@@ -1,0 +1,86 @@
+version: "3.9"
+   
+services:
+  db:
+    image: postgres
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_NAME=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+  backend:
+    build: ./backend
+    command: >
+      bash -c "python backend/manage.py migrate --fake sessions zero
+      && python backend/manage.py migrate --fake-initial
+      && python backend/manage.py collectstatic --no-input
+      && python backend/manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/code
+      - ./backend/static:/static
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_NAME=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    depends_on:
+      - db
+    links:
+      - db
+  llm_api:
+    build: ./llm_api
+    command: >
+      bash -c "python llm_api/manage.py migrate --fake sessions zero
+      && python llm_api/manage.py migrate --fake-initial
+      && python llm_api/manage.py collectstatic --no-input
+      && python llm_api/manage.py runserver 0.0.0.0:8001"
+    volumes:
+      - .:/code
+      - ./llm_api/static:/static
+    ports:
+      - "8001:8001"
+    environment:
+      - POSTGRES_NAME=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    deploy:
+      resources:
+        limits:
+          cpus: '8.0'
+          memory: 16G
+  nginx:
+    build: ./nginx
+    volumes:
+      - ./backend/static:/static
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+  llamalogy:
+    volumes:
+      - ./Llamology:/code
+    build: ./Llamology
+    # command: >
+    #   bash -c "pip3 freeze > new_requirements.txt
+    #   && cat new_requirements.txt"
+    #  bash -c "python load_to_chroma.py"
+    # make chunks from zotero folder
+    command: > 
+      bash -c "python zotero_parser.py"
+    #  bash -c "python load_to_chroma.py"
+    # bash -c "python highlight_pdf.py"
+    # bash -c "python query_llama_gpu.py"
+    # bash -c "python cnvrg_api_call.py"
+    # bash -c "python load_to_chroma.py"
+    
+  chroma:
+    build: ./chroma
+    volumes:
+      - ./chroma:/code
+    command: >
+      bash -c "python load_to_chroma.py"
+    
