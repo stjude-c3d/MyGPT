@@ -25,4 +25,6 @@ MyGPT can be installed on following environments:
 
 ### Personal Computer (MacBook) - no GPU
 
-For this installtion, the entire pipeline will run as a single unit on CPU. This is the easiest way to get started with MyGPT, but it is also the slowest.
+For this installtion, the entire pipeline will run as a single unit on CPUs. This is the easiest way to get started with MyGPT, but it is also the slowest.
+
+To run the pipleine on MacBook without GPU, follow the instructions from this google colaboratory notebook: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1h92XHMT5D_vlmf2oEZ0BRn3ke41Cz9p4?usp=sharing)

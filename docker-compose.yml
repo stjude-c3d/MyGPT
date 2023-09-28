@@ -60,27 +60,14 @@ services:
       - "80:80"
     depends_on:
       - backend
-  llamalogy:
+  frontend:
+    build: ./frontend
     volumes:
-      - ./Llamology:/code
-    build: ./Llamology
-    # command: >
-    #   bash -c "pip3 freeze > new_requirements.txt
-    #   && cat new_requirements.txt"
-    #  bash -c "python load_to_chroma.py"
-    # make chunks from zotero folder
-    command: > 
-      bash -c "python zotero_parser.py"
-    #  bash -c "python load_to_chroma.py"
-    # bash -c "python highlight_pdf.py"
-    # bash -c "python query_llama_gpu.py"
-    # bash -c "python cnvrg_api_call.py"
-    # bash -c "python load_to_chroma.py"
-    
-  chroma:
-    build: ./chroma
-    volumes:
-      - ./chroma:/code
-    command: >
-      bash -c "python load_to_chroma.py"
+      - .:/code
+      - ./frontend/build:/build
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+      - llm_api
     
