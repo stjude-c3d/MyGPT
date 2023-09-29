@@ -267,7 +267,7 @@ def add_demo_dataset():
                 paper_dataset=dataset,
                 paper_date_time=make_aware(datetime.datetime.now())
             )
-            with open(f'{documents_directory}/pdfs/paper{idx+1}.pdf', 'rb') as f:
+            with open(f'{documents_directory}/pdfs/{dataset_name}/paper{idx+1}.pdf', 'rb') as f:
                 paper.paper_attachment.save(dataset_name + '/paper' + str(idx+1) + '.pdf', File(f), save=True)
            
         print(f'Added {new_count - count} documents')
