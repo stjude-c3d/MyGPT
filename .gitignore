@@ -18,3 +18,4 @@ backend/chroma_storage/*
 chroma/chroma_storage/*
 *.pyc
 .DS_Store
+mydatabase

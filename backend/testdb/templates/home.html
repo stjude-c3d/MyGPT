@@ -29,20 +29,27 @@
 				to access all available API endpoints.</h4>
 		</div>
 		<div style="text-align:center; padding-top: 10px; width:200px; margin:auto;">
+			<h3> Reload sample publication library <h3>
+				<form action="#" method="get">
+					<input type="submit" class="btn" value="reload library" name="reload_library" style="margin: 5px;">
+				</form>
+		</div>
+		<div style="text-align:center; padding-top: 10px; width:200px; margin:auto;">
 			<h3> Add collection from zotero library <h3>
-				{% comment %} if success message show it in green {% endcomment %}
-				{% if success %}
-					<p style="color:green;">{{ success }}</p>
-				{% endif %}
-				{% comment %} if error message show it in red {% endcomment %}
-				{% if error %}
-					<p style="color:red;">{{ error }}</p>
-				{% endif %}
 			<form action="#" method="get">
 				<input type="text" value="" placeholder="Zotero Group ID" name="group_id" size="20" style="margin: 5px;"/>
 				<input type="text" value="" placeholder="Zotero Collection ID" name="collection_id" size="20" style="margin: 5px;"/>
 				<input type="submit" class="btn" value="Submit" name="upload_btn" style="margin: 5px;">
 			</form>
+		</div>
+		<div style="text-align:center; padding-top: 10px; width:200px; margin:auto;">
+			{% if success %}
+				<p style="color:green;">{{ success }}</p>
+			{% endif %}
+			{% comment %} if error message show it in red {% endcomment %}
+			{% if error %}
+				<p style="color:red;">{{ error }}</p>
+			{% endif %}
 		</div>
 	</body>
 </html> 

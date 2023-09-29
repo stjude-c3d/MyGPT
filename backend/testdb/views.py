@@ -12,10 +12,6 @@ from django.core import serializers
 import PyPDF2
 from pyzotero import zotero
 import fitz
-# from datasets import load_dataset
-# import pandas as pd
-# import numpy as np
-# import faiss
 import unicodedata
 from tqdm import tqdm
 import chromadb
@@ -26,12 +22,20 @@ import os
 import ssl
 import json
 import re
-# import statistics
 
 app_config = apps.get_app_config('testdb')
 
 def home(request):
     datasets = Dataset.objects.all()
+
+    if(datasets.count() == 0):
+        add_demo_dataset()
+
+    if(request.GET.get('reload_library')):
+        datasets.get(dataset_name='GPCR').delete()
+        add_demo_dataset()
+        datasets = Dataset.objects.all()
+        return render(request, 'home.html', {'success': 'Successfully reloaded demo dataset', 'datasets': datasets})
 
     if(request.GET.get('upload_btn')):
         if(request.GET.get('group_id') and request.GET.get('group_id') != ''):
@@ -39,7 +43,8 @@ def home(request):
             collection_id = request.GET.get('collection_id')
             dataset_name = get_zotero_chunks(group_id, collection_id)
             add_to_chroma(dataset_name)
-            return render(request, 'home.html', {'success': 'Successfully uploaded dataset'})
+            datasets = Dataset.objects.all()
+            return render(request, 'home.html', {'success': 'Successfully uploaded dataset', 'datasets': datasets})
 
     return render(request, 'home.html', {'datasets': datasets})
 
@@ -203,6 +208,70 @@ def add_to_chroma(dataset_name):
         dataset.save()
         print(f'Added {new_count - count} documents')
 
+def add_demo_dataset():
+    documents_directory = '/code/backend/sample_dataset'
+    # collection_name = 'pub_collection'
+    # Read all files in the data directory
+    documents = []
+    metadatas = []
+    files = os.listdir(documents_directory)
+    files = ['GPCR.txt']
+    dataset_name = 'GPCR'
+    titles = []
+    client = chromadb.PersistentClient(path='/code/backend/chroma_storage/.')
+
+    # If the collection already exists, we will delete it and create a new one.
+    client.get_or_create_collection(name=dataset_name)
+    client.delete_collection(name=dataset_name)
+    collection = client.get_or_create_collection(name=dataset_name)
+
+    # Create ids from the current count
+    count = collection.count()
+    print(f'Collection already contains {count} documents')
+
+    # Load the documents in batches of 100
+    if count == 0:
+        for filename in files:
+            # collection_name = filename
+            with open(f'{documents_directory}/data_chunks/{filename}', 'r') as file:
+                for line_number, line in enumerate(
+                    tqdm((file.readlines()), desc=f'Reading {filename}'), 1
+                ):
+                    # Strip whitespace and append the line to the documents list
+                    line = line.strip()
+                    #convert line to json
+                    line_json = eval(line)
+                    documents.append(line_json['content'])
+                    metadatas.append({'filename': line_json['title'], 'page': line_json['page']})
+                    if line_json['title'] not in titles:
+                        titles.append(line_json['title'])
+        ids = [str(i) for i in range(count, count + len(documents))]
+        for i in tqdm(
+            range(0, len(documents), 100), desc='Adding documents', unit_scale=100
+        ):
+            collection.add(
+                ids=ids[i : i + 100],
+                documents=documents[i : i + 100],
+                metadatas=metadatas[i : i + 100],  # type: ignore
+            )
+
+        new_count = collection.count()
+        dataset = Dataset.objects.create(
+            dataset_name=dataset_name,
+            dataset_size=new_count,
+            dataset_date_time=make_aware(datetime.datetime.now())
+        )
+        for (idx, title) in enumerate(titles):
+            paper = Papers.objects.create(
+                paper_title=title,
+                paper_dataset=dataset,
+                paper_date_time=make_aware(datetime.datetime.now())
+            )
+            with open(f'{documents_directory}/pdfs/paper{idx+1}.pdf', 'rb') as f:
+                paper.paper_attachment.save(dataset_name + '/paper' + str(idx+1) + '.pdf', File(f), save=True)
+           
+        print(f'Added {new_count - count} documents')
+
 def find_cutoff_distance(distances):
     # find the distane from where the distances start to increase
     cutoff_distance = distances[1]
@@ -272,7 +341,7 @@ def llama_prompt_new_question(user_question, dataset_name):
     context, titles, pages, chunks, distances = nearestDataChroma(user_question, dataset_name)
     context_clean =  re.sub(r'[^\x00-\x7f]',r'', context)
     query = re.sub(r'\"',r'"', user_question)
-    prompt_template = "<s>[INST] <<SYS>> You are a helpful, respectful, and honest assistant. Always answer as helpfully as possible, while being safe. Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature. If a question does not make any sense or is not factually coherent, explain why instead of answering something not correct. You will answer the given query denoted by '[Query]' using context, denoted by '[Context]'. The context will come from various sources. Certain pieces of context will be irrelevant, while others will be relevant. Use relevant pieces of context to respond to the query. <</SYS>> [Context] "+ context_clean + " [Query] " + query + "[/INST] [Reply] "
+    prompt_template = "<s>[INST] <<SYS>> You are a helpful, respectful, and honest assistant. You will answer the given query denoted by '[Query]' using context, denoted by '[Context]'. The context will come from various sources. Certain pieces of context will be irrelevant, while others will be relevant. Use relevant pieces of context to respond to the query. If you don't know the answer, just say that you don't know, don't try to make up an answer. Answer in less than 200 words. <</SYS>> [Context] "+ context_clean + " [Query] " + query + "[/INST] [Reply] "
     return (prompt_template, titles, pages, chunks, distances)
 
 def llama_prompt_conversation(user_question, conversation_json, dataset_name):
@@ -283,7 +352,7 @@ def llama_prompt_conversation(user_question, conversation_json, dataset_name):
     context, titles, pages, chunks, distances = nearestDataChroma(similarity_text, dataset_name)
     context_clean =  re.sub(r'[^\x00-\x7f]',r'', context)
     query = re.sub(r'\"',r'"', user_question)
-    prompt_template = "<s>[INST] <<SYS>> You are a helpful, respectful, and honest assistant. Always answer as helpfully as possible, while being safe. Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature. If a question does not make any sense or is not factually coherent, explain why instead of answering something not correct. You will answer the given query denoted by '[Query]' using context, denoted by '[Context]'. The context will come from various sources. Certain pieces of context will be irrelevant, while others will be relevant. Use relevant pieces of context to respond to the query. <</SYS>>"
+    prompt_template = "<s>[INST] <<SYS>> You are a helpful, respectful, and honest assistant. You will answer the given query denoted by '[Query]' using context, denoted by '[Context]'. The context will come from various sources. Certain pieces of context will be irrelevant, while others will be relevant. Use relevant pieces of context to respond to the query. If you don't know the answer, just say that you don't know, don't try to make up an answer. Answer in less than 200 words. <</SYS>>"
     for qna in conversation_json:
         prompt_template += qna['question'] + ' [/INST] ' + qna['answers'] + ' </s><s>[INST] '
     prompt_template += "[Context] " + context_clean + "[Query] " + query + "[/INST] [Reply] "
@@ -361,7 +430,7 @@ def get_answer_from_google_colab(prompt):
 
 def get_answer_from_local(prompt):
     payload = '{"text": "' + prompt + '"}'
-    conn = http.client.HTTPConnection('localhost', 8001)
+    conn = http.client.HTTPConnection('10.203.65.155', 80)
     headers = {
         'Content-Type': 'text/html; charset=utf-8'
     }

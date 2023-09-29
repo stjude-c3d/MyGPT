@@ -50,10 +50,9 @@ def ask_llamology(request):
     answer = ''
     if request.method == 'POST':
         request_str = request.body.decode('utf-8')
-        request_json = json.loads(request_str, strict=False)
-        prompt = request_json['text']
+        prompt = request_str.replace('{"text": "', '').replace('"}', '')
         print(prompt)
-        output = app_config.llama2(prompt, max_tokens=2024, temperature=0.1, top_k=10, top_p=0.2, echo=True)
+        output = app_config.llama2(prompt, max_tokens=2024, temperature=0, top_k=10, top_p=0.1, echo=True)
         answer = output['choices'][0]['text'].replace(prompt, '')
         answer_response = { 'response': answer }
         print(answer_response)
