@@ -1,7 +1,6 @@
 *.log
 .DS_Store
 *.bin
-backend/models/*
 backend/static/*
 backend/.env
 llm_api/static/*

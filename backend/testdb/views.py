@@ -209,7 +209,7 @@ def add_to_chroma(dataset_name):
         print(f'Added {new_count - count} documents')
 
 def add_demo_dataset():
-    documents_directory = '/code/backend/sample_dataset'
+    documents_directory = '/code/backend/data'
     # collection_name = 'pub_collection'
     # Read all files in the data directory
     documents = []
@@ -430,7 +430,8 @@ def get_answer_from_google_colab(prompt):
 
 def get_answer_from_local(prompt):
     payload = '{"text": "' + prompt + '"}'
-    conn = http.client.HTTPConnection('10.203.65.155', 80)
+    local_ip = os.environ.get('LOCAL_IP_ADDRESS')
+    conn = http.client.HTTPConnection(local_ip, 80)
     headers = {
         'Content-Type': 'text/html; charset=utf-8'
     }
