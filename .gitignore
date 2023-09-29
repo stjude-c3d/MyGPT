@@ -7,7 +7,6 @@ Llamology/pdfs/*
 backend/models/*
 backend/static/*
 backend/.env
-llm_api/models/*
 llm_api/static/*
 llm_api/.env
 google_colab_demo/static/*
