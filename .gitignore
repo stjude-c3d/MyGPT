@@ -1,15 +1,13 @@
 *.log
 .DS_Store
 *.bin
-Llamology/.cnvrg
-Llamology/models/*
-Llamology/pdfs/*
 backend/models/*
 backend/static/*
 backend/.env
 llm_api/static/*
 llm_api/.env
 google_colab_demo/static/*
+static/*
 data/*
 .cnvrgignore
 *.mp4
@@ -20,4 +18,3 @@ backend/chroma_storage/*
 chroma/chroma_storage/*
 *.pyc
 .DS_Store
-backend/data/*

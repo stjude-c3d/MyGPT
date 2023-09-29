@@ -40,6 +40,7 @@ services:
       && python llm_api/manage.py runserver 0.0.0.0:8001"
     volumes:
       - .:/code
+      - ./llm_api/models:/code/models
       - ./llm_api/static:/static
     ports:
       - "8001:8001"

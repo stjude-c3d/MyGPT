@@ -361,7 +361,7 @@ def get_answer_from_google_colab(prompt):
 
 def get_answer_from_local(prompt):
     payload = '{"text": "' + prompt + '"}'
-    conn = http.client.HTTPConnection('10.203.65.155', 80)
+    conn = http.client.HTTPConnection('localhost', 8001)
     headers = {
         'Content-Type': 'text/html; charset=utf-8'
     }
