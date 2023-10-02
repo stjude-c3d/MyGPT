@@ -1,0 +1,43 @@
+version: "3.9"
+   
+services:
+  db:
+    image: postgres
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_NAME=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+  backend:
+    build: ./backend
+    command: >
+      bash -c "python backend/manage.py migrate --fake sessions zero
+      && python backend/manage.py migrate --fake-initial
+      && python backend/manage.py collectstatic --no-input
+      && python backend/manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/code
+      - ./backend/static:/static
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_NAME=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    depends_on:
+      - db
+    links:
+      - db
+  frontend:
+    build: ./frontend
+    volumes:
+      - .:/code
+      - ./frontend/build:/build
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+      - llm_api
