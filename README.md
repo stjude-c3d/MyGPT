@@ -15,8 +15,8 @@ We have divided the MyGPT pipeline architecture into three sections:
 
 MyGPT can be installed on following environments:
 
-- [Personal Computer (MacBook) - no GPU](#personal-computer---no-gpu)
-- [Personal Computer (MacBook)- Apple GPU](#personal-computer-macbook---apple-gpu)
+- [Personal Computer - no GPU](#personal-computer---no-gpu)
+- [Personal Computer - with GPU](#personal-computer---with-gpu)
 - Google Colab - no GPU (coming next week)
 - Google Colab - GPU (T40) (coming next week)
 - Google Colab - GPU (A100) (coming next week)
@@ -31,7 +31,7 @@ To run the pipleine on following environments, follow the instructions from the 
 * Mac without GPU [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1h92XHMT5D_vlmf2oEZ0BRn3ke41Cz9p4?usp=sharing)
 * Linux without GPU [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1feKcAvNwMIZpx7UGOb3UYhw_HFMC_kHP?usp=sharing)
 
-### Personal Computer (MacBook) - Apple GPU
+### Personal Computer - with GPU
 
 For this installation, the LLM API will run on Apple GPU, and remaining pipeline will run via Docker on CPUs. 
 The steps will differ slightly for this method, although installation time should be same.
