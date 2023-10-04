@@ -15,7 +15,7 @@ We have divided the MyGPT pipeline architecture into three sections:
 
 MyGPT can be installed on following environments:
 
-- [Personal Computer (MacBook) - no GPU](#personal-computer-macbook---no-gpu)
+- [Personal Computer (MacBook) - no GPU](#personal-computer---no-gpu)
 - [Personal Computer (MacBook)- Apple GPU](#personal-computer-macbook---apple-gpu)
 - Google Colab - no GPU (coming next week)
 - Google Colab - GPU (T40) (coming next week)
@@ -23,11 +23,13 @@ MyGPT can be installed on following environments:
 - Server with GPU (coming next week)
 - Amazon Web Services (AWS) - GPU (coming next week)
 
-### Personal Computer (MacBook) - no GPU
+### Personal Computer - no GPU
 
 For this installtion, the entire pipeline will run as a single unit on CPUs. This is the easiest way to get started with MyGPT, but it is also the response time will be slowest.
 
-To run the pipleine on MacBook without GPU, follow the instructions from this google colaboratory notebook: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1h92XHMT5D_vlmf2oEZ0BRn3ke41Cz9p4?usp=sharing)
+To run the pipleine on following environments, follow the instructions from the Google colab notebook:
+* Mac without GPU [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1h92XHMT5D_vlmf2oEZ0BRn3ke41Cz9p4?usp=sharing)
+* Linux without GPU [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1feKcAvNwMIZpx7UGOb3UYhw_HFMC_kHP?usp=sharing)
 
 ### Personal Computer (MacBook) - Apple GPU
 
@@ -35,7 +37,8 @@ For this installation, the LLM API will run on Apple GPU, and remaining pipeline
 The steps will differ slightly for this method, although installation time should be same.
 Because we are using GPU for this method, the response time will be much faster than the previous method.
 
-To run the pipleine on MacBook with Apple GPU, follow the instructions from this google colaboratory notebook: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1mNqsBPNbzra3h3i9ggqOyPDEehrnAMdZ?usp=sharing)
+To run the pipleine on following environments, follow the instructions from the Google colab notebook:
+* Mac with Apple GPU [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1mNqsBPNbzra3h3i9ggqOyPDEehrnAMdZ?usp=sharing)
 
 ## User Interface
 MyGPT user interface will allow users to check the publcation library, ask questions, and get answers. The user interface is built using ReactJS.

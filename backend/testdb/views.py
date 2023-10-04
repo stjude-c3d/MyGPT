@@ -4,8 +4,6 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
 from rest_framework import viewsets
-from .models import Papers, Dataset, Question, Answer, Source, ScoreCard, Conversation
-from .serializers import PapersSerializer, QuestionSerializer, AnswerSerializer, ScoreCardSerializer, DatasetSerializer
 from django.apps import apps
 from django.utils.timezone import make_aware
 from django.core import serializers
@@ -22,22 +20,48 @@ import os
 import ssl
 import json
 import re
+from .models import Papers, Dataset, Question, Answer, Source, ScoreCard, Conversation
+from .serializers import PapersSerializer, QuestionSerializer, AnswerSerializer, ScoreCardSerializer, DatasetSerializer
+from .forms import PapersForm
 
 app_config = apps.get_app_config('testdb')
 
 def home(request):
     datasets = Dataset.objects.all()
+    form = PapersForm()
+    file_count = 15
 
     if(datasets.count() == 0):
         add_demo_dataset()
 
-    if(request.GET.get('reload_library')):
+    if(request.method == 'POST'):
+        form = PapersForm(request.POST, request.FILES)
+        dataset_name = request.POST.get('dataset_name')
+        if form.is_valid():
+            print(form, request.POST, request.FILES)
+            # Dataset.objects.create(
+            #     dataset_name=dataset_name,
+            #     dataset_size=0,
+            #     dataset_date_time=make_aware(datetime.datetime.now())
+            # )
+            # for i in range(1, file_count+1):
+            #     Papers.objects.create(
+            #         paper_title=request.POST.get('paper_title'+str(i)),
+            #         paper_attachment=request.FILES.get('paper_attachment'+str(i)),
+            #         paper_dataset=Dataset.objects.get(dataset_name=dataset_name),
+            #         paper_date_time=make_aware(datetime.datetime.now())
+            #     )
+            return render(request, 'home.html', {'success': 'Successfully uploaded dataset'})
+        else:
+            return render(request, 'home.html', {'error': 'Failed to upload dataset'})
+
+    elif(request.GET.get('reload_library')):
         datasets.get(dataset_name='GPCR').delete()
         add_demo_dataset()
         datasets = Dataset.objects.all()
         return render(request, 'home.html', {'success': 'Successfully reloaded demo dataset', 'datasets': datasets})
 
-    if(request.GET.get('upload_btn')):
+    elif(request.GET.get('upload_btn')):
         if(request.GET.get('group_id') and request.GET.get('group_id') != ''):
             group_id = request.GET.get('group_id')
             collection_id = request.GET.get('collection_id')
@@ -46,7 +70,7 @@ def home(request):
             datasets = Dataset.objects.all()
             return render(request, 'home.html', {'success': 'Successfully uploaded dataset', 'datasets': datasets})
 
-    return render(request, 'home.html', {'datasets': datasets})
+    return render(request, 'home.html', {'datasets': datasets, 'form': form, 'file_count': range(1,file_count+1)})
 
 ####################
 # Helper functions #
