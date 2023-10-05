@@ -51,7 +51,7 @@
 				<input type="submit" class="btn" value="Submit" name="upload_btn" style="margin: 5px;">
 			</form>
 		</div>
-		<div style="text-align: center; padding-top: 10px; width:1000px; margin:auto;">
+		<div style="text-align: center; padding-top: 10px; width:1200px; margin:auto;">
 			<h3> Add a publication library from files<h3>
 				<form action="#" method="post" enctype="multipart/form-data">
 					{% csrf_token %}
@@ -67,9 +67,7 @@
 						<div style="display: inline-block">
 							{{ form.paper_title.errors }}
 							<label for="id_paper_title" style="font-size: 15px; font-weight: normal;">Paper Title:</label>
-							<textarea name="paper_title" rows="1" cols="60" required id="id_paper_title">
-								{{ form.paper_title.value }}
-							</textarea>
+							<input type='text' name="paper_title"  value={{form.paper_title.value}} required id="id_paper_title" size='100'>
 						</div>
 						<div style="display: inline-block">
 							{{ form.paper_attachment.errors }}

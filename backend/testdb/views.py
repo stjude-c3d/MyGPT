@@ -38,20 +38,10 @@ def home(request):
         form = PapersForm(request.POST, request.FILES)
         dataset_name = request.POST.get('dataset_name')
         if form.is_valid():
-            print(form, request.POST, request.FILES)
-            # Dataset.objects.create(
-            #     dataset_name=dataset_name,
-            #     dataset_size=0,
-            #     dataset_date_time=make_aware(datetime.datetime.now())
-            # )
-            # for i in range(1, file_count+1):
-            #     Papers.objects.create(
-            #         paper_title=request.POST.get('paper_title'+str(i)),
-            #         paper_attachment=request.FILES.get('paper_attachment'+str(i)),
-            #         paper_dataset=Dataset.objects.get(dataset_name=dataset_name),
-            #         paper_date_time=make_aware(datetime.datetime.now())
-            #     )
-            return render(request, 'home.html', {'success': 'Successfully uploaded dataset'})
+            dataset_name = add_dataset_from_upload(request)
+            add_to_chroma(dataset_name)
+            datasets = Dataset.objects.all()
+            return render(request, 'home.html', {'success': 'Successfully uploaded dataset', 'datasets': datasets, 'form': form, 'file_count': range(1,file_count+1)})
         else:
             return render(request, 'home.html', {'error': 'Failed to upload dataset'})
 
@@ -59,7 +49,7 @@ def home(request):
         datasets.get(dataset_name='GPCR').delete()
         add_demo_dataset()
         datasets = Dataset.objects.all()
-        return render(request, 'home.html', {'success': 'Successfully reloaded demo dataset', 'datasets': datasets})
+        return render(request, 'home.html', {'success': 'Successfully reloaded demo dataset', 'datasets': datasets, 'form': form, 'file_count': range(1,file_count+1)})
 
     elif(request.GET.get('upload_btn')):
         if(request.GET.get('group_id') and request.GET.get('group_id') != ''):
@@ -68,7 +58,7 @@ def home(request):
             dataset_name = get_zotero_chunks(group_id, collection_id)
             add_to_chroma(dataset_name)
             datasets = Dataset.objects.all()
-            return render(request, 'home.html', {'success': 'Successfully uploaded dataset', 'datasets': datasets})
+            return render(request, 'home.html', {'success': 'Successfully uploaded dataset', 'datasets': datasets, 'form': form, 'file_count': range(1,file_count+1)})
 
     return render(request, 'home.html', {'datasets': datasets, 'form': form, 'file_count': range(1,file_count+1)})
 
@@ -180,6 +170,82 @@ def get_zotero_chunks(group_id, collection_id):
             f.write(str(chunk) + '\n')
     print('zotero chunks saved to file')
     return dataset_name
+
+def add_dataset_from_upload(request):
+    dataset_name = request.POST.get('dataset_name')
+    paper_titles = request.POST.getlist('paper_title')
+    paper_attachments = request.FILES.getlist('paper_attachment')
+
+    # create dataset
+    dataset = Dataset.objects.filter(dataset_name=dataset_name)
+    if dataset.count() > 0:
+        dataset = dataset[0]
+    else:
+        dataset = Dataset.objects.create(
+            dataset_name=dataset_name,
+            dataset_size=0,
+            dataset_date_time=make_aware(datetime.datetime.now())
+        )
+
+    # make directory for pdfs
+    if not os.path.exists('backend/data/pdfs/'+ dataset_name):
+        os.makedirs('backend/data/pdfs/'+ dataset_name)
+    
+    # save pdfs
+    data = []
+    go_to_next = False
+    for idx in range(len(paper_titles)):
+        if paper_titles[idx] == '' or paper_titles[idx] == '-':
+            continue
+        paper = Papers.objects.create(
+            paper_title=paper_titles[idx],
+            paper_dataset=dataset,
+            paper_date_time=make_aware(datetime.datetime.now())
+        )
+        pdf_name = 'backend/data/pdfs/'+ dataset_name +'/paper' + str(idx+1) + '.pdf'
+        with open(pdf_name, 'wb') as f:
+            f.write(paper_attachments[idx].read())
+        with open(pdf_name, 'rb') as f:
+            paper.paper_attachment.save('papers/' + dataset_name + '/paper' + str(idx+1) + '.pdf', File(f), save=True)
+
+        # extract text from pdfs
+        content = getPDFContent(pdf_name)
+
+        if go_to_next:
+            go_to_next = False
+        for page in range(content[1]):
+            if go_to_next:
+                break
+            text = content[0][page].extract_text().encode('ascii', 'ignore').decode('ascii')
+            n = 1000
+            splits = []
+            remainder = ''
+            for i in range(0, len(text), n):
+                item = remainder + text[i : i + n]
+                if len(re.findall(r'\sReferences.*\n+\d+',item, re.I)):
+                    go_to_next = True
+                    break
+                item = item.replace('\n', ' ')
+                if '. ' in item:
+                    remainder = item[item.rindex('. ') + 2: ]
+                    item = item.removesuffix(remainder)
+                if len(item) > 10:
+                    splits.append(item)
+            for split in splits:
+                # if len(re.findall(r'^References .*\s+', split)):
+                #     go_to_next = True
+                #     break
+                chunk = {'title': paper_titles[idx], 'page': page+1, 'content': split, 'type': 'pagechunk'}
+                data.append(chunk)
+        print('zotero chunks loaded')        
+
+    with open('backend/data/data_chunks/'+ dataset_name +'.txt', 'w') as f:
+        for chunk in data:
+            # convert chunk to string and write to file
+            f.write(str(chunk) + '\n')
+    print('zotero chunks saved to file')
+    return dataset_name
+
 
 def add_to_chroma(dataset_name):
     documents_directory = '/code/backend/data/data_chunks'
