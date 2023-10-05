@@ -237,7 +237,7 @@ def add_dataset_from_upload(request):
                 #     break
                 chunk = {'title': paper_titles[idx], 'page': page+1, 'content': split, 'type': 'pagechunk'}
                 data.append(chunk)
-        print('zotero chunks loaded')        
+    print('zotero chunks loaded')        
 
     with open('backend/data/data_chunks/'+ dataset_name +'.txt', 'w') as f:
         for chunk in data:
