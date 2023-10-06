@@ -18,3 +18,5 @@ chroma/chroma_storage/*
 *.pyc
 .DS_Store
 mydatabase
+biogpt_api/.env
+biogpt_api/static/*

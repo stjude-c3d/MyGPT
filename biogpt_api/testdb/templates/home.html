@@ -1,0 +1,25 @@
+{% comment %} {% load staticfiles %} {% endcomment %}
+<html lang="en">
+
+    <head>
+		<meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="This is Django template backend app with REST api support.">
+		<title>MyGPT LLM API</title>
+    </head>
+
+    <body>
+		<header>
+		</header>
+		<div style="text-align:center;">
+			<h1> MyGPT LLM API server </h1>
+			<h3> The App is running!<h3>
+			{% comment %} <h4> {{ protein_family.count }} Protein families added to test database from GPCRdb REST API</h4>
+			<h4> AND </h4>
+			<h4> {{ tcga_variants.count }} TCGA variants added to test database from CSV file.</h4> {% endcomment %}
+			<h4> go to <a href="http://localhost:8001/api/">http://localhost:8001/api/</a> 
+				to access all available queries.</h4>
+		</div>
+	</body>
+</html> 
