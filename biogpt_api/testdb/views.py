@@ -61,8 +61,8 @@ def ask_biogpt(request):
             temperature=0.4,
             max_new_tokens=4024,
             num_return_sequences=1,
-            top_k=40,
-            top_p=0.4,
+            top_k=60,
+            top_p=0.8,
             do_sample=True
         ):
             answer = x['generated_text'].replace(prompt, '')
@@ -70,8 +70,6 @@ def ask_biogpt(request):
         # time to complete in seconds
         time_complete = datetime.datetime.now() - now
         print('response time: ', time_complete)
-        # answer = output[0]['generated_text'].replace(prompt, '')
-        # answer_response = { 'response': answer }
         print('biogpt: ', answer_response)
 
     return Response(answer_response, content_type='application/json')
