@@ -11,4 +11,4 @@ class TestdbConfig(AppConfig):
         model_path='./models/Llama2/llama-2-7b-chat.ggmlv3.q5_K_S.bin'
         ## V100 with 32GB RAM can handle n_gpu_layers=28, n_ctx=2040, n_batch=580 with response time less than a minute
         ## V100 with 32GB RAM can handle n_gpu_layers=48, n_ctx=2040, n_batch=580 with response time less than 10 secs
-        self.llama2 = Llama(model_path=model_path, n_gpu_layers=56, n_ctx=3024, n_batch=1080)
+        self.llama2 = Llama(model_path=model_path, n_gpu_layers=56, n_ctx=6024, n_batch=1080)

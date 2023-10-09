@@ -481,6 +481,17 @@ def get_conversation_json(question_text):
         conversation_json.append(qna_json)
     return conversation_json
 
+def get_previous_qna_json(question_text):
+    question = Question.objects.filter(question_text=question_text)[0]
+    answers = Answer.objects.filter(question=question)
+    conversation_json = []
+    qna_json = {
+        'question': question.question_text,
+        'answers': answers[0].answer_text,
+    }
+    conversation_json.append(qna_json)
+    return conversation_json
+
 def get_answer_from_cnvrg(prompt):
 
     response = os.system("ping -c 1 llama-clean-5-1.cnvrg.stjude.org")
@@ -790,11 +801,15 @@ def ask_llamology(request):
         current_date_time = make_aware(datetime.datetime.now())
         dataset = Dataset.objects.get(dataset_name=request_dataset_name)
         dataset_name = dataset.dataset_name
+        related_question = json_request['related_query']
+        conversation_json = {}
         quesiton_exist = Question.objects.filter(question_text=question_text).exists()
         if quesiton_exist:
             question = Question.objects.get(question_text=question_text)
             conversation_id = question.conversation.id
             conversation = Conversation.objects.get(id=conversation_id)
+            if(len(previous_question)):
+                conversation_json = get_previous_qna_json(previous_question)
         else:
             if (new_conversation):
                 conversation = Conversation.objects.create(
@@ -805,6 +820,7 @@ def ask_llamology(request):
                 conversation_id = Question.objects.get(question_text=previous_question).conversation.id
                 conversation = Conversation.objects.get(id=conversation_id)
                 # conversation_json = get_conversation_json(previous_question)
+                conversation_json = get_previous_qna_json(previous_question)
             question = Question.objects.create(
                 question_text=question_text,
                 question_dataset=dataset,
@@ -868,11 +884,14 @@ def ask_llamology(request):
         else:
             user_question = json_request['text']
             user_question_clean = unicodedata.normalize('NFKD', user_question).encode('ascii', 'ignore').decode('utf-8', 'ignore')
-            prompt, titles, pages, chunks, distances  = llama_prompt_new_question(user_question_clean, dataset_name)
+            # prompt, titles, pages, chunks, distances  = llama_prompt_new_question(user_question_clean, dataset_name)
             # if (new_conversation):
             #     prompt, titles, pages, chunks, distances  = llama_prompt_new_question(user_question_clean, dataset_name)
             # else:
-            #     prompt, titles, pages, chunks, distances  = llama_prompt_conversation(user_question_clean, conversation_json,dataset_name) 
+            if (related_question):
+                prompt, titles, pages, chunks, distances  = llama_prompt_conversation(user_question_clean, conversation_json, dataset_name)
+            else:
+                prompt, titles, pages, chunks, distances  = llama_prompt_new_question(user_question_clean, dataset_name) 
             sources = []
             for idx, title in enumerate(titles):
                 sources.append({

@@ -5,7 +5,7 @@ import {
 import { defaultLayoutPlugin, ToolbarProps, ToolbarSlot } from '@react-pdf-viewer/default-layout'
 import { pageNavigationPlugin } from '@react-pdf-viewer/page-navigation'
 import '@react-pdf-viewer/default-layout/lib/styles/index.css'
-import { PaperAirplaneIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
+import { PaperAirplaneIcon, LinkIcon } from '@heroicons/react/24/outline'
 import { DropdownOptions } from './DropDownMenu'
 import Feedback from './Feedback'
 
@@ -13,6 +13,7 @@ import Feedback from './Feedback'
 function GPTHome(){
 	const [searchTerm, setSearchTerm] = useState<any>('')
 	const [query, setQuery] = useState<any[]>([])
+	const [relatedQuery, setRelatedQuery] = useState<any>(false)
 	const [answers, setAnswers] = useState<any[]>([])
 	const [papers, setPapers] = useState<any[]>([])
 	const [sourcePapers, setSourcePapers] = useState<any[]>([])
@@ -73,16 +74,18 @@ function GPTHome(){
 			keepalive: true,
 			setTimeout: 10000,
 			body: JSON.stringify({ 
-				text: query[query.length-1] ? query[query.length-1].replaceAll('"','\\"') : '',
+				text: query[query.length-1] && query[query.length-1].question ? query[query.length-1].question.replaceAll('"','\\"') : '',
 				dataset: selectedDataset !== defaultDataset ? selectedDataset : defaultDataset,
 				new_conversation: query.length === 1 ? true : false, 
-				previous_query: query.length > 1 ? query[query.length-2].replaceAll('"','\\"') : '',
+				related_query: relatedQuery,
+				previous_query: query.length > 1 ? query[query.length-2].question.replaceAll('"','\\"') : '',
 			})
 		}
 		if(query.length && query.length !== answers.length){
 			let response_answer:any = null
 		// setSelectedPage(0)
 		// setselectedPaperIdx(0)
+		setRelatedQuery(false)
 			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/llamology/?format=json`, requestOptions)
 				.then(response => response.json())
 				.then(data => {
@@ -183,7 +186,21 @@ function GPTHome(){
 			<div className='col-span-3 mt-24 mr-6 p-6 max-w-4xl bg-panel3 rounded-lg max-h-[92vh] overflow-y-auto'>
 				<div className='text-2xl font-bold text-nav'>Ask a Question</div>
 				<div className='text-sm text-nav my-2'>Ask a question about a paper or a topic from your publication library. We will try to answer it using the GPT models.</div>
-				<div className='pt-4 mb-4 mx-4 flex'>
+				<div className='p-1 mx-2 flex justify-end'>
+					<button className={'px-2 py-1 mx-1 my-auto bg-white text-sm hover:bg-bsk_dark_blue text-bsk_dark_blue font-semibold hover:text-white hover:border-transparent rounded-full shadow-md hover:shadow-lg outline-none focus:outline-none' + (answers.length && answers[answers.length-1].response ? '':' opacity-50 cursor-not-allowed')} 
+						disabled={answers.length && answers[answers.length-1].response ? false : true}
+						onClick={
+							()=>{
+								setQuery([])
+								setAnswers([])
+							}
+						}>
+							<p className='inline-block ml-2'>
+								Clear Chat
+							</p>
+					</button>
+				</div>
+				<div className='pt-4 mb-2 mx-4 flex'>
 					<textarea
 						id='submitter' 
 						rows={4}
@@ -192,15 +209,17 @@ function GPTHome(){
 						value={searchTerm}
 						onChange={(e:any)=>{
 							if (!e.target.value.length){
-								setAnswers([])
+								// setAnswers([])
 							}
 							setSearchTerm(e.target.value.replace(/\n/g, ''))
 						}}
 						onKeyUp={
 							(e:any)=>{
 								if (e.keyCode === 13){
-									setQuery((prevQuery:any)=>[...prevQuery, searchTerm])
-									setSearchTerm([''])
+									setQuery((prevQuery:any)=>[...prevQuery, 
+										{'question':searchTerm, 'related': relatedQuery}
+									])
+									setSearchTerm('')
 								}
 							}
 						}>
@@ -208,30 +227,32 @@ function GPTHome(){
 					<button 
 						className='p-4 mx-2 my-auto bg-white hover:bg-bsk_dark_blue text-bsk_dark_blue font-semibold hover:text-white py-2 px-3 hover:border-transparent rounded-full shadow-md hover:shadow-lg outline-none focus:outline-none h-12'
 						onClick={() => {
-								setQuery((prevQuery:any)=>[...prevQuery, searchTerm])
-								setSearchTerm([''])
+							setQuery((prevQuery:any)=>[...prevQuery, 
+									{'question':searchTerm, 'related': relatedQuery}
+								])
+								setSearchTerm('')
 							}
 						}
 					>
 						<p className='inline-block ml-2'><PaperAirplaneIcon className='w-6 h-6 inline-block'/></p>
 					</button>
 				</div>
-				{
-					answers.length && answers[answers.length-1].response ?
-					<div className='p-1 mx-2 flex'>
-						<button className='px-2 py-1 mx-1 my-auto bg-white text-sm hover:bg-bsk_dark_blue text-bsk_dark_blue font-semibold hover:text-white hover:border-transparent rounded-full shadow-md hover:shadow-lg outline-none focus:outline-none' 
-							onClick={
-								()=>{
-									setQuery([])
-									setAnswers([])
+				{ answers.length && answers[answers.length-1].response && searchTerm.length ?
+					<div className='p-1 mx-4 flex'>
+						<input type='checkbox' className='my-auto'
+							onChange={
+								(e:any)=>{
+									if (e.target.checked){
+										setRelatedQuery(true)
+									}
 								}
-							}>
-								<p className='inline-block ml-2'><ArrowPathIcon className=' mr-2 w-4 h-4 inline-block'/>
-									Clear Chat
-								</p>
-						</button>
-					</div> : null
-				}
+							}
+						/>
+						<p className='inline-block mx-2 text-sm'>
+							related to previous question
+						</p>
+					</div>
+					 : null }
 				{
 					query.length ? 
 					<>{ query.map((_q:any, i:any)=>(
@@ -239,8 +260,9 @@ function GPTHome(){
 							<div className='py-4 px-6 m-4 bg-panel2 rounded-lg shadow-md box2 user-chat'>
 								<div className='flex flex-row justify-between font-bold'>
 									<div className='text-nav text-sm py-2'>You</div>
+									<div className='text-nav text-xs py-2'>{query[query.length-i-1].related ? <LinkIcon className='w-4 h-4 inline-block'/> : null}</div>
 								</div>
-								<div className='text-nav'>{query[query.length-i-1]}</div>
+								<div className='text-nav'>{query[query.length-i-1].question}</div>
 							</div>
 							{	answers[query.length-i-1] && answers[query.length-i-1].response ?
 								<div className='py-4 px-6 m-4 bg-panel1 rounded-lg shadow-md box2 llm-chat'>
