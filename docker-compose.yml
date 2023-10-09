@@ -34,10 +34,7 @@ services:
   llm_api:
     build: ./llm_api
     command: >
-      bash -c "python llm_api/manage.py migrate --fake sessions zero
-      && python llm_api/manage.py migrate --fake-initial
-      && python llm_api/manage.py collectstatic --no-input
-      && python llm_api/manage.py runserver 0.0.0.0:8001"
+      bash -c "python llm_api/manage.py runserver 0.0.0.0:8001"
     volumes:
       - .:/code
       - ./llm_api/models:/code/models
