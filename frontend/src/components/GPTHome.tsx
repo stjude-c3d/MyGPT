@@ -5,7 +5,7 @@ import {
 import { defaultLayoutPlugin, ToolbarProps, ToolbarSlot } from '@react-pdf-viewer/default-layout'
 import { pageNavigationPlugin } from '@react-pdf-viewer/page-navigation'
 import '@react-pdf-viewer/default-layout/lib/styles/index.css'
-import { PaperAirplaneIcon } from '@heroicons/react/24/outline'
+import { PaperAirplaneIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
 import { DropdownOptions } from './DropDownMenu'
 import Feedback from './Feedback'
 
@@ -216,6 +216,22 @@ function GPTHome(){
 						<p className='inline-block ml-2'><PaperAirplaneIcon className='w-6 h-6 inline-block'/></p>
 					</button>
 				</div>
+				{
+					answers.length && answers[answers.length-1].response ?
+					<div className='p-1 mx-2 flex'>
+						<button className='px-2 py-1 mx-1 my-auto bg-white text-sm hover:bg-bsk_dark_blue text-bsk_dark_blue font-semibold hover:text-white hover:border-transparent rounded-full shadow-md hover:shadow-lg outline-none focus:outline-none' 
+							onClick={
+								()=>{
+									setQuery([])
+									setAnswers([])
+								}
+							}>
+								<p className='inline-block ml-2'><ArrowPathIcon className=' mr-2 w-4 h-4 inline-block'/>
+									Clear Chat
+								</p>
+						</button>
+					</div> : null
+				}
 				{
 					query.length ? 
 					<>{ query.map((_q:any, i:any)=>(
