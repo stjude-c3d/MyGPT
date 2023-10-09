@@ -17,11 +17,11 @@ MyGPT can be installed on following environments:
 
 - [Personal Computer - no GPU](#personal-computer---no-gpu)
 - [Personal Computer - with GPU](#personal-computer---with-gpu)
-- Google Colab - no GPU (coming next week)
-- Google Colab - GPU (T40) (coming next week)
-- Google Colab - GPU (A100) (coming next week)
-- Server with GPU (coming next week)
-- Amazon Web Services (AWS) - GPU (coming next week)
+- Google Colab - no GPU (coming soon)
+- Google Colab - GPU (T40) (coming soon)
+- Google Colab - GPU (A100) (coming soon)
+- Server with GPU (coming soon)
+- Amazon Web Services (AWS) - GPU (coming soon)
 
 ### Personal Computer - no GPU
 

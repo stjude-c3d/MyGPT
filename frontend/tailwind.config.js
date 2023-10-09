@@ -17,7 +17,8 @@ module.exports = {
         'white': '#fff',
         'bsk_opp': '#CCA791',
         'bsk_blue': '#CFE5FF',
-        'bsk_dark_blue': '#7F97B3'
+        'bsk_dark_blue': '#7F97B3',
+        'primary': '#687E8C',
       },
     },
   },
