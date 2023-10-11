@@ -141,7 +141,7 @@ def get_zotero_chunks(group_id, collection_id):
         for page in range(content[1]):
             if go_to_next:
                 break
-            text = content[0][page].extract_text().encode('ascii', 'ignore').decode('ascii')
+            text = content[0][page].extract_text()
             n = 1000
             splits = []
             remainder = ''
@@ -216,7 +216,7 @@ def add_dataset_from_upload(request):
         for page in range(content[1]):
             if go_to_next:
                 break
-            text = content[0][page].extract_text().encode('ascii', 'ignore').decode('ascii')
+            text = content[0][page].extract_text()
             n = 1000
             splits = []
             remainder = ''
@@ -429,9 +429,8 @@ def nearestDataChroma(text, dataset_name):
 
 def llama_prompt_new_question(user_question, dataset_name):
     context, titles, pages, chunks, distances = nearestDataChroma(user_question, dataset_name)
-    context_clean =  re.sub(r'[^\x00-\x7f]',r'', context)
     query = re.sub(r'\"',r'"', user_question)
-    prompt_template = "<s>[INST] <<SYS>> You are a helpful, respectful, and honest assistant. You will answer the given query denoted by '[Query]' using context, denoted by '[Context]'. The context will come from various sources. Certain pieces of context will be irrelevant, while others will be relevant. Use relevant pieces of context to respond to the query. If you don't know the answer, just say that you don't know, don't try to make up an answer. Answer in less than 200 words. <</SYS>> [Context] "+ context_clean + " [Query] " + query + "[/INST] [Reply] "
+    prompt_template = "<s>[INST] <<SYS>> You are a helpful, respectful, and honest assistant. You will answer the given query denoted by '[Query]' using context, denoted by '[Context]'. The context will come from various sources. Certain pieces of context will be irrelevant, while others will be relevant. Use relevant pieces of context to respond to the query. If you don't know the answer, just say that you don't know, don't try to make up an answer. Answer in less than 200 words. <</SYS>> [Context] "+ context + " [Query] " + query + "[/INST] [Reply] "
     return (prompt_template, titles, pages, chunks, distances)
 
 def llama_prompt_conversation(user_question, conversation_json, dataset_name):
@@ -440,12 +439,11 @@ def llama_prompt_conversation(user_question, conversation_json, dataset_name):
         similarity_text += qna['question']
     similarity_text += user_question
     context, titles, pages, chunks, distances = nearestDataChroma(similarity_text, dataset_name)
-    context_clean =  re.sub(r'[^\x00-\x7f]',r'', context)
     query = re.sub(r'\"',r'"', user_question)
     prompt_template = "<s>[INST] <<SYS>> You are a helpful, respectful, and honest assistant. You will answer the given query denoted by '[Query]' using context, denoted by '[Context]'. The context will come from various sources. Certain pieces of context will be irrelevant, while others will be relevant. Use relevant pieces of context to respond to the query. If you don't know the answer, just say that you don't know, don't try to make up an answer. Answer in less than 200 words. <</SYS>>"
     for qna in conversation_json:
         prompt_template += qna['question'] + ' [/INST] ' + qna['answers'] + ' </s><s>[INST] '
-    prompt_template += "[Context] " + context_clean + "[Query] " + query + "[/INST] [Reply] "
+    prompt_template += "[Context] " + context + "[Query] " + query + "[/INST] [Reply] "
 
     return (prompt_template, titles, pages, chunks, distances)
 
@@ -506,7 +504,7 @@ def get_answer_from_cnvrg(prompt):
         'Content-Type': 'text/html; charset=utf-8'
     }
 
-    conn.request('POST', '/api/v1/endpoints/ya3fm5t89qr6nxhmstpk', payload, headers)
+    conn.request('POST', '/api/v1/endpoints/ya3fm5t89qr6nxhmstpk', payload.encode('utf-8'), headers)
 
     res = conn.getresponse()
     data = res.read()
@@ -521,7 +519,7 @@ def get_answer_from_google_colab(prompt):
     headers = {
         'Content-Type': 'text/html; charset=utf-8'
     }
-    conn.request('POST', '/api/llamology/', payload, headers)
+    conn.request('POST', '/api/llamology/', payload.encode('utf-8'), headers)
 
     res = conn.getresponse()
     data = res.read()
@@ -537,7 +535,7 @@ def get_answer_from_local(prompt):
         'Content-Type': 'text/html; charset=utf-8'
     }
 
-    conn.request('POST', '/api/llama2/', payload, headers)
+    conn.request('POST', '/api/llama2/', payload.encode('utf-8'), headers)
 
     res = conn.getresponse()
     data = res.read()
