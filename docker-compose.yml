@@ -71,7 +71,7 @@ services:
       resources:
         limits:
           cpus: '8.0'
-          memory: 32G
+          memory: 16G
   nginx:
     build: ./nginx
     volumes:

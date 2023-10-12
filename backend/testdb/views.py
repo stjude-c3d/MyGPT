@@ -452,18 +452,24 @@ def biogpt_context(text):
     prompt_template = f'''question: {text} context: {context} answer:'''
     return (prompt_template, titles, pages, chunks, distances)
 
-def biogpt_process(text):
-    context, titles, pages = llama_prompt_new_question(text)
-    # prompt_template = f'''based on the this information, {context},  '''
-    return context, titles, pages
+def biogpt_prompt_new_question(user_question, dataset_name):
+    context, titles, pages, chunks, distances = nearestDataChroma(user_question, dataset_name)
+    query = re.sub(r'\"',r'"', user_question)
+    prompt_template = context + " Based on above information, answer this: " + query
+    return (prompt_template, titles, pages, chunks, distances)
 
-# def llama_process(text):
-#     context, titles, pages = llama_context(text)
-#     prompt_template = f'''SYSTEM: You are a helpful, respectful, and honest assistant. Always answer as helpfully as possible, while being safe. Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature. If a question does not make any sense or is not factually coherent, explain why instead of providing an incorrect answer. If you don't know the answer to a question, please refrain from sharing false information. Utilize context provided only if it appears to be useful for generating a relevant response; otherwise, answer as if no context was given. If context is deemed relevant, begin the answer by citing the location of the SAMPLE portion of the context you are provided.
-#     QUESTION: {context}
-#     ANSWER: ", 
-#     '''
-#     return prompt_template, titles, pages
+def biogpt_prompt_conversation(user_question, conversation_json, dataset_name):
+    similarity_text = ''
+    for qna in conversation_json:
+        similarity_text += qna['question']
+    similarity_text += user_question
+    context, titles, pages, chunks, distances = nearestDataChroma(similarity_text, dataset_name)
+    query = re.sub(r'\"',r'"', user_question)
+    for qna in conversation_json:
+        prompt_template = qna['question'] + qna['answers']
+    prompt_template += context + " Based on above information, answer this: " + query
+
+    return (prompt_template, titles, pages, chunks, distances)
 
 def get_conversation_json(question_text):
     conversation_id = Question.objects.filter(question_text=question_text)[0].conversation.id
@@ -527,7 +533,7 @@ def get_answer_from_google_colab(prompt):
 
     return answer
 
-def get_answer_from_local(prompt):
+def get_answer_from_local_llama2(prompt):
     payload = '{"text": "' + prompt + '"}'
     local_ip = os.environ.get('LOCAL_IP_ADDRESS')
     conn = http.client.HTTPConnection(local_ip, 80)
@@ -536,6 +542,22 @@ def get_answer_from_local(prompt):
     }
 
     conn.request('POST', '/api/llama2/', payload.encode('utf-8'), headers)
+
+    res = conn.getresponse()
+    data = res.read()
+    answer = data
+
+    return answer
+
+def get_answer_from_local_biogpt(prompt):
+    payload = '{"text": "' + prompt + '"}'
+    local_ip = os.environ.get('LOCAL_IP_ADDRESS')
+    conn = http.client.HTTPConnection(local_ip, 80)
+    headers = {
+        'Content-Type': 'text/html; charset=utf-8'
+    }
+
+    conn.request('POST', '/api/biogpt/', payload.encode('utf-8'), headers)
 
     res = conn.getresponse()
     data = res.read()
@@ -735,53 +757,186 @@ def ask_biogpt_org(request):
 @api_view(['POST'])
 def ask_biogpt_ft(request):
     answer = ''
-    current_date_time = make_aware(datetime.datetime.now())
     if request.method == 'POST':
         json_request = JSONParser().parse(request)
         question_text = json_request['text']
-        if Question.objects.filter(question_text=question_text).exists():
+        request_dataset_name = json_request['dataset']
+        new_conversation = json_request['new_conversation']
+        previous_question = json_request['previous_query']
+        current_date_time = make_aware(datetime.datetime.now())
+        dataset = Dataset.objects.get(dataset_name=request_dataset_name)
+        dataset_name = dataset.dataset_name
+        related_question = json_request['related_query']
+        conversation_json = {}
+        quesiton_exist = Question.objects.filter(question_text=question_text).exists()
+        if quesiton_exist:
             question = Question.objects.get(question_text=question_text)
+            conversation_id = question.conversation.id
+            conversation = Conversation.objects.get(id=conversation_id)
+            if(len(previous_question)):
+                conversation_json = get_previous_qna_json(previous_question)
         else:
+            if (new_conversation):
+                conversation = Conversation.objects.create(
+                    conversation_dataset=dataset,
+                    start_date_time=current_date_time
+                )
+            else:
+                conversation_id = Question.objects.get(question_text=previous_question).conversation.id
+                conversation = Conversation.objects.get(id=conversation_id)
+                # conversation_json = get_conversation_json(previous_question)
+                conversation_json = get_previous_qna_json(previous_question)
             question = Question.objects.create(
                 question_text=question_text,
-                question_dataset=1,
+                question_dataset=dataset,
+                conversation=conversation,
                 saved_date_time=current_date_time
             )
         answers = Answer.objects.filter(question=question, model_type='BioGPT-ft')
-        print(answers)
         if len(answers) > 0:
+            sources = Source.objects.filter(answer=answers[0])
+            source_json = []
+            for source in sources:
+                source_json.append({
+                    'paper': source.source_paper,
+                    'page': source.source_page,
+                    'context': source.context,
+                    'distance': source.distance
+                })
             answer = { 
-                'source':'BioGPT-ft', 
-                'response': answers[0].answer_text, 
-                'paper': answers[0].source_paper, 
-                'page': answers[0].source_page
-            }
-        else:
-            similary_data = biogpt_context(json_request['text'])
-            for x in app_config.ft_generator(
-                similary_data[0],
-                max_length=3000,
-                num_return_sequences=1,
-                do_sample=True
-            ):
-                answer_response = x['generated_text'].replace(similary_data[0], '')
-                print('BioGPT-ft: ',answer_response, '\n')
-                answer = {
-                    'source':'BioGPT-finetuned', 
-                    'response': answer_response, 
-                    'paper': similary_data[1][0], 
-                    'page': similary_data[2][0]
+                    'source':'Biogpt-ft', 
+                    'response': answers[0].answer_text, 
+                    'sources': source_json,
+                    'rating': answers[0].rating,
+                    'user_comment': answers[0].user_comment
                 }
-            Answer.objects.create(
-                answer_text=answer['response'], 
-                model_type='BioGPT-ft', 
-                rating=0,
-                source_paper=answer['paper'],
-                source_page=answer['page'], 
-                question=question,
-                saved_date_time=current_date_time
-            )
-    
+            #group sources from same paper
+            sources_grouped = []
+            for source in source_json:
+                if len(sources_grouped) == 0:
+                    sources_grouped.append([source])
+                else:
+                    found = False
+                    for source_group in sources_grouped:
+                        if source['paper'] == source_group[0]['paper']:
+                            source_group.append(source)
+                            found = True
+                            break
+                    if not found:
+                        sources_grouped.append([source])
+
+            # hightlight pdf with source paper and page
+            for source_grp in sources_grouped:
+                paper_obj = Papers.objects.filter(paper_title=source_grp[0]['paper'])[0].paper_attachment
+                if (len(paper_obj.path.split('/')[-1].split('_')) > 1): 
+                    paper_name =   paper_obj.path.split('/')[-1].split('_')[0] + '.pdf'
+                else:
+                    paper_name =   paper_obj.path.split('/')[-1]
+
+                original_pdf_path = 'backend/data/pdfs/'+ dataset_name +'/' + paper_name
+                highlighted_pdf_path = 'backend/data/pdfs/' + dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf'
+
+                highlight_pdf(
+                    original_pdf_path, 
+                    highlighted_pdf_path, 
+                    source_grp
+                )
+
+                # create highlighted paper object
+                paper = Papers.objects.filter(paper_title=source_grp[0]['paper'])[0]
+                with open(highlighted_pdf_path, 'rb') as f:
+                    paper.highlited_attachment.save(dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf', File(f), save=True)
+        else:
+            user_question = json_request['text']
+            user_question_clean = unicodedata.normalize('NFKD', user_question).encode('ascii', 'ignore').decode('utf-8', 'ignore')
+            # prompt, titles, pages, chunks, distances  = llama_prompt_new_question(user_question_clean, dataset_name)
+            # if (new_conversation):
+            #     prompt, titles, pages, chunks, distances  = llama_prompt_new_question(user_question_clean, dataset_name)
+            # else:
+            if (related_question):
+                prompt, titles, pages, chunks, distances  = biogpt_prompt_conversation(user_question_clean, conversation_json, dataset_name)
+            else:
+                prompt, titles, pages, chunks, distances  = biogpt_prompt_new_question(user_question_clean, dataset_name) 
+            sources = []
+            for idx, title in enumerate(titles):
+                sources.append({
+                    'paper': title,
+                    'page': pages[idx],
+                    'context': chunks[idx],
+                    'distance': round(distances[idx],3) #round to 3 decimals
+                })
+
+            sources_grouped = []
+            for source in sources:
+                if len(sources_grouped) == 0:
+                    sources_grouped.append([source])
+                else:
+                    found = False
+                    for source_group in sources_grouped:
+                        if source['paper'] == source_group[0]['paper']:
+                            source_group.append(source)
+                            found = True
+                            break
+                    if not found:
+                        sources_grouped.append([source])
+
+            # hightlight pdf with source paper and page
+            for source_grp in sources_grouped:
+                paper_obj = Papers.objects.filter(paper_title=source_grp[0]['paper'])[0].paper_attachment
+                if (len(paper_obj.path.split('/')[-1].split('_')) > 1): 
+                    paper_name =   paper_obj.path.split('/')[-1].split('_')[0] + '.pdf'
+                else:
+                    paper_name =   paper_obj.path.split('/')[-1]
+
+                original_pdf_path = 'backend/data/pdfs/'+ dataset_name + '/' + paper_name
+                highlighted_pdf_path = 'backend/data/pdfs/' + dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf'
+
+                highlight_pdf(
+                    original_pdf_path, 
+                    highlighted_pdf_path, 
+                    source_grp
+                )
+
+                # create highlighted paper object
+                paper = Papers.objects.filter(paper_title=source_grp[0]['paper'])[0]
+                with open(highlighted_pdf_path, 'rb') as f:
+                    paper.highlited_attachment.save(dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf', File(f), save=True)
+
+            # following for running the code from local
+            answer_response = get_answer_from_local_biogpt(prompt)
+            print('BioGPT-ft: ',answer_response, '\n')
+            if answer_response != '':
+                answer_json = json.loads(answer_response)
+                if 'response' not in answer_json:
+                    answer = { 
+                        'source':'BioGPT-ft', 
+                        'response': 'error getting the answer',
+                        'sources': sources
+                    }
+                else:
+                    answer = { 
+                        'source':'BioGPT-ft', 
+                        'response': answer_json['response'],
+                        'sources': sources
+                    }
+                    answerObj = Answer.objects.create(
+                        answer_text=answer['response'], 
+                        model_type='BioGPT-ft', 
+                        rating=0,
+                        question=question,
+                        saved_date_time=current_date_time
+                    )
+                    conversation.question_answer_count += 1
+                    conversation.save()
+
+                    for idx, title in enumerate(titles):
+                        Source.objects.create(
+                            source_paper=title,
+                            source_page=pages[idx],
+                            context=chunks[idx].replace("\x00", "\uFFFD"),
+                            distance=round(distances[idx],3),
+                            answer=answerObj
+                        )
     print('BioGPT-ft: ',answer, '\n')    
     return Response(answer, content_type="application/json")
 
@@ -985,7 +1140,7 @@ def ask_llamology(request):
             # answer_response = get_answer_from_google_colab(prompt)
 
             # following for running the code from local
-            answer_response = get_answer_from_local(prompt)
+            answer_response = get_answer_from_local_llama2(prompt)
             print('Llama2: ',answer_response, '\n')
             if answer_response != '':
                 answer_json = json.loads(answer_response)

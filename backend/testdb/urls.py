@@ -17,6 +17,6 @@ urlpatterns = [
     path('api/post_question_answer/', views.post_new_question_answer, name='post_question_answer'),
     path('api/biogpt_original/', views.ask_biogpt_org, name='ask_biogpt_original'),
     path('api/biogpt_finetuned/', views.ask_biogpt_ft, name='ask_biogpt_finetuned'),
-    path('api/llamology/', views.ask_llamology, name='ask_llamology'),
+    path('api/llama2/', views.ask_llamology, name='ask_llamology'),
 	path('api/feedback/', views.feedback_for_answers, name='feedback'),
 ]

@@ -7,7 +7,7 @@ import { pageNavigationPlugin } from '@react-pdf-viewer/page-navigation'
 import '@react-pdf-viewer/default-layout/lib/styles/index.css'
 import { PaperAirplaneIcon, LinkIcon } from '@heroicons/react/24/outline'
 import { DropdownOptions } from './DropDownMenu'
-import Feedback from './Feedback'
+// import Feedback from './Feedback'
 
 
 function GPTHome(){
@@ -23,6 +23,7 @@ function GPTHome(){
 	const [fileAttachmentType, setFileAttachmentType] = useState('paper_attachment')
 	const [datasets, setDatasets] = useState<string[]>([])
 	const defaultDataset = 'GPCR'
+	const [llm, setLlm] = useState<any>('Llama2')
 	const [selectedDataset, setSelectedDataset] = useState(defaultDataset)
 
 	useEffect(()=>{
@@ -86,7 +87,10 @@ function GPTHome(){
 		// setSelectedPage(0)
 		// setselectedPaperIdx(0)
 		setRelatedQuery(false)
-			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/llamology/?format=json`, requestOptions)
+		let llm_endpoint = ''
+		if (llm === 'Llama2') llm_endpoint = 'llama2'
+		else if (llm === 'BioGPT-ft') llm_endpoint = 'biogpt_finetuned'
+			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/${llm_endpoint}/?format=json`, requestOptions)
 				.then(response => response.json())
 				.then(data => {
 					response_answer = data
@@ -186,8 +190,17 @@ function GPTHome(){
 			<div className='col-span-3 mt-24 mr-6 p-6 max-w-4xl bg-panel3 rounded-lg max-h-[92vh] overflow-y-auto'>
 				<div className='text-2xl font-bold text-nav'>Ask a Question</div>
 				<div className='text-sm text-nav my-2'>Ask a question about a paper or a topic from your publication library. We will try to answer it using the GPT models.</div>
-				<div className='p-1 mx-2 flex justify-end'>
-					<button className={'px-2 py-1 mx-1 my-auto bg-white text-sm hover:bg-bsk_dark_blue text-bsk_dark_blue font-semibold hover:text-white hover:border-transparent rounded-full shadow-md hover:shadow-lg outline-none focus:outline-none' + (answers.length && answers[answers.length-1].response ? '':' opacity-50 cursor-not-allowed')} 
+				<div className='p-1 mx-4 flex'>
+					<div className='text-sm text-nav my-auto mx-1'>GPT model</div>
+					<DropdownOptions
+						optionsList={['Llama2', 'BioGPT-ft']}
+						defaultOption={llm}
+						dropDownCallback={(option:string)=>{
+							setLlm(option)
+						}
+						}
+					/>
+					<button className={'px-2 py-1 mx-4 my-auto bg-white text-sm hover:bg-bsk_dark_blue text-bsk_dark_blue font-semibold hover:text-white hover:border-transparent rounded-full shadow-md hover:shadow-lg outline-none focus:outline-none' + (answers.length && answers[answers.length-1].response ? '':' opacity-50 cursor-not-allowed')} 
 						disabled={answers.length && answers[answers.length-1].response ? false : true}
 						onClick={
 							()=>{
@@ -271,7 +284,7 @@ function GPTHome(){
 									<div className='text-white text-sm py-2'>{answers[query.length-i-1].source}</div>
 								</div>
 								<div className='text-white whitespace-pre-wrap'>{answers[query.length-i-1].response}</div>
-								<Feedback
+								{/* <Feedback
 									answer={JSON.parse(JSON.stringify(answers[query.length-i-1]))}
 									feedbackReceived={(answers[query.length-i-1].rating && answers[query.length-i-1].rating !== 0) ? true : false}
 									feedbackCallback={(feedback:any)=>{
@@ -294,7 +307,7 @@ function GPTHome(){
 												console.log(data)
 											})
 									}}
-								/>
+								/> */}
 								{
 									sourcePapers.length && sourcePages.length && sourcePapers[query.length-i-1] && sourcePages[query.length-i-1] ?
 									<>
@@ -325,7 +338,7 @@ function GPTHome(){
 								: (
 								<div className='py-4 px-6 m-4 bg-panel1 rounded-lg shadow-md box2 llm-chat'>
 									<div className='flex flex-row justify-between font-bold'>
-										<div className='text-white text-sm py-2'>{'Llama2'}</div>
+										<div className='text-white text-sm py-2'>{llm}</div>
 									</div>
 									<div className='text-white whitespace-pre-wrap'>{'Loading...'}</div>
 								</div>
