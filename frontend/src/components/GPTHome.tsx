@@ -208,7 +208,7 @@ function GPTHome(){
 								setAnswers([])
 							}
 						}>
-							<p className='inline-block ml-2'>
+							<p className='inline-block mx-2'>
 								Clear Chat
 							</p>
 					</button>

@@ -14,5 +14,9 @@ class TestdbConfig(AppConfig):
         # # Create the pipeline for BioGPT finetuned on KIDS2023
         model_ft = BioGptForCausalLM.from_pretrained('./models/BioGPT/BioGPT-Large-PubMedQA-finetuned-KIDS2023')
         tokenizer_ft = BioGptTokenizer.from_pretrained('./models/BioGPT/BioGPT-Large-PubMedQA-finetuned-KIDS2023')
+
+        ## Download the model and the tokenizer from the model hub
+        # model_ft = BioGptForCausalLM.from_pretrained('caprizone6/BioGPT-Large-PubMedQA-finetuned-KIDS2023')
+        # tokenizer_ft = BioGptTokenizer.from_pretrained('caprizone6/BioGPT-Large-PubMedQA-finetuned-KIDS2023')
         # self.biogpt_generator = pipeline('text-generation', model=model_ft, tokenizer=tokenizer_ft)
         self.biogpt_generator = pipeline('text-generation', model=model_ft, tokenizer=tokenizer_ft, device='mps')
