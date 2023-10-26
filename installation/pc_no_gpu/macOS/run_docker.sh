@@ -7,9 +7,9 @@ mkdir backend/data/pdfs/GPCR
 cp -r backend/sample_dataset/pdfs/* backend/data/pdfs/GPCR/.
 cp backend/sample_dataset/data_chunks/GPCR.txt backend/data/data_chunks/.
 docker compose up -d backend
-sleep 1m
+sleep 60
 open http://localhost:8000
-sleep 1m
+sleep 60
 
 docker compose up -d llm_api
 docker compose up -d nginx

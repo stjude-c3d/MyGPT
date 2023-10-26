@@ -29,9 +29,9 @@ For this installtion, the entire pipeline will run as a single unit on CPUs. Thi
 
 To run the pipleine on following environments, follow the instructions from the Google colab notebook:
 * Mac without GPU
-	- [Simple instructions](./installation/pc_no_gpu/mac/README.md): This are simple insturctions with bash scripts, although it's easy to follow, it's not interactive and doesn't have troubleshooting steps. If you come across any bug or error, please report it in the issues section. You can also modify bash scripts as per your convenience.
+	- [Simple instructions](./installation/pc_no_gpu/macOS/README.md): This are simple insturctions with bash scripts, although it's easy to follow, it's not interactive and doesn't have troubleshooting steps. You can also modify bash scripts as per your convenience.
 	- Detailed instructions: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1h92XHMT5D_vlmf2oEZ0BRn3ke41Cz9p4?usp=sharing)
-	This are instructions with interactive Jupyter notebook on Google colab, it has troubleshooting steps and is easy to follow. If you come across any bug or error, please report it in the issues section. You can also modify Jupyter notebook as per your convenience.
+	This are instructions with interactive Jupyter notebook on Google colab, it has troubleshooting steps. If you come across any bug or error, please report it in the issues section. You can also modify Jupyter notebook as per your convenience.
 * Linux without GPU [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1feKcAvNwMIZpx7UGOb3UYhw_HFMC_kHP?usp=sharing)
 * Windows without GPU [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1r9cGHFwl4VStyb0szC4U-6hidXjtZBDE?usp=sharing)
 
@@ -42,7 +42,10 @@ The steps will differ slightly for this method, although installation time shoul
 Because we are using GPU for this method, the response time will be much faster than the previous method.
 
 To run the pipleine on following environments, follow the instructions from the Google colab notebook:
-* Mac with Apple GPU [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1mNqsBPNbzra3h3i9ggqOyPDEehrnAMdZ?usp=sharing)
+* Mac with Apple GPU
+- [Simple instructions](./installation/pc_with_gpu/macOS/README.md): This are simple insturctions with bash scripts, although it's easy to follow, it's not interactive and doesn't have troubleshooting steps. You can also modify bash scripts as per your convenience.
+- Detailed instructions: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1mNqsBPNbzra3h3i9ggqOyPDEehrnAMdZ?usp=sharing)
+This are instructions with interactive Jupyter notebook on Google colab, it has troubleshooting steps. If you come across any bug or error, please report it in the issues section. You can also modify Jupyter notebook as per your convenience.
 
 ## User Interface
 MyGPT user interface will allow users to check the publcation library, ask questions, and get answers. The user interface is built using ReactJS.
@@ -50,3 +53,7 @@ MyGPT user interface will allow users to check the publcation library, ask quest
 Here is an example of the user interface with question, answer, and source citing:
 
 <img src='./images/MyGPT_UI.png' width='800px' alt='MyGPT user interface'>
+
+## Issues
+
+If you come across any bug or error, please report it in the [issues](https://github.com/mb-group/MyGPT_public/issues) section.
