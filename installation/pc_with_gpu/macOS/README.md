@@ -1,4 +1,4 @@
-# Installation on Mac without GPU
+# Installation on Mac with M1 GPU
 
 ## Requirements
 

@@ -1,4 +1,5 @@
 ## run docker containers as detached 
+cd MyGPT
 docker compose up -d db
 sleep 10
 

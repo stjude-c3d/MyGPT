@@ -1,4 +1,5 @@
 ## create super user for backend app
+cd MyGPT
 
 # find backend container id by image name
 backend_container_id=$(docker ps -aqf "ancestor=mygpt-backend")
