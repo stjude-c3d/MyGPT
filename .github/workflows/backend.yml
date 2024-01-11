@@ -5,8 +5,12 @@ name: backend
 
 on:
   push:
+    paths:
+      - "backend/**"
     branches: [ "main" ]
   pull_request:
+    paths:
+      - "backend/**"
     branches: [ "main" ]
 
 permissions:

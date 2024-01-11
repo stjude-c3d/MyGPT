@@ -5,8 +5,12 @@ name: llm_api
 
 on:
   push:
+    paths:
+     - "llm_api/**"
     branches: [ "main" ]
   pull_request:
+    paths:
+     - "llm_api/**"
     branches: [ "main" ]
 
 permissions:
