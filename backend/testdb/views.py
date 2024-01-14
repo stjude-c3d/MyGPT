@@ -651,15 +651,19 @@ class DataSetsViewSet(viewsets.ModelViewSet):
 @api_view(['GET'])
 def get_papers(request):
     if request.method == 'GET':
-        dataset_name = request.GET.get('dataset')
-        dataset = Dataset.objects.get(dataset_name=dataset_name)
-        papers = Papers.objects.filter(paper_dataset=dataset)
-        papers_ = serializers.serialize('json', papers)
+        if request.GET.get('dataset'):
+            dataset_name = request.GET.get('dataset')
+            dataset = Dataset.objects.get(dataset_name=dataset_name)
+            papers = Papers.objects.filter(paper_dataset=dataset)
+            papers_ = serializers.serialize('json', papers)
+        else:
+            papers = Papers.objects.all()
+            papers_ = serializers.serialize('json', papers)
         papers_json = json.loads(papers_)
         papers = []
         for paper in papers_json:
             papers.append(paper['fields'])
-        return Response(papers, content_type='application/json')
+        return Response(papers)
 
 @api_view(['POST'])
 def post_new_question_answer(request):
