@@ -1,0 +1,1 @@
+ollama create mygpt_llama2 -f ./Modelfile

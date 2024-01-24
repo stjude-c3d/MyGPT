@@ -90,4 +90,10 @@ services:
     depends_on:
       - backend
       - llm_api
-    
+  ollama:
+    build: ./ollama
+    volumes:
+        - ./ollama/models:/root/.ollama/models
+    ports:
+        - 11434:11434
+    container_name: ollama
