@@ -11,3 +11,6 @@ RUN apt install -y build-essential
 COPY requirements.txt /code/
 RUN pip install -r requirements.txt
 COPY . /code/
+# install docker
+RUN apt-get update 
+RUN apt install docker.io -y

@@ -20,8 +20,8 @@ import os
 import ssl
 import json
 import re
-from .models import Papers, Dataset, Question, Answer, Source, ScoreCard, Conversation
-from .serializers import PapersSerializer, QuestionSerializer, AnswerSerializer, ScoreCardSerializer, DatasetSerializer
+from .models import Papers, Dataset, Question, Answer, Source, Conversation, Model
+from .serializers import ModelSerializer, PapersSerializer, QuestionSerializer, AnswerSerializer, DatasetSerializer
 from .forms import PapersForm
 
 app_config = apps.get_app_config('testdb')
@@ -60,6 +60,7 @@ def home(request):
             datasets = Dataset.objects.all()
             return render(request, 'home.html', {'success': 'Successfully uploaded dataset', 'datasets': datasets, 'form': form, 'file_count': range(1,file_count+1)})
 
+    get_ollama_models()
     return render(request, 'home.html', {'datasets': datasets, 'form': form, 'file_count': range(1,file_count+1)})
 
 ####################
@@ -605,9 +606,36 @@ def highlight_pdf(input_file, output_file, source_grp):
 
     input_pdf.save(output_file, garbage=4, deflate=True, clean=True)
 
+def get_ollama_models():
+    command = 'docker exec -i ollama ollama list > backend/data/ollama_models.txt'
+    os.system(command)
+    with open('backend/data/ollama_models.txt', 'r') as f:
+        lines = f.readlines()
+        models = []
+        for line in lines:
+            if 'ID' in line:
+                continue
+            model = {}
+            model['name'] = line.split('\t')[0].split(' ')[0]
+            model['size'] = line.split('\t')[2]
+            models.append(model)
+    # delete file
+    os.remove('backend/data/ollama_models.txt')
+    for model in models:
+        if Model.objects.filter(model_name=model.get("name")).count() == 0:
+            Model.objects.create(model_name=model.get("name"), model_size=model.get("size"))
+    return
+
 ####################
 # API viewSets     #
 ####################
+
+class ModelViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that shows protein families.
+    """
+    queryset = Model.objects.all()
+    serializer_class = ModelSerializer
 
 class QuestionsViewSet(viewsets.ModelViewSet):
     """
@@ -622,13 +650,6 @@ class AnswersViewSet(viewsets.ModelViewSet):
     """
     queryset = Answer.objects.all()
     serializer_class = AnswerSerializer
-
-class ScoreCardViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that shows protein families.
-    """
-    queryset = ScoreCard.objects.all()
-    serializer_class = ScoreCardSerializer
 
 class PapersViewSet(viewsets.ModelViewSet):
     """
@@ -664,36 +685,6 @@ def get_papers(request):
         for paper in papers_json:
             papers.append(paper['fields'])
         return Response(papers)
-
-@api_view(['POST'])
-def post_new_question_answer(request):
-    if request.method == 'POST':
-        json_request = JSONParser().parse(request)
-        question_text, question_type = json_request['text'], json_request['type']
-        question = Question.objects.get_or_create(question_text=question_text, question_type=question_type)
-        scores = {
-            'chatGPT': None,
-            'AI21': None,
-            'OpenAssistant': None,
-            'BioGPT': None,
-            'Llamology': None
-        }
-        answers = json_request['answers']
-        for answer in answers:
-            answer_text = answer['text']
-            model_type = answer['type']
-            score = None
-            if (answer['score'] == 'positive'):
-                score = 1
-            elif (answer['score'] == 'neutral'):
-                score = 0
-            elif (answer['score'] == 'negative'):
-                score = -1
-            scores['model_type'] = score
-            Answer.objects.get_or_create(answer_text=answer_text, model_type=model_type, rating=score, question=question[0])
-        ScoreCard.objects.get_or_create(question=question[0], chatGPT=scores['chatGPT'], AI21=scores['AI21'], OpenAssistant=scores['OpenAssistant'], BioGPT=scores['BioGPT'], Llamology=scores['Llamology'])
-
-    return Response({'saved':True}, content_type="application/json")
 
 @api_view(['POST'])
 def ask_biogpt_org(request):
@@ -1181,6 +1172,117 @@ def ask_llamology(request):
         print('Llama2: ',answer, '\n')
         
     return Response(answer, content_type="application/json")
+
+# example json: {"text": "how many inactive conformational states ABL1 has?", "dataset": "ABL1"}
+@api_view(['POST'])
+def get_context(request):
+    if request.method == 'POST':
+        json_request = JSONParser().parse(request)
+        question_text = json_request['text']
+        dataset_name = json_request['dataset']
+        new_conversation = json_request['new_conversation']
+        previous_question = json_request['previous_query']
+        context, titles, pages, chunks, distances = nearestDataChroma(question_text, dataset_name)
+        sources = []
+
+        # save question to database
+        current_date_time = make_aware(datetime.datetime.now())
+        dataset = Dataset.objects.get(dataset_name=dataset_name)
+        quesiton_exist = Question.objects.filter(question_text=question_text).exists()
+        if quesiton_exist:
+            question = Question.objects.get(question_text=question_text)
+            conversation_id = question.conversation.id
+            conversation = Conversation.objects.get(id=conversation_id)
+        else:
+            if (new_conversation):
+                conversation = Conversation.objects.create(
+                    conversation_dataset=dataset,
+                    start_date_time=current_date_time
+                )
+            else:
+                conversation_id = Question.objects.get(question_text=previous_question).conversation.id
+                conversation = Conversation.objects.get(id=conversation_id)
+            question = Question.objects.create(
+                question_text=question_text,
+                question_dataset=dataset,
+                conversation=conversation,
+                saved_date_time=current_date_time
+            )
+        question_sources = Source.objects.filter(question=question)
+        for idx, title in enumerate(titles):
+            sources.append({
+                'paper': title,
+                'page': pages[idx],
+                'context': chunks[idx],
+                'distance': round(distances[idx],3) #round to 3 decimals
+            })
+            if len(question_sources) == 0:
+                Source.objects.create(
+                    source_paper=title,
+                    source_page=pages[idx],
+                    context=chunks[idx].replace("\x00", "\uFFFD"),
+                    distance=round(distances[idx],3),
+                    question=question
+                )
+
+        sources_grouped = []
+        for source in sources:
+            if len(sources_grouped) == 0:
+                sources_grouped.append([source])
+            else:
+                found = False
+                for source_group in sources_grouped:
+                    if source['paper'] == source_group[0]['paper']:
+                        source_group.append(source)
+                        found = True
+                        break
+                if not found:
+                    sources_grouped.append([source])
+
+        # hightlight pdf with source paper and page
+        for source_grp in sources_grouped:
+            paper_obj = Papers.objects.filter(paper_title=source_grp[0]['paper'])[0].paper_attachment
+            if (len(paper_obj.path.split('/')[-1].split('_')) > 1): 
+                paper_name =   paper_obj.path.split('/')[-1].split('_')[0] + '.pdf'
+            else:
+                paper_name =   paper_obj.path.split('/')[-1]
+
+            original_pdf_path = 'backend/data/pdfs/'+ dataset_name + '/' + paper_name
+            highlighted_pdf_path = 'backend/data/pdfs/' + dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf'
+
+            highlight_pdf(
+                original_pdf_path, 
+                highlighted_pdf_path, 
+                source_grp
+            )
+
+            # create highlighted paper object
+            paper = Papers.objects.filter(paper_title=source_grp[0]['paper'])[0]
+            with open(highlighted_pdf_path, 'rb') as f:
+                paper.highlited_attachment.save(dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf', File(f), save=True)
+        
+        context_json = {
+            'context': context,
+            'sources': sources
+        }
+        
+        return Response(context_json, content_type="application/json")
+    
+@api_view(['POST'])
+def save_answer(request):
+    if request.method == 'POST':
+        json_request = JSONParser().parse(request)
+        question_text = json_request['question_text']
+        answer_text = json_request['answer_text']
+        model = json_request['model_type']
+        model_type = Model.objects.get(model_name=model)
+        question = Question.objects.get(question_text=question_text)
+        Answer.objects.create(
+            answer_text=answer_text, 
+            model_type=model_type, 
+            question=question
+        )
+        return Response({'saved':True}, content_type="application/json")
 
 @api_view(['POST'])
 def feedback_for_answers(request):

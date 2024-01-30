@@ -13,7 +13,10 @@ import { DropdownOptions } from './DropDownMenu'
 function GPTHome(){
 	const [searchTerm, setSearchTerm] = useState<any>('')
 	const [query, setQuery] = useState<any[]>([])
+	const [context, setContext] = useState<any>('')
 	const [relatedQuery, setRelatedQuery] = useState<any>(false)
+	const [answer, setAnswer] = useState<any>('')
+	const [answerReceived, setAnswerReceived] = useState<any>(false)
 	const [answers, setAnswers] = useState<any[]>([])
 	const [papers, setPapers] = useState<any[]>([])
 	const [sourcePapers, setSourcePapers] = useState<any[]>([])
@@ -23,8 +26,25 @@ function GPTHome(){
 	const [fileAttachmentType, setFileAttachmentType] = useState('paper_attachment')
 	const [datasets, setDatasets] = useState<string[]>([])
 	const defaultDataset = 'GPCR'
-	const [llm, setLlm] = useState<any>('Llama2')
+	const [llms, setLlms] = useState<any[]>([])
+	const [llm, setLlm] = useState<any>(llms !== undefined && llms.length ? llms[0].model_name : '')
 	const [selectedDataset, setSelectedDataset] = useState(defaultDataset)
+
+	// get llms from backend
+	useEffect(()=>{
+		const requestOptions = {
+			method: 'GET',
+			headers: { 
+				'Content-Type': 'application/json'
+			}
+		}
+		fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/llms/`, requestOptions)
+			.then(response => response.json())
+			.then(data => {
+				setLlms(data.results.map((l:any)=>l.model_name))
+				setLlm(data.results[0].model_name)
+			})
+	},[])
 
 	useEffect(()=>{
 		const requestOptions = {
@@ -83,32 +103,87 @@ function GPTHome(){
 			})
 		}
 		if(query.length && query.length !== answers.length){
-			let response_answer:any = null
 		// setSelectedPage(0)
 		// setselectedPaperIdx(0)
 		setRelatedQuery(false)
-		let llm_endpoint = ''
-		if (llm === 'Llama2') llm_endpoint = 'llama2'
-		else if (llm === 'BioGPT-ft') llm_endpoint = 'biogpt_finetuned'
+		let llm_endpoint = 'get_context'
 			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/${llm_endpoint}/?format=json`, requestOptions)
 				.then(response => response.json())
 				.then(data => {
-					response_answer = data
-					return [...answers, data]
-				})
-				.then(setAnswers)
-				.then(()=>{
-					setSourcePapers((prevSourcePapers:any)=>[...prevSourcePapers, response_answer.sources.map((s:any)=>s.paper)])
-					setSourcePages((prevSourcePages:any)=>[...prevSourcePages, response_answer.sources.map((s:any)=>s.page)])
-					setSelectedPage(response_answer.sources[0].page)
-					const paperIndex = papers.findIndex((p:any)=>p.paper_title === response_answer.sources[0].paper)
+					setContext(data.context)
+					setSourcePapers((prevSourcePapers:any)=>[...prevSourcePapers, data.sources.map((s:any)=>s.paper)])
+					setSourcePages((prevSourcePages:any)=>[...prevSourcePages, data.sources.map((s:any)=>s.page)])
+					setSelectedPage(data.sources[0].page)
+					const paperIndex:number = papers.findIndex((p:any)=>p.paper_title === data.sources[0].paper)
 					setselectedPaperIdx(paperIndex)
 					setPapers([])
 					setFileAttachmentType('highlited_attachment')
+					setAnswerReceived(false)
 				})
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[query])
+
+	// get answer from the ollama
+	useEffect(()=>{
+		const question =  query[query.length-1] && query[query.length-1].question ? query[query.length-1].question.replaceAll('"','\\"') : ''
+		const body = JSON.stringify({
+			'model': llm,
+			'prompt': context + '\n Based on above context answer this question: ' + question
+		})
+		if(context.length > 1 && question.length > 1){
+			// fetch using async await
+			const postData = async () => {
+				let content = ''
+				const response = await fetch(`http://localhost:11434/api/generate`, {body, method: 'POST'})
+				const reader:any = response.body?.getReader()
+				while (true) {
+					const { done, value } = await reader.read()
+					if (done) {
+						break;
+					}
+					const rawjson = new TextDecoder().decode(value);
+					const json = JSON.parse(rawjson)
+
+					if (json.done === false) {
+						content += json.response
+					}else{
+						setAnswerReceived(true)
+					}
+					setAnswer(content)
+				}
+			}
+			postData()
+		}
+	},[query, context, llm])
+
+	useEffect(()=>{
+		if (answerReceived)
+			setAnswers((prevAnswers:any)=>[...prevAnswers, {'response': answer, 'source': llm}])
+	},[answer, llm, answerReceived])
+
+	// save asnwer to backend database
+	useEffect(()=>{
+		if(answers.length && query.length && query.length === answers.length){
+			const requestOptions = {
+				method: 'POST',
+				headers: { 
+					'Content-Type': 'application/json',
+					'Authorization': `${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_AUTH_TOKEN_PROD : process.env.REACT_APP_AUTH_TOKEN_DEV}`
+				},
+				body: JSON.stringify({ 
+					question_text: query[query.length-1].question,
+					answer_text: answers[answers.length-1].response,
+					model_type: answers[answers.length-1].source,
+				})
+			}
+			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/save_answer/?format=json`, requestOptions)
+				.then(response => response.json())
+				.then(data => {
+					console.log(data)
+				})
+		}
+	},[answers, query])
 
 	useEffect(()=>{
 		PageNavigationPluginInstance.jumpToPage(selectedPage-1)
@@ -193,7 +268,7 @@ function GPTHome(){
 				<div className='p-1 mx-4 flex'>
 					<div className='text-sm text-nav my-auto mx-1'>GPT model</div>
 					<DropdownOptions
-						optionsList={['Llama2', 'BioGPT-ft']}
+						optionsList={llms !== undefined && llms.length ? llms : []}
 						defaultOption={llm}
 						dropDownCallback={(option:string)=>{
 							setLlm(option)
@@ -340,7 +415,33 @@ function GPTHome(){
 									<div className='flex flex-row justify-between font-bold'>
 										<div className='text-white text-sm py-2'>{llm}</div>
 									</div>
-									<div className='text-white whitespace-pre-wrap'>{'Loading...'}</div>
+									<div className='text-white whitespace-pre-wrap'>{answer.length ? answer: 'Generating answer...'}</div>
+									{
+									sourcePapers.length && sourcePages.length && sourcePapers[query.length-i-1] && sourcePages[query.length-i-1] ?
+									<>
+										<div className='text-white text-sm font-bold pt-4'>
+											{sourcePapers[query.length-i-1].length > 1 ? 'Sources' : 'Source'}
+										</div>
+										{sourcePapers[query.length-i-1].map((paper:any, index:number)=>(
+											<div 
+												className={ 
+													selectedPaperIdx === (papers.findIndex((p:any)=>p.paper_title===paper)) && selectedPage === sourcePages[query.length-i-1][index] ? 
+													'bg-slate-500':''} 
+												key={index} onClick={
+												()=>{
+													// setSourceIdx(index)
+													setselectedPaperIdx(papers.findIndex((p:any)=>p.paper_title===paper))
+													setSelectedPage(sourcePages[query.length-i-1][index])
+													setFileAttachmentType('highlited_attachment')
+												}}
+											>
+												<div className='border border-gray-400'></div>
+												<div className='text-white text-sm p-2 font-normal italic'>{'Page ' + (sourcePages[query.length-i-1][index]) + ' of "' + paper + '"'}</div>
+											</div>
+										))}
+									</>
+									: <></>
+									}
 								</div>
 								)
 							}

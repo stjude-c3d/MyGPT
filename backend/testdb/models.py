@@ -54,7 +54,8 @@ class Question(models.Model):
 
 class Answer(models.Model):
 	answer_text = models.TextField(default='-')
-	model_type =  models.CharField(choices=model_types, max_length=40, default='-')
+	model_type =  models.ForeignKey('Model', on_delete=models.SET_DEFAULT, default='llama2')
+	temperature = models.FloatField(default=1)
 	rating = models.IntegerField(choices=rating_types, default=0)
 	user_comment = models.TextField(default='-')
 	saved_date_time = models.DateTimeField(default=timezone.now, null=True)
@@ -65,15 +66,11 @@ class Source(models.Model):
 	source_page = models.IntegerField(default=0)
 	context = models.TextField(default='-')
 	distance = models.FloatField(default=0)
-	answer = models.ForeignKey(Answer, on_delete=models.CASCADE)
+	question = models.ForeignKey(Question, on_delete=models.CASCADE, null=True)
 
 	def __str__(self):
 		return self.source_paper[:15] + ', p.' + str(self.source_page)
 
-class ScoreCard(models.Model):
-	question = models.ForeignKey(Question, on_delete=models.CASCADE)
-	chatGPT = models.IntegerField(null=True)
-	AI21 = models.IntegerField(null=True)
-	OpenAssistant = models.IntegerField(null=True)
-	BioGPT = models.IntegerField(null=True)
-	Llamology = models.IntegerField(null=True)
+class Model(models.Model):
+	model_name = models.CharField(max_length=200, default='-')
+	model_size =  models.CharField(max_length=40, default='-')

@@ -1,5 +1,8 @@
 from django.contrib import admin
-from .models import Dataset, Papers, Conversation, Question, Answer, Source, ScoreCard
+from .models import Model, Dataset, Papers, Conversation, Question, Answer, Source
+
+class ModelAdmin(admin.ModelAdmin):
+    list_display = ['model_name', 'model_size']
 
 class DatasetAdmin(admin.ModelAdmin):
     list_display = ['dataset_name', 'zotero_id', 'dataset_size', 'dataset_date_time']
@@ -17,15 +20,12 @@ class AnswerAdmin(admin.ModelAdmin):
     list_display = ['answer_text', 'model_type', 'rating', 'question', 'saved_date_time']
 
 class SourceAdmin(admin.ModelAdmin):
-    list_display = ['source_paper', 'source_page', 'context', 'distance', 'answer']
+    list_display = ['source_paper', 'source_page', 'context', 'distance', 'question']
 
-class ScoreCardAdmin(admin.ModelAdmin):
-    list_display = ['question', 'chatGPT', 'AI21', 'OpenAssistant', 'BioGPT']
-
+admin.site.register(Model, ModelAdmin)
 admin.site.register(Dataset, DatasetAdmin)
 admin.site.register(Papers, PapersAdmin)
 admin.site.register(Conversation, ConversationAdmin)
 admin.site.register(Question, QuestionAdmin)
 admin.site.register(Answer, AnswerAdmin)
 admin.site.register(Source, SourceAdmin)
-admin.site.register(ScoreCard, ScoreCardAdmin)

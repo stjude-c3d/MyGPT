@@ -14,13 +14,15 @@ services:
   backend:
     build: ./backend
     command: >
-      bash -c "python backend/manage.py migrate --fake sessions zero
+      bash -c "dockerd >/dev/null 2>&1 & sleep 10
+      && python backend/manage.py migrate --fake sessions zero
       && python backend/manage.py migrate --fake-initial
       && python backend/manage.py collectstatic --no-input
       && python backend/manage.py runserver 0.0.0.0:8000"
     volumes:
       - .:/code
       - ./backend/static:/static
+      - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - "8000:8000"
     environment:
@@ -89,11 +91,18 @@ services:
       - "3000:3000"
     depends_on:
       - backend
-      - llm_api
   ollama:
     build: ./ollama
+    # set environment variables
+    environment:
+      - OLLAMA_ORIGINS=http://localhost:*
     volumes:
         - ./ollama/models:/root/.ollama/models
     ports:
         - 11434:11434
     container_name: ollama
+    deploy:
+      resources:
+        limits:
+          cpus: '8.0'
+          memory: 16G

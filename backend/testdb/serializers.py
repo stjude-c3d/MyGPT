@@ -1,5 +1,10 @@
-from .models import Dataset, Papers, Question, Answer, Source, ScoreCard
+from .models import Model, Dataset, Papers, Question, Answer, Source
 from rest_framework import serializers
+
+class ModelSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Model
+        fields = ['model_name', 'model_size']
 
 class DatasetSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
@@ -25,9 +30,4 @@ class AnswerSerializer(serializers.HyperlinkedModelSerializer):
 class SourceSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Source
-        fields = ['source_paper', 'source_page', 'context', 'distance', 'answer']
-
-class ScoreCardSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = ScoreCard
-        fields = ['question', 'chatGPT', 'AI21', 'OpenAssistant', 'BioGPT']
+        fields = ['source_paper', 'source_page', 'context', 'distance', 'question']
