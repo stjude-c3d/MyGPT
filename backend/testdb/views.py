@@ -486,6 +486,21 @@ def get_conversation_json(question_text):
         conversation_json.append(qna_json)
     return conversation_json
 
+def get_confidence_score(distances):
+    best_distance = 0.4
+    worst_distance = 1.5
+
+    # calculate confidence score
+    # if maximum distance is more than 1.5 then confidence score is 0
+    if max(distances) > worst_distance:
+        confidence_score = 0
+    else:
+        mean_distance = sum(distances) / len(distances)
+        confidence_score = 1 - (mean_distance - best_distance) / (worst_distance - best_distance)
+        # trim confidence score to 2 decimal places
+        confidence_score = round(confidence_score, 2)
+    return confidence_score
+
 def get_previous_qna_json(question_text):
     question = Question.objects.filter(question_text=question_text)[0]
     answers = Answer.objects.filter(question=question)
@@ -1179,11 +1194,15 @@ def get_context(request):
     if request.method == 'POST':
         json_request = JSONParser().parse(request)
         question_text = json_request['text']
+        model = json_request['model_type']
+        model_type = Model.objects.get(model_name=model)
         dataset_name = json_request['dataset']
         new_conversation = json_request['new_conversation']
         previous_question = json_request['previous_query']
         context, titles, pages, chunks, distances = nearestDataChroma(question_text, dataset_name)
         sources = []
+        distances = [round(dist, 3) for dist in distances]
+        confidence_score = get_confidence_score(distances)
 
         # save question to database
         current_date_time = make_aware(datetime.datetime.now())
@@ -1204,6 +1223,8 @@ def get_context(request):
                 conversation = Conversation.objects.get(id=conversation_id)
             question = Question.objects.create(
                 question_text=question_text,
+                confidence_score=confidence_score,
+                model_type=model_type,
                 question_dataset=dataset,
                 conversation=conversation,
                 saved_date_time=current_date_time
@@ -1263,6 +1284,7 @@ def get_context(request):
         
         context_json = {
             'context': context,
+            'confidence_score': confidence_score,
             'sources': sources
         }
         

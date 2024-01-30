@@ -12,6 +12,7 @@
     "@testing-library/jest-dom": "^5.16.2",
     "@testing-library/react": "^12.1.4",
     "@testing-library/user-event": "^13.5.0",
+    "@types/d3": "^7.1.0",
     "@types/jest": "^27.4.1",
     "@types/node": "^16.11.26",
     "pdfjs-dist": "^3.11.174",
@@ -20,7 +21,8 @@
     "react-router-dom": "^6.3.0",
     "react-scripts": "5.0.0",
     "typescript": "^4.6.2",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "d3":"7.4.4"
   },
   "scripts": {
     "start": "react-scripts start",

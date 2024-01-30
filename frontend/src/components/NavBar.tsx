@@ -1,6 +1,5 @@
-import * as React from 'react'
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Cog6ToothIcon, ArchiveBoxIcon } from '@heroicons/react/24/outline'
 
 // -----------------------------//
 // Top Navigation with app name //
@@ -13,7 +12,8 @@ interface NavProps {
 	appLogoPath?: string,
 	appLogoLink?: any,
 	appLogoExternalLink?: any,
-	showBurgerButton?: boolean,
+	showHistoryButton?: boolean,
+	showSettingsButton?: boolean,
 	burgerImagePath?: any,
 	burgerButtonLink?:any,
 	backgroundColor?:string, 
@@ -27,32 +27,11 @@ const defaultNavProps : NavProps = {
 	appName: 'Example App',
 	appNameLink: '/',
   	showAppLogo: false,
-  	showBurgerButton: false
+  	showHistoryButton: false,
+	showSettingsButton: false,
 }
 
 export const NavBar = (props = defaultNavProps) => {
-
-	const [showLogout, setShowLogout] = useState(false)
-	const loginRequest = {
-		scopes: ['User.Read']
-	}
-
-	const handleLogin = () => {
-		props.loginInstance.loginRedirect(loginRequest).catch((e:any) => {
-			console.log(e);
-		});
-    }
-
-	const handleLogout = () => {
-		props.loginInstance.logoutRedirect({
-			postLogoutRedirectUri: '/',
-		});
-	}
-
-	const showLogoutMenu = () => {
-		if(!showLogout) setShowLogout(true)
-		else setShowLogout(false)
-	}
 
   	return(
 	<div>
@@ -81,41 +60,26 @@ export const NavBar = (props = defaultNavProps) => {
 				<Link to={props.appNameLink || '/' }>
 					<span className='text-4xl text-white p-2 m-1 font-semibold inline-block'>{props.appName}</span>
 				</Link>
-				{	
-					props.showBurgerButton && !props.showLoginButton ?
-					(<Link to={props.burgerButtonLink}>
-						<img src={props.burgerImagePath} alt='' loading='lazy' className='object-cover h-5 inline-block float-right m-5 mr-12'/>
-					</Link>) : (<></>)
-				}
-				{	
-				  props.showLoginButton && !props.showBurgerButton && props.isAuthenticated ?
-				  (<Link to='/'>
-					<button className='object-cover text-white bg-bsk_opp_darker rounded-full p-8 py-2 inline-block mr-8 ml-12 hover:drop-shadow-sm' 
-						onClick={() => showLogoutMenu()}>
-							{props.loginAccounts.length && props.loginAccounts[0].name?.split(',')[1]}
-					</button>
-				  </Link>) : 
-				  props.showLoginButton && !props.showBurgerButton && !props.isAuthenticated ?
-				  (<Link to='/'>
-					<button className='object-cover text-white bg-bsk_opp_darker rounded-full px-8 py-2 inline-block mr-8 ml-12 hover:drop-shadow-sm' 
-						onClick={() => handleLogin()}>
-							Login
-					</button>
-				  </Link>)  : (<></>)
-			}
-			{ !props.showBurgerButton && !props.showLoginButton ? <div></div> : <></>}
+				<div>
+					{	
+						props.showHistoryButton ?
+						(
+							<button className='object-cover text-white bg-bsk_opp_darker rounded-full p-2 inline-block m-2 hover:drop-shadow-sm'>
+								<ArchiveBoxIcon className='h-6 w-6'/>
+							</button>
+						) : (<></>)
+					}
+					{
+						props.showSettingsButton ?
+						(
+							<button className='object-cover text-white bg-bsk_opp_darker rounded-full p-2 inline-block ml-2 mr-8 hover:drop-shadow-sm'>
+								<Cog6ToothIcon className='h-6 w-6'/>
+							</button>
+						) : (<></>)
+					}
+				</div>
 			</div>
 		</nav>
-		{
-			showLogout ? (
-				<div className='mt-24 py-2 fixed bg-bsk_blue right-0 z-20'>
-					<button className='object-cover text-bsk_dark_blue rounded-full h-[50px] w-[100px] inline-block mr-8 ml-12 hover:bolder'
-						onClick={() => handleLogout()}>
-						Logout
-					</button>
-				</div>
-			) : null
-		}
 	</div>
   	)	
 }

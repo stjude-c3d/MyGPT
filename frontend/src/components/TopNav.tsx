@@ -9,12 +9,11 @@ function TopNav() {
         <NavBar 
             appName={'MyGPT'}
             appNameLink = {'/'}
-            showAppLogo = {false}
-            // appLogoPath = {'./BlueSky_Kinase_logo.png'}
+            showAppLogo = {true}
+            appLogoPath = {'./stjude-logo-child.png'}
             // appLogoLink = {'/'}
-            showBurgerButton = {false}
-            burgerImagePath = {'./burger-button.png'}
-            burgerButtonLink ={'/'}
+            showHistoryButton = {true}
+            showSettingsButton = {true}
             backgroundColor={'#2A4759'}
           />
       </BrowserRouter>

@@ -6,6 +6,7 @@ import { defaultLayoutPlugin, ToolbarProps, ToolbarSlot } from '@react-pdf-viewe
 import { pageNavigationPlugin } from '@react-pdf-viewer/page-navigation'
 import '@react-pdf-viewer/default-layout/lib/styles/index.css'
 import { PaperAirplaneIcon, LinkIcon } from '@heroicons/react/24/outline'
+import { schemeRdYlGn, scaleLinear } from 'd3'
 import { DropdownOptions } from './DropDownMenu'
 // import Feedback from './Feedback'
 
@@ -13,6 +14,7 @@ import { DropdownOptions } from './DropDownMenu'
 function GPTHome(){
 	const [searchTerm, setSearchTerm] = useState<any>('')
 	const [query, setQuery] = useState<any[]>([])
+	const [confidenceScores, setConfidenceScores] = useState<any[]>([])
 	const [context, setContext] = useState<any>('')
 	const [relatedQuery, setRelatedQuery] = useState<any>(false)
 	const [answer, setAnswer] = useState<any>('')
@@ -29,6 +31,10 @@ function GPTHome(){
 	const [llms, setLlms] = useState<any[]>([])
 	const [llm, setLlm] = useState<any>(llms !== undefined && llms.length ? llms[0].model_name : '')
 	const [selectedDataset, setSelectedDataset] = useState(defaultDataset)
+	const ConfidenceScoreScale = scaleLinear().domain([0, 1]).range([0, 100])
+	const confidenceColor = (score:number) => {
+		return schemeRdYlGn[9][Math.round(ConfidenceScoreScale(score)/10)]
+	}
 
 	// get llms from backend
 	useEffect(()=>{
@@ -41,7 +47,7 @@ function GPTHome(){
 		fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/llms/`, requestOptions)
 			.then(response => response.json())
 			.then(data => {
-				setLlms(data.results.map((l:any)=>l.model_name))
+				setLlms(data.results.map((l:any)=>l.model_name.split(':')[0]))
 				setLlm(data.results[0].model_name)
 			})
 	},[])
@@ -96,6 +102,7 @@ function GPTHome(){
 			setTimeout: 10000,
 			body: JSON.stringify({ 
 				text: query[query.length-1] && query[query.length-1].question ? query[query.length-1].question.replaceAll('"','\\"') : '',
+				model_type: llm,
 				dataset: selectedDataset !== defaultDataset ? selectedDataset : defaultDataset,
 				new_conversation: query.length === 1 ? true : false, 
 				related_query: relatedQuery,
@@ -109,16 +116,22 @@ function GPTHome(){
 		let llm_endpoint = 'get_context'
 			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/${llm_endpoint}/?format=json`, requestOptions)
 				.then(response => response.json())
-				.then(data => {
-					setContext(data.context)
-					setSourcePapers((prevSourcePapers:any)=>[...prevSourcePapers, data.sources.map((s:any)=>s.paper)])
-					setSourcePages((prevSourcePages:any)=>[...prevSourcePages, data.sources.map((s:any)=>s.page)])
-					setSelectedPage(data.sources[0].page)
-					const paperIndex:number = papers.findIndex((p:any)=>p.paper_title === data.sources[0].paper)
-					setselectedPaperIdx(paperIndex)
-					setPapers([])
-					setFileAttachmentType('highlited_attachment')
-					setAnswerReceived(false)
+				.then((data:any) => {
+					if (data.confidence_score === 0){
+						setConfidenceScores((prevConfidenceScores:any)=>[...prevConfidenceScores, data.confidence_score])
+						setContext('None')
+					}else{
+						setConfidenceScores((prevConfidenceScores:any)=>[...prevConfidenceScores, data.confidence_score])
+						setContext(data.context)
+						setSourcePapers((prevSourcePapers:any)=>[...prevSourcePapers, data.sources.map((s:any)=>s.paper)])
+						setSourcePages((prevSourcePages:any)=>[...prevSourcePages, data.sources.map((s:any)=>s.page)])
+						setSelectedPage(data.sources[0].page)
+						const paperIndex:number = papers.findIndex((p:any)=>p.paper_title === data.sources[0].paper)
+						setselectedPaperIdx(paperIndex)
+						setPapers([])
+						setFileAttachmentType('highlited_attachment')
+						setAnswerReceived(false)
+					}
 				})
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -129,7 +142,7 @@ function GPTHome(){
 		const question =  query[query.length-1] && query[query.length-1].question ? query[query.length-1].question.replaceAll('"','\\"') : ''
 		const body = JSON.stringify({
 			'model': llm,
-			'prompt': context + '\n Based on above context answer this question: ' + question
+			'prompt': context.length && context !== 'None' ? context + '\n Based on above context answer this question: ' + question : question,
 		})
 		if(context.length > 1 && question.length > 1){
 			// fetch using async await
@@ -271,9 +284,8 @@ function GPTHome(){
 						optionsList={llms !== undefined && llms.length ? llms : []}
 						defaultOption={llm}
 						dropDownCallback={(option:string)=>{
-							setLlm(option)
-						}
-						}
+							setLlm(llms.find((l:any)=>l.split(':')[0] === option))
+						}}
 					/>
 					<button className={'px-2 py-1 mx-4 my-auto bg-white text-sm hover:bg-bsk_dark_blue text-bsk_dark_blue font-semibold hover:text-white hover:border-transparent rounded-full shadow-md hover:shadow-lg outline-none focus:outline-none' + (answers.length && answers[answers.length-1].response ? '':' opacity-50 cursor-not-allowed')} 
 						disabled={answers.length && answers[answers.length-1].response ? false : true}
@@ -356,7 +368,20 @@ function GPTHome(){
 							{	answers[query.length-i-1] && answers[query.length-i-1].response ?
 								<div className='py-4 px-6 m-4 bg-panel1 rounded-lg shadow-md box2 llm-chat'>
 								<div className='flex flex-row justify-between font-bold'>
-									<div className='text-white text-sm py-2'>{answers[query.length-i-1].source}</div>
+									<div className='text-white text-sm py-2'>{answers[query.length-i-1].source.split(':')[0]}</div>
+									<div className='text-white text-xs py-2'>
+									{
+											confidenceScores[query.length-i-1] !== undefined ? 
+											(
+												<div className='text-white rounded-full text-xs py-1'>
+													Relevance 
+													<span style={{ backgroundColor: confidenceColor(confidenceScores[query.length-i-1])}} className= 'text-nav py-1 px-2 m-1 rounded-full'>
+														{confidenceScores[query.length-i-1]}
+													</span>
+												</div>
+											) : ''
+										}
+									</div>
 								</div>
 								<div className='text-white whitespace-pre-wrap'>{answers[query.length-i-1].response}</div>
 								{/* <Feedback
@@ -384,7 +409,7 @@ function GPTHome(){
 									}}
 								/> */}
 								{
-									sourcePapers.length && sourcePages.length && sourcePapers[query.length-i-1] && sourcePages[query.length-i-1] ?
+									confidenceScores[query.length-i-1] > 0 && sourcePapers.length && sourcePages.length && sourcePapers[query.length-i-1] && sourcePages[query.length-i-1] ?
 									<>
 										<div className='text-white text-sm font-bold pt-4'>
 											{sourcePapers[query.length-i-1].length > 1 ? 'Sources' : 'Source'}
@@ -412,31 +437,42 @@ function GPTHome(){
 								</div> 
 								: (
 								<div className='py-4 px-6 m-4 bg-panel1 rounded-lg shadow-md box2 llm-chat'>
-									<div className='flex flex-row justify-between font-bold'>
-										<div className='text-white text-sm py-2'>{llm}</div>
+									<div className='flex flex-row justify-between font-bold mt-2 mb-4'>
+										<div className='text-white text-sm py-1'>{llm.split(':')[0]}</div>
+										{
+											confidenceScores[query.length-1] !== undefined ? 
+											(
+												<div className='text-white rounded-full text-xs py-1'>
+													Relevance 
+													<span style={{ backgroundColor: confidenceColor(confidenceScores[query.length-1])}} className= 'text-nav py-1 px-2 m-1 rounded-full'>
+														{confidenceScores[query.length-1]}
+													</span>
+												</div>
+											) : ''
+										}
 									</div>
 									<div className='text-white whitespace-pre-wrap'>{answer.length ? answer: 'Generating answer...'}</div>
 									{
-									sourcePapers.length && sourcePages.length && sourcePapers[query.length-i-1] && sourcePages[query.length-i-1] ?
+									confidenceScores[query.length-1] > 0 && sourcePapers.length && sourcePages.length && sourcePapers[query.length-1] && sourcePages[query.length-1] ?
 									<>
 										<div className='text-white text-sm font-bold pt-4'>
-											{sourcePapers[query.length-i-1].length > 1 ? 'Sources' : 'Source'}
+											{sourcePapers[query.length-1].length > 1 ? 'Sources' : 'Source'}
 										</div>
-										{sourcePapers[query.length-i-1].map((paper:any, index:number)=>(
+										{sourcePapers[query.length-1].map((paper:any, index:number)=>(
 											<div 
 												className={ 
-													selectedPaperIdx === (papers.findIndex((p:any)=>p.paper_title===paper)) && selectedPage === sourcePages[query.length-i-1][index] ? 
+													selectedPaperIdx === (papers.findIndex((p:any)=>p.paper_title===paper)) && selectedPage === sourcePages[query.length-1][index] ? 
 													'bg-slate-500':''} 
 												key={index} onClick={
 												()=>{
 													// setSourceIdx(index)
 													setselectedPaperIdx(papers.findIndex((p:any)=>p.paper_title===paper))
-													setSelectedPage(sourcePages[query.length-i-1][index])
+													setSelectedPage(sourcePages[query.length-1][index])
 													setFileAttachmentType('highlited_attachment')
 												}}
 											>
 												<div className='border border-gray-400'></div>
-												<div className='text-white text-sm p-2 font-normal italic'>{'Page ' + (sourcePages[query.length-i-1][index]) + ' of "' + paper + '"'}</div>
+												<div className='text-white text-sm p-2 font-normal italic'>{'Page ' + (sourcePages[query.length-1][index]) + ' of "' + paper + '"'}</div>
 											</div>
 										))}
 									</>
