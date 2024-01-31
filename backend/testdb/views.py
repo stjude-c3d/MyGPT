@@ -1194,7 +1194,7 @@ def get_context(request):
     if request.method == 'POST':
         json_request = JSONParser().parse(request)
         question_text = json_request['text']
-        model = json_request['model_type']
+        model = json_request['model_type'] + ':latest'
         model_type = Model.objects.get(model_name=model)
         dataset_name = json_request['dataset']
         new_conversation = json_request['new_conversation']
@@ -1207,20 +1207,23 @@ def get_context(request):
         # save question to database
         current_date_time = make_aware(datetime.datetime.now())
         dataset = Dataset.objects.get(dataset_name=dataset_name)
-        quesiton_exist = Question.objects.filter(question_text=question_text).exists()
+        quesiton_exist = Question.objects.filter(question_text=question_text).filter(model_type=model_type).exists()
         if quesiton_exist:
-            question = Question.objects.get(question_text=question_text)
+            question = Question.objects.get(question_text=question_text, model_type=model_type)
             conversation_id = question.conversation.id
             conversation = Conversation.objects.get(id=conversation_id)
         else:
             if (new_conversation):
                 conversation = Conversation.objects.create(
+                    question_answer_count=1,
                     conversation_dataset=dataset,
                     start_date_time=current_date_time
                 )
             else:
-                conversation_id = Question.objects.get(question_text=previous_question).conversation.id
+                conversation_id = Question.objects.get(question_text=previous_question, model_type=model_type).conversation.id
                 conversation = Conversation.objects.get(id=conversation_id)
+                conversation.question_answer_count += 1
+                conversation.save()
             question = Question.objects.create(
                 question_text=question_text,
                 confidence_score=confidence_score,
@@ -1296,9 +1299,9 @@ def save_answer(request):
         json_request = JSONParser().parse(request)
         question_text = json_request['question_text']
         answer_text = json_request['answer_text']
-        model = json_request['model_type']
+        model = json_request['model_type'] + ':latest'
         model_type = Model.objects.get(model_name=model)
-        question = Question.objects.get(question_text=question_text)
+        question = Question.objects.get(question_text=question_text, model_type=model_type)
         Answer.objects.create(
             answer_text=answer_text, 
             model_type=model_type, 

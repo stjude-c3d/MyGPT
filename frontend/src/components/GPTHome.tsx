@@ -6,7 +6,7 @@ import { defaultLayoutPlugin, ToolbarProps, ToolbarSlot } from '@react-pdf-viewe
 import { pageNavigationPlugin } from '@react-pdf-viewer/page-navigation'
 import '@react-pdf-viewer/default-layout/lib/styles/index.css'
 import { PaperAirplaneIcon, LinkIcon } from '@heroicons/react/24/outline'
-import { schemeRdYlGn, scaleLinear } from 'd3'
+import { scaleSequential, interpolateRdYlGn } from 'd3'
 import { DropdownOptions } from './DropDownMenu'
 // import Feedback from './Feedback'
 
@@ -31,10 +31,9 @@ function GPTHome(){
 	const [llms, setLlms] = useState<any[]>([])
 	const [llm, setLlm] = useState<any>(llms !== undefined && llms.length ? llms[0].model_name : '')
 	const [selectedDataset, setSelectedDataset] = useState(defaultDataset)
-	const ConfidenceScoreScale = scaleLinear().domain([0, 1]).range([0, 100])
-	const confidenceColor = (score:number) => {
-		return schemeRdYlGn[9][Math.round(ConfidenceScoreScale(score)/10)]
-	}
+	const ConfidenceScoreColor = scaleSequential()
+		.domain([0, 1])
+		.interpolator(interpolateRdYlGn)
 
 	// get llms from backend
 	useEffect(()=>{
@@ -48,7 +47,7 @@ function GPTHome(){
 			.then(response => response.json())
 			.then(data => {
 				setLlms(data.results.map((l:any)=>l.model_name.split(':')[0]))
-				setLlm(data.results[0].model_name)
+				setLlm(data.results[0].model_name.split(':')[0])
 			})
 	},[])
 
@@ -110,39 +109,43 @@ function GPTHome(){
 			})
 		}
 		if(query.length && query.length !== answers.length){
-		// setSelectedPage(0)
-		// setselectedPaperIdx(0)
-		setRelatedQuery(false)
-		let llm_endpoint = 'get_context'
-			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/${llm_endpoint}/?format=json`, requestOptions)
-				.then(response => response.json())
-				.then((data:any) => {
-					if (data.confidence_score === 0){
-						setConfidenceScores((prevConfidenceScores:any)=>[...prevConfidenceScores, data.confidence_score])
-						setContext('None')
-					}else{
-						setConfidenceScores((prevConfidenceScores:any)=>[...prevConfidenceScores, data.confidence_score])
-						setContext(data.context)
-						setSourcePapers((prevSourcePapers:any)=>[...prevSourcePapers, data.sources.map((s:any)=>s.paper)])
-						setSourcePages((prevSourcePages:any)=>[...prevSourcePages, data.sources.map((s:any)=>s.page)])
-						setSelectedPage(data.sources[0].page)
-						const paperIndex:number = papers.findIndex((p:any)=>p.paper_title === data.sources[0].paper)
-						setselectedPaperIdx(paperIndex)
-						setPapers([])
-						setFileAttachmentType('highlited_attachment')
+			// setSelectedPage(0)
+			// setselectedPaperIdx(0)
+			setRelatedQuery(false)
+			let llm_endpoint = 'get_context'
+				fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/${llm_endpoint}/?format=json`, requestOptions)
+					.then(response => response.json())
+					.then((data:any) => {
 						setAnswerReceived(false)
-					}
-				})
+						if (data.confidence_score === 0){
+							setConfidenceScores((prevConfidenceScores:any)=>[...prevConfidenceScores, data.confidence_score])
+							setContext('None')
+							setSourcePapers((prevSourcePapers:any)=>[...prevSourcePapers, []])
+							setSourcePages((prevSourcePages:any)=>[...prevSourcePages, []])
+						}else{
+							setConfidenceScores((prevConfidenceScores:any)=>[...prevConfidenceScores, data.confidence_score])
+							setContext(data.context)
+							setSourcePapers((prevSourcePapers:any)=>[...prevSourcePapers, data.sources.map((s:any)=>s.paper)])
+							setSourcePages((prevSourcePages:any)=>[...prevSourcePages, data.sources.map((s:any)=>s.page)])
+							setSelectedPage(data.sources[0].page)
+							const paperIndex:number = papers.findIndex((p:any)=>p.paper_title === data.sources[0].paper)
+							setselectedPaperIdx(paperIndex)
+							setPapers([])
+							setFileAttachmentType('highlited_attachment')
+							setAnswerReceived(false)
+						}
+					})
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[query])
+	console.log(query, answers)
 
 	// get answer from the ollama
 	useEffect(()=>{
 		const question =  query[query.length-1] && query[query.length-1].question ? query[query.length-1].question.replaceAll('"','\\"') : ''
 		const body = JSON.stringify({
 			'model': llm,
-			'prompt': context.length && context !== 'None' ? context + '\n Based on above context answer this question: ' + question : question,
+			'prompt': context.length && context !== 'None' ? context + '\n Based on above context answer this question in less than 100 words: ' + question : question,
 		})
 		if(context.length > 1 && question.length > 1){
 			// fetch using async await
@@ -171,8 +174,9 @@ function GPTHome(){
 	},[query, context, llm])
 
 	useEffect(()=>{
-		if (answerReceived)
+		if (answerReceived && answer.length !== 0){
 			setAnswers((prevAnswers:any)=>[...prevAnswers, {'response': answer, 'source': llm}])
+		}
 	},[answer, llm, answerReceived])
 
 	// save asnwer to backend database
@@ -194,6 +198,8 @@ function GPTHome(){
 				.then(response => response.json())
 				.then(data => {
 					console.log(data)
+					setContext('')
+					setAnswer('')
 				})
 		}
 	},[answers, query])
@@ -375,7 +381,7 @@ function GPTHome(){
 											(
 												<div className='text-white rounded-full text-xs py-1'>
 													Relevance 
-													<span style={{ backgroundColor: confidenceColor(confidenceScores[query.length-i-1])}} className= 'text-nav py-1 px-2 m-1 rounded-full'>
+													<span style={{ backgroundColor: ConfidenceScoreColor(confidenceScores[query.length-i-1])}} className= 'text-nav py-1 px-2 m-1 rounded-full'>
 														{confidenceScores[query.length-i-1]}
 													</span>
 												</div>
@@ -444,7 +450,7 @@ function GPTHome(){
 											(
 												<div className='text-white rounded-full text-xs py-1'>
 													Relevance 
-													<span style={{ backgroundColor: confidenceColor(confidenceScores[query.length-1])}} className= 'text-nav py-1 px-2 m-1 rounded-full'>
+													<span style={{ backgroundColor: ConfidenceScoreColor(confidenceScores[query.length-1])}} className= 'text-nav py-1 px-2 m-1 rounded-full'>
 														{confidenceScores[query.length-1]}
 													</span>
 												</div>
