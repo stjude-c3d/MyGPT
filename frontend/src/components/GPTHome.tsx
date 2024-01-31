@@ -138,15 +138,19 @@ function GPTHome(){
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[query])
-	console.log(query, answers)
 
 	// get answer from the ollama
 	useEffect(()=>{
 		const question =  query[query.length-1] && query[query.length-1].question ? query[query.length-1].question.replaceAll('"','\\"') : ''
+		const systemPrompt = 'Use following information to answer the question in less than 100 words, try not to use anything else:' + context
+		
 		const body = JSON.stringify({
 			'model': llm,
-			'prompt': context.length && context !== 'None' ? context + '\n Based on above context answer this question in less than 100 words: ' + question : question,
+			'prompt': question,
+			'system': systemPrompt,
+			'context': []
 		})
+		
 		if(context.length > 1 && question.length > 1){
 			// fetch using async await
 			const postData = async () => {
@@ -302,7 +306,7 @@ function GPTHome(){
 							}
 						}>
 							<p className='inline-block mx-2'>
-								Clear Chat
+								Start a new Chat
 							</p>
 					</button>
 				</div>
