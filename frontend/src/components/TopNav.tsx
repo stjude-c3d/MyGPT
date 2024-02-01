@@ -1,7 +1,9 @@
 import { BrowserRouter } from 'react-router-dom'
 import { NavBar } from './NavBar'
 
-function TopNav() {
+function TopNav(props:{
+  setShowSettings:any
+}) {
 
   return (
     <>
@@ -14,6 +16,7 @@ function TopNav() {
             // appLogoLink = {'/'}
             showHistoryButton = {true}
             showSettingsButton = {true}
+            settingButtonCallback = {() => {props.setShowSettings(true)}}
             backgroundColor={'#2A4759'}
           />
       </BrowserRouter>

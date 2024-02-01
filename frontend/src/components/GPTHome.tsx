@@ -5,13 +5,16 @@ import {
 import { defaultLayoutPlugin, ToolbarProps, ToolbarSlot } from '@react-pdf-viewer/default-layout'
 import { pageNavigationPlugin } from '@react-pdf-viewer/page-navigation'
 import '@react-pdf-viewer/default-layout/lib/styles/index.css'
-import { PaperAirplaneIcon, LinkIcon } from '@heroicons/react/24/outline'
+import { PaperAirplaneIcon, LinkIcon, PencilIcon } from '@heroicons/react/24/outline'
 import { scaleSequential, interpolateRdYlGn } from 'd3'
 import { DropdownOptions } from './DropDownMenu'
 // import Feedback from './Feedback'
 
 
-function GPTHome(){
+function GPTHome(props:{
+	currentSettings:any,
+	settingsCallback:any
+}){
 	const [searchTerm, setSearchTerm] = useState<any>('')
 	const [query, setQuery] = useState<any[]>([])
 	const [confidenceScores, setConfidenceScores] = useState<any[]>([])
@@ -26,11 +29,8 @@ function GPTHome(){
 	const [selectedPaperIdx, setselectedPaperIdx] = useState(0)
 	const [selectedPage, setSelectedPage] = useState(0)
 	const [fileAttachmentType, setFileAttachmentType] = useState('paper_attachment')
-	const [datasets, setDatasets] = useState<string[]>([])
-	const defaultDataset = 'GPCR'
 	const [llms, setLlms] = useState<any[]>([])
 	const [llm, setLlm] = useState<any>(llms !== undefined && llms.length ? llms[0].model_name : '')
-	const [selectedDataset, setSelectedDataset] = useState(defaultDataset)
 	const ConfidenceScoreColor = scaleSequential()
 		.domain([0, 1])
 		.interpolator(interpolateRdYlGn)
@@ -58,34 +58,15 @@ function GPTHome(){
 				'Content-Type': 'application/json'
 			}
 		}
-		if(!papers.length)
-			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/get_papers/?dataset=${selectedDataset !== defaultDataset ? selectedDataset : defaultDataset }&format=json`, requestOptions)
+		if(!papers.length || props.currentSettings.fetchPapers === true){
+			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/get_papers/?dataset=${props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset }&format=json`, requestOptions)
 				.then(response => response.json())
 				.then(data => setPapers(data))
-	},[papers, query, defaultDataset, selectedDataset])
-
-	useEffect(()=>{
-		const requestOptions = {
-			method: 'GET',
-			headers: { 
-				'Content-Type': 'application/json'
-			}
+			
+			props.settingsCallback({...props.currentSettings, fetchPapers: false})
 		}
-		if(!datasets.length)
-			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/datasets/`, requestOptions)
-				.then(response => response.json())
-				.then(data => {
-					const dataset_names = data.results.map((d:any)=>d.dataset_name)
-					if (dataset_names && dataset_names.length && dataset_names.includes(defaultDataset)){
-						dataset_names.splice(dataset_names.indexOf(defaultDataset), 1)
-						dataset_names.unshift(defaultDataset)
-					} else {
-						dataset_names.unshift(defaultDataset)
-					}
-					setDatasets(dataset_names)
-				})
-	},[datasets.length])
-
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	},[papers, query, props.currentSettings.defaultDataset, props.currentSettings.selectedDataset, props.currentSettings.fetchPapers])
 	
 	useEffect(()=>{
 		// setAnswers([])
@@ -102,7 +83,7 @@ function GPTHome(){
 			body: JSON.stringify({ 
 				text: query[query.length-1] && query[query.length-1].question ? query[query.length-1].question.replaceAll('"','\\"') : '',
 				model_type: llm,
-				dataset: selectedDataset !== defaultDataset ? selectedDataset : defaultDataset,
+				dataset: props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset,
 				new_conversation: query.length === 1 ? true : false, 
 				related_query: relatedQuery,
 				previous_query: query.length > 1 ? query[query.length-2].question.replaceAll('"','\\"') : '',
@@ -502,22 +483,19 @@ function GPTHome(){
 				
 				<div className='p-2 text-sm border-slate-400 border-y'>
 					<div className='text-white inline-block px-2'> Current library </div>
-					<div className='inline-block'>
-						<DropdownOptions
-							optionsList={datasets}
-							defaultOption={datasets[0]}
-							dropDownCallback={(option:string)=>{
-								setPapers([])
-								setSelectedDataset(option)
-							}}
-						/>
+					<div className='inline-block px-2 bg-panel3 rounded-md cursor-default'>{props.currentSettings.selectedDataset}</div>
+					<div className='mx-2 inline-block px-2 bg-white rounded-md cursor-pointer hover:bg-slate-200' 
+						onClick={()=>{
+							props.settingsCallback({...props.currentSettings, showSettings: true})
+						}}>
+						<PencilIcon className='w-4 h-4 inline-block'/>
 					</div>
 				</div>
 				<div className='mb-4 divide-y'>
 					{/* list all the papers */}
 					{
 						papers.map((p:any, index:number)=>
-							<div key={index} className={'p-2' + (selectedPaperIdx === index ? ' bg-nav': ' bg-panel1')}>
+							<div key={index} className={'p-2 ' + (selectedPaperIdx === index ? ' bg-nav cursor-default': ' bg-panel1 cursor-pointer')}>
 								<div className='text-white text-sm '
 									onClick={()=> {
 										setselectedPaperIdx(index)

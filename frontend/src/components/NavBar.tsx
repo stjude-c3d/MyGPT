@@ -14,13 +14,10 @@ interface NavProps {
 	appLogoExternalLink?: any,
 	showHistoryButton?: boolean,
 	showSettingsButton?: boolean,
+	settingButtonCallback?: any,
 	burgerImagePath?: any,
 	burgerButtonLink?:any,
 	backgroundColor?:string, 
-	showLoginButton?: boolean,
-	loginInstance?: any,
-	loginAccounts?: any,
-	isAuthenticated?: boolean,
 }
 
 const defaultNavProps : NavProps = {
@@ -72,7 +69,9 @@ export const NavBar = (props = defaultNavProps) => {
 					{
 						props.showSettingsButton ?
 						(
-							<button className='object-cover text-white bg-bsk_opp_darker rounded-full p-2 inline-block ml-2 mr-8 hover:drop-shadow-sm'>
+							<button className='object-cover text-white bg-bsk_opp_darker rounded-full p-2 inline-block ml-2 mr-8 hover:drop-shadow-sm'
+								onClick={props.settingButtonCallback}
+							>
 								<Cog6ToothIcon className='h-6 w-6'/>
 							</button>
 						) : (<></>)
