@@ -61,7 +61,7 @@ export const NavBar = (props = defaultNavProps) => {
 					{	
 						props.showHistoryButton ?
 						(
-							<button className='object-cover text-white bg-bsk_opp_darker rounded-full p-2 inline-block m-2 hover:drop-shadow-sm'>
+							<button className='object-cover text-white bg-bsk_opp_darker rounded-full p-2 inline-block m-2 hover:drop-shadow-sm transition ease-in-out hover:bg-panel1'>
 								<ArchiveBoxIcon className='h-6 w-6'/>
 							</button>
 						) : (<></>)
@@ -69,7 +69,7 @@ export const NavBar = (props = defaultNavProps) => {
 					{
 						props.showSettingsButton ?
 						(
-							<button className='object-cover text-white bg-bsk_opp_darker rounded-full p-2 inline-block ml-2 mr-8 hover:drop-shadow-sm'
+							<button className='object-cover text-white bg-bsk_opp_darker rounded-full p-2 inline-block ml-2 mr-8 hover:drop-shadow-sm transition ease-in-out hover:bg-panel1'
 								onClick={props.settingButtonCallback}
 							>
 								<Cog6ToothIcon className='h-6 w-6'/>

@@ -7,12 +7,15 @@ const defaultSettings = {
 		{key:'sentence_transformers', text:'Sentence Transformers'}
 ],
 	selectedPanel: 'datasets',
-    llm: 'llama2',
+	llms: ['llama2'],
+    defaultLlm: 'llama2',
+	selectedLlm: 'llama2',
     datasets: ['GPCR'],
 	defaultDataset: 'GPCR',
     selectedDataset: 'GPCR',
     sentence_transformer: 'stsb-roberta-large',
-    system_prompt: 'Given the following abstract, generate a summary of the paper.',
+	sentence_transformers: ['stsb-roberta-large', 'stsb-roberta-base', 'stsb-bert-large', 'stsb-bert-base'],
+    system_prompt: 'Use following information to answer the question in less than 100 words, try not to use anything else:',
 	fetchPapers: false,
   }
 

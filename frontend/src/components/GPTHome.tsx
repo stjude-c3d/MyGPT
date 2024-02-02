@@ -5,9 +5,8 @@ import {
 import { defaultLayoutPlugin, ToolbarProps, ToolbarSlot } from '@react-pdf-viewer/default-layout'
 import { pageNavigationPlugin } from '@react-pdf-viewer/page-navigation'
 import '@react-pdf-viewer/default-layout/lib/styles/index.css'
-import { PaperAirplaneIcon, LinkIcon, PencilIcon } from '@heroicons/react/24/outline'
+import { PaperAirplaneIcon, LinkIcon, Cog6ToothIcon } from '@heroicons/react/24/outline'
 import { scaleSequential, interpolateRdYlGn } from 'd3'
-import { DropdownOptions } from './DropDownMenu'
 // import Feedback from './Feedback'
 
 
@@ -29,27 +28,9 @@ function GPTHome(props:{
 	const [selectedPaperIdx, setselectedPaperIdx] = useState(0)
 	const [selectedPage, setSelectedPage] = useState(0)
 	const [fileAttachmentType, setFileAttachmentType] = useState('paper_attachment')
-	const [llms, setLlms] = useState<any[]>([])
-	const [llm, setLlm] = useState<any>(llms !== undefined && llms.length ? llms[0].model_name : '')
 	const ConfidenceScoreColor = scaleSequential()
 		.domain([0, 1])
 		.interpolator(interpolateRdYlGn)
-
-	// get llms from backend
-	useEffect(()=>{
-		const requestOptions = {
-			method: 'GET',
-			headers: { 
-				'Content-Type': 'application/json'
-			}
-		}
-		fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/llms/`, requestOptions)
-			.then(response => response.json())
-			.then(data => {
-				setLlms(data.results.map((l:any)=>l.model_name.split(':')[0]))
-				setLlm(data.results[0].model_name.split(':')[0])
-			})
-	},[])
 
 	useEffect(()=>{
 		const requestOptions = {
@@ -82,7 +63,7 @@ function GPTHome(props:{
 			setTimeout: 10000,
 			body: JSON.stringify({ 
 				text: query[query.length-1] && query[query.length-1].question ? query[query.length-1].question.replaceAll('"','\\"') : '',
-				model_type: llm,
+				model_type: props.currentSettings.selectedLlm,
 				dataset: props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset,
 				new_conversation: query.length === 1 ? true : false, 
 				related_query: relatedQuery,
@@ -126,7 +107,7 @@ function GPTHome(props:{
 		const systemPrompt = 'Use following information to answer the question in less than 100 words, try not to use anything else:' + context
 		
 		const body = JSON.stringify({
-			'model': llm,
+			'model': props.currentSettings.selectedLlm,
 			'prompt': question,
 			'system': systemPrompt,
 			'context': []
@@ -156,13 +137,13 @@ function GPTHome(props:{
 			}
 			postData()
 		}
-	},[query, context, llm])
+	},[query, context, props.currentSettings.selectedLlm])
 
 	useEffect(()=>{
 		if (answerReceived && answer.length !== 0){
-			setAnswers((prevAnswers:any)=>[...prevAnswers, {'response': answer, 'source': llm}])
+			setAnswers((prevAnswers:any)=>[...prevAnswers, {'response': answer, 'source': props.currentSettings.selectedLlm}])
 		}
-	},[answer, llm, answerReceived])
+	},[answer, props.currentSettings.selectedLlm, answerReceived])
 
 	// save asnwer to backend database
 	useEffect(()=>{
@@ -269,27 +250,32 @@ function GPTHome(props:{
 			<div className='col-span-3 mt-24 mr-6 p-6 max-w-4xl bg-panel3 rounded-lg max-h-[92vh] overflow-y-auto'>
 				<div className='text-2xl font-bold text-nav'>Ask a Question</div>
 				<div className='text-sm text-nav my-2'>Ask a question about a paper or a topic from your publication library. We will try to answer it using the GPT models.</div>
-				<div className='p-1 mx-4 flex'>
+				{ answers.length && answers[answers.length-1].response ?
+					<div className='p-1 mx-4 flex justify-center'>
+						<button className={'px-2 py-1 mx-4 my-auto bg-white text-sm hover:bg-bsk_dark_blue text-bsk_dark_blue font-semibold hover:text-white hover:border-transparent rounded-full shadow-md hover:shadow-lg outline-none focus:outline-none' + (answers.length && answers[answers.length-1].response ? '':' opacity-50 cursor-not-allowed')} 
+							disabled={answers.length && answers[answers.length-1].response ? false : true}
+							onClick={
+								()=>{
+									setQuery([])
+									setAnswers([])
+								}
+							}>
+								<p className='inline-block mx-2'>
+									Start a new Chat
+								</p>
+						</button>
+					</div> : <></>
+				}
+				<div className='mt-4 p-1 mx-4 flex'>
 					<div className='text-sm text-nav my-auto mx-1'>GPT model</div>
-					<DropdownOptions
-						optionsList={llms !== undefined && llms.length ? llms : []}
-						defaultOption={llm}
-						dropDownCallback={(option:string)=>{
-							setLlm(llms.find((l:any)=>l.split(':')[0] === option))
-						}}
-					/>
-					<button className={'px-2 py-1 mx-4 my-auto bg-white text-sm hover:bg-bsk_dark_blue text-bsk_dark_blue font-semibold hover:text-white hover:border-transparent rounded-full shadow-md hover:shadow-lg outline-none focus:outline-none' + (answers.length && answers[answers.length-1].response ? '':' opacity-50 cursor-not-allowed')} 
-						disabled={answers.length && answers[answers.length-1].response ? false : true}
-						onClick={
-							()=>{
-								setQuery([])
-								setAnswers([])
-							}
-						}>
-							<p className='inline-block mx-2'>
-								Start a new Chat
-							</p>
-					</button>
+					<div className='inline-block px-2 bg-panel1 text-white rounded-md cursor-default'>{props.currentSettings.selectedLlm}</div>
+					<div className='pb-1 mx-2 inline-block px-2 bg-white rounded-md cursor-pointer hover:bg-slate-200' 
+						onClick={()=>{
+							props.settingsCallback({...props.currentSettings, selectedPanel: 'llms', showSettings: true})
+						}}>
+						<Cog6ToothIcon className='w-4 h-4 inline-block'/>
+					</div>
+					
 				</div>
 				<div className='pt-4 mb-2 mx-4 flex'>
 					<textarea
@@ -429,7 +415,7 @@ function GPTHome(props:{
 								: (
 								<div className='py-4 px-6 m-4 bg-panel1 rounded-lg shadow-md box2 llm-chat'>
 									<div className='flex flex-row justify-between font-bold mt-2 mb-4'>
-										<div className='text-white text-sm py-1'>{llm.split(':')[0]}</div>
+										<div className='text-white text-sm py-1'>{props.currentSettings.selectedLlm}</div>
 										{
 											confidenceScores[query.length-1] !== undefined ? 
 											(
@@ -483,12 +469,12 @@ function GPTHome(props:{
 				
 				<div className='p-2 text-sm border-slate-400 border-y'>
 					<div className='text-white inline-block px-2'> Current library </div>
-					<div className='inline-block px-2 bg-panel3 rounded-md cursor-default'>{props.currentSettings.selectedDataset}</div>
-					<div className='mx-2 inline-block px-2 bg-white rounded-md cursor-pointer hover:bg-slate-200' 
+					<div className='inline-block px-2 py-1 bg-panel3 rounded-md cursor-default'>{props.currentSettings.selectedDataset}</div>
+					<div className='mx-2 inline-block px-2 py-1 bg-white rounded-md cursor-pointer hover:bg-slate-200' 
 						onClick={()=>{
-							props.settingsCallback({...props.currentSettings, showSettings: true})
+							props.settingsCallback({...props.currentSettings, selectedPanel: 'datasets', showSettings: true})
 						}}>
-						<PencilIcon className='w-4 h-4 inline-block'/>
+						<Cog6ToothIcon className='w-4 h-4 inline-block'/>
 					</div>
 				</div>
 				<div className='mb-4 divide-y'>

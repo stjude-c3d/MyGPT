@@ -46,6 +46,9 @@ class Conversation(models.Model):
 	start_date_time = models.DateTimeField(default=timezone.now, null=True)
 	last_date_time = models.DateTimeField(default=timezone.now, null=True)
 
+	def __str__(self):
+		return str(self.id)
+
 class Question(models.Model):
 	question_text = models.TextField(default='-')
 	confidence_score = models.FloatField(default=0)
