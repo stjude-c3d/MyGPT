@@ -44,7 +44,7 @@ function GPTHome(props:{
 				.then(response => response.json())
 				.then(data => setPapers(data))
 			
-			props.settingsCallback({...props.currentSettings, fetchPapers: false})
+			props.settingsCallback({...props.currentSettings, showSettings: false, fetchPapers: false})
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[papers, query, props.currentSettings.defaultDataset, props.currentSettings.selectedDataset, props.currentSettings.fetchPapers])

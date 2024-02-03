@@ -75,16 +75,18 @@ def getPDFContent(path):
     return (context, len(pdfReader.pages))
 
 # Collects chunks of text from PDFs stored in a Zotero collection.
-def get_zotero_chunks(group_id, collection_id):
+def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key):
     # example gorup id and collection id
     # group_id = 4982570
     # collection_id = 'YTPMLXYY'
     types = ['journalArticle', 'preprint']
-    library_type = 'group'
-    api_key = os.environ.get('ZOTERO_API_KEY')
+    # library_type =  'group'
+    api_key = users_api_key
+    if not api_key:
+        api_key = os.environ.get('ZOTERO_API_KEY')
 
     # Initialize the Zotero API client
-    zot = zotero.Zotero(group_id, library_type, api_key)
+    zot = zotero.Zotero(library_id, library_id_type, api_key)
     # Get the 'Llama' collection id
     dataset_name = zot.all_collections(collection_id)[0]['data']['name']
     datasets = Dataset.objects.filter(dataset_name=dataset_name)
@@ -173,7 +175,7 @@ def get_zotero_chunks(group_id, collection_id):
     return dataset_name
 
 def add_dataset_from_upload(request):
-    dataset_name = request.POST.get('dataset_name')
+    dataset_name = request.POST.get('dataset_name').replace(' ', '_')
     paper_titles = request.POST.getlist('paper_title')
     paper_attachments = request.FILES.getlist('paper_attachment')
 
@@ -1321,3 +1323,55 @@ def feedback_for_answers(request):
         answer.user_comment = user_comment
         answer.save()
         return Response({'saved':True}, content_type="application/json")
+    
+@api_view(['GET'])
+def delete_dataset(request):
+    if request.method == 'GET':
+        dataset_name = request.GET.get('dataset')
+        dataset = Dataset.objects.get(dataset_name=dataset_name)
+        papers = Papers.objects.filter(paper_dataset=dataset)
+        for paper in papers:
+            paper.delete()
+        dataset.delete()
+        return Response({'deleted':True}, content_type="application/json")
+    
+@api_view(['POST'])
+def add_zotero_dataset(request):
+    if request.method == 'POST':
+        json_request = JSONParser().parse(request)
+        api_key = json_request['api_key']
+        library_id = json_request['library_id']
+        library_id_type = json_request['library_id_type']
+        collection_id = json_request['collection_id']
+        dataset_name = get_zotero_chunks(library_id, library_id_type, collection_id, api_key)
+        # if dataset_name.error:
+        #     return Response({'error':True, 'error_message': dataset_name.error}, content_type="application/json")
+        add_to_chroma(dataset_name)
+        datasets = Dataset.objects.all()
+        dataset_names = []
+        for dataset in datasets:
+            dataset_names.append(dataset.dataset_name)
+        return Response({'added':True, 'datasets': dataset_names}, content_type="application/json")
+    
+@api_view(['POST'])
+def upload_documents(request):
+    if request.method == 'POST':
+        dataset_name = add_dataset_from_upload(request)
+        add_to_chroma(dataset_name)
+        # dataset_name = request.POST.get('library_name')
+        # # get form data files 
+        # files = request.FILES.getlist('files')
+        # titles = request.POST.get('titles')
+        # print(titles, files)
+        # # create dataset
+        # dataset = Dataset.objects.create(dataset_name=dataset_name)
+        # # save papers
+        # for idx, file in enumerate(files):
+        #     print(idx, file, titles)
+        #     Papers.objects.create(
+        #         paper_title=titles,
+        #         paper_attachment=file,
+        #         paper_dataset=dataset
+        #     )
+        # add_to_chroma(dataset_name)
+        return Response({'uploaded':True}, content_type="application/json")

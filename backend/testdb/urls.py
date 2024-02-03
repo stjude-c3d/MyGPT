@@ -20,4 +20,7 @@ urlpatterns = [
 	path('api/get_context/', views.get_context, name='get_context'),
 	path('api/save_answer/', views.save_answer, name='save_answer'),
 	path('api/feedback/', views.feedback_for_answers, name='feedback'),
+	path('api/delete_dataset/', views.delete_dataset, name='delete_dataset'),
+	path('api/add_zotero_collection/', views.add_zotero_dataset, name='add_zotero_collection'),
+	path('api/upload_documents/', views.upload_documents, name='upload_documents'),
 ]

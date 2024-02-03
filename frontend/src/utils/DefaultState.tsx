@@ -13,8 +13,15 @@ const defaultSettings = {
     datasets: ['GPCR'],
 	defaultDataset: 'GPCR',
     selectedDataset: 'GPCR',
-    sentence_transformer: 'stsb-roberta-large',
-	sentence_transformers: ['stsb-roberta-large', 'stsb-roberta-base', 'stsb-bert-large', 'stsb-bert-base'],
+    default_sentence_transformer: 'all-MiniLM-L6-v2',
+	selected_sentence_transformer: 'all-MiniLM-L6-v2',
+	sentence_transformers: [
+		'all-MiniLM-L6-v2',
+		'all-MiniLM-L12-v2', 
+		'all-mpnet-base-v2', 
+		'multi-qa-mpnet-base-dot-v1',
+		'paraphrase-albert-small-v2'
+	],
     system_prompt: 'Use following information to answer the question in less than 100 words, try not to use anything else:',
 	fetchPapers: false,
   }

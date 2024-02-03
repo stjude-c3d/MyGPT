@@ -2,7 +2,7 @@ import {useState, useEffect} from 'react'
 import Workflow from './Workflow'
 import { DropdownOptions } from './DropDownMenu'
 import ZoteroSettings from './ZoteroSettings'
-import { MagnifyingGlassMinusIcon, MagnifyingGlassPlusIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassMinusIcon, MagnifyingGlassPlusIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
 
 const Settings = (props:{
 	closeSettings:any,
@@ -12,10 +12,13 @@ const Settings = (props:{
 }) => {
 	const [activeTab, setActiveTab] = useState(props.currentSettings.selectedPanel || props.defaultSettings.selectedPanel)
 	const [workflowZoomedIn, setWorkflowZoomedIn] = useState(false)
+	const [workflowCollapsed, setWorkflowCollapsed] = useState(false)
 
 	const currentSettings = JSON.parse(JSON.stringify(props.currentSettings || props.defaultSettings))
 	const [datasets, setDatasets] = useState<string[]>([])
 	const [selectedDataset, setSelectedDataset] = useState(props.currentSettings.selectedDataset || props.defaultSettings.selectedDataset)
+	const [deleteDataset, setDeleteDataset] = useState('')
+	const [reloadDatasets, setReloadDatasets] = useState(false)
 
 	const [llms, setLlms] = useState<any[]>(props.currentSettings.llms || props.defaultSettings.llms)
 	const [llm, setLlm] = useState(props.currentSettings.selectedLlm || props.defaultSettings.selectedLlm)
@@ -28,7 +31,7 @@ const Settings = (props:{
 				'Content-Type': 'application/json'
 			}
 		}
-		if(!datasets.length)
+		if(!datasets.length || reloadDatasets)
 			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/datasets/`, requestOptions)
 				.then(response => response.json())
 				.then(data => {
@@ -41,6 +44,7 @@ const Settings = (props:{
 						dataset_names.unshift(props.defaultSettings.selectedDataset)
 					}
 					setDatasets(dataset_names)
+					setReloadDatasets(false)
 				})
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[datasets.length])
@@ -48,6 +52,30 @@ const Settings = (props:{
 	useEffect(()=>{
 		currentSettings.selectedDataset = selectedDataset
 	},[selectedDataset, currentSettings])
+
+	const reloadDatasetsCallabck = () => {
+		setReloadDatasets(true)
+	}
+
+	useEffect(()=>{
+		if(deleteDataset){
+			const requestOptions = {
+				method: 'GET',
+				headers: { 
+					'Content-Type': 'application/json'
+				}
+			}
+			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/delete_dataset/?dataset=${deleteDataset}`, requestOptions)
+				.then(response => response.json())
+				.then(data => {
+					console.log(data)
+					setDeleteDataset('')
+					const dataset_names = currentSettings.datasets.filter((d:string)=>d !== deleteDataset)
+					setDatasets(dataset_names)
+				
+				})
+		}
+	}, [deleteDataset, currentSettings.datasets])
 
 	// get llms from backend
 	useEffect(()=>{
@@ -68,7 +96,7 @@ const Settings = (props:{
 	return (
 		// create floating panel with opque background
 		<div className='fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center'>
-			<div className={'bg-panel1 w-3/4 max-h-[1100px] rounded-lg ' + (window.screen.availHeight < 1000 ? 'h-[95vh]' : 'h-[75vh]')}>
+			<div className={'bg-panel1 w-3/4 max-h-[1100px] max-w-[1200px] rounded-lg ' + (window.screen.availHeight < 1000 ? 'h-[95vh]' : 'h-[75vh]')}>
 				<div className='flex justify-between'>
 					<div className='text-2xl font-bold text-white mt-8 mx-8'>Settings</div>
 					<div className='text-2xl font-bold text-white mt-8 mr-8 cursor-pointer' onClick={props.closeSettings}>x</div>
@@ -93,25 +121,33 @@ const Settings = (props:{
 					</div>
 					{/* create right side list of settings */}
 					<div className='w-3/4 bg-panel2 h-full'>
-						<div className={'mx-4 my-4 px-4 bg-gray-300 rounded-md ' + (workflowZoomedIn ? 'h-[45vh]' : 'h-[29vh]')}>
-							<div className='flex justify-between'>
-								<div className='text-white text-lg font-bold'>MyGPT Workflow</div>
-								{ window.screen.availHeight < 1000 ? 
-									<div className='flex'>
-										<div className='text-white text-lg font-bold cursor-pointer pt-2' onClick={()=>setWorkflowZoomedIn(!workflowZoomedIn)}>
-											{workflowZoomedIn ? <MagnifyingGlassMinusIcon className='h-6 w-6'/> : <MagnifyingGlassPlusIcon className='h-6 w-6'/>}
+						<div className={'mx-4 my-4 px-4 bg-gray-300 rounded-md ' + (workflowZoomedIn ? 'h-[45vh]' : workflowCollapsed ? 'h-8' : 'h-[29vh]')}>
+							<div className='flex justify-between m-1'>
+								<div className='text-panel1 text-lg font-bold'>MyGPT Workflow</div>
+								<div className='flex flex-row justify-between'>
+									{ window.screen.availHeight < 1000 ? 
+										<div className='flex m-1'>
+											<div className='text-panel1 text-lg font-bold cursor-pointer p-1 hover:bg-panel1 hover:text-white rounded-md' onClick={()=>setWorkflowZoomedIn(!workflowZoomedIn)}>
+												{workflowZoomedIn ? <MagnifyingGlassMinusIcon className='h-5 w-5'/> : <MagnifyingGlassPlusIcon className='h-5 w-5'/>}
+											</div>
+										</div> : <></>
+									}
+									<div className='flex m-1'>
+										<div className='text-panel1 text-lg font-bold cursor-pointer p-1 hover:bg-panel1 hover:text-white rounded-md' onClick={()=>setWorkflowCollapsed(!workflowCollapsed)}>
+											{workflowCollapsed ? <ChevronUpIcon className='h-5 w-5'/> : <ChevronDownIcon className='h-5 w-5'/>}
 										</div>
-									</div> : <></>
-								}
+									</div>
+								</div>
 							</div>
-							<Workflow focusComponent={activeTab} zoomedIn={workflowZoomedIn}/>
+							<Workflow focusComponent={activeTab} zoomedIn={workflowZoomedIn} collapsed={workflowCollapsed}/>
 						</div>
 						{ activeTab === 'datasets' ?
-							<div className='px-8 py-2 flex flex-col divide-y overflow-y-scroll h-[40vh] max-h-[470px]'>
-								<div className='flex flex-col justify-center my-2'>
-									<div className='text-nav px-2 flex justify-center mb-2'> Current library </div>
-									<div className='flex justify-center'>
+							<div className={'px-8 py-2 flex flex-col divide-y overflow-y-scroll ' + (workflowCollapsed ? ' h-[60vh] max-h-[770px]' : ' h-[40vh] max-h-[470px]')}>
+								<div className='flex flex-col justify-start my-2'>
+									<div className='text-nav px-2 flex justify-start mb-2'> Current library </div>
+									<div className='flex justify-start'>
 										<DropdownOptions
+											width={'200px'}
 											optionsList={datasets}
 											defaultOption={currentSettings.selectedDataset}
 											dropDownCallback={(option:string)=>{
@@ -123,26 +159,33 @@ const Settings = (props:{
 									</div>
 								</div>
 								{/* list of available libraries */}
-								<div className='flex flex-col justify-center my-4'>
-									<div className='text-nav px-2 flex justify-center mt-2'> Available libraries </div>
-									<div className='text-nav px-8 flex justify-center'>
+								<div className='flex flex-col justify-start my-4'>
+									<div className='text-nav px-2 flex justify-start mt-2'> Available libraries </div>
+									<div className='text-nav px-4 flex justify-start'>
 										<ul className='list-disc'>
 											{datasets.map((dataset:string, index:number) => {
 												return(
 													<li key={index} className='ml-4'>
 														<div className='flex justify-between m-1'>
 															{dataset}
-															<button className='ml-2 bg-panel1 text-white px-2 rounded-md'>Delete</button>
+															<button className='ml-2 bg-panel1 text-white px-2 rounded-md'
+																onClick={()=>{setDeleteDataset(dataset)}}
+															>Delete</button>
 														</div>
 													</li>
 												)
 											})}
 										</ul>
 									</div>
+									<div className='flex justify-start text-sm text-nav'>
+										<p>
+											<b>Note:</b> Deleting a library is irreversible action and will remove all papers and annotations associated with it.
+										</p>
+										</div>
 								</div>
 
 								{/* add new library */}
-								<ZoteroSettings/>
+								<ZoteroSettings reloadDatasetsCallabck={reloadDatasetsCallabck}/>
 								</div> : <></>
 							}
 							{ activeTab === 'llms' ?
@@ -175,7 +218,7 @@ const Settings = (props:{
 									/>
 									</div>
 								<div>
-									<button className='bg-panel1 text-white px-4 py-1 rounded-md mx-4 my-2' onClick={()=>setEditPrompt(true)}>Edit</button>
+									<button className='bg-panel1 text-white px-4 py-1 rounded-md mx-4 my-2' onClick={()=>setEditPrompt(!editPrompt)}>{editPrompt ? 'Save' : 'Edit' }</button>
 									{
 									props.defaultSettings.system_prompt !== currentSettings.system_prompt ?
 										<button className='bg-panel1 text-white px-4 py-1 rounded-md mx-4 my-2' onClick={()=>{
@@ -191,8 +234,9 @@ const Settings = (props:{
 							<div className='px-8 py-2 flex flex-col divide-y'>
 								<div className='m-2'>
 									<div className='text-nav inline-block px-2 mx-4 my-2'>Current Sentence Transformer</div>
-									<div className='mx-4'>
+									<div className='mx-4 px-2'>
 										<DropdownOptions
+											width={'180px'}
 											optionsList={props.defaultSettings.sentence_transformers}
 											defaultOption={currentSettings.sentence_transformer}
 											dropDownCallback={(option:string)=>{
@@ -204,15 +248,23 @@ const Settings = (props:{
 								<div className='m-2'>
 									<div className='text-nav inline-block px-2 mx-4 my-2'>Available Sentence Transformer</div>
 									<div className='mx-4'>
-										<ul className='list-disc'>
+										<ul className='list-disc ml-4'>
 											{props.defaultSettings.sentence_transformers.map((st:string, index:number) => {
 												return(
-													<li key={index} className='ml-4'>
-															{st}
+													<li key={index} className='ml-4 text-nav text-sm'>
+															{st + (st === props.defaultSettings.default_sentence_transformer ? ' (default)' : '')}
 													</li>
 												)
 											})}
 										</ul>
+									</div>
+								</div>
+								<div className='m-2'>
+									<div className='text-nav inline-block px-2 mx-4 my-2'>
+										<div className='text-nav p-1 my-1'>Add other Sentence Transformers</div>
+										<p className='text-sm ml-4'> You can choose any Sentence Transformer from this list: <a className='underline' href='https://www.sbert.net/docs/pretrained_models.html'>SBERT.net</a></p>
+										<input type='text' placeholder='Sentence Transformer' className='rounded-md w-60 p-1 ml-4'/>
+										<button className='bg-panel1 text-white px-4 py-1 rounded-md m-2'>Add</button>
 									</div>
 								</div>
 							</div> : <></>
