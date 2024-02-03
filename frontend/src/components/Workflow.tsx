@@ -1,10 +1,11 @@
 const Workflow = (props:{
 	zoomedIn: boolean,
+	collapsed: boolean,
 	focusComponent: string
 }) => {
 	return (
 		<div className="flex justify-center">
-			<svg id="MyGPT_workflow" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1241 656.57" style={ props.zoomedIn ? {'height':'40vh'} : {'height': '25vh'}}>
+			<svg id="MyGPT_workflow" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1241 656.57" style={ props.zoomedIn ? {'height':'40vh'} : props.collapsed ? {'display':'none'} : {'height': '25vh'}}>
 			<g className="cls-99">
 				<path className="cls-118" d="M719,304.51h291V65.51c0-6.6-5.4-12-12-12H273c-6.6,0-12,5.4-12,12v517c0,6.6,5.4,12,12,12h446v-290Z"/>
 				<g>
