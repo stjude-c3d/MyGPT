@@ -1,5 +1,4 @@
 ## run docker containers as detached 
-cd MyGPT
 docker compose up -d db
 sleep 10
 
@@ -12,6 +11,5 @@ sleep 60
 open http://localhost:8000
 sleep 60
 
-docker compose up -d llm_api
-docker compose up -d nginx
+# run frontend
 docker compose up -d frontend

@@ -1,4 +1,3 @@
 SECRET_KEY = '*(bq%bt*didjq*r5ft=pe=g1l0bxn3#luq5na(48-=-6*g^oi('
 DJANGO_SUPERUSER_PASSWORD = 'mygpt123'
-LOCAL_IP_ADDRESS = '10.222.66.555'
 ZOTERO_API_KEY = 'Add zotero key here'

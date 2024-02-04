@@ -16,38 +16,27 @@ We have divided the MyGPT pipeline architecture into three sections:
 
 MyGPT can be installed on following environments:
 
-- [Personal Computer - no GPU](#personal-computer---no-gpu)
-- [Personal Computer - with GPU](#personal-computer---with-gpu)
-- Google Colab (coming soon)
-- Server with GPU (coming soon)
-- Amazon Web Services (AWS) - GPU (coming soon)
+- [Personal Computer](#personal-computer)
+- Server/VM with/without GPU (coming soon)
+- Amazon Web Services (AWS) (coming soon)
 
-### Personal Computer - no GPU
+### Personal Computer
 
-For this installtion, the entire pipeline will run as a single unit on CPUs. This is the easiest way to get started with MyGPT, but it is also the response time will be slowest.
-
-To run the pipleine on following environments, follow the instructions:
-* Mac without GPU
-	- [Simple instructions](./installation/pc_no_gpu/macOS/README.md): This are simple insturctions with bash scripts, although it's easy to follow, it's not interactive and doesn't have troubleshooting steps. You can also modify bash scripts as per your convenience.
-	- Detailed instructions: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1h92XHMT5D_vlmf2oEZ0BRn3ke41Cz9p4?usp=sharing)
-	This are instructions with interactive Jupyter notebook on Google colab, it has troubleshooting steps. If you come across any bug or error, please report it in the issues section. You can also modify Jupyter notebook as per your convenience.
-* Linux without GPU
-	- [Simple instructions](./installation/pc_no_gpu/linux/README.md): This are simple insturctions with bash scripts, although it's easy to follow, it's not interactive and doesn't have troubleshooting steps. You can also modify bash scripts as per your convenience.
-	- Detailed instructions: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1feKcAvNwMIZpx7UGOb3UYhw_HFMC_kHP?usp=sharing)
-	This are instructions with interactive Jupyter notebook on Google colab, it has troubleshooting steps. If you come across any bug or error, please report it in the issues section. You can also modify Jupyter notebook as per your convenience.
-* Windows without GPU [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1r9cGHFwl4VStyb0szC4U-6hidXjtZBDE?usp=sharing)
-
-### Personal Computer - with GPU
-
-For this installation, the LLM API will run on Apple GPU, and remaining pipeline will run via Docker on CPUs. 
-The steps will differ slightly for this method, although installation time should be same.
-Because we are using GPU for this method, the response time will be much faster than the previous method.
+MyGPT is using Ollama for LLM server, and it requires at least 8GB (16GB for better response time) of RAM and 10GB of disk space.
+Also, Ollama is providing direct installation on Mac and Linux only. For Windows users we will use Docker to run Ollama.
 
 To run the pipleine on following environments, follow the instructions:
-* Mac with Apple GPU
-	- [Simple instructions](./installation/pc_with_gpu/macOS/README.md): This are simple insturctions with bash scripts, although it's easy to follow, it's not interactive and doesn't have troubleshooting steps. You can also modify bash scripts as per your convenience.
-	- Detailed instructions: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1mNqsBPNbzra3h3i9ggqOyPDEehrnAMdZ?usp=sharing)
-	This are instructions with interactive Jupyter notebook on Google colab, it has troubleshooting steps. If you come across any bug or error, please report it in the issues section. You can also modify Jupyter notebook as per your convenience.
+* Mac
+	- [Basic Installation](./installation/macOS/README.md): This are simple and easy to follow. You can also modify bash scripts as per your convenience.
+	<!-- - Detailed instructions: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1h92XHMT5D_vlmf2oEZ0BRn3ke41Cz9p4?usp=sharing)
+	This are instructions with interactive Jupyter notebook on Google colab, it has troubleshooting steps. If you come across any bug or error, please report it in the issues section. You can also modify Jupyter notebook as per your convenience. -->
+* Linux
+	- [Basic Installation](./installation/linux/README.md): This are simple and easy to follow. You can also modify bash scripts as per your convenience.
+	<!-- - Detailed instructions: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1feKcAvNwMIZpx7UGOb3UYhw_HFMC_kHP?usp=sharing)
+	This are instructions with interactive Jupyter notebook on Google colab, it has troubleshooting steps. If you come across any bug or error, please report it in the issues section. You can also modify Jupyter notebook as per your convenience. -->
+* Windows 
+	<!-- - [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1r9cGHFwl4VStyb0szC4U-6hidXjtZBDE?usp=sharing) -->
+	- Coming soon
 
 ## User Interface
 MyGPT user interface will allow users to check the publcation library, ask questions, and get answers. The user interface is built using ReactJS.

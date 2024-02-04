@@ -25,7 +25,10 @@
 					</ul>
 				{% endif %}
 			</div>
-			<h4> go to <a href="http://localhost/api/">http://localhost/api/</a> 
+
+			<h3> For Developers: API Endpoints </h3>
+
+			<h4> go to <a href="http://localhost:8000/api/">http://localhost:8000/api/</a> 
 				to access all available API endpoints.</h4>
 		</div>
 		<div style="text-align:center; padding-top: 10px; width:200px; margin:auto;">
@@ -42,42 +45,6 @@
 				<form action="#" method="get">
 					<input type="submit" class="btn" value="reload library" name="reload_library" style="margin: 5px;">
 				</form>
-		</div>
-		<div style="text-align:center; padding-top: 10px; width:400px; margin:auto;">
-			<h3> Add a publication library from zotero library <h3>
-			<form action="#" method="get">
-				<input type="text" value="" placeholder="Zotero Group ID" name="group_id" size="20" style="margin: 5px;"/>
-				<input type="text" value="" placeholder="Zotero Collection ID" name="collection_id" size="20" style="margin: 5px;"/>
-				<input type="submit" class="btn" value="Submit" name="upload_btn" style="margin: 5px;">
-			</form>
-		</div>
-		<div style="text-align: center; padding-top: 10px; width:1200px; margin:auto;">
-			<h3> Add a publication library from files<h3>
-				<form action="#" method="post" enctype="multipart/form-data">
-					{% csrf_token %}
-					{{ form.non_field_errors }}
-					<div style="margin:5px;">
-						<label for="id_dataset_name" style="font-size: 15px; font-weight: normal;">Library Name:</label>
-						<input type="text" name="dataset_name" value="" required id="id_dataset_name">
-					</div>
-					{% for file_index in file_count %}
-					{{ from.non_field_errors }}
-					<div style="text-align: left">
-						<div style="display: inline-block; font-size: 15px; font-weight: normal;">{{file_index}}</div>
-						<div style="display: inline-block">
-							{{ form.paper_title.errors }}
-							<label for="id_paper_title" style="font-size: 15px; font-weight: normal;">Paper Title:</label>
-							<input type='text' name="paper_title"  value={{form.paper_title.value}} required id="id_paper_title" size='100'>
-						</div>
-						<div style="display: inline-block">
-							{{ form.paper_attachment.errors }}
-							<label for="id_paper_attachment" style="font-size: 15px; font-weight: normal;">Paper Attachment:</label>
-							{{ form.paper_attachment }}
-						</div>
-					</div>
-					{% endfor %}
-					<input type="submit" class="btn" value="Submit" name="upload_btn" style="margin: 5px;">
-					</form>
 		</div>
 	</body>
 </html> 
