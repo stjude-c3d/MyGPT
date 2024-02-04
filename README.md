@@ -8,9 +8,9 @@ ChatGPT has revolutionized creative occupations, but tasks requiring factual bac
 <img src='./images/pipeline.png' width='800px' alt='MyGPT pipeline'>
 
 We have divided the MyGPT pipeline architecture into three sections: 
-1. <b>User interface (UI)</b>: The UI is the front-end of the pipeline. It is a web application that allows users to interact with the pipeline. The UI is built using ReactJS.
-2. <b>Backend server</b>: The backend server is responsible for handling requests from the UI and sending them to the LLM server. The backend server is built using Python Django.
-3. <b>LLM server</b>: The LLM server is responsible for generating answers to the questions asked by the user. The LLM server is built using Django and Llama-CPP-Python.
+1. <u>User interface (UI)</u>: The UI is the front-end of the pipeline. It is a web application that allows users to interact with the pipeline. The UI is built using ReactJS.
+2. <u>Backend server</u>: The backend server is responsible for handling requests from the UI and sending them to the LLM server. The backend server is built using Python Django.
+3. <u>LLM server</u>: The LLM server is responsible for generating answers to the questions asked by the user. We are using Ollama for the LLM server.
 
 ## Installation
 
