@@ -47,4 +47,4 @@ Here is an example of the user interface with question, answer, and source citin
 
 ## Issues
 
-If you come across any bug or error, please report it in the [issues](https://github.com/mb-group/MyGPT_public/issues) section.
+If you come across any bug or error, please report it in the [issues](https://github.com/stjude-c3d/MyGPT/issues) section.
