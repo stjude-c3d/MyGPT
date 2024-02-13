@@ -45,10 +45,13 @@ function GPTHome(props:{
 				.then(data => setPapers(data))
 			
 			props.settingsCallback({...props.currentSettings, showSettings: false, fetchPapers: false})
+			setselectedPaperIdx(0)
+			setSelectedPage(0)
+			setFileAttachmentType('paper_attachment')
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[papers, query, props.currentSettings.defaultDataset, props.currentSettings.selectedDataset, props.currentSettings.fetchPapers])
-	
+
 	useEffect(()=>{
 		// setAnswers([])
 		// setSourceReceived(false)
@@ -125,7 +128,7 @@ function GPTHome(props:{
 						break;
 					}
 					const rawjson = new TextDecoder().decode(value);
-					const json = JSON.parse(rawjson)
+					const json = JSON.parse(rawjson.split('\n')[0])
 
 					if (json.done === false) {
 						content += json.response
@@ -352,8 +355,8 @@ function GPTHome(props:{
 											(
 												<div className='text-white rounded-full text-xs py-1'>
 													Relevance 
-													<span style={{ backgroundColor: ConfidenceScoreColor(confidenceScores[query.length-i-1])}} className= 'text-nav py-1 px-2 m-1 rounded-full'>
-														{confidenceScores[query.length-i-1]}
+													<span style={{ backgroundColor: ConfidenceScoreColor(confidenceScores[query.length-i-1])}} className= 'text-white py-1 px-2 m-1 rounded-full'>
+														{(confidenceScores[query.length-i-1] * 100) + '%'} 
 													</span>
 												</div>
 											) : ''
@@ -422,7 +425,7 @@ function GPTHome(props:{
 												<div className='text-white rounded-full text-xs py-1'>
 													Relevance 
 													<span style={{ backgroundColor: ConfidenceScoreColor(confidenceScores[query.length-1])}} className= 'text-nav py-1 px-2 m-1 rounded-full'>
-														{confidenceScores[query.length-1]}
+														{(confidenceScores[query.length-i-1] * 100) + '%'}
 													</span>
 												</div>
 											) : ''

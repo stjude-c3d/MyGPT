@@ -79,3 +79,6 @@ class Source(models.Model):
 class Model(models.Model):
 	model_name = models.CharField(max_length=200, default='-')
 	model_size =  models.CharField(max_length=40, default='-')
+
+	def __str__(self):
+		return self.model_name

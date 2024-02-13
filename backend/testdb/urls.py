@@ -23,4 +23,5 @@ urlpatterns = [
 	path('api/delete_dataset/', views.delete_dataset, name='delete_dataset'),
 	path('api/add_zotero_collection/', views.add_zotero_dataset, name='add_zotero_collection'),
 	path('api/upload_documents/', views.upload_documents, name='upload_documents'),
+	path('api/add_ollama_model/', views.add_ollama_model, name='add_ollama_model'),
 ]

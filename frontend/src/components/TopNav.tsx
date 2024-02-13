@@ -12,7 +12,7 @@ function TopNav(props:{
             appName={'MyGPT'}
             appNameLink = {'/'}
             showAppLogo = {true}
-            appLogoPath = {'./stjude-logo-child.png'}
+            appLogoPath = {'./mygpt_logo.png'}
             // appLogoLink = {'/'}
             showHistoryButton = {true}
             showSettingsButton = {true}

@@ -150,9 +150,9 @@ def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key)
             remainder = ''
             for i in range(0, len(text), n):
                 item = remainder + text[i : i + n]
-                if len(re.findall(r'\sReferences.*\n+\d+',item, re.I)):
-                    go_to_next = True
-                    break
+                # if len(re.findall(r'\sReferences.*\n+\d+',item, re.I)):
+                #     go_to_next = True
+                #     break
                 item = item.replace('\n', ' ')
                 if '. ' in item:
                     remainder = item[item.rindex('. ') + 2: ]
@@ -225,9 +225,9 @@ def add_dataset_from_upload(request):
             remainder = ''
             for i in range(0, len(text), n):
                 item = remainder + text[i : i + n]
-                if len(re.findall(r'\sReferences.*\n+\d+',item, re.I)):
-                    go_to_next = True
-                    break
+                # if len(re.findall(r'\sReferences.*\n+\d+',item, re.I)):
+                #     go_to_next = True
+                #     break
                 item = item.replace('\n', ' ')
                 if '. ' in item:
                     remainder = item[item.rindex('. ') + 2: ]
@@ -1358,20 +1358,15 @@ def upload_documents(request):
     if request.method == 'POST':
         dataset_name = add_dataset_from_upload(request)
         add_to_chroma(dataset_name)
-        # dataset_name = request.POST.get('library_name')
-        # # get form data files 
-        # files = request.FILES.getlist('files')
-        # titles = request.POST.get('titles')
-        # print(titles, files)
-        # # create dataset
-        # dataset = Dataset.objects.create(dataset_name=dataset_name)
-        # # save papers
-        # for idx, file in enumerate(files):
-        #     print(idx, file, titles)
-        #     Papers.objects.create(
-        #         paper_title=titles,
-        #         paper_attachment=file,
-        #         paper_dataset=dataset
-        #     )
-        # add_to_chroma(dataset_name)
         return Response({'uploaded':True}, content_type="application/json")
+    
+@api_view(['POST'])
+def add_ollama_model(request):
+    if request.method == 'POST':
+        ollama_model = JSONParser().parse(request)
+        if Model.objects.filter(model_name=ollama_model['name']).count() == 0:
+            Model.objects.create(
+                model_name=ollama_model['name'],
+                model_size=ollama_model['size']
+            )
+        return Response({'added':True}, content_type="application/json")

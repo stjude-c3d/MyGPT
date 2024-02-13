@@ -218,7 +218,7 @@ const ZoteroSettings = (props: {
 					</div>
 					<div className='flex flex-col mt-2'>
 						{ Array.from(Array(uploadDocCount).keys()).map((x:any) =>
-						<div className='flex justify-center p-1 text-nav'>
+						<div className='flex justify-center p-1 text-nav' key={x}>
 							<div> Document {x+1}</div>
 							<input type='text' placeholder=' Title*' className='rounded-md mx-2 w-72 px-2 py-1 text-nav'
 								onChange={(e) => {
