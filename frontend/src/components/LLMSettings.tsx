@@ -122,30 +122,30 @@ const LLMSettings = (props: {
 
 
 	  return (
-		<div className='px-8 py-2'>
-			<div className='text-nav inline-block px-2'> Current LLM </div>
-			<div className='inline-block'>
-				<DropdownOptions
-					optionsList={props.llms}
-					defaultOption={props.currentSettings.selectedLlm}
-					dropDownCallback={(option:string)=>{
-						currentSettings.selectedLlm = option
-						props.settingsCallback(currentSettings)
-					}}
-				/>
-			</div>
+		<div className='px-8 py-2 divide-y'>
 			<div className='flex flex-col justify-start my-4'>
-				<div className='text-nav px-2 flex justify-start mt-2'> Available LLMs on system </div>
+				<div className='text-nav px-2 flex justify-start my-2 text-lg font-semibold'> Available LLMs on system </div>
 				<div className='text-nav px-4 flex justify-start'>
 					<ul className='list-disc'>
 						{props.llms.map((llm:string, index:number) => {
 							return(
 								<li key={index} className='ml-4'>
 									<div className='flex justify-between m-1 text-nav'>
-										{llm + (llm === props.selectedLlm ? ' (selected)' : '')}
-										{/* <button className='ml-2 bg-panel1 text-white px-2 rounded-md'
-											onClick={()=>{}}
-										>Delete</button> */}
+										{llm}
+										<div>
+											<button className={'ml-2 text-white px-2 rounded-md w-24' 
+												+ (llm === props.selectedLlm ? ' bg-gray-300' : ' bg-panel1')}
+												onClick={()=>{
+													currentSettings.selectedLlm = llm
+													props.settingsCallback(currentSettings)
+												}}
+												disabled={llm === props.selectedLlm ? true : false}
+											>{ llm === props.selectedLlm ? 'Selected' : 'Select'}</button>
+											
+											{/* <button className='ml-2 bg-red-900 text-white px-2 rounded-md'
+												onClick={()=>{setDeleteDataset(dataset)}}
+											>Delete</button> */}
+										</div>
 									</div>
 								</li>
 							)
@@ -154,7 +154,7 @@ const LLMSettings = (props: {
 				</div>
 			</div>
 			<div className='flex flex-col justify-start my-4'>
-				<div className='text-nav px-2 flex justify-start mt-2'> LLMs ready to download </div>
+				<div className='text-nav px-2 flex justify-start my-2 text-lg font-semibold'> LLMs ready to download </div>
 				{ 
 					message === '' ? <></> :
 					<div className={'ml-2 text-nav px-2 rounded-md' + (modelLoaded ? ' bg-green-200' : ' bg-orange-200')}>

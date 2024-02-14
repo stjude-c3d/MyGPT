@@ -1,7 +1,7 @@
 import {useState, useEffect} from 'react'
 import Workflow from './Workflow'
 import { DropdownOptions } from './DropDownMenu'
-import ZoteroSettings from './ZoteroSettings'
+import AddLibrarySettings from './AddLibrarySettings'
 import LLMSettings from './LLMSettings'
 import { MagnifyingGlassMinusIcon, MagnifyingGlassPlusIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
 
@@ -144,41 +144,37 @@ const Settings = (props:{
 						</div>
 						{ activeTab === 'datasets' ?
 							<div className={'px-8 py-2 flex flex-col divide-y ' + (workflowCollapsed ? ' h-[60vh] max-h-[770px]' : ' h-[40vh] max-h-[470px]')}>
-								<div className='flex flex-col justify-start my-2'>
-									<div className='text-nav px-2 flex justify-start mb-2'> Current library </div>
-									<div className='flex justify-start'>
-										<DropdownOptions
-											width={'200px'}
-											optionsList={datasets}
-											defaultOption={currentSettings.selectedDataset}
-											dropDownCallback={(option:string)=>{
-												setSelectedDataset(option)
-												// currentSettings.selectedDataset = option
-												props.settingsCallback({...currentSettings, selectedDataset: option, fetchPapers: true})
-											}}
-										/>
-									</div>
-								</div>
 								{/* list of available libraries */}
-								<div className='flex flex-col justify-start my-4'>
-									<div className='text-nav px-2 flex justify-start mt-2'> Available libraries </div>
+								<div className='flex flex-col justify-start mt-4'>
+									<div className='text-nav px-2 flex justify-start mt-2 text-lg font-semibold'> Available libraries </div>
 									<div className='text-nav px-4 flex justify-start'>
 										<ul className='list-disc'>
 											{datasets.map((dataset:string, index:number) => {
 												return(
 													<li key={index} className='ml-4'>
 														<div className='flex justify-between m-1'>
-															{dataset}
-															<button className='ml-2 bg-panel1 text-white px-2 rounded-md'
-																onClick={()=>{setDeleteDataset(dataset)}}
-															>Delete</button>
+															{dataset.split('_').join(' ')}
+															<div>
+																<button className={'ml-2 text-white px-2 rounded-md w-24' 
+																	+ (dataset === currentSettings.selectedDataset ? ' bg-gray-300' : ' bg-panel1')}
+																	onClick={()=>{
+																		setSelectedDataset(dataset)
+																		props.settingsCallback({...currentSettings, selectedDataset: dataset, fetchPapers: true})
+																	}}
+																	disabled={dataset === currentSettings.selectedDataset ? true : false}
+																>{ dataset === currentSettings.selectedDataset ? 'Selected' : 'Select'}</button>
+																
+																<button className='ml-2 bg-red-900 text-white px-2 rounded-md'
+																	onClick={()=>{setDeleteDataset(dataset)}}
+																>Delete</button>
+															</div>
 														</div>
 													</li>
 												)
 											})}
 										</ul>
 									</div>
-									<div className='flex justify-start text-sm text-nav'>
+									<div className='flex justify-start text-sm text-nav mt-4'>
 										<p>
 											<b>Note:</b> Deleting a library is irreversible action and will remove all papers and annotations associated with it.
 										</p>
@@ -186,7 +182,7 @@ const Settings = (props:{
 								</div>
 
 									{/* add new library */}
-									<ZoteroSettings reloadDatasetsCallabck={reloadDatasetsCallabck}/>
+									<AddLibrarySettings reloadDatasetsCallabck={reloadDatasetsCallabck}/>
 								</div> : <></>
 							}
 							{ activeTab === 'llms' ?
@@ -200,7 +196,7 @@ const Settings = (props:{
 						}
 						{ activeTab === 'llm_parameters' ?
 							<div className='px-8 py-2 flex flex-col'>
-								<div className='text-nav inline-block px-2 mx-4 my-2'>System Prompt</div>
+								<div className='text-nav inline-block px-2 mx-4 my-2 text-lg font-semibold'>System Prompt</div>
 								<div className='mx-4'>
 									<textarea
 										rows={5}

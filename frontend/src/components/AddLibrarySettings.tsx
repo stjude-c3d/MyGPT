@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
 
-const ZoteroSettings = (props: {
+const AddLibrarySettings = (props: {
 	reloadDatasetsCallabck: any
 }) => {
   const [apiKey, setApiKey] = useState('')
@@ -49,10 +49,6 @@ const ZoteroSettings = (props: {
 			setCollectionId('')
 			if (data.added){
 				setShowSuccess(true)
-				setTimeout(() => {
-					setShowSuccess(false)
-				}, 3000)
-			
 			}
 		})
 	}
@@ -66,7 +62,7 @@ const ZoteroSettings = (props: {
 			uploadDocs.filter((d)=> d.file !== null && d.title !== '').forEach((doc:any) => {
 				if (doc.title && doc.file){
 					formData.append('paper_title', doc.title)
-					formData.append('paper_attachment', doc.file[0])
+					formData.append('paper_attachment', doc.file)
 				}
 			})
 			const requestOptions = {
@@ -79,15 +75,13 @@ const ZoteroSettings = (props: {
 			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/upload_documents/`, requestOptions)
 			.then(response => response.json())
 			.then(data => {
+				console.log(data)
 				// props.reloadDatasetsCallabck()
 				setUploadLibrary(false)
 				setUploadLibraryName('')
 				setUploadDocs(emptyUploadDocs)
 				if (data.uploaded){
 					setShowSuccess(true)
-					setTimeout(() => {
-						setShowSuccess(false)
-					}, 3000)
 				}
 			})
 		}
@@ -96,7 +90,7 @@ const ZoteroSettings = (props: {
 
   return (
 	<div className='my-4'>
-		<div className='text-nav p-2 mt-2 flex justify-start'> Add new library </div>
+		<div className='text-nav p-2 mt-2 flex justify-start text-lg font-semibold'> Add new library </div>
 		{/*  add choice button with 2 options */}
 		<div className='flex justify-start'>
 			<div className={'inline-block px-4 py-1 shadow rounded-l-lg border-2 border-panel1 ' + 
@@ -210,9 +204,19 @@ const ZoteroSettings = (props: {
 		{ uploadPanel ?
 			<div className='flex justify-start'>
 				<div className='flex flex-col mt-4'>
+					{ showSuccess ?
+						<div className='flex justify-start'>
+							<div className='text-nav p-1 text-lg bg-green-200 rounded-md'>Library uploaded successfully</div>
+						</div> : 
+						uploadLibrary && !showSuccess ?
+						<div className='flex justify-start'>
+							<div className='text-nav p-1 text-lg bg-orange-200 rounded-md'>Uploading documents...</div>
+						</div> :
+						<></>
+					}
 					<div className='flex justify-start p-2'>
-						<div className='text-nav w-40 p-1'>Library Name</div>
-						<input type='text' placeholder=' Library Name' className='rounded-md w-72 px-2 py-1 text-nav'
+						<div className='text-nav w-32 p-1'>Library Name</div>
+						<input type='text' placeholder=' Library Name' className='rounded-md w-60 px-2 py-1 text-nav' value={UploadLibraryName}
 							onChange={(e) => setUploadLibraryName(e.target.value)}
 						/>
 					</div>
@@ -220,17 +224,18 @@ const ZoteroSettings = (props: {
 						{ Array.from(Array(uploadDocCount).keys()).map((x:any) =>
 						<div className='flex justify-center p-1 text-nav' key={x}>
 							<div> Document {x+1}</div>
-							<input type='text' placeholder=' Title*' className='rounded-md mx-2 w-72 px-2 py-1 text-nav'
+							{/* <input type='text' placeholder=' Title*' className='rounded-md mx-2 w-72 px-2 py-1 text-nav'
 								onChange={(e) => {
 									let newUploadDocs:any = uploadDocs
 									newUploadDocs[x].title = e.target.value
 									setUploadDocs(newUploadDocs)
 								}}
-							/>
-							<input type='file' className='rounded-md w-60'
-								onChange={(e) => {
+							/> */}
+							<input type='file' className='rounded-md w-60 mx-2'
+								onChange={(e:any) => {
 									let newUploadDocs:any = uploadDocs
-									newUploadDocs[x].file = e.target.files
+									newUploadDocs[x].file = e.target.files[0]
+									newUploadDocs[x].title = e.target.files[0].name.split('.')[0]
 									setUploadDocs(newUploadDocs)
 								}}
 							/>
@@ -243,10 +248,6 @@ const ZoteroSettings = (props: {
 							onClick={() => setUploadLibrary(true)}
 						>Upload documents</button>
 					</div>
-					{ showSuccess ?
-					<div className='flex justify-start'>
-						<div className='text-nav p-1 text-lg bg-green-200 rounded-md'>Library uploaded successfully</div>
-					</div> : <></>}
 				</div>
 			</div>
 			: <></>
@@ -255,4 +256,4 @@ const ZoteroSettings = (props: {
   )
 }
 
-export default ZoteroSettings
+export default AddLibrarySettings

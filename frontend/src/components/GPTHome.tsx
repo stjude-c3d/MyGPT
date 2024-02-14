@@ -29,7 +29,7 @@ function GPTHome(props:{
 	const [selectedPage, setSelectedPage] = useState(0)
 	const [fileAttachmentType, setFileAttachmentType] = useState('paper_attachment')
 	const ConfidenceScoreColor = scaleSequential()
-		.domain([0, 1])
+		.domain([0, 100])
 		.interpolator(interpolateRdYlGn)
 
 	useEffect(()=>{
@@ -45,13 +45,13 @@ function GPTHome(props:{
 				.then(data => setPapers(data))
 			
 			props.settingsCallback({...props.currentSettings, showSettings: false, fetchPapers: false})
-			setselectedPaperIdx(0)
-			setSelectedPage(0)
-			setFileAttachmentType('paper_attachment')
+			// setselectedPaperIdx(0)
+			// setSelectedPage(0)
+			// setFileAttachmentType('paper_attachment')
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[papers, query, props.currentSettings.defaultDataset, props.currentSettings.selectedDataset, props.currentSettings.fetchPapers])
-
+	// console.log(props.currentSettings.selectedDataset, props.currentSettings.defaultDataset)
 	useEffect(()=>{
 		// setAnswers([])
 		// setSourceReceived(false)
@@ -317,7 +317,7 @@ function GPTHome(props:{
 						<p className='inline-block ml-2'><PaperAirplaneIcon className='w-6 h-6 inline-block'/></p>
 					</button>
 				</div>
-				{ answers.length && answers[answers.length-1].response && searchTerm.length ?
+				{/* { answers.length && answers[answers.length-1].response && searchTerm.length ?
 					<div className='p-1 mx-4 flex'>
 						<input type='checkbox' className="mr-2 mt-[0.3rem] h-3.5 w-8 appearance-none rounded-[0.4375rem] bg-neutral-300 before:pointer-events-none before:absolute before:h-3.5 before:w-3.5 before:rounded-full before:bg-transparent before:content-[''] after:absolute after:z-[2] after:-mt-[0.1875rem] after:h-5 after:w-5 after:rounded-full after:border-none after:bg-neutral-100 after:shadow-[0_0px_3px_0_rgb(0_0_0_/_7%),_0_2px_2px_0_rgb(0_0_0_/_4%)] after:transition-[background-color_0.2s,transform_0.2s] after:content-[''] checked:bg-primary checked:after:absolute checked:after:z-[2] checked:after:-mt-[3px] checked:after:ml-[1.0625rem] checked:after:h-5 checked:after:w-5 checked:after:rounded-full checked:after:border-none checked:after:bg-primary checked:after:shadow-[0_3px_1px_-2px_rgba(0,0,0,0.2),_0_2px_2px_0_rgba(0,0,0,0.14),_0_1px_5px_0_rgba(0,0,0,0.12)] checked:after:transition-[background-color_0.2s,transform_0.2s] checked:after:content-[''] hover:cursor-pointer focus:outline-none focus:ring-0 focus:before:scale-100 focus:before:opacity-[0.12] focus:before:shadow-[3px_-1px_0px_13px_rgba(0,0,0,0.6)] focus:before:transition-[box-shadow_0.2s,transform_0.2s] focus:after:absolute focus:after:z-[1] focus:after:block focus:after:h-5 focus:after:w-5 focus:after:rounded-full focus:after:content-[''] checked:focus:border-primary checked:focus:bg-primary checked:focus:before:ml-[1.0625rem] checked:focus:before:scale-100 checked:focus:before:shadow-[3px_-1px_0px_13px_#3b71ca] checked:focus:before:transition-[box-shadow_0.2s,transform_0.2s] dark:bg-neutral-600 dark:after:bg-neutral-400 dark:checked:bg-primary dark:checked:after:bg-primary dark:focus:before:shadow-[3px_-1px_0px_13px_rgba(255,255,255,0.4)] dark:checked:focus:before:shadow-[3px_-1px_0px_13px_#3b71ca]"
 						role={'switch'}
@@ -333,7 +333,7 @@ function GPTHome(props:{
 							related to previous question
 						</p>
 					</div>
-					 : null }
+					 : null } */}
 				{
 					query.length ? 
 					<>{ query.map((_q:any, i:any)=>(
@@ -355,8 +355,9 @@ function GPTHome(props:{
 											(
 												<div className='text-white rounded-full text-xs py-1'>
 													Relevance 
-													<span style={{ backgroundColor: ConfidenceScoreColor(confidenceScores[query.length-i-1])}} className= 'text-white py-1 px-2 m-1 rounded-full'>
-														{(confidenceScores[query.length-i-1] * 100) + '%'} 
+													<span style={{ backgroundColor: ConfidenceScoreColor(confidenceScores[query.length-i-1])}} 
+														className= {'py-1 px-2 m-1 rounded-full' + (confidenceScores[query.length-i-1] > 80 || confidenceScores[query.length-i-1] < 20 ? ' text-white' : ' text-nav')}>
+														{confidenceScores[query.length-i-1] + '%'} 
 													</span>
 												</div>
 											) : ''
@@ -424,8 +425,9 @@ function GPTHome(props:{
 											(
 												<div className='text-white rounded-full text-xs py-1'>
 													Relevance 
-													<span style={{ backgroundColor: ConfidenceScoreColor(confidenceScores[query.length-1])}} className= 'text-nav py-1 px-2 m-1 rounded-full'>
-														{(confidenceScores[query.length-i-1] * 100) + '%'}
+													<span style={{ backgroundColor: ConfidenceScoreColor(confidenceScores[query.length-1])}} 
+														className= {'py-1 px-2 m-1 rounded-full' + (confidenceScores[query.length-i-1] > 80 || confidenceScores[query.length-i-1] < 20 ? ' text-white' : ' text-nav')}>
+														{confidenceScores[query.length-i-1] + '%'}
 													</span>
 												</div>
 											) : ''
@@ -472,7 +474,7 @@ function GPTHome(props:{
 				
 				<div className='p-2 text-sm border-slate-400 border-y'>
 					<div className='text-white inline-block px-2'> Current library </div>
-					<div className='inline-block px-2 py-1 bg-panel3 rounded-md cursor-default'>{props.currentSettings.selectedDataset}</div>
+					<div className='inline-block px-2 py-1 bg-panel3 rounded-md cursor-default'>{props.currentSettings.selectedDataset.split('_').join(' ')}</div>
 					<div className='mx-2 inline-block px-2 py-1 bg-white rounded-md cursor-pointer hover:bg-slate-200' 
 						onClick={()=>{
 							props.settingsCallback({...props.currentSettings, selectedPanel: 'datasets', showSettings: true})
