@@ -177,18 +177,7 @@ const AddLibrarySettings = (props: {
 						</div>
 						</>: <></>}
 					
-					</div>	
-					{/* <div className='flex justify-center'>
-						<div className='text-nav px-1 my-1'>OR</div>
 					</div>
-					<div className='flex pb-2'>
-						<div className='text-nav w-40 p-1'>Zotero user ID</div>
-						<input type='text' placeholder='Zotero user ID' className='rounded-md w-80 p-1'/>
-					</div>
-					<div className='flex pb-2'>
-						<div className='text-nav w-40 p-1'>Zotero collection ID</div>	
-						<input type='text' placeholder='Zotero collection ID' className='rounded-md w-80 p-1'/>
-					</div> */}
 					<div className='flex justify-start'>
 						<button className='bg-panel1 text-white px-4 py-2 rounded-md my-2' onClick={()=>setAddLibrary(true)}>Add library</button>
 					</div>

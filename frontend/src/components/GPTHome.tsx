@@ -39,19 +39,27 @@ function GPTHome(props:{
 				'Content-Type': 'application/json'
 			}
 		}
+
 		if(!papers.length || props.currentSettings.fetchPapers === true){
 			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/get_papers/?dataset=${props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset }&format=json`, requestOptions)
 				.then(response => response.json())
 				.then(data => setPapers(data))
 			
 			props.settingsCallback({...props.currentSettings, showSettings: false, fetchPapers: false})
-			// setselectedPaperIdx(0)
-			// setSelectedPage(0)
-			// setFileAttachmentType('paper_attachment')
+			if (props.currentSettings.fetchPapers === true){
+				setselectedPaperIdx(0)
+				setSelectedPage(0)
+				setFileAttachmentType('paper_attachment')
+				setSourcePapers([])
+				setSourcePages([])
+			}
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[papers, query, props.currentSettings.defaultDataset, props.currentSettings.selectedDataset, props.currentSettings.fetchPapers])
+	
 	// console.log(props.currentSettings.selectedDataset, props.currentSettings.defaultDataset)
+	
+	// get context from the backend vector database
 	useEffect(()=>{
 		// setAnswers([])
 		// setSourceReceived(false)
@@ -107,7 +115,7 @@ function GPTHome(props:{
 	// get answer from the ollama
 	useEffect(()=>{
 		const question =  query[query.length-1] && query[query.length-1].question ? query[query.length-1].question.replaceAll('"','\\"') : ''
-		const systemPrompt = 'Use following information to answer the question in less than 100 words, try not to use anything else:' + context
+		const systemPrompt = props.currentSettings.system_prompt + context
 		
 		const body = JSON.stringify({
 			'model': props.currentSettings.selectedLlm,
@@ -128,18 +136,26 @@ function GPTHome(props:{
 						break;
 					}
 					const rawjson = new TextDecoder().decode(value);
-					const json = JSON.parse(rawjson.split('\n')[0])
-
-					if (json.done === false) {
-						content += json.response
+					let jsons = []
+					if (rawjson.includes('\n')){
+						jsons = rawjson.split('\n').filter((j:any)=>j.length)
 					}else{
-						setAnswerReceived(true)
+						jsons = [rawjson]
+					}
+					for (const j of jsons){
+						const json = JSON.parse(j)
+						if (json.done === false) {
+							content += json.response
+						}else{
+							setTimeout(()=>{setAnswerReceived(true)}, 3000)
+						}
 					}
 					setAnswer(content)
 				}
 			}
 			postData()
 		}
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[query, context, props.currentSettings.selectedLlm])
 
 	useEffect(()=>{
@@ -173,10 +189,15 @@ function GPTHome(props:{
 		}
 	},[answers, query])
 
+	const PageNavigationPluginInstance = pageNavigationPlugin()
+
 	useEffect(()=>{
-		PageNavigationPluginInstance.jumpToPage(selectedPage-1)
-	// eslint-disable-next-line react-hooks/exhaustive-deps
-	},[selectedPage])
+		// settime for the page to load
+		setTimeout(()=>{
+			PageNavigationPluginInstance.jumpToPage(selectedPage-1)
+		}, 1000)
+		// PageNavigationPluginInstance.jumpToPage(selectedPage-1)
+	},[selectedPage, PageNavigationPluginInstance])
 
 	// console.log('answers', answers)
 
@@ -245,8 +266,6 @@ function GPTHome(props:{
 		},
 		renderToolbar,
 	})
-
-	const PageNavigationPluginInstance = pageNavigationPlugin()
 
 	return (
 		<div className='grid grid-cols-10 p-4 bg-gray-200 max-w-[2000px] mx-auto h-screen'>

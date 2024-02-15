@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { DropdownOptions } from './DropDownMenu'
 
 const LLMSettings = (props: {
 	llms:any, 
