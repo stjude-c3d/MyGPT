@@ -19,7 +19,6 @@ const Settings = (props:{
 	const [datasets, setDatasets] = useState<string[]>([])
 	const [selectedDataset, setSelectedDataset] = useState(props.currentSettings.selectedDataset || props.defaultSettings.selectedDataset)
 	const [deleteDataset, setDeleteDataset] = useState('')
-	const [reloadDatasets, setReloadDatasets] = useState(false)
 
 	const [llms, setLlms] = useState<any[]>(props.currentSettings.llms || props.defaultSettings.llms)
 	const [llm, setLlm] = useState(props.currentSettings.selectedLlm || props.defaultSettings.selectedLlm)
@@ -32,12 +31,12 @@ const Settings = (props:{
 				'Content-Type': 'application/json'
 			}
 		}
-		if(!datasets.length || reloadDatasets)
+		if(!datasets.length || props.currentSettings.fetchDatasets)
 			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/datasets/`, requestOptions)
 				.then(response => response.json())
 				.then(data => {
 					const dataset_names = data.results.map((d:any)=>d.dataset_name)
-					props.settingsCallback({...currentSettings, datasets: dataset_names})
+					props.settingsCallback({...currentSettings, datasets: dataset_names, fetchDatasets: false})
 					if (dataset_names && dataset_names.length && dataset_names.includes(props.defaultSettings.selectedDataset)){
 						dataset_names.splice(dataset_names.indexOf(props.defaultSettings.selectedDataset), 1)
 						dataset_names.unshift(props.defaultSettings.selectedDataset)
@@ -45,18 +44,14 @@ const Settings = (props:{
 						dataset_names.unshift(props.defaultSettings.selectedDataset)
 					}
 					setDatasets(dataset_names)
-					setReloadDatasets(false)
 				})
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	},[datasets.length])
+	},[datasets.length, props.currentSettings.fetchDatasets])
 
 	useEffect(()=>{
 		currentSettings.selectedDataset = selectedDataset
 	},[selectedDataset, currentSettings])
 
-	const reloadDatasetsCallabck = () => {
-		setReloadDatasets(true)
-	}
 
 	useEffect(()=>{
 		if(deleteDataset){
@@ -182,7 +177,10 @@ const Settings = (props:{
 								</div>
 
 									{/* add new library */}
-									<AddLibrarySettings reloadDatasetsCallabck={reloadDatasetsCallabck}/>
+									<AddLibrarySettings
+										currentSettings={currentSettings}
+										settingsCallback={props.settingsCallback}
+									/>
 								</div> : <></>
 							}
 							{ activeTab === 'llms' ?

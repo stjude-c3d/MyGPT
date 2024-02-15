@@ -47,6 +47,8 @@ function GPTHome(props:{
 			
 			props.settingsCallback({...props.currentSettings, showSettings: false, fetchPapers: false})
 			if (props.currentSettings.fetchPapers === true){
+				setQuery([])
+				setAnswers([])
 				setselectedPaperIdx(0)
 				setSelectedPage(0)
 				setFileAttachmentType('paper_attachment')

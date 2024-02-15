@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
 
 const AddLibrarySettings = (props: {
-	reloadDatasetsCallabck: any
+	currentSettings: any,
+	settingsCallback: any
 }) => {
   const [apiKey, setApiKey] = useState('')
   const [showAPIHelp, setShowAPIHelp] = useState(false)
@@ -22,6 +23,7 @@ const AddLibrarySettings = (props: {
   const emptyUploadDocs = Array.from(Array(40).keys()).map((x:any) => {return {title: '', file: null}})
   const [uploadDocs, setUploadDocs] = useState(emptyUploadDocs)
   const [uploadLibrary, setUploadLibrary] = useState(false)
+  const currentSettings = JSON.parse(JSON.stringify(props.currentSettings))
 
 //   console.log(UploadLibraryName, uploadDocs)
 
@@ -42,7 +44,7 @@ const AddLibrarySettings = (props: {
 		fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/add_zotero_collection/`, requestOptions)
 		.then(response => response.json())
 		.then(data => {
-			props.reloadDatasetsCallabck()
+			props.settingsCallback({...currentSettings, fetchDatasets: true})
 			setAddLibrary(false)
 			setApiKey('')
 			setLibraryId('')
@@ -77,6 +79,7 @@ const AddLibrarySettings = (props: {
 			.then(data => {
 				console.log(data)
 				// props.reloadDatasetsCallabck()
+				props.settingsCallback({...currentSettings, fetchDatasets: true})
 				setUploadLibrary(false)
 				setUploadLibraryName('')
 				setUploadDocs(emptyUploadDocs)

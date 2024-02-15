@@ -13,6 +13,7 @@ const defaultSettings = {
     datasets: ['GPCR'],
 	defaultDataset: 'GPCR',
     selectedDataset: 'GPCR',
+	fetchDatasets: false,
     default_sentence_transformer: 'all-MiniLM-L6-v2',
 	selected_sentence_transformer: 'all-MiniLM-L6-v2',
 	sentence_transformers: [
