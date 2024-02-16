@@ -1,7 +1,10 @@
 [![backend](https://github.com/mb-group/MyGPT/actions/workflows/backend.yml/badge.svg)](https://github.com/mb-group/MyGPT/actions/workflows/backend.yml) [![frontend](https://github.com/mb-group/MyGPT/actions/workflows/frontend.yml/badge.svg)](https://github.com/mb-group/MyGPT/actions/workflows/frontend.yml)
 # MyGPT
 
-<img src='./frontend/public/android-chrome-512x512.png' width='200px' alt='MyGPT logo'>
+<!-- make div and show logo in middle -->
+<div align="center" style='padding:20px;'>
+	<img src='./frontend/public/android-chrome-512x512.png' width='200px' alt='MyGPT logo'>
+</div>
 
 ChatGPT has revolutionized creative occupations, but tasks requiring factual backing suffer from generalized models and limitations such as hallucinations and inconsistency. Here, we present MyGPT — an open-source Large Language Model (LLM) pipeline to ask questions for content from a curated list of publications or video/audio lectures. MyGPT minimizes hallucination by providing a context for the question and generates accurate answers with source citing. MyGPT can run on personal devices or cloud infrastructures and can help with complex tasks such as literature review and learning. 
 

@@ -67,6 +67,7 @@
 
 
 /* CSS style for MyGPT workflow svg */
+
 .cls-1, .cls-2, .cls-3, .cls-4, .cls-5, .cls-6, .cls-7, .cls-8 {
 	font-family: MyriadPro-Semibold, 'Myriad Pro';
 	font-weight: 600;
@@ -272,10 +273,6 @@
 
   .cls-69 {
 	letter-spacing: 0em;
-  }
-
-  .cls-70, .cls-9, .cls-11, .cls-71, .cls-34, .cls-35, .cls-12, .cls-59, .cls-60, .cls-42 {
-	font-family: MyriadPro-Regular, 'Myriad Pro';
   }
 
   .cls-70, .cls-72 {
