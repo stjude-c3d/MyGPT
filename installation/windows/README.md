@@ -1,8 +1,6 @@
-# Installation on Linux
+# Installation on Windows
 
 ## Requirements
-
-This readme is an example for a Linux with Ubuntu platform. Only difference between Ubuntu and other platform is how packages are installed, for example, we will be using `apt` in this readme but you can use your own installer like `dnf` or `pacman` as per your Linux platform.
 
 To Run the MyGPT pipeline, we will need the following minimum specifications for your system:
 
@@ -13,7 +11,6 @@ To Run the MyGPT pipeline, we will need the following minimum specifications for
 We will also need several tools to run the pipeline:
 
 *   Git
-*   Apt
 *   Docker
 *   Ollama
 
@@ -21,23 +18,17 @@ We will also need several tools to run the pipeline:
 
 We will install these two tools in the following steps:
 
-1. **Apt installation**
 
-	Check if you have `apt` installed on your system by running following command.
+1.  **Git installation**
 
-	```
-	apt --help
-	```
-
-	If you get error that apt not found, you can check what package manager your platform is using as default. Some of the default package managers for Linux system are dnf, yum and pacman. If you have any of these package managers, you might want to edit the commands in the cell below according to your needs. We will be using these package manager to install Git and Docker.
-
-2.  **Apt packages installation**
-
-	We will install Apt packages by running following commands:
+	You can check if you have `git` installed on your system by running following command.:
 
 	```
-	sudo apt install git
+	git --version
 	```
+
+	If you get an error that `git not found`, you can install it follwing instructions from this official site [Git download for Windows](https://git-scm.com/download/win)
+
 
 3. **Docker installation**
 
@@ -48,10 +39,13 @@ We will install these two tools in the following steps:
 	docker --version
 	```
 
-	If you get an error that `docker not found`,   Go to the official Docker installation page for Linux and install the appropriate Docker on your system: https://docs.docker.com/desktop/install/linux-install/
+	If you get an error that `docker not found`,   Go to the official Docker installation page for Windows and install the appropriate Docker on your system: https://docs.docker.com/desktop/install/windows-install/
 
 	You can change Docker setting to match requirements for MyGPT:
 	<img src="../../images/docker_resources.png?raw=true" width="700px">
+
+	<u>Troubleshoot help:</u> if you get error `Docker desktop requires a newer WSL kernel version on Windows`, go to this post to fix it: https://medium.com/@dilsharahasanka/solved-docker-desktop-requires-a-newer-wsl-kernel-version-on-windows-b093b1684c0b
+
 
 4. **Ollama installation**
 
@@ -78,7 +72,7 @@ We will install these two tools in the following steps:
 
 	```
 	cd MyGPT
-	bash installation/linux/build_docker.sh
+	call installation\windows\build_docker.bat
 	```
 
 4. **Run docker containers**
@@ -86,7 +80,7 @@ We will install these two tools in the following steps:
 	We will run following script to run docker containers:
 
 	```
-	bash installation/linux/run_docker.sh
+	call installation\windows\run_docker.bat
 	```
 
 	This script should take around 5-10 minutes to run.
@@ -135,19 +129,19 @@ https://www.zotero.org/groups/4982570/babu_group/collections/YTPMLXYY
 
 ## Other optional tasks for MyGPT pipeline
 
-### create super user
+<!-- ### create super user
 
 To create super user, run following command:
 
 ```
 bash MyGPT/installation/pc_no_gpu/macOS/create_superuser.sh
 ```
-You can check backend database at http://localhost:8000/admin/ with username and password you created in above step.
+You can check backend database at http://localhost:8000/admin/ with username and password you created in above step. -->
 
 ### stop docker containers
 
 To stop docker containers, run following command:
 
 ```
-bash MyGPT/installation/pc_no_gpu/macOS/stop_docker.sh
+call MyGPT\installation\windows\stop_docker.bat
 ```

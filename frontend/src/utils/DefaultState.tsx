@@ -4,7 +4,8 @@ const defaultSettings = {
 		{key:'datasets', text:'Publication libraries'},
 		{key:'llms', text:'LLMs'},
 		{key:'llm_parameters', text:'LLM parameters'},
-		{key:'sentence_transformers', text:'Sentence Transformers'}
+		{key:'sentence_transformers', text:'Sentence Transformers'},
+		{key:'relevance_score', text:'Relevance score parameters'},
 ],
 	selectedPanel: 'datasets',
 	llms: ['llama2'],
@@ -25,6 +26,10 @@ const defaultSettings = {
 	],
     system_prompt: 'Use following information to answer the question in less than 100 words, try not to use anything else:',
 	fetchPapers: false,
+	relevance_score_cutoff: {
+		best: 0.4,
+		worst: 1.5
+	}
   }
 
 export default defaultSettings

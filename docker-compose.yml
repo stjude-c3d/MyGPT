@@ -33,47 +33,6 @@ services:
       - db
     links:
       - db
-  llm_api:
-    build: ./llm_api
-    command: >
-      bash -c "python llm_api/manage.py runserver 0.0.0.0:8001"
-    volumes:
-      - .:/code
-      - ./llm_api/models:/code/models
-      - ./llm_api/static:/static
-    ports:
-      - "8001:8001"
-    environment:
-      - POSTGRES_NAME=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-    deploy:
-      resources:
-        limits:
-          cpus: '8.0'
-          memory: 16G
-  biogpt_api:
-    build: ./biogpt_api
-    command: >
-      bash -c "python manage.py migrate --fake sessions zero
-      && python manage.py migrate --fake-initial
-      && python manage.py collectstatic --no-input
-      && python manage.py runserver 0.0.0.0:8001"
-    volumes:
-      - ./biogpt_api:/code
-      # - ./biogpt_api/models:/code/models
-      - ./biogpt_api/static:/static
-    ports:
-      - "8001:8001"
-    environment:
-      - POSTGRES_NAME=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-    deploy:
-      resources:
-        limits:
-          cpus: '8.0'
-          memory: 16G
   nginx:
     build: ./nginx
     volumes:
@@ -104,5 +63,5 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '8.0'
-          memory: 16G
+          cpus: '10.0'
+          memory: 8G

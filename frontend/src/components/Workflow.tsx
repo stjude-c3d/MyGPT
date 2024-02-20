@@ -255,16 +255,16 @@ const Workflow = (props:{
 				<line className={props.focusComponent === 'llm_parameters' ? 'cls-26-focus' : 'cls-26'} x1="873.32" y1="504.51" x2="904.32" y2="504.51"/>
 			</g>
 			<g id="Answer">
-				<rect className="cls-18" x="1090.47" y="404.97" width="128" height="152.04" rx="6.91" ry="6.91"/>
-				<rect className="cls-18" x="1103.5" y="483.5" width="104" height="63.04"/>
-				<text className="cls-2" transform="translate(1113.82 502.6)"><tspan className="cls-33"><tspan className="cls-93" x="0" y="0">S</tspan><tspan x="8.4" y="0">ou</tspan><tspan className="cls-48" x="26.53" y="0">rc</tspan><tspan x="39.12" y="0">e</tspan></tspan><tspan className="cls-106"><tspan className="cls-62" x="0" y="14.4">P</tspan><tspan x="6.56" y="14.4">ublic</tspan><tspan className="cls-40" x="31.96" y="14.4">a</tspan><tspan x="37.98" y="14.4">tion title</tspan></tspan><tspan className="cls-106"><tspan className="cls-36" x="0" y="28.8">P</tspan><tspan className="cls-75" x="6.46" y="28.8">age</tspan></tspan></text>
-				<text className="cls-35" transform="translate(1130.98 577.34)"><tspan className="cls-15" x="0" y="0">A</tspan><tspan x="9.74" y="0">ns</tspan><tspan className="cls-109" x="24.96" y="0">w</tspan><tspan className="cls-100" x="36.58" y="0">er</tspan></text>
-				<rect className="cls-18" x="1103.47" y="419.35" width="104" height="54.39"/>
-				<text className="cls-6" transform="translate(1109.96 436.46)"><tspan className="cls-115" x="0" y="0">A</tspan><tspan className="cls-72" x="10.1" y="0">ns</tspan><tspan className="cls-122" x="25.92" y="0">w</tspan><tspan x="37.7" y="0">er</tspan></text>
-				<line className="cls-26" x1="1137.08" y1="445.45" x2="1192.08" y2="445.45"/>
-				<line className="cls-26" x1="1136.97" y1="457.05" x2="1191.97" y2="457.05"/>
-				<line className="cls-26" x1="1136" y1="462.75" x2="1167" y2="462.75"/>
-				<line className="cls-26" x1="1158.53" y1="451.07" x2="1189.53" y2="451.07"/>
+				<rect className={props.focusComponent === 'relevance_score' ? 'cls-18-focus' : 'cls-18'} x="1090.47" y="404.97" width="128" height="152.04" rx="6.91" ry="6.91"/>
+				<rect className={props.focusComponent === 'relevance_score' ? 'cls-18-focus' : 'cls-18'} x="1103.5" y="483.5" width="104" height="63.04"/>
+				<text className={props.focusComponent === 'relevance_score' ? 'cls-2-focus' : 'cls-2'} transform="translate(1113.82 502.6)"><tspan className="cls-33"><tspan className="cls-93" x="0" y="0">S</tspan><tspan x="8.4" y="0">ou</tspan><tspan className="cls-48" x="26.53" y="0">rc</tspan><tspan x="39.12" y="0">e</tspan></tspan><tspan className="cls-106"><tspan className="cls-62" x="0" y="14.4">P</tspan><tspan x="6.56" y="14.4">ublic</tspan><tspan className="cls-40" x="31.96" y="14.4">a</tspan><tspan x="37.98" y="14.4">tion title</tspan></tspan><tspan className="cls-106"><tspan className="cls-36" x="0" y="28.8">P</tspan><tspan className="cls-75" x="6.46" y="28.8">age</tspan></tspan></text>
+				<text className={props.focusComponent === 'relevance_score' ? 'cls-35-focus' : 'cls-35'} transform="translate(1130.98 577.34)"><tspan className="cls-15" x="0" y="0">A</tspan><tspan x="9.74" y="0">ns</tspan><tspan className="cls-109" x="24.96" y="0">w</tspan><tspan className="cls-100" x="36.58" y="0">er</tspan></text>
+				<rect className={props.focusComponent === 'relevance_score' ? 'cls-18-focus' : 'cls-18'} x="1103.47" y="419.35" width="104" height="54.39"/>
+				<text className={props.focusComponent === 'relevance_score' ? 'cls-6-focus' : 'cls-6'} transform="translate(1109.96 436.46)"><tspan className="cls-115" x="0" y="0">A</tspan><tspan className="cls-72" x="10.1" y="0">ns</tspan><tspan className="cls-122" x="25.92" y="0">w</tspan><tspan x="37.7" y="0">er</tspan></text>
+				<line className={props.focusComponent === 'relevance_score' ? 'cls-26-focus' : 'cls-26'} x1="1137.08" y1="445.45" x2="1192.08" y2="445.45"/>
+				<line className={props.focusComponent === 'relevance_score' ? 'cls-26-focus' : 'cls-26'} x1="1136.97" y1="457.05" x2="1191.97" y2="457.05"/>
+				<line className={props.focusComponent === 'relevance_score' ? 'cls-26-focus' : 'cls-26'} x1="1136" y1="462.75" x2="1167" y2="462.75"/>
+				<line className={props.focusComponent === 'relevance_score' ? 'cls-26-focus' : 'cls-26'} x1="1158.53" y1="451.07" x2="1189.53" y2="451.07"/>
 			</g>
 			<g id="LLMs">
 				<g className={props.focusComponent === 'llms' ? 'cls-13-focus' : 'cls-13'}>

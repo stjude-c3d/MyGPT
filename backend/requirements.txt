@@ -14,7 +14,7 @@ pymupdf
 # huggingface-hub
 nltk
 numpy
-chromadb==0.4.9
+chromadb==0.4.22
 tqdm
 python-dotenv
 pytest-django
