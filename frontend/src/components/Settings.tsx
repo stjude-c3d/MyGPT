@@ -75,18 +75,43 @@ const Settings = (props:{
 
 	// get llms from backend
 	useEffect(()=>{
-		const requestOptions = {
-			method: 'GET',
-			headers: { 
-				'Content-Type': 'application/json'
-			}
+
+		const postData = async () => {
+			const response = await fetch(`http://localhost:11434/api/tags`, {method: 'GET'})
+				const data = await response.json()
+
+				// set models
+				const llms = data.models.map((model:any) => model.name.split(':')[0])
+				const llm = llms[0]
+				setLlms(llms)
+				setLlm(llm)
+
+				// add new model to backend API
+				let llms_object:any = []
+				data.models.forEach((model:any) => {
+					let llm_name = model.name.split(':')[0]
+					let llm_size = model.size* 1e-9
+					let llm_size_gb = llm_size.toFixed(2)
+					llms_object.push({name: llm_name, size: llm_size_gb})
+				})
+				
+				const requestOptions = {
+					method: 'POST',
+					headers: { 
+						'Content-Type': 'application/json',
+						'Authorization': `${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_AUTH_TOKEN_PROD : process.env.REACT_APP_AUTH_TOKEN_DEV}`
+					},
+				setConnection: 'keep-alive',
+				keepalive: true,
+				setTimeout: 10000,
+				body: JSON.stringify({'llms': llms_object})
+				}
+				const response2 = await fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/add_ollama_models/`, requestOptions)
+				const data2 = await response2.json()
+				console.log(data2)
+
 		}
-		fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/llms/`, requestOptions)
-			.then(response => response.json())
-			.then(data => {
-				setLlms(data.results.map((l:any)=>l.model_name.split(':')[0]))
-				setLlm(data.results[0].model_name.split(':')[0])
-			})
+		postData()
 	},[])
 
 	return (
@@ -116,7 +141,7 @@ const Settings = (props:{
 						</div>
 					</div>
 					{/* create right side list of settings */}
-					<div className={'w-3/4 bg-panel2 overflow-y-scroll ' + (window.screen.availHeight < 1000 ? 'h-[80vh]' : 'h-[60vh]')}>
+					<div className={'w-3/4 bg-panel2 overflow-y-auto ' + (window.screen.availHeight < 1000 ? 'h-[80vh]' : 'h-[60vh]')}>
 						<div className={'mx-4 my-4 px-4 bg-gray-300 rounded-md ' + (workflowZoomedIn ? 'h-[45vh]' : workflowCollapsed ? 'h-8' : 'h-[29vh]')}>
 							<div className='flex justify-between m-1'>
 								<div className='text-panel1 text-lg font-bold'>MyGPT Workflow</div>
@@ -222,7 +247,7 @@ const Settings = (props:{
 							activeTab === 'sentence_transformers' ?
 							<div className='px-8 py-2 flex flex-col divide-y'>
 								<div className='m-2'>
-									<div className='text-nav inline-block px-2 mx-4 my-2'>Current Sentence Transformer</div>
+									<div className='text-nav inline-block px-2 mx-4 my-2 text-lg font-semibold'>Current Sentence Transformer</div>
 									<div className='mx-4 px-2'>
 										<DropdownOptions
 											width={'180px'}
@@ -235,7 +260,7 @@ const Settings = (props:{
 									</div>
 								</div>
 								<div className='m-2'>
-									<div className='text-nav inline-block px-2 mx-4 my-2'>Available Sentence Transformer</div>
+									<div className='text-nav inline-block px-2 mx-4 my-2 text-lg font-semibold'>Available Sentence Transformer</div>
 									<div className='mx-4'>
 										<ul className='list-disc ml-4'>
 											{props.defaultSettings.sentence_transformers.map((st:string, index:number) => {
@@ -249,12 +274,32 @@ const Settings = (props:{
 									</div>
 								</div>
 								<div className='m-2'>
-									<div className='text-nav inline-block px-2 mx-4 my-2'>
+									<div className='text-nav inline-block px-2 mx-4 my-2 text-lg font-semibold'>
 										<div className='text-nav p-1 my-1'>Add other Sentence Transformers</div>
 										<p className='text-sm ml-4'> You can choose any Sentence Transformer from this list: <a className='underline' href='https://www.sbert.net/docs/pretrained_models.html'>SBERT.net</a></p>
 										<input type='text' placeholder='Sentence Transformer' className='rounded-md w-60 p-1 ml-4'/>
 										<button className='bg-panel1 text-white px-4 py-1 rounded-md m-2'>Add</button>
 									</div>
+								</div>
+							</div> : <></>
+						}
+						{
+							activeTab === 'relevance_score' ?
+							<div className='px-8 py-2 flex flex-col divide-y'>
+								<div className='m-2'>
+									<div className='text-nav inline-block px-2 mx-4 my-2 text-lg font-semibold'>Relevance Score Cutoff</div>
+									<div className='mx-4 px-2 w-[200px]'>
+										<div className='flex justify-between'>
+											<div className='text-nav p-1 my-1'>Best</div>
+											<input type='number' placeholder='Best' className='rounded-md w-20 p-1 m-1' value={currentSettings.relevance_score_cutoff.best} onChange={(e)=>props.settingsCallback({...currentSettings, relevance_score_cutoff: {...currentSettings.relevance_score_cutoff, best: e.target.value}})}/>
+										</div>
+										<div className='flex justify-between'>
+											<div className='text-nav p-1 my-1'>Worst</div>
+											<input type='number' placeholder='Worst' className='rounded-md w-20 p-1 m-1' value={currentSettings.relevance_score_cutoff.worst} onChange={(e)=>props.settingsCallback({...currentSettings, relevance_score_cutoff: {...currentSettings.relevance_score_cutoff, worst: e.target.value}})}/>
+										</div>
+									</div>
+									<button className='bg-panel1 text-white px-4 py-1 rounded-md mx-4 my-2' onClick={()=>props.settingsCallback(currentSettings)}>Save</button>
+									<button className='bg-panel1 text-white px-4 py-1 rounded-md mx-4 my-2' onClick={()=>props.settingsCallback(props.defaultSettings)}>Reset</button>
 								</div>
 							</div> : <></>
 						}

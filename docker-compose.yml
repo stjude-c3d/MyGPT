@@ -15,12 +15,12 @@ services:
     build: ./backend
     command: >
       bash -c "dockerd >/dev/null 2>&1 & sleep 10
-      && python backend/manage.py migrate --fake sessions zero
-      && python backend/manage.py migrate --fake-initial
-      && python backend/manage.py collectstatic --no-input
-      && python backend/manage.py runserver 0.0.0.0:8000"
+      && python manage.py migrate --fake sessions zero
+      && python manage.py migrate --fake-initial
+      && python manage.py collectstatic --no-input
+      && python manage.py runserver 0.0.0.0:8000"
     volumes:
-      - .:/code
+      - ./backend:/code
       - ./backend/static:/static
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
@@ -44,7 +44,7 @@ services:
   frontend:
     build: ./frontend
     volumes:
-      - .:/code
+      # - .:/code
       - ./frontend/build:/build
     ports:
       - "3000:3000"

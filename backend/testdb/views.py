@@ -103,15 +103,15 @@ def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key)
 
     data = []
     # make directory for pdfs
-    if not os.path.exists('backend/data/pdfs/'+ dataset_name):
-        os.makedirs('backend/data/pdfs/'+ dataset_name)
+    if not os.path.exists('data/pdfs/'+ dataset_name):
+        os.makedirs('data/pdfs/'+ dataset_name)
     
     # Loop through PDF attachments, extract content, and store it in 'data' list
     go_to_next = False
     for idx, title, attachment, abstract in zip( range(1, len(titles)+1), titles, pdf_attachments, abstracts):
-        with open('backend/data/pdfs/'+ dataset_name +'/paper' + str(idx) + '.pdf', 'wb') as f:
+        with open('data/pdfs/'+ dataset_name +'/paper' + str(idx) + '.pdf', 'wb') as f:
             f.write(zot.file(attachment['data']['key']))
-        content = getPDFContent('backend/data/pdfs/'+ dataset_name +'/paper' + str(idx) + '.pdf')
+        content = getPDFContent('data/pdfs/'+ dataset_name +'/paper' + str(idx) + '.pdf')
         papers = Papers.objects.filter(paper_title=title, paper_dataset=dataset)
         if papers.count() > 0:
             paper = papers[0]
@@ -123,7 +123,7 @@ def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key)
                 paper_dataset=dataset,
                 paper_date_time=make_aware(datetime.datetime.now())
             )
-            with open('backend/data/pdfs/'+ dataset_name +'/paper' + str(idx) + '.pdf', 'rb') as f:
+            with open('data/pdfs/'+ dataset_name +'/paper' + str(idx) + '.pdf', 'rb') as f:
                 paper.paper_attachment.save(dataset_name + '/paper' + str(idx) + '.pdf', File(f), save=True)
         if go_to_next:
             go_to_next = False
@@ -153,7 +153,7 @@ def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key)
                 data.append(chunk)
     print('zotero chunks loaded')        
 
-    with open('backend/data/data_chunks/'+ dataset_name +'.txt', 'w') as f:
+    with open('data/data_chunks/'+ dataset_name +'.txt', 'w') as f:
         for chunk in data:
             # convert chunk to string and write to file
             f.write(str(chunk) + '\n')
@@ -177,8 +177,8 @@ def add_dataset_from_upload(request):
         )
 
     # make directory for pdfs
-    if not os.path.exists('backend/data/pdfs/'+ dataset_name):
-        os.makedirs('backend/data/pdfs/'+ dataset_name)
+    if not os.path.exists('data/pdfs/'+ dataset_name):
+        os.makedirs('data/pdfs/'+ dataset_name)
     
     # save pdfs
     data = []
@@ -191,7 +191,7 @@ def add_dataset_from_upload(request):
             paper_dataset=dataset,
             paper_date_time=make_aware(datetime.datetime.now())
         )
-        pdf_name = 'backend/data/pdfs/'+ dataset_name +'/paper' + str(idx+1) + '.pdf'
+        pdf_name = 'data/pdfs/'+ dataset_name +'/paper' + str(idx+1) + '.pdf'
         with open(pdf_name, 'wb') as f:
             f.write(paper_attachments[idx].read())
         with open(pdf_name, 'rb') as f:
@@ -228,7 +228,7 @@ def add_dataset_from_upload(request):
                 data.append(chunk)
     print('zotero chunks loaded')        
 
-    with open('backend/data/data_chunks/'+ dataset_name +'.txt', 'w') as f:
+    with open('data/data_chunks/'+ dataset_name +'.txt', 'w') as f:
         for chunk in data:
             # convert chunk to string and write to file
             f.write(str(chunk) + '\n')
@@ -237,7 +237,7 @@ def add_dataset_from_upload(request):
 
 
 def add_to_chroma(dataset_name):
-    documents_directory = '/code/backend/data/data_chunks'
+    documents_directory = '/code/data/data_chunks'
     # collection_name = 'pub_collection'
     # Read all files in the data directory
     documents = []
@@ -246,7 +246,7 @@ def add_to_chroma(dataset_name):
 
     # Instantiate a persistent chroma client in the persist_directory.
     # Learn more at docs.trychroma.com
-    client = chromadb.PersistentClient(path='/code/backend/chroma_storage/.')
+    client = chromadb.PersistentClient(path='/code/chroma_storage/.')
 
     # If the collection already exists, we will delete it and create a new one.
     client.get_or_create_collection(name=dataset_name)
@@ -288,7 +288,7 @@ def add_to_chroma(dataset_name):
         print(f'Added {new_count - count} documents')
 
 def add_demo_dataset():
-    documents_directory = '/code/backend/data'
+    documents_directory = '/code/data'
     # collection_name = 'pub_collection'
     # Read all files in the data directory
     documents = []
@@ -297,7 +297,7 @@ def add_demo_dataset():
     files = ['GPCR.txt']
     dataset_name = 'GPCR'
     titles = []
-    client = chromadb.PersistentClient(path='/code/backend/chroma_storage/.')
+    client = chromadb.PersistentClient(path='/code/chroma_storage/.')
 
     # If the collection already exists, we will delete it and create a new one.
     client.get_or_create_collection(name=dataset_name)
@@ -372,7 +372,7 @@ def nearestDataChroma(text, dataset_name):
 
     # If the collection already exists, we just return it. This allows us to add more
     # data to an existing collection.
-    client = chromadb.PersistentClient(path='/code/backend/chroma_storage/.')
+    client = chromadb.PersistentClient(path='/code/chroma_storage/.')
     collection = client.get_collection(name=dataset_name)
     # collection = app_config.collection
 
@@ -481,9 +481,9 @@ def highlight_pdf(input_file, output_file, source_grp):
     input_pdf.save(output_file, garbage=4, deflate=True, clean=True)
 
 def get_ollama_models():
-    command = 'docker exec -i ollama ollama list > backend/data/ollama_models.txt'
+    command = 'docker exec -i ollama ollama list > data/ollama_models.txt'
     os.system(command)
-    with open('backend/data/ollama_models.txt', 'r') as f:
+    with open('data/ollama_models.txt', 'r') as f:
         lines = f.readlines()
         models = []
         for line in lines:
@@ -494,7 +494,7 @@ def get_ollama_models():
             model['size'] = line.split('\t')[2]
             models.append(model)
     # delete file
-    os.remove('backend/data/ollama_models.txt')
+    os.remove('data/ollama_models.txt')
     for model in models:
         if Model.objects.filter(model_name=model.get("name")).count() == 0:
             Model.objects.create(model_name=model.get("name"), model_size=model.get("size"))
@@ -643,8 +643,8 @@ def get_context(request):
             else:
                 paper_name =   paper_obj.path.split('/')[-1]
 
-            original_pdf_path = 'backend/data/pdfs/'+ dataset_name + '/' + paper_name
-            highlighted_pdf_path = 'backend/data/pdfs/' + dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf'
+            original_pdf_path = 'data/pdfs/'+ dataset_name + '/' + paper_name
+            highlighted_pdf_path = 'data/pdfs/' + dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf'
 
             highlight_pdf(
                 original_pdf_path, 
@@ -729,14 +729,16 @@ def upload_documents(request):
         dataset_name = add_dataset_from_upload(request)
         add_to_chroma(dataset_name)
         return Response({'uploaded':True}, content_type="application/json")
-    
+
 @api_view(['POST'])
-def add_ollama_model(request):
+def add_ollama_models(request):
     if request.method == 'POST':
-        ollama_model = JSONParser().parse(request)
-        if Model.objects.filter(model_name=ollama_model['name']).count() == 0:
-            Model.objects.create(
-                model_name=ollama_model['name'],
-                model_size=ollama_model['size']
-            )
+        json_request = JSONParser().parse(request)
+        ollama_models = json_request['llms']
+        for ollama_model in ollama_models:
+            if Model.objects.filter(model_name=ollama_model['name']).count() == 0:
+                Model.objects.create(
+                    model_name=ollama_model['name'],
+                    model_size=ollama_model['size']
+                )
         return Response({'added':True}, content_type="application/json")

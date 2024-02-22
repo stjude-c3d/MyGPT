@@ -100,12 +100,13 @@ const LLMSettings = (props: {
 					setConnection: 'keep-alive',
 					keepalive: true,
 					setTimeout: 10000,
-					body: JSON.stringify({ 
-						'name': llm.name,
-						'size': llm_size_gb,
-					})
+					body: JSON.stringify({
+						'llms': [{ 
+							'name': llm.name,
+							'size': llm_size_gb,
+						}]})
 				}
-				let llm_endpoint = 'add_ollama_model'
+				let llm_endpoint = 'add_ollama_models'
 				fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/${llm_endpoint}/?format=json`, requestOptions)
 					.then(response => response.json())
 					.then((data:any) => {
