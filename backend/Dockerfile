@@ -3,7 +3,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 RUN mkdir /code
 WORKDIR /code
-# RUN apt update
+RUN apt update
 RUN pip install --upgrade pip
 RUN pip install --upgrade setuptools wheel
 RUN apt install -y build-essential

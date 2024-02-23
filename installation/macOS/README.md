@@ -62,6 +62,48 @@ We will install these required tools in the following steps:
 
 ## MyGPT installation
 
+You have 2 options to install MyGPT pipeline:
+
+1. Use pre-built docker images (faster and easier to install, but you can't modify source code)
+2. Build docker images from source code (slower, but you can modify source code)
+
+### Option 1: Use pre-built docker images
+
+1. **Get MyGPT source code**
+
+	If you have zip file with MyGPT source code, you can unzip it and copy it on your desktop or your desired location. You can skip remaining instructions from below and go to Step 2.
+
+	If you want to get source code from GitHub we will first get MyGPT source code by running following command. It will create `MyGPT` folder on your Desktop. To get the source code from GitHub, we will need `GitHub username` and `GitHub access token` as the GitHub repo is private. When you run the following command, it will ask for this credentials.
+
+	```
+	git clone https://github.com/mb-group/MyGPT.git
+	```
+
+	<u>Note:</u> If you don't have GitHub access token, you can genearte classic token using this guideline: https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic
+
+2. **Run docker containers**
+
+	We will run following script to run docker containers:
+
+	```
+	cd MyGPT/installation/macOS/prebuilt_images
+	bash run_docker.sh
+	```
+
+	This script should take around 5-10 minutes to run.
+	While above script is running, it will open several pages in your default browser. 
+	You can see status of different components of MyGPT pipeline on these pages.
+	* backend: http://localhost:8000/
+
+		<img src="../../images/backend_server.png?raw=true" width="500px">
+
+	* frontend: http://localhost:3000/
+
+		<img src="../../images/frontend_launch.png?raw=true" width="1200px">
+
+
+### Option 2: Build docker images from source code
+
 1. **Get MyGPT source code**
 
 	If you have zip file with MyGPT source code, you can unzip it and copy it on your desktop or your desired location. You can skip remaining instructions from below and go to Step 2.
@@ -80,7 +122,7 @@ We will install these required tools in the following steps:
 
 	```
 	cd MyGPT
-	bash installation/macOS/build_docker.sh
+	bash installation/macOS/build_images/build_docker.sh
 	```
 
 3. **Run docker containers**
@@ -88,7 +130,7 @@ We will install these required tools in the following steps:
 	We will run following script to run docker containers:
 
 	```
-	bash installation/macOS/run_docker.sh
+	bash installation/macOS/build_images/run_docker.sh
 	```
 
 	This script should take around 5-10 minutes to run.
@@ -142,7 +184,7 @@ https://www.zotero.org/groups/4982570/babu_group/collections/YTPMLXYY
 To create super user, run following command:
 
 ```
-bash MyGPT/installation/pc_no_gpu/macOS/create_superuser.sh
+bash MyGPT/installation/macOS/build_images/create_superuser.sh
 ```
 You can check backend database at http://localhost:8000/admin/ with username and password you created in above step.
 
@@ -151,5 +193,5 @@ You can check backend database at http://localhost:8000/admin/ with username and
 To stop docker containers, run following command:
 
 ```
-bash MyGPT/installation/pc_no_gpu/macOS/stop_docker.sh
+bash MyGPT/installation/macOS/build_images/stop_docker.sh
 ```

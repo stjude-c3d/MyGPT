@@ -22,4 +22,4 @@ biogpt_api/.env
 biogpt_api/static/*
 ollama/models/blobs/*
 ollama/models/manifests/*
-installation/macOS/data/*
+installation/macOS/prebuilt_images/data/*
