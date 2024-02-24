@@ -2,6 +2,7 @@
 .DS_Store
 *.bin
 backend/static/*
+backend/media/*
 backend/.env
 llm_api/static/*
 llm_api/.env
@@ -23,3 +24,4 @@ biogpt_api/static/*
 ollama/models/blobs/*
 ollama/models/manifests/*
 installation/macOS/prebuilt_images/data/*
+installation/macOS/prebuilt_images/libraries/papers/*

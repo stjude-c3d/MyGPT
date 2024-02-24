@@ -11,6 +11,11 @@ services:
       - POSTGRES_NAME=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
   backend:
     image: ghcr.io/stjude-c3d/mygpt-backend:latest
     command: >
@@ -19,14 +24,23 @@ services:
       && python manage.py migrate --fake-initial
       && python manage.py collectstatic --no-input
       && python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./libraries:/media
     ports:
       - "8000:8000"
     environment:
       - POSTGRES_NAME=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000"]
+      interval: 30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     links:
       - db
   frontend:
@@ -34,4 +48,5 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy

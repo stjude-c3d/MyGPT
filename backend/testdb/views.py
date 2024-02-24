@@ -46,7 +46,6 @@ def home(request):
             datasets = Dataset.objects.all()
             return render(request, 'home.html', {'success': 'Successfully uploaded dataset', 'datasets': datasets, 'form': form, 'file_count': range(1,file_count+1)})
 
-    get_ollama_models()
     return render(request, 'home.html', {'datasets': datasets, 'form': form, 'file_count': range(1,file_count+1)})
 
 ####################
@@ -195,7 +194,7 @@ def add_dataset_from_upload(request):
         with open(pdf_name, 'wb') as f:
             f.write(paper_attachments[idx].read())
         with open(pdf_name, 'rb') as f:
-            paper.paper_attachment.save('papers/' + dataset_name + '/paper' + str(idx+1) + '.pdf', File(f), save=True)
+            paper.paper_attachment.save(dataset_name + '/paper' + str(idx+1) + '.pdf', File(f), save=True)
 
         # extract text from pdfs
         content = getPDFContent(pdf_name)
@@ -480,26 +479,6 @@ def highlight_pdf(input_file, output_file, source_grp):
 
     input_pdf.save(output_file, garbage=4, deflate=True, clean=True)
 
-def get_ollama_models():
-    command = 'docker exec -i ollama ollama list > data/ollama_models.txt'
-    os.system(command)
-    with open('data/ollama_models.txt', 'r') as f:
-        lines = f.readlines()
-        models = []
-        for line in lines:
-            if 'ID' in line:
-                continue
-            model = {}
-            model['name'] = line.split('\t')[0].split(' ')[0]
-            model['size'] = line.split('\t')[2]
-            models.append(model)
-    # delete file
-    os.remove('data/ollama_models.txt')
-    for model in models:
-        if Model.objects.filter(model_name=model.get("name")).count() == 0:
-            Model.objects.create(model_name=model.get("name"), model_size=model.get("size"))
-    return
-
 ####################
 # API viewSets     #
 ####################
@@ -566,7 +545,7 @@ def get_context(request):
     if request.method == 'POST':
         json_request = JSONParser().parse(request)
         question_text = json_request['text']
-        model = json_request['model_type'] + ':latest'
+        model = json_request['model_type']
         model_type = Model.objects.get(model_name=model)
         dataset_name = json_request['dataset']
         new_conversation = json_request['new_conversation']
@@ -671,7 +650,7 @@ def save_answer(request):
         json_request = JSONParser().parse(request)
         question_text = json_request['question_text']
         answer_text = json_request['answer_text']
-        model = json_request['model_type'] + ':latest'
+        model = json_request['model_type']
         model_type = Model.objects.get(model_name=model)
         question = Question.objects.get(question_text=question_text, model_type=model_type)
         Answer.objects.create(
