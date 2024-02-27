@@ -60,6 +60,14 @@ We will install these required tools in the following steps:
 
 	Finally, download and install Ollama by following instructions from this offical [Ollama site](https://ollama.ai/)
 
+	You can check if Ollama is running by visiting http://localhost:11434/ in your default browser.
+
+	Once you confirm Ollama is running, you have to pull Lllama2 model by running following command:
+
+	```
+	ollama pull llama2
+	```
+
 ## MyGPT installation
 
 You have 2 options to install MyGPT pipeline:
@@ -76,12 +84,22 @@ You have 2 options to install MyGPT pipeline:
 	If you want to get source code from GitHub we will first get MyGPT source code by running following command. It will create `MyGPT` folder on your Desktop. To get the source code from GitHub, we will need `GitHub username` and `GitHub access token` as the GitHub repo is private. When you run the following command, it will ask for this credentials.
 
 	```
-	git clone https://github.com/mb-group/MyGPT.git
+	git clone https://github.com/stjude-c3d/MyGPT.git
 	```
 
-	<u>Note:</u> If you don't have GitHub access token, you can genearte classic token using this guideline: https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic
+	<ins>Note:</ins> If you don't have GitHub access token, you can genearte classic token using this guideline: https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic
 
-2. **Run docker containers**
+2. login to GitHub Docker registry
+
+	As the GitHub repository is private rightnow, we have to login to GitHub Docker registry to use the prebuilt images. To login to GitHub Docker registry, run following command. It will ask for your GitHub username and password. 
+	
+	<ins> Caution:</ins> the password is your access token (same token you used in step 1), not your github password you use to login in github account.
+
+	```
+	docker login ghcr.io
+	```
+
+3. **Run docker containers**
 
 	We will run following script to run docker containers:
 
@@ -114,7 +132,7 @@ You have 2 options to install MyGPT pipeline:
 	git clone https://github.com/mb-group/MyGPT.git
 	```
 
-	<u>Note:</u> If you don't have GitHub access token, you can genearte classic token using this guideline: https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic
+	<ins>Note:</ins> If you don't have GitHub access token, you can genearte classic token using this guideline: https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic
 
 2. **Build docker images**
 
@@ -167,30 +185,45 @@ You have 2 options to install MyGPT pipeline:
 
 	<img src="../../images/MyGPT_zotero_menu.png?raw=true" width="800px">
 
-* <u>Zotero API key:</u> You can generate an API key in your profile settings https://www.zotero.org/settings/keys
+* <ins>Zotero API key:</ins> You can generate an API key in your profile settings https://www.zotero.org/settings/keys
 
-* <u>Zotero User ID:</u> You can get it from Zotero prfile page by visiting https://www.zotero.org/settings/keys. It's 6-7 digit number.
+* <ins>Zotero User ID:</ins> You can get it from Zotero prfile page by visiting https://www.zotero.org/settings/keys. It's 6-7 digit number.
 
-* <u>Zotero Group ID:</u> You can get it from URL of the group, for example, here is URL for BABU group and group ID is `4982570`: 
+* <ins>Zotero Group ID:</ins> You can get it from URL of the group, for example, here is URL for BABU group and group ID is `4982570`: 
 https://www.zotero.org/groups/4982570/babu_group/
 
-* <u>Zotero Collection ID:</u> You can get it from URL of the collection, for example, here is URL for BABU group and collection ID is `YTPMLXYY`:
+* <ins>Zotero Collection ID:</ins> You can get it from URL of the collection, for example, here is URL for BABU group and collection ID is `YTPMLXYY`:
 https://www.zotero.org/groups/4982570/babu_group/collections/YTPMLXYY
 
 ## Other optional tasks for MyGPT pipeline
 
 ### create super user
 
-To create super user, run following command:
+To create super user, run following command if you are using pre-built docker images:
+
+```
+cd MyGPT/installation/macOS/prebuilt_images/
+bash create_superuser.sh
+```
+
+Or run following command if you are building docker images:
 
 ```
 bash MyGPT/installation/macOS/build_images/create_superuser.sh
 ```
+
 You can check backend database at http://localhost:8000/admin/ with username and password you created in above step.
 
 ### stop docker containers
 
-To stop docker containers, run following command:
+To stop docker containers, run following command if you are using pre-built docker images:
+```
+cd MyGPT/installation/macOS/prebuilt_images/
+bash stop_docker.sh
+```
+
+Or run following command if you are building docker images:
+
 
 ```
 bash MyGPT/installation/macOS/build_images/stop_docker.sh

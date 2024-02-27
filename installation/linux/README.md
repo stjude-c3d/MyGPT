@@ -57,7 +57,73 @@ We will install these two tools in the following steps:
 
 	Finally, download and install Ollama by following instructions from this offical [Ollama site](https://ollama.ai/)
 
+	After installation, you can run following command in Terminal to start Ollama server, if you haven't done it already:
+
+	```
+	sudo systemctl start ollama
+	```
+
+	You can check if Ollama is running by visiting http://localhost:11434/ in your default browser.
+
+	Once you start Ollama, you have to pull Lllama2 model by running following command:
+
+	```
+	ollama pull llama2
+	```
+
 ## MyGPT installation
+
+You have 2 options to install MyGPT pipeline:
+
+1. Use pre-built docker images (faster and easier to install, but you can't modify source code)
+2. Build docker images from source code (slower, but you can modify source code)
+
+### Option 1: Use pre-built docker images
+
+1. **Get MyGPT source code**
+
+	If you have zip file with MyGPT source code, you can unzip it and copy it on your desktop or your desired location. You can skip remaining instructions from below and go to Step 2.
+
+	If you want to get source code from GitHub we will first get MyGPT source code by running following command. It will create `MyGPT` folder on your Desktop. To get the source code from GitHub, we will need `GitHub username` and `GitHub access token` as the GitHub repo is private. When you run the following command, it will ask for this credentials.
+
+	```
+	git clone https://github.com/stjude-c3d/MyGPT.git
+	```
+
+	<ins>Note:</ins> If you don't have GitHub access token, you can genearte classic token using this guideline: https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic
+
+2. login to GitHub Docker registry
+
+	As the GitHub repository is private rightnow, we have to login to GitHub Docker registry to use the prebuilt images. To login to GitHub Docker registry, run following command. It will ask for your GitHub username and password. 
+	
+	<ins> Caution:</ins> the password is your access token (same token you used in step 1), not your github password you use to login in github account.
+
+	```
+	sudo docker login ghcr.io
+	```
+
+3. **Run docker containers**
+
+	We will run following script to run docker containers:
+
+	```
+	cd MyGPT/installation/linux/prebuilt_images
+	bash run_docker.sh
+	```
+
+	This script should take around 5-10 minutes to run.
+	While above script is running, it will open several pages in your default browser. 
+	You can see status of different components of MyGPT pipeline on these pages.
+	* backend: http://localhost:8000/
+
+		<img src="../../images/backend_server.png?raw=true" width="500px">
+
+	* frontend: http://localhost:3000/
+
+		<img src="../../images/frontend_launch.png?raw=true" width="1200px">
+
+
+### Option 2: Build docker images from source code
 
 1. **Get MyGPT source code**
 
@@ -78,7 +144,7 @@ We will install these two tools in the following steps:
 
 	```
 	cd MyGPT
-	bash installation/linux/build_docker.sh
+	bash installation/linux/build_images/build_docker.sh
 	```
 
 4. **Run docker containers**
@@ -86,7 +152,7 @@ We will install these two tools in the following steps:
 	We will run following script to run docker containers:
 
 	```
-	bash installation/linux/run_docker.sh
+	bash installation/linux/build_images/run_docker.sh
 	```
 
 	This script should take around 5-10 minutes to run.
@@ -137,17 +203,31 @@ https://www.zotero.org/groups/4982570/babu_group/collections/YTPMLXYY
 
 ### create super user
 
-To create super user, run following command:
+To create super user, run following command if you are using pre-built docker images:
 
 ```
-bash MyGPT/installation/pc_no_gpu/macOS/create_superuser.sh
+cd MyGPT/installation/linux/prebuilt_images/
+bash create_superuser.sh
 ```
+
+Or run following command if you are building docker images:
+
+```
+bash MyGPT/installation/linux/build_images/create_superuser.sh
+```
+
 You can check backend database at http://localhost:8000/admin/ with username and password you created in above step.
 
 ### stop docker containers
 
-To stop docker containers, run following command:
+To stop docker containers, run following command if you are using pre-built docker images:
+```
+cd MyGPT/installation/linux/prebuilt_images/
+bash stop_docker.sh
+```
+
+Or run following command if you are building docker images:
+
 
 ```
-bash MyGPT/installation/pc_no_gpu/macOS/stop_docker.sh
-```
+bash MyGPT/installation/linux/build_images/stop_docker.sh

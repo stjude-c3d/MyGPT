@@ -25,3 +25,5 @@ ollama/models/blobs/*
 ollama/models/manifests/*
 installation/macOS/prebuilt_images/data/*
 installation/macOS/prebuilt_images/libraries/papers/*
+installation/linux/prebuilt_images/data/*
+installation/linux/prebuilt_images/libraries/papers/*
