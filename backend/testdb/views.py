@@ -32,7 +32,8 @@ def home(request):
         add_demo_dataset()
 
     elif(request.GET.get('reload_library')):
-        datasets.get(dataset_name='GPCR').delete()
+        if datasets.filter(dataset_name='GPCR').count() > 0:
+            datasets.get(dataset_name='GPCR').delete()
         add_demo_dataset()
         datasets = Dataset.objects.all()
         return render(request, 'home.html', {'success': 'Successfully reloaded demo dataset', 'datasets': datasets, 'form': form, 'file_count': range(1,file_count+1)})
@@ -324,16 +325,19 @@ def add_demo_dataset():
                     if line_json['title'] not in titles:
                         titles.append(line_json['title'])
         ids = [str(i) for i in range(count, count + len(documents))]
+       
+        temp_collection = client.get_or_create_collection(name=dataset_name)
         for i in tqdm(
             range(0, len(documents), 100), desc='Adding documents', unit_scale=100
         ):
-            collection.add(
+            temp_collection.add(
                 ids=ids[i : i + 100],
                 documents=documents[i : i + 100],
                 metadatas=metadatas[i : i + 100],  # type: ignore
             )
 
         new_count = collection.count()
+        print(f'new_count: {new_count}')
         dataset = Dataset.objects.create(
             dataset_name=dataset_name,
             dataset_size=new_count,
