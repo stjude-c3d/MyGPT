@@ -38,9 +38,9 @@ jobs:
      with:
       context: backend
       file: backend/Dockerfile
-      platforms: linux/arm64
+      platforms: linux/amd64
       # platforms: linux/amd64,linux/arm64
       push: true
       tags: |
        ghcr.io/stjude-c3d/mygpt-backend:latest
-       ghcr.io/stjude-c3d/mygpt-backend:latest-arm64
+       ghcr.io/stjude-c3d/mygpt-backend:latest-amd64
