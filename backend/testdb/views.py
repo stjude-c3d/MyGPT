@@ -300,9 +300,8 @@ def add_demo_dataset():
     client = chromadb.PersistentClient(path='/code/chroma_storage/.')
 
     # If the collection already exists, we will delete it and create a new one.
-    client.get_or_create_collection(name=dataset_name)
     client.delete_collection(name=dataset_name)
-    collection = client.get_or_create_collection(name=dataset_name)
+    collection = client.create_collection(name=dataset_name)
 
     # Create ids from the current count
     count = collection.count()
@@ -329,12 +328,15 @@ def add_demo_dataset():
         temp_collection = client.get_or_create_collection(name=dataset_name)
         for i in tqdm(
             range(0, len(documents), 100), desc='Adding documents', unit_scale=100
-        ):
-            temp_collection.add(
-                ids=ids[i : i + 100],
-                documents=documents[i : i + 100],
-                metadatas=metadatas[i : i + 100],  # type: ignore
-            )
+        ):  
+            try:
+                temp_collection.add(
+                    ids=ids[i : i + 100],
+                    documents=documents[i : i + 100],
+                    metadatas=metadatas[i : i + 100],  # type: ignore
+                )
+            except:
+                print('error adding documents')
 
         new_count = collection.count()
         print(f'new_count: {new_count}')
