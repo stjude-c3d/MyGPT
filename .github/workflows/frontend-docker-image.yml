@@ -1,13 +1,13 @@
-name: Backend Docker Image
+name: Frontend Docker Image
 
 on:
 #  push:
 #   paths:
-#   - "backend/**"
+#   - "frontend/**"
 #   branches: [ "main" ]
 #  pull_request:
 #   paths:
-#   - "backend/**"
+#   - "frontend/**"
 #   branches: [ "main" ]
  workflow_dispatch:
  
@@ -36,11 +36,9 @@ jobs:
    - name: Build and push
      uses: docker/build-push-action@v5
      with:
-      context: backend
-      file: backend/Dockerfile
-      platforms: linux/amd64
-      # platforms: linux/amd64,linux/arm64
+      context: frontend
+      file: frontend/Dockerfile
+      platforms: linux/amd64,linux/arm64
       push: true
       tags: |
-       ghcr.io/stjude-c3d/mygpt-backend:latest
-       ghcr.io/stjude-c3d/mygpt-backend:latest-amd64
+       ghcr.io/stjude-c3d/mygpt-frontend:latest
