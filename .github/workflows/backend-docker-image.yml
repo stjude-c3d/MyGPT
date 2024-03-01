@@ -9,6 +9,7 @@ on:
   paths:
   - "backend/**"
   branches: [ "main" ]
+ 
 
 jobs:
  build:
@@ -23,18 +24,18 @@ jobs:
 
   # build for arm64 and amd64
    - name: Set up QEMU
-     uses: docker/setup-qemu-action@v1
+     uses: docker/setup-qemu-action@v3
 
    - name: Set up Docker Buildx
-     uses: docker/setup-buildx-action@v1
+     uses: docker/setup-buildx-action@v3
 
    - name: Build and push
-     uses: docker/build-push-action@v2
+     uses: docker/build-push-action@v5
      with:
       context: backend
       file: backend/Dockerfile
       platforms: linux/amd64,linux/arm64
       push: true
       tags: |
-       ghcr.io/${{ github.repository }}-backend:latest
-       ghcr.io/${{ github.repository }}-backend:latest-arm64
+       ghcr.io/stjude-c3d/mygpt-backend:latest
+       ghcr.io/stjude-c3d/mygpt-backend:latest-arm64
