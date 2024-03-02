@@ -293,15 +293,14 @@ def add_demo_dataset():
     # Read all files in the data directory
     documents = []
     metadatas = []
-    files = os.listdir(documents_directory)
-    files = ['GPCR.txt']
     dataset_name = 'GPCR'
     titles = []
     client = chromadb.PersistentClient(path='/code/chroma_storage/.')
 
     # If the collection already exists, we will delete it and create a new one.
-    client.delete_collection(name=dataset_name)
-    collection = client.create_collection(name=dataset_name)
+    if client.get_collection(name=dataset_name):
+        client.delete_collection(name=dataset_name)
+    collection = client.get_or_create_collection(name=dataset_name)
 
     # Create ids from the current count
     count = collection.count()
@@ -309,28 +308,26 @@ def add_demo_dataset():
 
     # Load the documents in batches of 100
     if count == 0:
-        for filename in files:
-            # collection_name = filename
-            with open(f'{documents_directory}/data_chunks/{filename}', 'r') as file:
-                for line_number, line in enumerate(
-                    tqdm((file.readlines()), desc=f'Reading {filename}'), 1
-                ):
-                    # Strip whitespace and append the line to the documents list
-                    line = line.strip()
-                    #convert line to json
-                    line_json = eval(line)
-                    documents.append(line_json['content'])
-                    metadatas.append({'filename': line_json['title'], 'page': line_json['page']})
-                    if line_json['title'] not in titles:
-                        titles.append(line_json['title'])
+        # collection_name = filename
+        with open(f'{documents_directory}/data_chunks/GPCR.txt', 'r') as file:
+            for line_number, line in enumerate(
+                tqdm((file.readlines()), desc=f'Reading GPCR.txt'), 1
+            ):
+                # Strip whitespace and append the line to the documents list
+                line = line.strip()
+                #convert line to json
+                line_json = eval(line)
+                documents.append(line_json['content'])
+                metadatas.append({'filename': line_json['title'], 'page': line_json['page']})
+                if line_json['title'] not in titles:
+                    titles.append(line_json['title'])
         ids = [str(i) for i in range(count, count + len(documents))]
        
-        temp_collection = client.get_or_create_collection(name=dataset_name)
         for i in tqdm(
             range(0, len(documents), 100), desc='Adding documents', unit_scale=100
         ):  
             try:
-                temp_collection.add(
+                collection.add(
                     ids=ids[i : i + 100],
                     documents=documents[i : i + 100],
                     metadatas=metadatas[i : i + 100],  # type: ignore
@@ -338,7 +335,12 @@ def add_demo_dataset():
             except:
                 print('error adding documents')
 
-        new_count = collection.count()
+        new_count = 0
+        try:
+            new_count = collection.count()
+        except:
+            print('error counting documents')
+        
         print(f'new_count: {new_count}')
         dataset = Dataset.objects.create(
             dataset_name=dataset_name,
