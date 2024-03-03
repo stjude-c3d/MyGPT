@@ -300,7 +300,7 @@ def add_demo_dataset():
     # If the collection already exists, we will delete it and create a new one.
     if len(client.list_collections()):
         for collection in client.list_collections():
-            if collection['name'] == dataset_name:
+            if collection.name == dataset_name:
                 client.delete_collection(name=dataset_name)
     collection = client.get_or_create_collection(name=dataset_name)
 
