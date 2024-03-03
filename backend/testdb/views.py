@@ -298,8 +298,10 @@ def add_demo_dataset():
     client = chromadb.PersistentClient(path='/code/chroma_storage/.')
 
     # If the collection already exists, we will delete it and create a new one.
-    if client.get_collection(name=dataset_name):
-        client.delete_collection(name=dataset_name)
+    if len(client.list_collections()):
+        for collection in client.list_collections():
+            if collection['name'] == dataset_name:
+                client.delete_collection(name=dataset_name)
     collection = client.get_or_create_collection(name=dataset_name)
 
     # Create ids from the current count

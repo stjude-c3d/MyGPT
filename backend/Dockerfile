@@ -13,3 +13,4 @@ RUN apt install -y curl
 COPY requirements.txt /code/
 RUN pip install -r requirements.txt
 COPY . /code/
+COPY ./env_example /code/.env
