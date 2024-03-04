@@ -3,6 +3,12 @@
 *.bin
 backend/static/*
 backend/media/*
+backend/chroma_storage/*
+backend/data/data_chunks/*
+!backend/data/data_chunks/GPCR.txt
+backend/data/pdfs/*
+!backend/data/pdfs/GPCR
+backend/data/pdfs/GPCR/*_highlighted.pdf
 backend/.env
 llm_api/static/*
 llm_api/.env
@@ -14,7 +20,6 @@ data/*
 *.wav
 .chroma/*
 frontend/public/*.pdf
-backend/chroma_storage/*
 chroma/chroma_storage/*
 *.pyc
 .DS_Store
