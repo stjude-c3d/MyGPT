@@ -1,4 +1,4 @@
-from .models import Model, Dataset, Papers, Question, Answer, Source
+from .models import Model, Dataset, Papers, Conversation, Question, Answer, Source, FrontEndSettings
 from rest_framework import serializers
 
 class ModelSerializer(serializers.HyperlinkedModelSerializer):
@@ -9,7 +9,7 @@ class ModelSerializer(serializers.HyperlinkedModelSerializer):
 class DatasetSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Dataset
-        fields = ['dataset_name', 'zotero_id', 'dataset_size', 'dataset_date_time']
+        fields = ['dataset_name', 'zotero_id', 'dataset_size', 'dataset_date_time', 'user', 'user_email', 'user_group']
 
 class PapersSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
@@ -21,6 +21,10 @@ class QuestionSerializer(serializers.HyperlinkedModelSerializer):
         model = Question
         fields = ['question_text', 'question_dataset', 'saved_date_time']
 
+class ConversationSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Conversation
+        fields = ['conversation_dataset', 'question_answer_count', 'user', 'start_date_time', 'last_date_time']
 
 class AnswerSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
@@ -31,3 +35,8 @@ class SourceSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Source
         fields = ['source_paper', 'source_page', 'context', 'distance', 'question']
+
+class FrontEndSettingsSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = FrontEndSettings
+        fields = ['show_no_context_switch', 'azure_login', 'saved_date_time']

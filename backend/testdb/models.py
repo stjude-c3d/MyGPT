@@ -21,6 +21,9 @@ class Dataset(models.Model):
 	dataset_name = models.CharField(max_length=200, default='-')
 	zotero_id = models.CharField(max_length=40, default='-')
 	dataset_size = models.IntegerField(default=0)
+	user = models.CharField(max_length=200, default='-')
+	user_email = models.CharField(max_length=200, default='-')
+	user_group = models.CharField(max_length=200, default='-')
 	dataset_date_time = models.DateTimeField(default=timezone.now, null=True)
 
 	def __str__(self):
@@ -43,6 +46,7 @@ class Papers(models.Model):
 class Conversation(models.Model):
 	conversation_dataset = models.ForeignKey('Dataset', on_delete=models.CASCADE)
 	question_answer_count = models.IntegerField(default=0)
+	user = models.CharField(max_length=200, default='-')
 	start_date_time = models.DateTimeField(default=timezone.now, null=True)
 	last_date_time = models.DateTimeField(default=timezone.now, null=True)
 
@@ -82,3 +86,8 @@ class Model(models.Model):
 
 	def __str__(self):
 		return self.model_name
+	
+class FrontEndSettings(models.Model):
+	show_no_context_switch = models.BooleanField(default=False)
+	azure_login = models.BooleanField(default=False)
+	saved_date_time = models.DateTimeField(default=timezone.now, null=True)

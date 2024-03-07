@@ -17,7 +17,7 @@ import re
 import os
 import json
 import re
-from .models import Papers, Dataset, Question, Answer, Source, Conversation, Model
+from .models import Papers, Dataset, Question, Answer, Source, Conversation, Model, FrontEndSettings
 from .serializers import ModelSerializer, PapersSerializer, QuestionSerializer, AnswerSerializer, DatasetSerializer
 from .forms import PapersForm
 
@@ -560,11 +560,16 @@ def get_context(request):
         dataset_name = json_request['dataset']
         new_conversation = json_request['new_conversation']
         previous_question = json_request['previous_query']
-        context, titles, pages, chunks, distances = nearestDataChroma(question_text, dataset_name)
-        sources = []
-        distances = [round(dist, 3) for dist in distances]
-        confidence_score = get_confidence_score(distances)
-
+        no_context = json_request['no_context']
+        if no_context:    
+            context, titles, pages, chunks, distances = '', [], [], [], []
+            sources = []
+            confidence_score = 0
+        else:
+            context, titles, pages, chunks, distances = nearestDataChroma(question_text, dataset_name)
+            sources = []
+            distances = [round(dist, 3) for dist in distances]
+            confidence_score = get_confidence_score(distances)
         # save question to database
         current_date_time = make_aware(datetime.datetime.now())
         dataset = Dataset.objects.get(dataset_name=dataset_name)
@@ -731,3 +736,23 @@ def add_ollama_models(request):
                     model_size=ollama_model['size']
                 )
         return Response({'added':True}, content_type="application/json")
+    
+@api_view(['GET'])
+def get_frontend_settings(request):
+    if request.method == 'GET':
+        # check if settings exist
+        if FrontEndSettings.objects.count() == 0:
+            # create default settings
+            FrontEndSettings.objects.create(
+                show_no_context_switch=False,
+                azure_login=False,
+                saved_date_time=make_aware(datetime.datetime.now())
+            )
+        
+        # get the latest settings
+        frontend_settings = FrontEndSettings.objects.latest('saved_date_time')
+        frontend_settings_obj = {
+            'show_no_context_switch': frontend_settings.show_no_context_switch,
+            'azure_login': frontend_settings.azure_login
+        }
+        return Response({'settings':frontend_settings_obj})
