@@ -22,7 +22,7 @@ function GPTHome(props:{
 	const [answer, setAnswer] = useState<any>('')
 	const [answerReceived, setAnswerReceived] = useState<any>(false)
 	const [answers, setAnswers] = useState<any[]>([])
-	const [papers, setPapers] = useState<any[]>([])
+	const [papers, setPapers] = useState<any[]>(props.currentSettings.papers || [])
 	const [sourcePapers, setSourcePapers] = useState<any[]>([])
 	const [sourcePages, setSourcePages] = useState<any[]>([])
 	const [selectedPaperIdx, setselectedPaperIdx] = useState(0)
@@ -525,7 +525,7 @@ function GPTHome(props:{
 						<Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.js">
 						<div  className='h-[76vh]'>
 							<Viewer
-								fileUrl={`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}media/${papers.length ? papers[selectedPaperIdx][fileAttachmentType] : ''}`}
+								fileUrl={`${papers.length && fileAttachmentType === 'paper_attachment' ? papers[selectedPaperIdx]['paper_attachment'] : ''}`}
 								defaultScale={SpecialZoomLevel.ActualSize}
 								initialPage={selectedPage-1}
 								plugins={[

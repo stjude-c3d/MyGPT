@@ -42,15 +42,15 @@ export const NavBar = (props = defaultNavProps) => {
 				{
 					props.showAppLogo && props.appLogoLink ?
 					(<Link to={props.appLogoLink}>
-						<img src={props.appLogoPath} alt='' loading='lazy' className='object-cover h-16 w-22 inline-block justify-start ml-5'/>
+						<img src={props.appLogoPath} alt='mygpt_logo' loading='lazy' className='object-cover h-16 w-22 inline-block justify-start ml-5'/>
 					</Link>) : 
 					props.showAppLogo && props.appLogoExternalLink?
 					(<a href={props.appLogoExternalLink} rel='noreferrer'>
-						<img src={props.appLogoPath} alt='' loading='lazy' className='object-cover h-16 w-22 inline-block justify-start ml-5'/>
+						<img src={props.appLogoPath} alt='mygpt_logo' loading='lazy' className='object-cover h-16 w-22 inline-block justify-start ml-5'/>
 					</a>) :
 					props.showAppLogo ?
 					(<Link to='/'>
-						<img src={props.appLogoPath} alt='' loading='lazy' className='object-cover h-16 w-22 inline-block justify-start ml-5'/>
+						<img src={props.appLogoPath} alt='mygpt_logo' loading='lazy' className='object-cover h-16 w-22 inline-block justify-start ml-5'/>
 					</Link>) :
 					(<div></div>)
 				}
