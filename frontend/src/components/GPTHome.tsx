@@ -39,6 +39,28 @@ function GPTHome(props:{
 	const [frontendSettings, setFrontendSettings] = useState<any>(default_frontend_settings)
 	const [answerWithoutContext, setAnswerWithoutContext] = useState(false)
 
+	const [addDemoLibrary, setAddDemoLibrary] = useState(false)
+
+	useEffect(()=>{
+		const requestOptions = {
+			method: 'GET',
+			headers: { 
+				'Content-Type': 'application/json'
+			}
+		}
+		if(props.currentSettings.defaultDataset === 'None'){
+			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/datasets/`, requestOptions)
+				.then(response => response.json())
+				.then(data => {
+					const dataset_names = data.results.map((d:any)=>d.dataset_name)
+					if (dataset_names.length && props.currentSettings.selectedDataset === 'None'){
+						props.settingsCallback({...props.currentSettings, selectedDataset: dataset_names[0], fetchDatasets: false})
+					}
+				})
+		}
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	},[props.currentSettings.defaultDataset, props.currentSettings.selectedDataset, props.currentSettings.fetchDatasets])
+
 	useEffect(()=>{
 		const requestOptions = {
 			method: 'GET',
@@ -61,6 +83,10 @@ function GPTHome(props:{
 			}
 		}
 
+		if (props.currentSettings.defaultDataset === props.currentSettings.selectedDataset && props.currentSettings.defaultDataset === 'None'){
+			return
+		}
+
 		if(!papers.length || props.currentSettings.fetchPapers === true){
 			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/get_papers/?dataset=${props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset }&format=json`, requestOptions)
 				.then(response => response.json())
@@ -81,6 +107,26 @@ function GPTHome(props:{
 	},[papers, query, props.currentSettings.defaultDataset, props.currentSettings.selectedDataset, props.currentSettings.fetchPapers])
 	
 	// console.log(props.currentSettings.selectedDataset, props.currentSettings.defaultDataset)
+
+	// add demo library
+	useEffect(()=>{
+		if(addDemoLibrary){
+			const requestOptions = {
+				method: 'GET',
+				headers: { 
+					'Content-Type': 'application/json'
+				}
+			}
+			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/add_demo_library/?format=json`, requestOptions)
+				.then(response => response.json())
+				.then(data => {
+					console.log(data)
+					setAddDemoLibrary(false)
+					props.settingsCallback({...props.currentSettings, selectedDataset: 'GPCR' , showSettings: false, fetchPapers: true})
+				})
+		}
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	},[addDemoLibrary])
 	
 	// get context from the backend vector database
 	useEffect(()=>{
@@ -563,7 +609,8 @@ function GPTHome(props:{
 					<div className='overflow-x-auto h-full w-full pt-4 '>
 						<Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.js">
 						<div  className='h-[76vh]'>
-							<Viewer
+							{papers.length ?
+								<Viewer
 								fileUrl={`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}media/${papers.length ? papers[selectedPaperIdx][fileAttachmentType] : ''}`}
 								defaultScale={SpecialZoomLevel.ActualSize}
 								initialPage={selectedPage-1}
@@ -571,7 +618,31 @@ function GPTHome(props:{
 									DefaultLayoutPlunginInstance, 
 									PageNavigationPluginInstance,
 								]}
-							/>
+								/> :
+								<div>
+									<div className='text-center text-nav'>
+										No papers available.
+									</div>
+									<div className='text-center text-nav mb-2'>
+										You can load demo dataset by clicking on the following button.
+									</div>
+									<div className='text-center'>
+										<button 
+											className='p-2 mx-2 my-auto bg-white hover:bg-bsk_dark_blue text-bsk_dark_blue font-semibold hover:text-white py-2 px-3 hover:border-transparent rounded-full shadow-md hover:shadow-lg outline-none focus:outline-none'
+											onClick={()=>{
+												setAddDemoLibrary(true)
+											}}
+										>
+											<p className='inline-block ml-2'>
+												Load demo "GPCR" library
+											</p>
+										</button>
+									</div>
+									<div className='text-center text-nav mt-2'>
+										Or you can add your own library from Settings menu.
+									</div>
+								</div>
+							}
 						</div>
 					</Worker>
 					</div>

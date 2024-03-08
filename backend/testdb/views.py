@@ -28,10 +28,10 @@ def home(request):
     form = PapersForm()
     file_count = 15
 
-    if(datasets.count() == 0):
-        add_demo_dataset()
+    # if(datasets.count() == 0):
+    #     add_demo_dataset()
 
-    elif(request.GET.get('reload_library')):
+    if(request.GET.get('reload_library')):
         if datasets.filter(dataset_name='GPCR').count() > 0:
             datasets.get(dataset_name='GPCR').delete()
         add_demo_dataset()
@@ -756,3 +756,12 @@ def get_frontend_settings(request):
             'azure_login': frontend_settings.azure_login
         }
         return Response({'settings':frontend_settings_obj})
+    
+@api_view(['GET'])
+def add_demo_dataset_api(request):
+    if request.method == 'GET':
+        datasets = Dataset.objects.all()
+        if datasets.count() > 0 and datasets.filter(dataset_name='GPCR').count() > 0:
+            datasets.get(dataset_name='GPCR').delete()
+        add_demo_dataset()
+        return Response({'added':True}, content_type="application/json")

@@ -22,4 +22,5 @@ urlpatterns = [
 	path('api/upload_documents/', views.upload_documents, name='upload_documents'),
 	path('api/add_ollama_models/', views.add_ollama_models, name='add_ollama_models'),
 	path('api/frontend_settings/', views.get_frontend_settings, name='frontend_settings'),
+	path('api/add_demo_library/', views.add_demo_dataset_api, name='add_demo_dataset'),
 ]

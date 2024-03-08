@@ -169,7 +169,7 @@ const Settings = (props:{
 									<div className='text-nav px-2 flex justify-start mt-2 text-lg font-semibold'> Available libraries </div>
 									<div className='text-nav px-4 flex justify-start'>
 										<ul className='list-disc'>
-											{datasets.map((dataset:string, index:number) => {
+											{datasets.filter(d=>d !== 'None').map((dataset:string, index:number) => {
 												return(
 													<li key={index} className='ml-4'>
 														<div className='flex justify-between m-1'>
