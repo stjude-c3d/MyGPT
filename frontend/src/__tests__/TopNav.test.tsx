@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 // import { BrowserRouter } from 'react-router-dom'
-import TopNav from './TopNav'
+import TopNav from '../components/TopNav'
 
 describe('TopNav', () => {
 	it('renders the navigation bar', () => {
