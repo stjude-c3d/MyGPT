@@ -130,6 +130,7 @@ const Settings = (props:{
 								return(
 									<div 
 										key={index} 
+										data-panel={panel.key}
 										className={`text-white text-xl cursor-pointer p-2 ${activeTab === panel.key ? 'font-normal bg-nav' : 'font-light bg-panel1'}`}
 										onClick={() => setActiveTab(panel.key)}
 									>
