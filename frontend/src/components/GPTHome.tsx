@@ -22,7 +22,7 @@ function GPTHome(props:{
 	const [answer, setAnswer] = useState<any>('')
 	const [answerReceived, setAnswerReceived] = useState<any>(false)
 	const [answers, setAnswers] = useState<any[]>([])
-	const [papers, setPapers] = useState<any[]>([])
+	const [papers, setPapers] = useState<any[]>(props.currentSettings.papers || [])
 	const [sourcePapers, setSourcePapers] = useState<any[]>([])
 	const [sourcePages, setSourcePages] = useState<any[]>([])
 	const [selectedPaperIdx, setselectedPaperIdx] = useState(0)

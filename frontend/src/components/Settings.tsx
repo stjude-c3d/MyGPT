@@ -16,7 +16,7 @@ const Settings = (props:{
 	const [workflowCollapsed, setWorkflowCollapsed] = useState(false)
 
 	const currentSettings = JSON.parse(JSON.stringify(props.currentSettings || props.defaultSettings))
-	const [datasets, setDatasets] = useState<string[]>([])
+	const [datasets, setDatasets] = useState<string[]>(props.currentSettings.datasets || [])
 	const [selectedDataset, setSelectedDataset] = useState(props.currentSettings.selectedDataset || props.defaultSettings.selectedDataset)
 	const [deleteDataset, setDeleteDataset] = useState('')
 
@@ -130,6 +130,7 @@ const Settings = (props:{
 								return(
 									<div 
 										key={index} 
+										data-panel={panel.key}
 										className={`text-white text-xl cursor-pointer p-2 ${activeTab === panel.key ? 'font-normal bg-nav' : 'font-light bg-panel1'}`}
 										onClick={() => setActiveTab(panel.key)}
 									>

@@ -29,7 +29,79 @@ const defaultSettings = {
 	relevance_score_cutoff: {
 		best: 0.4,
 		worst: 1.5
-	}
+	},
+	papers: [
+		{
+			"paper_title": "Control of G protein-coupled receptor function via membrane-interacting intrinsically disordered C-terminal domains",
+			"paper_attachment": "./papers/paper1.pdf",
+			"highlited_attachment": "-",
+			"paper_dataset": 70,
+			"paper_date_time": "2024-03-03T07:10:38.676Z"
+		},
+		{
+			"paper_title": "Analysis of single-cell transcriptomes links enrichment of olfactory receptors with cancer cell differentiation status and prognosis",
+			"paper_attachment": "./papers/paper2.pdf",
+			"highlited_attachment": "-",
+			"paper_dataset": 70,
+			"paper_date_time": "2024-03-03T07:10:38.780Z"
+		},
+		{
+			"paper_title": "Allosteric Modulation of GPCRs of Class A by Cholesterol",
+			"paper_attachment": "./papers/paper3.pdf",
+			"highlited_attachment": "-",
+			"paper_dataset": 70,
+			"paper_date_time": "2024-03-03T07:10:38.880Z"
+		},
+		{
+			"paper_title": "GPCRs in Autocrine and Paracrine Regulations",
+			"paper_attachment": "papers/paper4.pdf",
+			"highlited_attachment": "-",
+			"paper_dataset": 70,
+			"paper_date_time": "2024-03-03T07:10:38.914Z"
+		},
+		{
+			"paper_title": "Targeting GPCRs and Their Signaling as a Therapeutic Option in Melanoma",
+			"paper_attachment": "papers/paper5.pdf",
+			"highlited_attachment": "-",
+			"paper_dataset": 70,
+			"paper_date_time": "2024-03-03T07:10:38.929Z"
+		},
+		{
+			"paper_title": "Targeting GPCRs to treat cardiac fibrosis",
+			"paper_attachment": "papers/paper6.pdf",
+			"highlited_attachment": "-",
+			"paper_dataset": 70,
+			"paper_date_time": "2024-03-03T07:10:38.951Z"
+		},
+		{
+			"paper_title": "Structure determination of GPCRs: cryo-EM compared with X-ray crystallography",
+			"paper_attachment": "papers/paper7.pdf",
+			"highlited_attachment": "-",
+			"paper_dataset": 70,
+			"paper_date_time": "2024-03-03T07:10:38.965Z"
+		},
+		{
+			"paper_title": "Common activation mechanism of class A GPCRs",
+			"paper_attachment": "papers/paper8.pdf",
+			"highlited_attachment": "-",
+			"paper_dataset": 70,
+			"paper_date_time": "2024-03-03T07:10:38.981Z"
+		},
+		{
+			"paper_title": "Selectivity determinants of GPCR–G-protein binding",
+			"paper_attachment": "papers/paper9.pdf",
+			"highlited_attachment": "-",
+			"paper_dataset": 70,
+			"paper_date_time": "2024-03-03T07:10:39.039Z"
+		},
+		{
+			"paper_title": "Mechanisms of signalling and biased agonism in G protein-coupled receptors",
+			"paper_attachment": "papers/paper10.pdf",
+			"highlited_attachment": "-",
+			"paper_dataset": 70,
+			"paper_date_time": "2024-03-03T07:10:39.164Z"
+		}
+	],
   }
 
 export default defaultSettings
