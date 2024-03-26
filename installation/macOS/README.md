@@ -96,6 +96,8 @@ You have 2 options to install MyGPT pipeline:
 > [!CAUTION] 
 > While generating you GitHub Access Token, make sure you check access for `repo` and  `read:packages` similar to image below.
 
+<img src="../../images/GitHub_access_token_scope.png?raw=true" width="600px">
+
 2. login to GitHub Docker registry
 
 	As the GitHub repository is private rightnow, we have to login to GitHub Docker registry to use the prebuilt images. To login to GitHub Docker registry, run following command. It will ask for your GitHub username and password. 
