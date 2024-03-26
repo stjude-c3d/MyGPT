@@ -38,5 +38,5 @@ jobs:
       working-directory: ./frontend
 
     - name: Test
-      run: npm test --if-present
+      run: npm run test:ci --if-present
       working-directory: ./frontend
