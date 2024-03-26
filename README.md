@@ -33,16 +33,18 @@ Also, Ollama is providing direct installation on Mac and Linux only. For Windows
 
 To run the pipleine on following environments, follow the instructions:
 * Mac
-	- [Basic Installation](./installation/macOS/README.md): This are simple and easy to follow. You can also modify bash scripts as per your convenience.
+	- [Basic Installation](./installation/macOS/README.md)
 	<!-- - Detailed instructions: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1h92XHMT5D_vlmf2oEZ0BRn3ke41Cz9p4?usp=sharing)
 	This are instructions with interactive Jupyter notebook on Google colab, it has troubleshooting steps. If you come across any bug or error, please report it in the issues section. You can also modify Jupyter notebook as per your convenience. -->
 * Linux
-	- [Basic Installation](./installation/linux/README.md): This are simple and easy to follow. You can also modify bash scripts as per your convenience.
+	- [Basic Installation](./installation/linux/README.md)
 	<!-- - Detailed instructions: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1feKcAvNwMIZpx7UGOb3UYhw_HFMC_kHP?usp=sharing)
 	This are instructions with interactive Jupyter notebook on Google colab, it has troubleshooting steps. If you come across any bug or error, please report it in the issues section. You can also modify Jupyter notebook as per your convenience. -->
 * Windows 
+	- [Basic Installation](./installation/windows/README.md)
 	<!-- - [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1r9cGHFwl4VStyb0szC4U-6hidXjtZBDE?usp=sharing) -->
-	- Coming soon
+
+	These instructions are simple and easy to follow. You can also modify bash scripts as per your convenience.
 
 ## User Interface
 MyGPT user interface will allow users to check the publcation library, ask questions, and get answers. The user interface is built using ReactJS.

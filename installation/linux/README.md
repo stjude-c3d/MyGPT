@@ -12,8 +12,8 @@ To Run the MyGPT pipeline, we will need the following minimum specifications for
 
 We will also need several tools to run the pipeline:
 
-*   Git
 *   Apt
+*   Git
 *   Docker
 *   Ollama
 
@@ -65,11 +65,14 @@ We will install these two tools in the following steps:
 
 	You can check if Ollama is running by visiting http://localhost:11434/ in your default browser.
 
-	Once you start Ollama, you have to pull Lllama2 model by running following command:
+> [!CAUTION]
+> After installing Ollama, close any open Terminal/Command Prompt before you pull Llama2.
 
-	```
-	ollama pull llama2
-	```
+Once you start Ollama, you have to pull Lllama2 model by running following command:
+
+```
+ollama pull llama2
+```
 
 ## MyGPT installation
 
@@ -82,25 +85,33 @@ You have 2 options to install MyGPT pipeline:
 
 1. **Get MyGPT source code**
 
-	If you have zip file with MyGPT source code, you can unzip it and copy it on your desktop or your desired location. You can skip remaining instructions from below and go to Step 2.
+	If you have zip file with MyGPT installation instructions, you can unzip it and copy it on your desktop or your desired location. You can skip remaining instructions from below and go to Step 2.
 
-	If you want to get source code from GitHub we will first get MyGPT source code by running following command. It will create `MyGPT` folder on your Desktop. To get the source code from GitHub, we will need `GitHub username` and `GitHub access token` as the GitHub repo is private. When you run the following command, it will ask for this credentials.
+	Or you can get installation instructions by running following command from Terminal. It will create `MyGPT_public` folder on your Desktop or desired folder. To get this from GitHub, we will need `GitHub username` and `GitHub access token` as the GitHub repo is private. When you run the following command, it will ask for this credentials.
 
 	```
 	git clone https://github.com/stjude-c3d/MyGPT.git
 	```
 
-	<ins>Note:</ins> If you don't have GitHub access token, you can genearte classic token using this guideline: https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic
+> [!NOTE] 
+> If you don't have GitHub access token, you can genearte classic token using this guideline: https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic
+
+> [!CAUTION] 
+> While generating you GitHub Access Token, make sure you check access for `repo` and  `read:packages` similar to image below.
+
+<img src="../../images/GitHub_access_token_scope.png?raw=true" width="600px">
 
 2. login to GitHub Docker registry
 
 	As the GitHub repository is private rightnow, we have to login to GitHub Docker registry to use the prebuilt images. To login to GitHub Docker registry, run following command. It will ask for your GitHub username and password. 
 	
-	<ins> Caution:</ins> the password is your access token (same token you used in step 1), not your github password you use to login in github account.
+> [!CAUTION]
+> Make sure Docker Desktop application is open and running before running the command.
+> the password is your access token (same token you used in step 1), not your github password you use to login in github account.
 
-	```
-	sudo docker login ghcr.io
-	```
+```
+docker login ghcr.io
+```
 
 3. **Run docker containers**
 

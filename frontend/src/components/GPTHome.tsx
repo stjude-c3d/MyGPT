@@ -32,12 +32,59 @@ function GPTHome(props:{
 		.domain([0, 100])
 		.interpolator(interpolateRdYlGn)
 
+	const default_frontend_settings = {
+		'show_no_context_switch': false,
+        'azure_login': false
+	}
+	const [frontendSettings, setFrontendSettings] = useState<any>(default_frontend_settings)
+	const [answerWithoutContext, setAnswerWithoutContext] = useState(false)
+
+	const [addDemoLibrary, setAddDemoLibrary] = useState(false)
+
 	useEffect(()=>{
 		const requestOptions = {
 			method: 'GET',
 			headers: { 
 				'Content-Type': 'application/json'
 			}
+		}
+		if(props.currentSettings.defaultDataset === 'None'){
+			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/datasets/`, requestOptions)
+				.then(response => response.json())
+				.then(data => {
+					const dataset_names = data.results.map((d:any)=>d.dataset_name)
+					if (dataset_names.length && props.currentSettings.selectedDataset === 'None'){
+						props.settingsCallback({...props.currentSettings, selectedDataset: dataset_names[0], fetchDatasets: false})
+					}
+				})
+		}
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	},[props.currentSettings.defaultDataset, props.currentSettings.selectedDataset, props.currentSettings.fetchDatasets])
+
+	useEffect(()=>{
+		const requestOptions = {
+			method: 'GET',
+			headers: { 
+				'Content-Type': 'application/json'
+			}
+		}
+		fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/frontend_settings/?format=json`, requestOptions)
+			.then(response => response.json())
+			.then(data => {
+				setFrontendSettings(data.settings)
+			})
+	},[])
+
+	useEffect(()=>{
+		const requestOptions = {
+			method: 'GET',
+			headers: { 
+				'Content-Type': 'application/json'
+			}
+		}
+
+		if (props.currentSettings.defaultDataset === props.currentSettings.selectedDataset && props.currentSettings.defaultDataset === 'None'){
+			return
 		}
 
 		if(!papers.length || props.currentSettings.fetchPapers === true){
@@ -60,6 +107,26 @@ function GPTHome(props:{
 	},[papers, query, props.currentSettings.defaultDataset, props.currentSettings.selectedDataset, props.currentSettings.fetchPapers])
 	
 	// console.log(props.currentSettings.selectedDataset, props.currentSettings.defaultDataset)
+
+	// add demo library
+	useEffect(()=>{
+		if(addDemoLibrary){
+			const requestOptions = {
+				method: 'GET',
+				headers: { 
+					'Content-Type': 'application/json'
+				}
+			}
+			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/add_demo_library/?format=json`, requestOptions)
+				.then(response => response.json())
+				.then(data => {
+					console.log(data)
+					setAddDemoLibrary(false)
+					props.settingsCallback({...props.currentSettings, selectedDataset: 'GPCR' , showSettings: false, fetchPapers: true})
+				})
+		}
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	},[addDemoLibrary])
 	
 	// get context from the backend vector database
 	useEffect(()=>{
@@ -81,6 +148,7 @@ function GPTHome(props:{
 				new_conversation: query.length === 1 ? true : false, 
 				related_query: relatedQuery,
 				previous_query: query.length > 1 ? query[query.length-2].question.replaceAll('"','\\"') : '',
+				no_context: answerWithoutContext
 			})
 		}
 		if(query.length && query.length !== answers.length){
@@ -355,6 +423,23 @@ function GPTHome(props:{
 						</p>
 					</div>
 					 : null } */}
+				{ frontendSettings.show_no_context_switch ? 
+					<div className='p-1 mx-4 flex'>
+						<input type='checkbox' 
+						// className="mr-2 mt-[0.3rem] h-3.5 w-8 appearance-none rounded-[0.4375rem] bg-neutral-300 before:pointer-events-none before:absolute before:h-3.5 before:w-3.5 before:rounded-full before:bg-transparent before:content-[''] after:absolute after:z-[2] after:-mt-[0.1875rem] after:h-5 after:w-5 after:rounded-full after:border-none after:bg-neutral-100 after:shadow-[0_0px_3px_0_rgb(0_0_0_/_7%),_0_2px_2px_0_rgb(0_0_0_/_4%)] after:transition-[background-color_0.2s,transform_0.2s] after:content-[''] checked:bg-primary checked:after:absolute checked:after:z-[2] checked:after:-mt-[3px] checked:after:ml-[1.0625rem] checked:after:h-5 checked:after:w-5 checked:after:rounded-full checked:after:border-none checked:after:bg-primary checked:after:shadow-[0_3px_1px_-2px_rgba(0,0,0,0.2),_0_2px_2px_0_rgba(0,0,0,0.14),_0_1px_5px_0_rgba(0,0,0,0.12)] checked:after:transition-[background-color_0.2s,transform_0.2s] checked:after:content-[''] hover:cursor-pointer focus:outline-none focus:ring-0 focus:before:scale-100 focus:before:opacity-[0.12] focus:before:shadow-[3px_-1px_0px_13px_rgba(0,0,0,0.6)] focus:before:transition-[box-shadow_0.2s,transform_0.2s] focus:after:absolute focus:after:z-[1] focus:after:block focus:after:h-5 focus:after:w-5 focus:after:rounded-full focus:after:content-[''] checked:focus:border-primary checked:focus:bg-primary checked:focus:before:ml-[1.0625rem] checked:focus:before:scale-100"
+							role={'switch'}
+							checked={answerWithoutContext}
+							onChange={
+								(e:any)=>{
+									setAnswerWithoutContext(e.target.checked)
+								}
+							}
+						/>
+						<p className='inline-block mx-2 text-sm text-nav'>
+							Answer without context
+						</p>
+					</div>
+					 : null }
 				{
 					query.length ? 
 					<>{ query.map((_q:any, i:any)=>(
@@ -524,15 +609,40 @@ function GPTHome(props:{
 					<div className='overflow-x-auto h-full w-full pt-4 '>
 						<Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.js">
 						<div  className='h-[76vh]'>
-							<Viewer
-								fileUrl={`${papers.length && fileAttachmentType === 'paper_attachment' ? papers[selectedPaperIdx]['paper_attachment'] : ''}`}
+							{papers.length ?
+								<Viewer
+								fileUrl={`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}media/${papers.length ? papers[selectedPaperIdx][fileAttachmentType] : ''}`}
 								defaultScale={SpecialZoomLevel.ActualSize}
 								initialPage={selectedPage-1}
 								plugins={[
 									DefaultLayoutPlunginInstance, 
 									PageNavigationPluginInstance,
 								]}
-							/>
+								/> :
+								<div>
+									<div className='text-center text-nav'>
+										No papers available.
+									</div>
+									<div className='text-center text-nav mb-2'>
+										You can load demo dataset by clicking on the following button.
+									</div>
+									<div className='text-center'>
+										<button 
+											className='p-2 mx-2 my-auto bg-white hover:bg-bsk_dark_blue text-bsk_dark_blue font-semibold hover:text-white py-2 px-3 hover:border-transparent rounded-full shadow-md hover:shadow-lg outline-none focus:outline-none'
+											onClick={()=>{
+												setAddDemoLibrary(true)
+											}}
+										>
+											<p className='inline-block ml-2'>
+												Load demo "GPCR" library
+											</p>
+										</button>
+									</div>
+									<div className='text-center text-nav mt-2'>
+										Or you can add your own library from Settings menu.
+									</div>
+								</div>
+							}
 						</div>
 					</Worker>
 					</div>

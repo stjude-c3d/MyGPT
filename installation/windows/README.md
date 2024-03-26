@@ -10,6 +10,8 @@ To Run the MyGPT pipeline, we will need the following minimum specifications for
 
 We will also need several tools to run the pipeline:
 
+*   Python
+*   Chocolatey
 *   Git
 *   Docker
 *   Ollama
@@ -18,73 +20,117 @@ We will also need several tools to run the pipeline:
 
 We will install these two tools in the following steps:
 
+1. **install Python and Pip**
 
-1.  **Git installation**
-
-	You can check if you have `git` installed on your system by running following command.:
-
+	Check if you have python installed on your system, by running following command from Command Prompt.
 	```
-	git --version
+	python -v
 	```
 
-	If you get an error that `git not found`, you can install it follwing instructions from this official site [Git download for Windows](https://git-scm.com/download/win)
+	If python is not isntalled on your PC, install it by downloading latest release from this page: https://www.python.org/downloads/windows/
 
+	While Python installtion, make sure to select the following option:
 
-3. **Docker installation**
+	<img src="../../images/python_install_windows.png?raw=true" width="500px">
 
-	The MyGPT pipeline will run as a single unit from Docker.
-	Check if you have `docker` installed on your system by running following command.
+2. **Chocolatory installation**
+
+	Check if you have choco installed on your system by running following command.
+	```
+	choco list
+	```
+
+	If you get error that `choco not found`, you can install `choco` by folliwng command from the new Command Prompt window:
 
 	```
-	docker --version
+	@"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "[System.Net.ServicePointManager]::SecurityProtocol = 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))" && SET "PATH=%PATH%;%ALLUSERSPROFILE%\chocolatey\bin"
 	```
 
-	If you get an error that `docker not found`,   Go to the official Docker installation page for Windows and install the appropriate Docker on your system: https://docs.docker.com/desktop/install/windows-install/
+3.  **Git installation**
 
-	You can change Docker setting to match requirements for MyGPT:
-	<img src="../../images/docker_resources.png?raw=true" width="700px">
+	Check if you have git installed on your system by running following command.
 
-	<u>Troubleshoot help:</u> if you get error `Docker desktop requires a newer WSL kernel version on Windows`, go to this post to fix it: https://medium.com/@dilsharahasanka/solved-docker-desktop-requires-a-newer-wsl-kernel-version-on-windows-b093b1684c0b
+	```
+	git --help
+	```
 
+	if you get message git not found, you can install it using choco.
 
-4. **Ollama installation**
+	```
+	choco install git
+	```
+	
+	After you get success message, you can close the Command Prompt window and open new Command Prompt as Administrator to run next command.
+
+4. **Docker installation**
+
+	To run MyGPT with CPUs-only, the entire pipeline will run as a single unit from Docker. Go to the official Docker installation page for Windows and install the appropriate Docker on your system: https://docs.docker.com/desktop/install/windows-install/
+
+	After installation, to verify if Docker is running on your system, run the following code:
+
+	```
+	docker --help
+	```
+	If you get an error that `docker not found`,   Go to the official Docker installation page for Linux and install the appropriate Docker on your system: https://docs.docker.com/desktop/install/linux-install/
+
+5. **Ollama installation**
 
 	Finally, download and install Ollama by following instructions from this offical [Ollama site](https://ollama.ai/)
+
+	You can check if Ollama is running by visiting http://localhost:11434/ in your default browser.
+
+> [!CAUTION]
+> After installing Ollama, close any open Terminal/Command Prompt before you pull Llama2.
+
+Once you start Ollama, you have to pull Lllama2 model by running following command:
+
+```
+ollama pull llama2
+```
 
 ## MyGPT installation
 
 1. **Get MyGPT source code**
 
-	If you have zip file with MyGPT source code, you can unzip it and copy it on your desktop or your desired location. You can skip remaining step from below and go to Step 2.
+	If you have zip file with MyGPT installation instructions, you can unzip it and copy it on your desktop or your desired location. You can skip remaining instructions from below and go to Step 2.
 
-	If you want to get source code from GitHub we will first get MyGPT source code by running following command. It will create `MyGPT` folder on your Desktop. To get the source code from GitHub, we will need `GitHub username` and `GitHub access token` as the GitHub repo is private. When you run the following command, it will ask for this credentials.
-
-	```
-	git clone https://github.com/mb-group/MyGPT.git
-	```
-
-	<u>Note:</u> If you don't have GitHub access token, you can genearte classic token using this guideline: https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic
-
-
-2. **Build docker images**
-
-	We will run following script to build docker images:
+	Or you can get installation instructions by running following command from Terminal. It will create `MyGPT_public` folder on your Desktop or desired folder. To get this from GitHub, we will need `GitHub username` and `GitHub access token` as the GitHub repo is private. When you run the following command, it will ask for this credentials.
 
 	```
-	cd MyGPT
-	call installation\windows\build_docker.bat
+	git clone https://github.com/stjude-c3d/MyGPT.git
 	```
 
-4. **Run docker containers**
+> [!NOTE] 
+> If you don't have GitHub access token, you can genearte classic token using this guideline: https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic
+
+> [!CAUTION] 
+> While generating you GitHub Access Token, make sure you check access for `repo` and  `read:packages` similar to image below.
+
+<img src="../../images/GitHub_access_token_scope.png?raw=true" width="600px">
+
+2. login to GitHub Docker registry
+
+	As the GitHub repository is private rightnow, we have to login to GitHub Docker registry to use the prebuilt images. To login to GitHub Docker registry, run following command. It will ask for your GitHub username and password. 
+
+> [!CAUTION]
+> Make sure Docker Desktop application is open and running before running the command.
+> the password is your access token (same token you used in step 1), not your github password you use to login in github account.
+
+```
+docker login ghcr.io
+```
+
+3. **Run docker containers**
 
 	We will run following script to run docker containers:
 
 	```
-	call installation\windows\run_docker.bat
+	cd MyGPT_public\installation\windows
+	run_docker.bat
 	```
 
 	This script should take around 5-10 minutes to run.
-	While above script is running, it will open several pages in your default browser. 
+	Once the script finish running, open following pages in your default browser. 
 	You can see status of different components of MyGPT pipeline on these pages.
 	* backend: http://localhost:8000/
 
@@ -93,7 +139,6 @@ We will install these two tools in the following steps:
 	* frontend: http://localhost:3000/
 
 		<img src="../../images/frontend_launch.png?raw=true" width="1200px">
-
 
 ## MyGPT pipeline usage
 
@@ -143,5 +188,5 @@ You can check backend database at http://localhost:8000/admin/ with username and
 To stop docker containers, run following command:
 
 ```
-call MyGPT\installation\windows\stop_docker.bat
+stop_docker.bat
 ```
