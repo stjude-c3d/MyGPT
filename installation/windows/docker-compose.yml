@@ -17,7 +17,7 @@ services:
       timeout: 5s
       retries: 5
   backend:
-    image: ghcr.io/stjude-c3d/mygpt-backend:arm64
+    image: ghcr.io/mb-group/mygpt-backend:latest
     command: >
       bash -c "dockerd >/dev/null 2>&1 & sleep 10
       && python manage.py migrate --fake sessions zero
@@ -44,7 +44,7 @@ services:
     links:
       - db
   frontend:
-    image: ghcr.io/stjude-c3d/mygpt-frontend:latest
+    image: ghcr.io/mb-group/mygpt-frontend:latest
     ports:
       - "3000:3000"
     depends_on:
