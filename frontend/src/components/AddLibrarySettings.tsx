@@ -19,7 +19,7 @@ const AddLibrarySettings = (props: {
   const [uploadPanel, setUploadPanel] = useState(false)
 
   const [UploadLibraryName, setUploadLibraryName] = useState('')
-  const [uploadDocCount, setUploadDocCount] = useState(5)
+//   const [uploadDocCount, setUploadDocCount] = useState(5)
   const emptyUploadDocs = Array.from(Array(40).keys()).map((x:any) => {return {title: '', file: null}})
   const [uploadDocs, setUploadDocs] = useState(emptyUploadDocs)
   const [uploadLibrary, setUploadLibrary] = useState(false)
@@ -213,29 +213,17 @@ const AddLibrarySettings = (props: {
 						/>
 					</div>
 					<div className='flex flex-col mt-2'>
-						{ Array.from(Array(uploadDocCount).keys()).map((x:any) =>
-						<div className='flex justify-center p-1 text-nav' key={x}>
-							<div> Document {x+1}</div>
-							{/* <input type='text' placeholder=' Title*' className='rounded-md mx-2 w-72 px-2 py-1 text-nav'
-								onChange={(e) => {
-									let newUploadDocs:any = uploadDocs
-									newUploadDocs[x].title = e.target.value
-									setUploadDocs(newUploadDocs)
-								}}
-							/> */}
-							<input type='file' className='rounded-md w-60 mx-2'
-								onChange={(e:any) => {
-									let newUploadDocs:any = uploadDocs
-									newUploadDocs[x].file = e.target.files[0]
-									newUploadDocs[x].title = e.target.files[0].name.split('.')[0]
-									setUploadDocs(newUploadDocs)
-								}}
-							/>
-						</div>
-						)}
+						{/* multiple documents upload */}
+						<input type='file' multiple className='rounded-md w-60 p-1 text-nav' onChange={(e) => {
+							const files = e.target.files
+							if (files){
+								const docs = Array.from(files).map((file:any) => {return {title: file.name, file: file}})
+								setUploadDocs(docs)
+							}
+						}}/>
 					</div>
 					<div className='flex justify-center'>
-						{uploadDocCount < 41 ? <button className='text-panel1 bg-white px-4 py-2 rounded-md m-2' onClick={()=>setUploadDocCount(uploadDocCount+5)}>+5</button> : <></>}
+						{/* {uploadDocCount < 41 ? <button className='text-panel1 bg-white px-4 py-2 rounded-md m-2' onClick={()=>setUploadDocCount(uploadDocCount+5)}>+5</button> : <></>} */}
 						<button className='bg-panel1 text-white px-4 py-2 rounded-md m-2'
 							onClick={() => setUploadLibrary(true)}
 						>Upload documents</button>
