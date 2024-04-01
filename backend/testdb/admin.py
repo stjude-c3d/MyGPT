@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Model, Dataset, Papers, Conversation, Question, Answer, Source, FrontEndSettings
+from .models import Model, Dataset, Papers, chunks, Conversation, Question, Answer, Source, FrontEndSettings
 
 class ModelAdmin(admin.ModelAdmin):
     list_display = ['model_name', 'model_size']
@@ -9,6 +9,9 @@ class DatasetAdmin(admin.ModelAdmin):
 
 class PapersAdmin(admin.ModelAdmin):
     list_display = ['paper_title', 'paper_attachment', 'highlited_attachment', 'paper_dataset', 'paper_date_time']
+
+class chunksAdmin(admin.ModelAdmin):
+    list_display = ['chunk_text', 'pca_x', 'pca_y', 'pca_z', 'chunk_dataset', 'chunk_paper', 'chunk_date_time']
 
 class ConversationAdmin(admin.ModelAdmin):
     list_display = ['id', 'question_answer_count', 'start_date_time', 'last_date_time', 'conversation_dataset', 'user']
@@ -28,6 +31,7 @@ class FrontEndSettingsAdmin(admin.ModelAdmin):
 admin.site.register(Model, ModelAdmin)
 admin.site.register(Dataset, DatasetAdmin)
 admin.site.register(Papers, PapersAdmin)
+admin.site.register(chunks, chunksAdmin)
 admin.site.register(Conversation, ConversationAdmin)
 admin.site.register(Question, QuestionAdmin)
 admin.site.register(Answer, AnswerAdmin)

@@ -43,6 +43,23 @@ class Papers(models.Model):
 	def __str__(self):
 		return self.paper_title
 	
+class chunks(models.Model):
+	chunk_text = models.TextField(default='-')
+	embedding = models.TextField(default='-')
+	pca_x = models.FloatField(default=0)
+	pca_y = models.FloatField(default=0)
+	pca_z = models.FloatField(default=0)
+	chunk_dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE)
+	chunk_paper = models.ForeignKey(Papers, on_delete=models.CASCADE)
+	chunk_date_time = models.DateTimeField(default=timezone.now, null=True)
+
+	class Meta:
+		verbose_name_plural = 'chunks'
+		verbose_name = 'chunk'
+
+	def __str__(self):
+		return (str(self.chunk_dataset) + '-' + str(self.id))
+	
 class Conversation(models.Model):
 	conversation_dataset = models.ForeignKey('Dataset', on_delete=models.CASCADE)
 	question_answer_count = models.IntegerField(default=0)

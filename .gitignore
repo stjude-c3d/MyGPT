@@ -4,6 +4,7 @@
 backend/static/*
 backend/media/*
 backend/chroma_storage/*
+backend/chroma/*
 backend/data/data_chunks/*
 !backend/data/data_chunks/GPCR.txt
 backend/data/pdfs/*

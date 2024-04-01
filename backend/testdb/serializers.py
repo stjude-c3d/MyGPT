@@ -1,4 +1,4 @@
-from .models import Model, Dataset, Papers, Conversation, Question, Answer, Source, FrontEndSettings
+from .models import Model, Dataset, Papers, chunks, Conversation, Question, Answer, Source, FrontEndSettings
 from rest_framework import serializers
 
 class ModelSerializer(serializers.HyperlinkedModelSerializer):
@@ -15,6 +15,11 @@ class PapersSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Papers
         fields = ['paper_title', 'paper_attachment', 'paper_dataset', 'paper_date_time']
+
+class ChunksSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = chunks
+        fields = ['chunk_text', 'embedding', 'pca_x', 'pca_y', 'pca_z', 'chunk_dataset', 'chunk_paper', 'chunk_date_time']
 
 class QuestionSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:

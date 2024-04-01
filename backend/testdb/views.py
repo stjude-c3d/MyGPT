@@ -12,12 +12,15 @@ from pyzotero import zotero
 import fitz
 from tqdm import tqdm
 import chromadb
+from chromadb.utils import embedding_functions
+import numpy as np
+import pandas as pd
 import datetime
 import re
 import os
 import json
 import re
-from .models import Papers, Dataset, Question, Answer, Source, Conversation, Model, FrontEndSettings
+from .models import Papers, Dataset, chunks, Question, Answer, Source, Conversation, Model, FrontEndSettings
 from .serializers import ModelSerializer, PapersSerializer, QuestionSerializer, AnswerSerializer, DatasetSerializer
 from .forms import PapersForm
 
@@ -46,6 +49,10 @@ def home(request):
             add_to_chroma(dataset_name)
             datasets = Dataset.objects.all()
             return render(request, 'home.html', {'success': 'Successfully uploaded dataset', 'datasets': datasets, 'form': form, 'file_count': range(1,file_count+1)})
+
+    # get_collections_data('all')
+    add_pca_to_chunks()
+    # save_chunks_pca_to_file()
 
     return render(request, 'home.html', {'datasets': datasets, 'form': form, 'file_count': range(1,file_count+1)})
 
@@ -272,6 +279,8 @@ def add_to_chroma(dataset_name):
                     documents.append(line_json['content'])
                     metadatas.append({'filename': line_json['title'], 'page': line_json['page']})
         ids = [str(i) for i in range(count, count + len(documents))]
+        
+        # add to vector database
         for i in tqdm(
             range(0, len(documents), 100), desc='Adding documents', unit_scale=100
         ):
@@ -285,6 +294,23 @@ def add_to_chroma(dataset_name):
         dataset = Dataset.objects.get(dataset_name=dataset_name)
         dataset.dataset_size = new_count
         dataset.save()
+
+        # add embeddings to database
+        for i in tqdm(
+            range(0, len(documents), 100), desc='Adding embeddings', unit_scale=100
+        ):
+            default_ef = embedding_functions.DefaultEmbeddingFunction()
+            
+            for document in documents[i : i + 100]:
+                embedding = default_ef([document])
+                chunks.objects.create(
+                    chunk_text=document,
+                    embedding=embedding,
+                    chunk_dataset=dataset,
+                    chunk_paper=Papers.objects.filter(paper_title=metadatas[i]['filename'])[0],
+                    chunk_date_time=make_aware(datetime.datetime.now())
+                )
+
         print(f'Added {new_count - count} documents')
 
 def add_demo_dataset():
@@ -349,6 +375,7 @@ def add_demo_dataset():
             dataset_size=new_count,
             dataset_date_time=make_aware(datetime.datetime.now())
         )
+
         for (idx, title) in enumerate(titles):
             paper = Papers.objects.create(
                 paper_title=title,
@@ -357,9 +384,75 @@ def add_demo_dataset():
             )
             with open(f'{documents_directory}/pdfs/{dataset_name}/paper{idx+1}.pdf', 'rb') as f:
                 paper.paper_attachment.save(dataset_name + '/paper' + str(idx+1) + '.pdf', File(f), save=True)
+
+        # add embeddings to database
+        for i in tqdm(
+            range(0, len(documents), 100), desc='Adding embeddings', unit_scale=100
+        ):
+            default_ef = embedding_functions.DefaultEmbeddingFunction()
+            for document in documents[i : i + 100]:
+                embedding = default_ef([document])
+                chunks.objects.create(
+                    chunk_text=document,
+                    embedding=embedding,
+                    chunk_dataset=dataset,
+                    chunk_paper=Papers.objects.filter(paper_title=metadatas[i]['filename'])[0],
+                    chunk_date_time=make_aware(datetime.datetime.now())
+                )
+
+        # add pca to chunks
+        add_pca_to_chunks()
            
         print(f'Added {new_count - count} documents')
 
+def add_pca_to_chunks():
+    chunks_objects = chunks.objects.all()
+    embddings = []
+    for chunk in chunks_objects:
+        embddings.append(eval(chunk.embedding)[0])
+
+    # perform pca on embeddings with numpy
+    data = pd.DataFrame(embddings)
+    data = data - data.mean()
+
+     # calculate covariance matrix
+    cov_matrix = data.cov()
+
+    # calculate eigen values and eigen vectors
+    eigen_values, eigen_vectors = np.linalg.eig(cov_matrix)
+
+    # sort eigen values and eigen vectors
+    idx = eigen_values.argsort()[::-1]
+    eigen_values = eigen_values[idx]
+    eigen_vectors = eigen_vectors[:,idx]
+
+    # select top 3 eigen vectors
+    pca = eigen_vectors[:, :3]
+
+    # project data to 2D
+    embeddings_pca = data.dot(pca)
+
+    # write pca embeddings to file
+    # remove imaginary part
+    embeddings_pca_short = np.real(embeddings_pca)
+    # convert to 2 decimal places
+    embeddings_pca_short = np.round(embeddings_pca_short, 4)
+
+    for idx, embedding in enumerate(embeddings_pca_short):
+        chunk = chunks_objects[idx]
+        chunk.pca_x = embedding[0]
+        chunk.pca_y = embedding[1]
+        chunk.pca_z = embedding[2]
+        chunk.save()
+
+""" def save_chunks_pca_to_file():
+    chunks_objects = chunks.objects.all()
+    with open('data/data_chunks/all_pca_2.txt', 'w') as file:
+        for chunk in chunks_objects:
+            # convert embedding into comma separated string
+            embedding_str = ','.join([str(chunk.pca_x), str(chunk.pca_y), str(chunk.pca_z), chunk.chunk_dataset.dataset_name])
+            file.write(embedding_str +  '\n')
+ """
 def find_cutoff_distance(distances):
     # find the distane from where the distances start to increase
     cutoff_distance = distances[1]
@@ -697,6 +790,10 @@ def delete_dataset(request):
         for paper in papers:
             paper.delete()
         dataset.delete()
+
+        # delete from chroma
+        client = chromadb.PersistentClient(path='/code/chroma_storage/.')
+        client.delete_collection(name=dataset_name)
         return Response({'deleted':True}, content_type="application/json")
     
 @api_view(['POST'])
