@@ -5,7 +5,7 @@ import {
 import { defaultLayoutPlugin, ToolbarProps, ToolbarSlot } from '@react-pdf-viewer/default-layout'
 import { pageNavigationPlugin } from '@react-pdf-viewer/page-navigation'
 import '@react-pdf-viewer/default-layout/lib/styles/index.css'
-import { PaperAirplaneIcon, LinkIcon, Cog6ToothIcon } from '@heroicons/react/24/outline'
+import { PaperAirplaneIcon, Cog6ToothIcon } from '@heroicons/react/24/outline'
 import { scaleSequential, interpolateRdYlGn } from 'd3'
 // import Feedback from './Feedback'
 
@@ -350,6 +350,9 @@ function GPTHome(props:{
 								()=>{
 									setQuery([])
 									setAnswers([])
+									setConfidenceScores([])
+									setSourcePapers([])
+									setSourcePages([])
 								}
 							}>
 								<p className='inline-block mx-2'>
@@ -447,7 +450,19 @@ function GPTHome(props:{
 							<div className='py-4 px-6 m-4 bg-panel2 rounded-lg shadow-md box2 user-chat'>
 								<div className='flex flex-row justify-between font-bold'>
 									<div className='text-nav text-sm py-2'>You</div>
-									<div className='text-nav text-xs py-2'>{query[query.length-i-1].related ? <LinkIcon className='w-4 h-4 inline-block'/> : null}</div>
+									{
+										confidenceScores[query.length-i-1] !== undefined ? 
+										(
+											<div className='text-nav rounded-full text-xs py-2'>
+												Relevance 
+												<span style={{ backgroundColor: ConfidenceScoreColor(confidenceScores[query.length-i-1])}} 
+													className= {'py-1 px-2 m-1 rounded-full' + (confidenceScores[query.length-i-1] > 80 || confidenceScores[query.length-i-1] < 20 ? ' text-white' : ' text-nav')}>
+													{confidenceScores[query.length-i-1] + '%'}
+												</span>
+											</div>
+										) : ''
+									}
+									{/* <div className='text-nav text-xs py-2'>{query[query.length-i-1].related ? <LinkIcon className='w-4 h-4 inline-block'/> : null}</div> */}
 								</div>
 								<div className='text-nav'>{query[query.length-i-1].question}</div>
 							</div>
@@ -456,18 +471,6 @@ function GPTHome(props:{
 								<div className='flex flex-row justify-between font-bold'>
 									<div className='text-white text-sm py-2'>{answers[query.length-i-1].source.split(':')[0]}</div>
 									<div className='text-white text-xs py-2'>
-									{
-											confidenceScores[query.length-i-1] !== undefined ? 
-											(
-												<div className='text-white rounded-full text-xs py-1'>
-													Relevance 
-													<span style={{ backgroundColor: ConfidenceScoreColor(confidenceScores[query.length-i-1])}} 
-														className= {'py-1 px-2 m-1 rounded-full' + (confidenceScores[query.length-i-1] > 80 || confidenceScores[query.length-i-1] < 20 ? ' text-white' : ' text-nav')}>
-														{confidenceScores[query.length-i-1] + '%'} 
-													</span>
-												</div>
-											) : ''
-										}
 									</div>
 								</div>
 								<div className='text-white whitespace-pre-wrap'>{answers[query.length-i-1].response}</div>
@@ -526,7 +529,7 @@ function GPTHome(props:{
 								<div className='py-4 px-6 m-4 bg-panel1 rounded-lg shadow-md box2 llm-chat'>
 									<div className='flex flex-row justify-between font-bold mt-2 mb-4'>
 										<div className='text-white text-sm py-1'>{props.currentSettings.selectedLlm}</div>
-										{
+										{/* {
 											confidenceScores[query.length-1] !== undefined ? 
 											(
 												<div className='text-white rounded-full text-xs py-1'>
@@ -537,7 +540,7 @@ function GPTHome(props:{
 													</span>
 												</div>
 											) : ''
-										}
+										} */}
 									</div>
 									<div className='text-white whitespace-pre-wrap'>{answer.length ? answer: 'Generating answer...'}</div>
 									{

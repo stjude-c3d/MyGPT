@@ -217,7 +217,7 @@ const AddLibrarySettings = (props: {
 						<input type='file' multiple className='rounded-md w-60 p-1 text-nav' onChange={(e) => {
 							const files = e.target.files
 							if (files){
-								const docs = Array.from(files).map((file:any) => {return {title: file.name, file: file}})
+								const docs = Array.from(files).map((file:any) => {return {title: file.name.split('.pdf')[0], file: file}})
 								setUploadDocs(docs)
 							}
 						}}/>
