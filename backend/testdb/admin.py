@@ -17,10 +17,10 @@ class ConversationAdmin(admin.ModelAdmin):
     list_display = ['id', 'question_answer_count', 'start_date_time', 'last_date_time', 'conversation_dataset', 'user']
 
 class QuestionAdmin(admin.ModelAdmin):
-    list_display = ['question_text', 'question_dataset', 'confidence_score' ,'conversation', 'saved_date_time']
+    list_display = ['question_text', 'question_dataset', 'relevance_score' ,'conversation', 'saved_date_time']
 
 class AnswerAdmin(admin.ModelAdmin):
-    list_display = ['answer_text', 'model_type', 'rating', 'question', 'saved_date_time']
+    list_display = ['answer_text', 'model_type', 'relevance_score', 'question', 'saved_date_time']
 
 class SourceAdmin(admin.ModelAdmin):
     list_display = ['source_paper', 'source_page', 'context', 'distance', 'question']

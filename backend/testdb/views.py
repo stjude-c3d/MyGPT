@@ -532,20 +532,20 @@ def get_conversation_json(question_text):
         conversation_json.append(qna_json)
     return conversation_json
 
-def get_confidence_score(distances):
+def get_relevance_score(distances):
     best_distance = 0.4
     worst_distance = 1.5
 
     # calculate confidence score
     # if maximum distance is more than 1.5 then confidence score is 0
     if max(distances) > worst_distance:
-        confidence_score = 0
+        relevance_score = 0
     else:
         mean_distance = sum(distances) / len(distances)
-        confidence_score = (1 - (mean_distance - best_distance) / (worst_distance - best_distance)) * 100
+        relevance_score = (1 - (mean_distance - best_distance) / (worst_distance - best_distance)) * 100
         # trim confidence score to 2 decimal places
-        confidence_score = round(confidence_score, 0)
-    return confidence_score
+        relevance_score = round(relevance_score, 0)
+    return relevance_score
 
 def get_previous_qna_json(question_text):
     question = Question.objects.filter(question_text=question_text)[0]
@@ -657,12 +657,12 @@ def get_context(request):
         if no_context:    
             context, titles, pages, chunks, distances = '', [], [], [], []
             sources = []
-            confidence_score = 0
+            relevance_score = 0
         else:
             context, titles, pages, chunks, distances = nearestDataChroma(question_text, dataset_name)
             sources = []
             distances = [round(dist, 3) for dist in distances]
-            confidence_score = get_confidence_score(distances)
+            relevance_score = get_relevance_score(distances)
         # save question to database
         current_date_time = make_aware(datetime.datetime.now())
         dataset = Dataset.objects.get(dataset_name=dataset_name)
@@ -685,7 +685,7 @@ def get_context(request):
                 conversation.save()
             question = Question.objects.create(
                 question_text=question_text,
-                confidence_score=confidence_score,
+                relevance_score=relevance_score,
                 model_type=model_type,
                 question_dataset=dataset,
                 conversation=conversation,
@@ -746,7 +746,7 @@ def get_context(request):
         
         context_json = {
             'context': context,
-            'confidence_score': confidence_score,
+            'relevance_score': relevance_score,
             'sources': sources
         }
         
@@ -761,12 +761,17 @@ def save_answer(request):
         model = json_request['model_type']
         model_type = Model.objects.get(model_name=model)
         question = Question.objects.get(question_text=question_text, model_type=model_type)
+        dataset_name = json_request['dataset']
+        _, _, _, _, distances = nearestDataChroma(answer_text, dataset_name)
+        distances = [round(dist, 3) for dist in distances]
+        relevance_score = get_relevance_score(distances)
         Answer.objects.create(
-            answer_text=answer_text, 
+            answer_text=answer_text,
+            relevance_score=relevance_score, 
             model_type=model_type, 
             question=question
         )
-        return Response({'saved':True}, content_type="application/json")
+        return Response({'saved':True, 'relevance_score': relevance_score}, content_type="application/json")
 
 @api_view(['POST'])
 def feedback_for_answers(request):

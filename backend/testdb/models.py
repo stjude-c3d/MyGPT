@@ -72,7 +72,7 @@ class Conversation(models.Model):
 
 class Question(models.Model):
 	question_text = models.TextField(default='-')
-	confidence_score = models.FloatField(default=0)
+	relevance_score = models.FloatField(default=0)
 	model_type =  models.ForeignKey('Model', on_delete=models.SET_DEFAULT, default=2)
 	question_dataset = models.ForeignKey('Dataset', on_delete=models.CASCADE)
 	conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)
@@ -82,6 +82,7 @@ class Answer(models.Model):
 	answer_text = models.TextField(default='-')
 	model_type =  models.ForeignKey('Model', on_delete=models.SET_DEFAULT, default=2)
 	temperature = models.FloatField(default=1)
+	relevance_score = models.FloatField(default=0)
 	rating = models.IntegerField(choices=rating_types, default=0)
 	user_comment = models.TextField(default='-')
 	saved_date_time = models.DateTimeField(default=timezone.now, null=True)

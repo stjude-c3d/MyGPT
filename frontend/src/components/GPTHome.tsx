@@ -16,7 +16,8 @@ function GPTHome(props:{
 }){
 	const [searchTerm, setSearchTerm] = useState<any>('')
 	const [query, setQuery] = useState<any[]>([])
-	const [confidenceScores, setConfidenceScores] = useState<any[]>([])
+	const [questionRelevancescore, setQuestionRelevancescore] = useState<any[]>([])
+	const [answerRelevancescore, setAnswerRelevancescore] = useState<any[]>([])
 	const [context, setContext] = useState<any>('')
 	const [relatedQuery, setRelatedQuery] = useState<any>(false)
 	const [answer, setAnswer] = useState<any>('')
@@ -160,13 +161,13 @@ function GPTHome(props:{
 					.then(response => response.json())
 					.then((data:any) => {
 						setAnswerReceived(false)
-						if (data.confidence_score === 0){
-							setConfidenceScores((prevConfidenceScores:any)=>[...prevConfidenceScores, data.confidence_score])
+						if (data.relevance_score === 0){
+							setQuestionRelevancescore((prevQuestionRelevancescore:any)=>[...prevQuestionRelevancescore, data.relevance_score])
 							setContext('None')
 							setSourcePapers((prevSourcePapers:any)=>[...prevSourcePapers, []])
 							setSourcePages((prevSourcePages:any)=>[...prevSourcePages, []])
 						}else{
-							setConfidenceScores((prevConfidenceScores:any)=>[...prevConfidenceScores, data.confidence_score])
+							setQuestionRelevancescore((prevQuestionRelevancescore:any)=>[...prevQuestionRelevancescore, data.relevance_score])
 							setContext(data.context)
 							setSourcePapers((prevSourcePapers:any)=>[...prevSourcePapers, data.sources.map((s:any)=>s.paper)])
 							setSourcePages((prevSourcePages:any)=>[...prevSourcePages, data.sources.map((s:any)=>s.page)])
@@ -174,7 +175,7 @@ function GPTHome(props:{
 							const paperIndex:number = papers.findIndex((p:any)=>p.paper_title === data.sources[0].paper)
 							setselectedPaperIdx(paperIndex)
 							setPapers([])
-							setFileAttachmentType('highlited_attachment')
+							// setFileAttachmentType('highlited_attachment')
 							setAnswerReceived(false)
 						}
 					})
@@ -234,7 +235,7 @@ function GPTHome(props:{
 		}
 	},[answer, props.currentSettings.selectedLlm, answerReceived])
 
-	// save asnwer to backend database
+	// save answer to backend database
 	useEffect(()=>{
 		if(answers.length && query.length && query.length === answers.length){
 			const requestOptions = {
@@ -247,17 +248,19 @@ function GPTHome(props:{
 					question_text: query[query.length-1].question,
 					answer_text: answers[answers.length-1].response,
 					model_type: answers[answers.length-1].source,
+					dataset: props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset,
 				})
 			}
 			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/save_answer/?format=json`, requestOptions)
 				.then(response => response.json())
 				.then(data => {
 					console.log(data)
+					setAnswerRelevancescore((prevAnswerRelevancescore:any)=>[...prevAnswerRelevancescore, data.relevance_score])
 					setContext('')
 					setAnswer('')
 				})
 		}
-	},[answers, query])
+	},[answers, query, props.currentSettings.selectedDataset, props.currentSettings.defaultDataset])
 
 	const PageNavigationPluginInstance = pageNavigationPlugin()
 
@@ -269,7 +272,7 @@ function GPTHome(props:{
 		// PageNavigationPluginInstance.jumpToPage(selectedPage-1)
 	},[selectedPage, PageNavigationPluginInstance])
 
-	// console.log('answers', answers)
+	// console.log('answers', answers, query, questionRelevancescore, answerRelevancescore)
 
 	const renderToolbar = (Toolbar: (props: ToolbarProps) => ReactElement) => (
 		<Toolbar>
@@ -350,7 +353,8 @@ function GPTHome(props:{
 								()=>{
 									setQuery([])
 									setAnswers([])
-									setConfidenceScores([])
+									setQuestionRelevancescore([])
+									setAnswerRelevancescore([])
 									setSourcePapers([])
 									setSourcePages([])
 								}
@@ -451,13 +455,13 @@ function GPTHome(props:{
 								<div className='flex flex-row justify-between font-bold'>
 									<div className='text-nav text-sm py-2'>You</div>
 									{
-										confidenceScores[query.length-i-1] !== undefined ? 
+										questionRelevancescore[query.length-i-1] !== undefined ? 
 										(
 											<div className='text-nav rounded-full text-xs py-2'>
 												Relevance 
-												<span style={{ backgroundColor: ConfidenceScoreColor(confidenceScores[query.length-i-1])}} 
-													className= {'py-1 px-2 m-1 rounded-full' + (confidenceScores[query.length-i-1] > 80 || confidenceScores[query.length-i-1] < 20 ? ' text-white' : ' text-nav')}>
-													{confidenceScores[query.length-i-1] + '%'}
+												<span style={{ backgroundColor: ConfidenceScoreColor(questionRelevancescore[query.length-i-1])}} 
+													className= {'py-1 px-2 m-1 rounded-full' + (questionRelevancescore[query.length-i-1] > 80 || questionRelevancescore[query.length-i-1] < 20 ? ' text-white' : ' text-nav')}>
+													{questionRelevancescore[query.length-i-1] + '%'}
 												</span>
 											</div>
 										) : ''
@@ -467,10 +471,23 @@ function GPTHome(props:{
 								<div className='text-nav'>{query[query.length-i-1].question}</div>
 							</div>
 							{	answers[query.length-i-1] && answers[query.length-i-1].response ?
+								// when full answers is ready to display
 								<div className='py-4 px-6 m-4 bg-panel1 rounded-lg shadow-md box2 llm-chat'>
 								<div className='flex flex-row justify-between font-bold'>
 									<div className='text-white text-sm py-2'>{answers[query.length-i-1].source.split(':')[0]}</div>
 									<div className='text-white text-xs py-2'>
+									{
+										answerRelevancescore[answers.length-1] !== undefined ? 
+										(
+											<div className='text-white rounded-full text-xs py-1'>
+												Relevance 
+												<span style={{ backgroundColor: ConfidenceScoreColor(answerRelevancescore[answers.length-1])}} 
+													className= {'py-1 px-2 m-1 rounded-full' + (answerRelevancescore[answers.length-i-1] > 80 || answerRelevancescore[answers.length-i-1] < 20 ? ' text-white' : ' text-nav')}>
+													{answerRelevancescore[answers.length-i-1] + '%'}
+												</span>
+											</div>
+										) : ''
+									}
 									</div>
 								</div>
 								<div className='text-white whitespace-pre-wrap'>{answers[query.length-i-1].response}</div>
@@ -499,7 +516,7 @@ function GPTHome(props:{
 									}}
 								/> */}
 								{
-									confidenceScores[query.length-i-1] > 0 && sourcePapers.length && sourcePages.length && sourcePapers[query.length-i-1] && sourcePages[query.length-i-1] ?
+									questionRelevancescore[query.length-1] > 0 && sourcePapers.length && sourcePages.length && sourcePapers[query.length-i-1] && sourcePages[query.length-i-1] ?
 									<>
 										<div className='text-white text-sm font-bold pt-4'>
 											{sourcePapers[query.length-i-1].length > 1 ? 'Sources' : 'Source'}
@@ -526,25 +543,14 @@ function GPTHome(props:{
 									}
 								</div> 
 								: (
+								// when answer is being generated
 								<div className='py-4 px-6 m-4 bg-panel1 rounded-lg shadow-md box2 llm-chat'>
 									<div className='flex flex-row justify-between font-bold mt-2 mb-4'>
 										<div className='text-white text-sm py-1'>{props.currentSettings.selectedLlm}</div>
-										{/* {
-											confidenceScores[query.length-1] !== undefined ? 
-											(
-												<div className='text-white rounded-full text-xs py-1'>
-													Relevance 
-													<span style={{ backgroundColor: ConfidenceScoreColor(confidenceScores[query.length-1])}} 
-														className= {'py-1 px-2 m-1 rounded-full' + (confidenceScores[query.length-i-1] > 80 || confidenceScores[query.length-i-1] < 20 ? ' text-white' : ' text-nav')}>
-														{confidenceScores[query.length-i-1] + '%'}
-													</span>
-												</div>
-											) : ''
-										} */}
 									</div>
 									<div className='text-white whitespace-pre-wrap'>{answer.length ? answer: 'Generating answer...'}</div>
 									{
-									confidenceScores[query.length-1] > 0 && sourcePapers.length && sourcePages.length && sourcePapers[query.length-1] && sourcePages[query.length-1] ?
+									questionRelevancescore[query.length-1] > 0 && sourcePapers.length && sourcePages.length && sourcePapers[query.length-1] && sourcePages[query.length-1] ?
 									<>
 										<div className='text-white text-sm font-bold pt-4'>
 											{sourcePapers[query.length-1].length > 1 ? 'Sources' : 'Source'}
