@@ -8,7 +8,7 @@ class DatasetAdmin(admin.ModelAdmin):
     list_display = ['dataset_name', 'zotero_id', 'dataset_size', 'user', 'user_email', 'user_group', 'dataset_date_time']
 
 class PapersAdmin(admin.ModelAdmin):
-    list_display = ['paper_title', 'paper_attachment', 'highlited_attachment', 'paper_dataset', 'paper_date_time']
+    list_display = ['paper_title', 'paper_attachment', 'highlighted_attachment', 'paper_dataset', 'paper_date_time']
 
 class chunksAdmin(admin.ModelAdmin):
     list_display = ['chunk_text', 'pca_x', 'pca_y', 'pca_z', 'chunk_dataset', 'chunk_paper', 'chunk_date_time']

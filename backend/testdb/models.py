@@ -32,7 +32,7 @@ class Dataset(models.Model):
 class Papers(models.Model):
 	paper_title = models.TextField(default='-')
 	paper_attachment = models.FileField(upload_to='papers', default='-')
-	highlited_attachment = models.FileField(upload_to='papers', default='-')
+	highlighted_attachment = models.FileField(upload_to='papers', default='-')
 	paper_dataset = models.ForeignKey('Dataset', on_delete=models.CASCADE)
 	paper_date_time = models.DateTimeField(default=timezone.now, null=True)
 

@@ -631,10 +631,10 @@ def get_papers(request):
         if request.GET.get('dataset'):
             dataset_name = request.GET.get('dataset')
             dataset = Dataset.objects.get(dataset_name=dataset_name)
-            papers = Papers.objects.filter(paper_dataset=dataset)
+            papers = Papers.objects.filter(paper_dataset=dataset).order_by('paper_date_time')
             papers_ = serializers.serialize('json', papers)
         else:
-            papers = Papers.objects.all()
+            papers = Papers.objects.all().order_by('paper_date_time')
             papers_ = serializers.serialize('json', papers)
         papers_json = json.loads(papers_)
         papers = []
@@ -733,6 +733,12 @@ def get_context(request):
             original_pdf_path = 'data/pdfs/'+ dataset_name + '/' + paper_name
             highlighted_pdf_path = 'data/pdfs/' + dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf'
 
+            # get all files with output_file name in thier name
+            files = [f for f in os.listdir('data/pdfs') if (paper_name.split('.')[0] + '_highlighted.pdf') in f]
+            # remove all files with output_file name in thier name
+            for f in files:
+                os.remove('data/pdfs/' + f)
+
             highlight_pdf(
                 original_pdf_path, 
                 highlighted_pdf_path, 
@@ -742,7 +748,7 @@ def get_context(request):
             # create highlighted paper object
             paper = Papers.objects.filter(paper_title=source_grp[0]['paper'])[0]
             with open(highlighted_pdf_path, 'rb') as f:
-                paper.highlited_attachment.save(dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf', File(f), save=True)
+                paper.highlighted_attachment.save(dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf', File(f), save=True)
         
         context_json = {
             'context': context,

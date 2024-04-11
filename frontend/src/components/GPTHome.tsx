@@ -143,12 +143,12 @@ function GPTHome(props:{
 			keepalive: true,
 			setTimeout: 10000,
 			body: JSON.stringify({ 
-				text: query[query.length-1] && query[query.length-1].question ? query[query.length-1].question.replaceAll('"','\\"') : '',
+				text: query[query.length-1] && query[query.length-1].question ? query[query.length-1].question.replaceAll('"',"'") : '',
 				model_type: props.currentSettings.selectedLlm,
 				dataset: props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset,
 				new_conversation: query.length === 1 ? true : false, 
 				related_query: relatedQuery,
-				previous_query: query.length > 1 ? query[query.length-2].question.replaceAll('"','\\"') : '',
+				previous_query: query.length > 1 ? query[query.length-2].question.replaceAll('"',"'") : '',
 				no_context: answerWithoutContext
 			})
 		}
@@ -174,8 +174,8 @@ function GPTHome(props:{
 							setSelectedPage(data.sources[0].page)
 							const paperIndex:number = papers.findIndex((p:any)=>p.paper_title === data.sources[0].paper)
 							setselectedPaperIdx(paperIndex)
+							setFileAttachmentType('highlighted_attachment')
 							setPapers([])
-							// setFileAttachmentType('highlited_attachment')
 							setAnswerReceived(false)
 						}
 					})
@@ -185,7 +185,7 @@ function GPTHome(props:{
 
 	// get answer from the ollama
 	useEffect(()=>{
-		const question =  query[query.length-1] && query[query.length-1].question ? query[query.length-1].question.replaceAll('"','\\"') : ''
+		const question =  query[query.length-1] && query[query.length-1].question ? query[query.length-1].question.replaceAll('"',"'") : ''
 		const systemPrompt = props.currentSettings.system_prompt + context
 		
 		const body = JSON.stringify({
@@ -218,7 +218,7 @@ function GPTHome(props:{
 						if (json.done === false) {
 							content += json.response
 						}else{
-							setTimeout(()=>{setAnswerReceived(true)}, 3000)
+							setAnswerReceived(true)
 						}
 					}
 					setAnswer(content)
@@ -231,8 +231,10 @@ function GPTHome(props:{
 
 	useEffect(()=>{
 		if (answerReceived && answer.length !== 0){
+			console.log(selectedPaperIdx)
 			setAnswers((prevAnswers:any)=>[...prevAnswers, {'response': answer, 'source': props.currentSettings.selectedLlm}])
 		}
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[answer, props.currentSettings.selectedLlm, answerReceived])
 
 	// save answer to backend database
@@ -245,8 +247,8 @@ function GPTHome(props:{
 					'Authorization': `${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_AUTH_TOKEN_PROD : process.env.REACT_APP_AUTH_TOKEN_DEV}`
 				},
 				body: JSON.stringify({ 
-					question_text: query[query.length-1].question,
-					answer_text: answers[answers.length-1].response,
+					question_text: query[query.length-1].question.replaceAll('"',"'"),
+					answer_text: answers[answers.length-1].response.replaceAll('"',"'"),
 					model_type: answers[answers.length-1].source,
 					dataset: props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset,
 				})
@@ -481,7 +483,7 @@ function GPTHome(props:{
 										(
 											<div className='text-white rounded-full text-xs py-1'>
 												Relevance 
-												<span style={{ backgroundColor: ConfidenceScoreColor(answerRelevancescore[answers.length-1])}} 
+												<span style={{ backgroundColor: ConfidenceScoreColor(answerRelevancescore[answers.length-i-1])}} 
 													className= {'py-1 px-2 m-1 rounded-full' + (answerRelevancescore[answers.length-i-1] > 80 || answerRelevancescore[answers.length-i-1] < 20 ? ' text-white' : ' text-nav')}>
 													{answerRelevancescore[answers.length-i-1] + '%'}
 												</span>
@@ -531,7 +533,7 @@ function GPTHome(props:{
 													// setSourceIdx(index)
 													setselectedPaperIdx(papers.findIndex((p:any)=>p.paper_title===paper))
 													setSelectedPage(sourcePages[query.length-i-1][index])
-													setFileAttachmentType('highlited_attachment')
+													setFileAttachmentType('highlighted_attachment')
 												}}
 											>
 												<div className='border border-gray-400'></div>
@@ -565,7 +567,7 @@ function GPTHome(props:{
 													// setSourceIdx(index)
 													setselectedPaperIdx(papers.findIndex((p:any)=>p.paper_title===paper))
 													setSelectedPage(sourcePages[query.length-1][index])
-													setFileAttachmentType('highlited_attachment')
+													setFileAttachmentType('highlighted_attachment')
 												}}
 											>
 												<div className='border border-gray-400'></div>
