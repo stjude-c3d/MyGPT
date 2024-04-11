@@ -23,7 +23,7 @@ We have divided the MyGPT pipeline architecture into three sections:
 MyGPT can be installed on following environments:
 
 - [Personal Computer](#personal-computer)
-- Server/VM with/without GPU (coming soon)
+- [Server/VM with/without GPU](#servervm-withwithout-gpu)
 - Amazon Web Services (AWS) (coming soon)
 
 ### Personal Computer
@@ -33,18 +33,25 @@ Also, Ollama is providing direct installation on Mac and Linux only. For Windows
 
 To run the pipleine on following environments, follow the instructions:
 * Mac
-	- [Basic Installation](./installation/macOS/README.md)
+	- [Installation guide](./installation/macOS/README.md)
 	<!-- - Detailed instructions: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1h92XHMT5D_vlmf2oEZ0BRn3ke41Cz9p4?usp=sharing)
 	This are instructions with interactive Jupyter notebook on Google colab, it has troubleshooting steps. If you come across any bug or error, please report it in the issues section. You can also modify Jupyter notebook as per your convenience. -->
 * Linux
-	- [Basic Installation](./installation/linux/README.md)
+	- [Installation guide](./installation/linux/README.md)
 	<!-- - Detailed instructions: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1feKcAvNwMIZpx7UGOb3UYhw_HFMC_kHP?usp=sharing)
 	This are instructions with interactive Jupyter notebook on Google colab, it has troubleshooting steps. If you come across any bug or error, please report it in the issues section. You can also modify Jupyter notebook as per your convenience. -->
 * Windows 
-	- [Basic Installation](./installation/windows/README.md)
+	- [Installation guide](./installation/windows/README.md)
 	<!-- - [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1r9cGHFwl4VStyb0szC4U-6hidXjtZBDE?usp=sharing) -->
 
 	These instructions are simple and easy to follow. You can also modify bash scripts as per your convenience.
+
+### Server/VM with/without GPU
+
+MyGPT can be installed on server/VM with/without GPU. Following readme is in progress and will be updated soon.
+
+* Linux server/VM
+	- [Installation guide](./installation/server_or_VM/README.md)
 
 ## User Interface
 MyGPT user interface will allow users to check the publcation library, ask questions, and get answers. The user interface is built using ReactJS.
