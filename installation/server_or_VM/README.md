@@ -119,7 +119,7 @@ docker login ghcr.io
 	We will run following script to run docker containers:
 
 	```
-	cd MyGPT/installation/server_or_VM/prebuilt_images
+	cd MyGPT/installation/server_or_VM/prebuilt_images_docker
 	bash run_docker.sh
 	```
 
@@ -236,7 +236,7 @@ https://www.zotero.org/groups/4982570/babu_group/collections/YTPMLXYY
 To create super user, run following command if you are using pre-built docker images:
 
 ```
-cd MyGPT/installation/linux/prebuilt_images/
+cd MyGPT/installation/linux/prebuilt_images_docker/
 bash create_superuser.sh
 ```
 
@@ -252,7 +252,7 @@ You can check backend database at http://localhost:8000/admin/ with username and
 
 To stop docker containers, run following command if you are using pre-built docker images:
 ```
-cd MyGPT/installation/linux/prebuilt_images/
+cd MyGPT/installation/linux/prebuilt_images_docker/
 bash stop_docker.sh
 ```
 
