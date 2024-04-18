@@ -1,0 +1,5 @@
+ragas
+langchain
+requests==2.27.1
+transformers==4.29.2
+sentence-transformers
