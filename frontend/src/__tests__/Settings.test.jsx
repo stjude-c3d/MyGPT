@@ -53,11 +53,11 @@ describe('Settings', () => {
     expect(divEl.textContent).toBe(activeTabTextContent)
   })
 
-  it('renders "LLM Parameters" panel', () => {
+  it('renders "Prompt and LLM parameters" panel', () => {
     const settingsCallback = jest.fn()
     const setShowSettings = jest.fn()
     const activeTab = 'llm_parameters'
-    const activeTabTextContent = 'LLM parameters'
+    const activeTabTextContent = 'Prompt and LLM parameters'
 
     const { container } = render(<Settings 
         closeSettings={() => setShowSettings(false)} 
