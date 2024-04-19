@@ -3,7 +3,7 @@ const defaultSettings = {
 	settingsPanels: [ 
 		{key:'datasets', text:'Publication libraries'},
 		{key:'llms', text:'LLMs'},
-		{key:'llm_parameters', text:'LLM parameters'},
+		{key:'llm_parameters', text:'Prompt and LLM parameters'},
 		{key:'sentence_transformers', text:'Sentence Transformers'},
 		{key:'relevance_score', text:'Relevance score parameters'},
 ],
@@ -19,7 +19,8 @@ const defaultSettings = {
 	selected_sentence_transformer: 'all-MiniLM-L6-v2',
 	sentence_transformers: [
 		'all-MiniLM-L6-v2',
-		'all-MiniLM-L12-v2', 
+		'all-MiniLM-L12-v2',
+		'multi-qa-MiniLM-L6-cos-v1', 
 		'all-mpnet-base-v2', 
 		'multi-qa-mpnet-base-dot-v1',
 		'paraphrase-albert-small-v2'

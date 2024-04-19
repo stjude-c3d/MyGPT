@@ -255,7 +255,7 @@ const Settings = (props:{
 											optionsList={props.defaultSettings.sentence_transformers}
 											defaultOption={currentSettings.sentence_transformer}
 											dropDownCallback={(option:string)=>{
-												props.settingsCallback({...currentSettings, sentence_transformer: option})
+												props.settingsCallback({...currentSettings, selected_sentence_transformer: option})
 											}}
 										/>
 									</div>

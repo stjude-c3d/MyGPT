@@ -4,6 +4,7 @@ requests>=2.0
 djangorestframework
 django-cors-headers
 transformers
+sentence_transformers
 torch
 sacremoses
 pypdf2

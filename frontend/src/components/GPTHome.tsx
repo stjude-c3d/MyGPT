@@ -116,7 +116,10 @@ function GPTHome(props:{
 				method: 'GET',
 				headers: { 
 					'Content-Type': 'application/json'
-				}
+				},
+				body: JSON.stringify({
+					sentence_transformer: props.currentSettings.selected_sentence_transformer
+				})
 			}
 			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/add_demo_library/?format=json`, requestOptions)
 				.then(response => response.json())
@@ -149,7 +152,8 @@ function GPTHome(props:{
 				new_conversation: query.length === 1 ? true : false, 
 				related_query: relatedQuery,
 				previous_query: query.length > 1 ? query[query.length-2].question.replaceAll('"',"'") : '',
-				no_context: answerWithoutContext
+				no_context: answerWithoutContext,
+				sentence_transformer: props.currentSettings.selected_sentence_transformer
 			})
 		}
 		if(query.length && query.length !== answers.length){
@@ -251,6 +255,7 @@ function GPTHome(props:{
 					answer_text: answers[answers.length-1].response.replaceAll('"',"'"),
 					model_type: answers[answers.length-1].source,
 					dataset: props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset,
+					sentence_transformer: props.currentSettings.selected_sentence_transformer,
 				})
 			}
 			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/save_answer/?format=json`, requestOptions)
@@ -262,7 +267,7 @@ function GPTHome(props:{
 					setAnswer('')
 				})
 		}
-	},[answers, query, props.currentSettings.selectedDataset, props.currentSettings.defaultDataset])
+	},[answers, query, props.currentSettings.selectedDataset, props.currentSettings.defaultDataset, props.currentSettings.selected_sentence_transformer])
 
 	const PageNavigationPluginInstance = pageNavigationPlugin()
 

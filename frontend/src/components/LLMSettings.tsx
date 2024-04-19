@@ -9,7 +9,7 @@ const LLMSettings = (props: {
 }) => {
 	
 	let currentSettings = props.currentSettings
-	let llmsDownload = ['Mistral', 'Vicuna', 'Orca-mini', 'Phi', 'Falcon', 'Tinyllama', 'Llama2:13b', 'Llama2:70b']
+	let llmsDownload = ['llama3', 'Mistral', 'Vicuna', 'Orca-mini', 'Phi', 'Falcon', 'Tinyllama', 'Llama2:13b', 'Llama2:70b']
 		.filter((llm:string) => !props.llms.includes(llm.toLowerCase()))
 	const [llmToLoad, setLlmToLoad] = useState('')
 	const [message, setMessage] = useState('')

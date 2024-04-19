@@ -37,7 +37,7 @@ def home(request):
     if(request.GET.get('reload_library')):
         if datasets.filter(dataset_name='GPCR').count() > 0:
             datasets.get(dataset_name='GPCR').delete()
-        add_demo_dataset()
+        add_demo_dataset('all-MiniLM-L6-v2')
         datasets = Dataset.objects.all()
         return render(request, 'home.html', {'success': 'Successfully reloaded demo dataset', 'datasets': datasets, 'form': form, 'file_count': range(1,file_count+1)})
 
@@ -243,7 +243,7 @@ def add_dataset_from_upload(request):
     return dataset_name
 
 
-def add_to_chroma(dataset_name):
+def add_to_chroma(dataset_name, sentence_transformer = 'all-MiniLM-L6-v2'):
     documents_directory = '/code/data/data_chunks'
     # collection_name = 'pub_collection'
     # Read all files in the data directory
@@ -255,10 +255,16 @@ def add_to_chroma(dataset_name):
     # Learn more at docs.trychroma.com
     client = chromadb.PersistentClient(path='/code/chroma_storage/.')
 
+    # use multi-qa-MiniLM-L6-cos-v1 embedding function
+    if sentence_transformer != 'all-MiniLM-L6-v2':
+        sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=sentence_transformer)
+    else:
+        sentence_transformer_ef = embedding_functions.DefaultEmbeddingFunction()
+
     # If the collection already exists, we will delete it and create a new one.
     client.get_or_create_collection(name=dataset_name)
     client.delete_collection(name=dataset_name)
-    collection = client.get_or_create_collection(name=dataset_name)
+    collection = client.get_or_create_collection(name=dataset_name, embedding_function=sentence_transformer_ef)
 
     # Create ids from the current count
     count = collection.count()
@@ -296,24 +302,11 @@ def add_to_chroma(dataset_name):
         dataset.save()
 
         # add embeddings to database
-        for i in tqdm(
-            range(0, len(documents), 100), desc='Adding embeddings', unit_scale=100
-        ):
-            default_ef = embedding_functions.DefaultEmbeddingFunction()
-            
-            for document in documents[i : i + 100]:
-                embedding = default_ef([document])
-                chunks.objects.create(
-                    chunk_text=document,
-                    embedding=embedding,
-                    chunk_dataset=dataset,
-                    chunk_paper=Papers.objects.filter(paper_title=metadatas[i]['filename'])[0],
-                    chunk_date_time=make_aware(datetime.datetime.now())
-                )
+        # add_embeddings_to_chunks(documents, metadatas, dataset)
 
         print(f'Added {new_count - count} documents')
 
-def add_demo_dataset():
+def add_demo_dataset(sentence_transformer = 'all-MiniLM-L6-v2'):
     documents_directory = '/code/data'
     # collection_name = 'pub_collection'
     # Read all files in the data directory
@@ -323,12 +316,18 @@ def add_demo_dataset():
     titles = []
     client = chromadb.PersistentClient(path='/code/chroma_storage/.')
 
+    # use multi-qa-MiniLM-L6-cos-v1 embedding function
+    if sentence_transformer != 'all-MiniLM-L6-v2':
+        sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=sentence_transformer)
+    else:
+        sentence_transformer_ef = embedding_functions.DefaultEmbeddingFunction()
+
     # If the collection already exists, we will delete it and create a new one.
     if len(client.list_collections()):
         for collection in client.list_collections():
             if collection.name == dataset_name:
                 client.delete_collection(name=dataset_name)
-    collection = client.get_or_create_collection(name=dataset_name)
+    collection = client.get_or_create_collection(name=dataset_name, embedding_function=sentence_transformer_ef)
 
     # Create ids from the current count
     count = collection.count()
@@ -386,24 +385,27 @@ def add_demo_dataset():
                 paper.paper_attachment.save(dataset_name + '/paper' + str(idx+1) + '.pdf', File(f), save=True)
 
         # add embeddings to database
-        for i in tqdm(
-            range(0, len(documents), 100), desc='Adding embeddings', unit_scale=100
-        ):
-            default_ef = embedding_functions.DefaultEmbeddingFunction()
-            for document in documents[i : i + 100]:
-                embedding = default_ef([document])
-                chunks.objects.create(
-                    chunk_text=document,
-                    embedding=embedding,
-                    chunk_dataset=dataset,
-                    chunk_paper=Papers.objects.filter(paper_title=metadatas[i]['filename'])[0],
-                    chunk_date_time=make_aware(datetime.datetime.now())
-                )
+        # add_embeddings_to_chunks(documents, metadatas, dataset)
 
         # add pca to chunks
         add_pca_to_chunks()
            
         print(f'Added {new_count - count} documents')
+
+def add_embeddings_to_chunks(documents, metadatas, dataset):
+    for i in tqdm(
+        range(0, len(documents), 100), desc='Adding embeddings', unit_scale=100
+    ):
+        default_ef = embedding_functions.DefaultEmbeddingFunction()
+        for document in documents[i : i + 100]:
+            embedding = default_ef([document])
+            chunks.objects.create(
+                chunk_text=document,
+                embedding=embedding,
+                chunk_dataset=dataset,
+                chunk_paper=Papers.objects.filter(paper_title=metadatas[i]['filename'])[0],
+                chunk_date_time=make_aware(datetime.datetime.now())
+            )
 
 def add_pca_to_chunks():
     chunks_objects = chunks.objects.all()
@@ -468,14 +470,19 @@ def find_cutoff_distance(distances):
             break
     return cutoff_distance
 
-def nearestDataChroma(text, dataset_name):
+def nearestDataChroma(text, dataset_name, sentence_transformer='all-MiniLM-L6-v2'):
     # collection_name = 'pub_collection'
     # client = chromadb.Client()
+    # use multi-qa-MiniLM-L6-cos-v1 embedding function
+    if sentence_transformer != 'all-MiniLM-L6-v2':
+        sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=sentence_transformer)
+    else:
+        sentence_transformer_ef = embedding_functions.DefaultEmbeddingFunction()
 
     # If the collection already exists, we just return it. This allows us to add more
     # data to an existing collection.
     client = chromadb.PersistentClient(path='/code/chroma_storage/.')
-    collection = client.get_collection(name=dataset_name)
+    collection = client.get_collection(name=dataset_name, embedding_function=sentence_transformer_ef)
     # collection = app_config.collection
 
     # Create ids from the current count
@@ -588,35 +595,35 @@ def highlight_pdf(input_file, output_file, source_grp):
 
 class ModelViewSet(viewsets.ModelViewSet):
     """
-    API endpoint that shows protein families.
+    API endpoint that shows list of models.
     """
     queryset = Model.objects.all()
     serializer_class = ModelSerializer
 
 class QuestionsViewSet(viewsets.ModelViewSet):
     """
-    API endpoint that shows protein families.
+    API endpoint that shows all questions.
     """
     queryset = Question.objects.all()
     serializer_class = QuestionSerializer
 
 class AnswersViewSet(viewsets.ModelViewSet):
     """
-    API endpoint that shows protein families.
+    API endpoint that shows all answers.
     """
     queryset = Answer.objects.all()
     serializer_class = AnswerSerializer
 
 class PapersViewSet(viewsets.ModelViewSet):
     """
-    API endpoint that shows protein families.
+    API endpoint that shows all papers.
     """
     queryset = Papers.objects.all()
     serializer_class = PapersSerializer
 
 class DataSetsViewSet(viewsets.ModelViewSet):
     """
-    API endpoint that shows protein families.
+    API endpoint that shows all datasets.
     """
     queryset = Dataset.objects.all()
     serializer_class = DatasetSerializer
@@ -654,12 +661,13 @@ def get_context(request):
         new_conversation = json_request['new_conversation']
         previous_question = json_request['previous_query']
         no_context = json_request['no_context']
+        sentence_transformer = json_request['sentence_transformer']
         if no_context:    
             context, titles, pages, chunks, distances = '', [], [], [], []
             sources = []
             relevance_score = 0
         else:
-            context, titles, pages, chunks, distances = nearestDataChroma(question_text, dataset_name)
+            context, titles, pages, chunks, distances = nearestDataChroma(question_text, dataset_name, sentence_transformer)
             sources = []
             distances = [round(dist, 3) for dist in distances]
             relevance_score = get_relevance_score(distances)
@@ -758,6 +766,60 @@ def get_context(request):
         
         return Response(context_json, content_type="application/json")
     
+@api_view(['GET'])
+def get_conversations_by_dataset(request):
+    if request.method == 'GET':
+        dataset_name = request.GET.get('dataset')
+        dataset = Dataset.objects.get(dataset_name=dataset_name)
+        conversations = Conversation.objects.filter(conversation_dataset=dataset)
+        conversations_obj = []
+        for conversation in conversations:
+            conversation_id = conversation.id
+            questions = Question.objects.filter(conversation=conversation).order_by('saved_date_time')
+            conversation_json = {}
+            conversation_json['conversation_id'] = conversation_id
+            conversation_json['questions_answers'] = []
+            for question in questions:
+                # answers = Answer.objects.filter(question=question)
+                qna_json = {
+                    'question_id': question.id,
+                    'question': question.question_text,
+                    # 'answers': answers[0].answer_text,
+                    'relevance_score': question.relevance_score
+                }
+                conversation_json['questions_answers'].append(qna_json)
+            conversations_obj.append(conversation_json)
+        return Response({'conversations':conversations_obj})
+
+@api_view(['GET'])
+def get_question_details(request):
+    if request.method == 'GET':
+        question_id = request.GET.get('question_id')
+        question = Question.objects.get(id=question_id)
+        answers = Answer.objects.filter(question=question)
+        sources = Source.objects.filter(question=question)
+        sources_json = []
+        for source in sources:
+            sources_json.append({
+                'paper': source.source_paper,
+                'page': source.source_page,
+                'context': source.context,
+                'distance': source.distance
+            })
+        answers_json = []
+        for answer in answers:
+            answers_json.append({
+                'answer': answer.answer_text,
+                'relevance_score': answer.relevance_score
+            })
+        question_json = {
+            'question': question.question_text,
+            'relevance_score': question.relevance_score,
+            'answers': answers_json,
+            'sources': sources_json
+        }
+        return Response(question_json)
+    
 @api_view(['POST'])
 def save_answer(request):
     if request.method == 'POST':
@@ -768,7 +830,8 @@ def save_answer(request):
         model_type = Model.objects.get(model_name=model)
         question = Question.objects.get(question_text=question_text, model_type=model_type)
         dataset_name = json_request['dataset']
-        _, _, _, _, distances = nearestDataChroma(answer_text, dataset_name)
+        sentence_transformer = json_request['sentence_transformer']
+        _, _, _, _, distances = nearestDataChroma(answer_text, dataset_name, sentence_transformer)
         distances = [round(dist, 3) for dist in distances]
         relevance_score = get_relevance_score(distances)
         Answer.objects.create(
@@ -815,10 +878,11 @@ def add_zotero_dataset(request):
         library_id = json_request['library_id']
         library_id_type = json_request['library_id_type']
         collection_id = json_request['collection_id']
+        sentence_transformer = request.POST.get('sentence_transformer')
         dataset_name = get_zotero_chunks(library_id, library_id_type, collection_id, api_key)
         # if dataset_name.error:
         #     return Response({'error':True, 'error_message': dataset_name.error}, content_type="application/json")
-        add_to_chroma(dataset_name)
+        add_to_chroma(dataset_name, sentence_transformer)
         datasets = Dataset.objects.all()
         dataset_names = []
         for dataset in datasets:
@@ -829,7 +893,8 @@ def add_zotero_dataset(request):
 def upload_documents(request):
     if request.method == 'POST':
         dataset_name = add_dataset_from_upload(request)
-        add_to_chroma(dataset_name)
+        sentence_transformer = request.POST.get('sentence_transformer')
+        add_to_chroma(dataset_name, sentence_transformer)
         return Response({'uploaded':True}, content_type="application/json")
 
 @api_view(['POST'])
@@ -869,7 +934,8 @@ def get_frontend_settings(request):
 def add_demo_dataset_api(request):
     if request.method == 'GET':
         datasets = Dataset.objects.all()
+        sentence_transformer = request.GET.get('sentence_transformer')
         if datasets.count() > 0 and datasets.filter(dataset_name='GPCR').count() > 0:
             datasets.get(dataset_name='GPCR').delete()
-        add_demo_dataset()
+        add_demo_dataset(sentence_transformer)
         return Response({'added':True}, content_type="application/json")

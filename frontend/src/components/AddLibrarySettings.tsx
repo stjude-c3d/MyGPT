@@ -61,6 +61,7 @@ const AddLibrarySettings = (props: {
 		if (uploadLibrary){
 			const formData = new FormData()
 			formData.append('dataset_name', UploadLibraryName)
+			formData.append('sentence_transformer', currentSettings.selected_sentence_transformer)
 			uploadDocs.filter((d)=> d.file !== null && d.title !== '').forEach((doc:any) => {
 				if (doc.title && doc.file){
 					formData.append('paper_title', doc.title)
