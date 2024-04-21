@@ -2,7 +2,8 @@ import { BrowserRouter } from 'react-router-dom'
 import { NavBar } from './NavBar'
 
 function TopNav(props:{
-  setShowSettings:any
+  setShowSettings:any,
+  setShowChatHistory:any
 }) {
 
   return (
@@ -15,6 +16,7 @@ function TopNav(props:{
             appLogoPath = {'./mygpt_logo.png'}
             // appLogoLink = {'/'}
             showHistoryButton = {true}
+            historyButtonCallback = {() => {props.setShowChatHistory(true)}}
             showSettingsButton = {true}
             settingButtonCallback = {() => {props.setShowSettings(true)}}
             backgroundColor={'#2A4759'}

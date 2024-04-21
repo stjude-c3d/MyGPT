@@ -4,10 +4,13 @@ import TopNav from './components/TopNav'
 import GPTHome from './components/GPTHome'
 import Settings from './components/Settings'
 import defaultSettings from './utils/DefaultState'
+import ChatHistory from './components/ChatHistory'
 
 function App() {  
   const [currentSettings, setCurrentSettings] = useState(defaultSettings);
   const [showSettings, setShowSettings] = useState(currentSettings.showSettings || defaultSettings.showSettings);
+
+  const [showChatHistory, setShowChatHistory] = useState(false)
 
   const settingsCallback = (newSettings:any) => {
     setCurrentSettings(newSettings)
@@ -22,7 +25,7 @@ function App() {
 
   return (
    <div className='bg-gray-200'>
-    <TopNav setShowSettings={setShowSettings}/>
+    <TopNav setShowSettings={setShowSettings} setShowChatHistory={setShowChatHistory}/>
     {showSettings ?
       <Settings 
         closeSettings={() => setShowSettings(false)} 
@@ -31,6 +34,11 @@ function App() {
         settingsCallback={settingsCallback}
       /> 
       : <></>}
+    {showChatHistory ? 
+      <ChatHistory
+        closeChatHistory={() => setShowChatHistory(false)}
+        dataset = {currentSettings.selectedDataset} 
+      /> : <></>}
     <GPTHome currentSettings={currentSettings} settingsCallback={settingsCallback}/>
   </div>
   )

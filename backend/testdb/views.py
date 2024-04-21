@@ -815,6 +815,7 @@ def get_question_details(request):
         question_json = {
             'question': question.question_text,
             'relevance_score': question.relevance_score,
+            'llm': question.model_type.model_name,
             'answers': answers_json,
             'sources': sources_json
         }

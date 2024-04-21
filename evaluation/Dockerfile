@@ -8,4 +8,5 @@ COPY requirements.txt /code/
 RUN pip install -r requirements.txt
 COPY . /code/
 EXPOSE 8001
-CMD ["python", "test_ragas.py"]
+# CMD [ "python", "test_ragas.py"]
+CMD ["python", "utils/get_question_answer.py"]

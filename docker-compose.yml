@@ -79,3 +79,8 @@ services:
         limits:
           cpus: '10.0'
           memory: 8G
+  evaluation:
+    build: ./evaluation
+    volumes:
+      - ./evaluation:/code
+   
