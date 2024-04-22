@@ -5,7 +5,6 @@ from . import views
 router = routers.DefaultRouter()
 router.register(r'llms', views.ModelViewSet)
 router.register(r'papers', views.PapersViewSet)
-router.register(r'datasets', views.DataSetsViewSet)
 router.register(r'questions', views.QuestionsViewSet)
 router.register(r'answers', views.AnswersViewSet)
 
@@ -13,6 +12,7 @@ urlpatterns = [
     path('', views.home, name='home'),
     path('api/', include(router.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+	path('api/get_datasets/', views.get_datasets, name='get_datasets'),
     path('api/get_papers/', views.get_papers, name='get_paper'),
 	path('api/get_context/', views.get_context, name='get_context'),
 	path('api/get_conversation_history/', views.get_conversations_by_dataset, name='conversation_history'),

@@ -3,7 +3,8 @@ import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
 
 const AddLibrarySettings = (props: {
 	currentSettings: any,
-	settingsCallback: any
+	settingsCallback: any, 
+	user?: any
 }) => {
   const [apiKey, setApiKey] = useState('')
   const [showAPIHelp, setShowAPIHelp] = useState(false)
@@ -38,7 +39,10 @@ const AddLibrarySettings = (props: {
 				api_key: apiKey,
 				library_id: libraryId,
 				library_id_type: libraryIdType,
-				collection_id: collectionId
+				collection_id: collectionId,
+				user: props.user.user,
+				user_email: props.user.user_email,
+				user_group: props.user.isAdmin ? 'admin' : 'user'
 			})
 		}
 		fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/add_zotero_collection/`, requestOptions)
@@ -60,8 +64,13 @@ const AddLibrarySettings = (props: {
  	useEffect(() => {
 		if (uploadLibrary){
 			const formData = new FormData()
+			
 			formData.append('dataset_name', UploadLibraryName)
 			formData.append('sentence_transformer', currentSettings.selected_sentence_transformer)
+			formData.append('user', props.user.user)
+			formData.append('user_email', props.user.user_email)
+			formData.append('user_group', props.user.isAdmin ? 'admin' : 'user')
+
 			uploadDocs.filter((d)=> d.file !== null && d.title !== '').forEach((doc:any) => {
 				if (doc.title && doc.file){
 					formData.append('paper_title', doc.title)

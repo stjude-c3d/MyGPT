@@ -9,14 +9,15 @@ const Settings = (props:{
 	closeSettings:any,
 	defaultSettings:any,
 	currentSettings:any,
-	settingsCallback:any
+	settingsCallback:any,
+	user?:any
 }) => {
 	const [activeTab, setActiveTab] = useState(props.currentSettings.selectedPanel || props.defaultSettings.selectedPanel)
 	const [workflowZoomedIn, setWorkflowZoomedIn] = useState(false)
 	const [workflowCollapsed, setWorkflowCollapsed] = useState(false)
 
 	const currentSettings = JSON.parse(JSON.stringify(props.currentSettings || props.defaultSettings))
-	const [datasets, setDatasets] = useState<string[]>([])
+	// const [datasets, setDatasets] = useState<string[]>([])
 	const [selectedDataset, setSelectedDataset] = useState(props.currentSettings.selectedDataset || props.defaultSettings.selectedDataset)
 	const [deleteDataset, setDeleteDataset] = useState('')
 
@@ -24,29 +25,30 @@ const Settings = (props:{
 	const [llm, setLlm] = useState(props.currentSettings.selectedLlm || props.defaultSettings.selectedLlm)
 
 	const [editPrompt, setEditPrompt] = useState(false)
-	useEffect(()=>{
-		const requestOptions = {
-			method: 'GET',
-			headers: { 
-				'Content-Type': 'application/json'
-			}
-		}
-		if(!datasets.length || props.currentSettings.fetchDatasets)
-			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/datasets/`, requestOptions)
-				.then(response => response.json())
-				.then(data => {
-					const dataset_names = data.results.map((d:any)=>d.dataset_name)
-					props.settingsCallback({...currentSettings, datasets: dataset_names, fetchDatasets: false})
-					if (dataset_names && dataset_names.length && dataset_names.includes(props.defaultSettings.selectedDataset)){
-						dataset_names.splice(dataset_names.indexOf(props.defaultSettings.selectedDataset), 1)
-						dataset_names.unshift(props.defaultSettings.selectedDataset)
-					} else {
-						dataset_names.unshift(props.defaultSettings.selectedDataset)
-					}
-					setDatasets(dataset_names)
-				})
-	// eslint-disable-next-line react-hooks/exhaustive-deps
-	},[datasets.length, props.currentSettings.fetchDatasets])
+	// useEffect(()=>{
+	// 	const requestOptions = {
+	// 		method: 'POST',
+	// 		headers: { 
+	// 			'Content-Type': 'application/json'
+	// 		},
+	// 		body: JSON.stringify(props.user ? props.user : {'user_email': ''})
+	// 	}
+	// 	if(!datasets.length || props.currentSettings.fetchDatasets)
+	// 		fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/get_datasets/`, requestOptions)
+	// 			.then(response => response.json())
+	// 			.then(data => {
+	// 				const dataset_names = data.map((d:any)=>d.dataset_name)
+	// 				props.settingsCallback({...currentSettings, datasets: dataset_names, fetchDatasets: false})
+	// 				if (dataset_names && dataset_names.length && dataset_names.includes(props.defaultSettings.selectedDataset)){
+	// 					dataset_names.splice(dataset_names.indexOf(props.defaultSettings.selectedDataset), 1)
+	// 					dataset_names.unshift(props.defaultSettings.selectedDataset)
+	// 				} else {
+	// 					dataset_names.unshift(props.defaultSettings.selectedDataset)
+	// 				}
+	// 				setDatasets(dataset_names)
+	// 			})
+	// // eslint-disable-next-line react-hooks/exhaustive-deps
+	// },[datasets.length, props.currentSettings.fetchDatasets])
 
 	useEffect(()=>{
 		currentSettings.selectedDataset = selectedDataset
@@ -67,11 +69,12 @@ const Settings = (props:{
 					console.log(data)
 					setDeleteDataset('')
 					const dataset_names = currentSettings.datasets.filter((d:string)=>d !== deleteDataset)
-					setDatasets(dataset_names)
+					props.settingsCallback({...currentSettings, datasets: dataset_names, selectedDataset: dataset_names[0]})
 				
 				})
 		}
-	}, [deleteDataset, currentSettings.datasets])
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [deleteDataset, currentSettings])
 
 	// get llms from backend
 	useEffect(()=>{
@@ -170,7 +173,7 @@ const Settings = (props:{
 									<div className='text-nav px-2 flex justify-start mt-2 text-lg font-semibold'> Available libraries </div>
 									<div className='text-nav px-4 flex justify-start'>
 										<ul className='list-disc'>
-											{datasets.filter(d=>d !== 'None').map((dataset:string, index:number) => {
+											{props.currentSettings.datasets.filter((d:any)=>d !== 'None').map((dataset:string, index:number) => {
 												return(
 													<li key={index} className='ml-4'>
 														<div className='flex justify-between m-1'>
@@ -206,6 +209,7 @@ const Settings = (props:{
 									<AddLibrarySettings
 										currentSettings={currentSettings}
 										settingsCallback={props.settingsCallback}
+										user={props.user}
 									/>
 								</div> : <></>
 							}

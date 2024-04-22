@@ -1,16 +1,28 @@
 import '../src/App.css'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import TopNav from './components/TopNav'
 import GPTHome from './components/GPTHome'
 import Settings from './components/Settings'
 import defaultSettings from './utils/DefaultState'
 import ChatHistory from './components/ChatHistory'
+import { PublicClientApplication } from '@azure/msal-browser'
+import { MsalProvider } from '@azure/msal-react'
+import { msalConfig } from './utils/authConfigEnv'
+
+const msalInstance = new PublicClientApplication(msalConfig)
+
+const default_frontend_settings = {
+  'show_no_context_switch': false,
+  'azure_login': false
+}
 
 function App() {  
-  const [currentSettings, setCurrentSettings] = useState(defaultSettings);
-  const [showSettings, setShowSettings] = useState(currentSettings.showSettings || defaultSettings.showSettings);
+  const [currentSettings, setCurrentSettings] = useState(defaultSettings)
+  const [showSettings, setShowSettings] = useState(currentSettings.showSettings || defaultSettings.showSettings)
 
   const [showChatHistory, setShowChatHistory] = useState(false)
+  const [frontendSettings, setFrontendSettings] = useState<any>(default_frontend_settings)
+  const [user, setUser] = useState<any>(null)
 
   const settingsCallback = (newSettings:any) => {
     setCurrentSettings(newSettings)
@@ -19,28 +31,117 @@ function App() {
     }
   }
 
-  // useEffect(()=>{
-  //   setShowSettings(currentSettings.showSettings)
-  // },[currentSettings.showSettings])
+  const loginCallback = (user:any) => {
+    setUser(user)
+    currentSettings.fetchDatasets = true
+  }
+
+  useEffect(()=>{
+		const requestOptions = {
+			method: 'GET',
+			headers: { 
+				'Content-Type': 'application/json'
+			}
+		}
+		fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/frontend_settings/?format=json`, requestOptions)
+			.then(response => response.json())
+			.then(data => {
+				setFrontendSettings(data.settings)
+			})
+	},[])
+
+  // get datasets when user login
+  useEffect(()=>{
+    if (user && user.user_email.length > 0 && currentSettings.fetchDatasets === true) {
+        const requestOptions = {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application',
+            'Authorization': `${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_AUTH_TOKEN_PROD : process.env.REACT_APP_AUTH_TOKEN_DEV}`
+          },
+          body: JSON.stringify({
+            'user_email': user.user_email
+          })
+        }
+        fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/get_datasets/?format=json`, requestOptions)
+          .then(response => response.json())
+          .then(data => {
+            setCurrentSettings({...currentSettings, datasets:data.map((d:any)=>d.dataset_name), selectedDataset:data[0].dataset_name, fetchDatasets:false})
+          })
+        } 
+        else if (currentSettings.selectedDataset === 'None' && currentSettings.fetchDatasets === true) {
+          const requestOptions = {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application',
+              'Authorization': `${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_AUTH_TOKEN_PROD : process.env.REACT_APP_AUTH_TOKEN_DEV}`
+            },
+            body: JSON.stringify({
+              'user_email': ''
+            })
+          }
+            fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/get_datasets/?format=json`, requestOptions)
+              .then(response => response.json())
+              .then(data => {
+                setCurrentSettings({...currentSettings, datasets:data.map((d:any)=>d.dataset_name), selectedDataset:data[0].dataset_name, fetchDatasets:false})
+            })
+        }
+    }, [user, currentSettings])
 
   return (
-   <div className='bg-gray-200'>
-    <TopNav setShowSettings={setShowSettings} setShowChatHistory={setShowChatHistory}/>
-    {showSettings ?
-      <Settings 
-        closeSettings={() => setShowSettings(false)} 
-        defaultSettings={defaultSettings} 
-        currentSettings={currentSettings}
-        settingsCallback={settingsCallback}
-      /> 
-      : <></>}
-    {showChatHistory ? 
-      <ChatHistory
-        closeChatHistory={() => setShowChatHistory(false)}
-        dataset = {currentSettings.selectedDataset} 
-      /> : <></>}
-    <GPTHome currentSettings={currentSettings} settingsCallback={settingsCallback}/>
-  </div>
+    <>
+    { frontendSettings.azure_login ?
+      <MsalProvider instance={msalInstance}>
+        <div className='bg-gray-200'>
+        <TopNav 
+          setShowSettings={setShowSettings} 
+          setShowChatHistory={setShowChatHistory} 
+          showLoginButton={frontendSettings.azure_login}
+          loginCallback={loginCallback}
+        />
+        {showSettings ?
+          <Settings 
+            closeSettings={() => setShowSettings(false)} 
+            defaultSettings={defaultSettings} 
+            currentSettings={currentSettings}
+            settingsCallback={settingsCallback}
+            user={user}
+          /> 
+          : <></>}
+        {showChatHistory ? 
+          <ChatHistory
+            closeChatHistory={() => setShowChatHistory(false)}
+            dataset = {currentSettings.selectedDataset}
+            datasets = {currentSettings.datasets} 
+          /> : <></>}
+        <GPTHome currentSettings={currentSettings} settingsCallback={settingsCallback} frontendSettings={frontendSettings}/>
+        </div>
+      </MsalProvider>
+    :
+    <div className='bg-gray-200'>
+      <TopNav 
+        setShowSettings={setShowSettings} 
+        setShowChatHistory={setShowChatHistory} 
+        showLoginButton={frontendSettings.azure_login}
+      />
+      {showSettings ?
+        <Settings 
+          closeSettings={() => setShowSettings(false)} 
+          defaultSettings={defaultSettings} 
+          currentSettings={currentSettings}
+          settingsCallback={settingsCallback}
+        /> 
+        : <></>}
+      {showChatHistory ? 
+        <ChatHistory
+          closeChatHistory={() => setShowChatHistory(false)}
+          dataset = {currentSettings.selectedDataset}
+          datasets = {currentSettings.datasets} 
+        /> : <></>}
+      <GPTHome currentSettings={currentSettings} settingsCallback={settingsCallback} frontendSettings={frontendSettings}/>
+    </div>
+  }
+  </>
   )
 }
 

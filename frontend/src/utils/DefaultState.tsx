@@ -1,5 +1,6 @@
 const defaultSettings = {
 	showSettings: false,
+	showLogin: false,
 	settingsPanels: [ 
 		{key:'datasets', text:'Publication libraries'},
 		{key:'llms', text:'LLMs'},
@@ -14,7 +15,7 @@ const defaultSettings = {
     datasets: ['None'],
 	defaultDataset: 'None',
     selectedDataset: 'None',
-	fetchDatasets: false,
+	fetchDatasets: true,
     default_sentence_transformer: 'all-MiniLM-L6-v2',
 	selected_sentence_transformer: 'all-MiniLM-L6-v2',
 	sentence_transformers: [

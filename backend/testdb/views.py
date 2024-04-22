@@ -68,7 +68,7 @@ def getPDFContent(path):
     return (context, len(pdfReader.pages))
 
 # Collects chunks of text from PDFs stored in a Zotero collection.
-def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key):
+def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key, user='', user_email='', user_group=''):
     # example gorup id and collection id
     # group_id = 4982570
     # collection_id = 'YTPMLXYY'
@@ -90,6 +90,9 @@ def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key)
             dataset_name=dataset_name,
             dataset_size=0,
             zotero_id=collection_id,
+            user = user if len(user) else '-',
+            user_email = user_email if len(user_email) else '-',
+            user_group = user_group if len(user_group) else '-',
             dataset_date_time=make_aware(datetime.datetime.now())
         )
 
@@ -171,6 +174,9 @@ def add_dataset_from_upload(request):
     dataset_name = request.POST.get('dataset_name').replace(' ', '_')
     paper_titles = request.POST.getlist('paper_title')
     paper_attachments = request.FILES.getlist('paper_attachment')
+    user = request.POST.get('user')
+    user_email = request.POST.get('user_email')
+    user_group = request.POST.get('user_group')
 
     # create dataset
     dataset = Dataset.objects.filter(dataset_name=dataset_name)
@@ -180,6 +186,9 @@ def add_dataset_from_upload(request):
         dataset = Dataset.objects.create(
             dataset_name=dataset_name,
             dataset_size=0,
+            user = user if len(user) else '-',
+            user_email = user_email if len(user_email) else '-',
+            user_group = user_group if len(user_group) else '-',
             dataset_date_time=make_aware(datetime.datetime.now())
         )
 
@@ -621,16 +630,25 @@ class PapersViewSet(viewsets.ModelViewSet):
     queryset = Papers.objects.all()
     serializer_class = PapersSerializer
 
-class DataSetsViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that shows all datasets.
-    """
-    queryset = Dataset.objects.all()
-    serializer_class = DatasetSerializer
-
 ####################
 # APIs             #
 ####################
+
+@api_view(['POST'])
+def get_datasets(request):
+    if request.method == 'POST':
+        json_request = JSONParser().parse(request)
+        user_email = json_request['user_email']
+        if user_email == '':
+            datasets = Dataset.objects.filter(user_email='-')
+        else:
+            datasets = Dataset.objects.filter(user_email=user_email)
+        datasets_ = serializers.serialize('json', datasets)
+        datasets_json = json.loads(datasets_)
+        datasets = []
+        for dataset in datasets_json:
+            datasets.append(dataset['fields'])
+        return Response(datasets)
 
 @api_view(['GET'])
 def get_papers(request):
@@ -880,7 +898,11 @@ def add_zotero_dataset(request):
         library_id_type = json_request['library_id_type']
         collection_id = json_request['collection_id']
         sentence_transformer = request.POST.get('sentence_transformer')
-        dataset_name = get_zotero_chunks(library_id, library_id_type, collection_id, api_key)
+        user = request.POST.get('user')
+        user_email = request.POST.get('user_email')
+        user_group = request.POST.get('user_group')
+
+        dataset_name = get_zotero_chunks(library_id, library_id_type, collection_id, api_key, user, user_email, user_group)
         # if dataset_name.error:
         #     return Response({'error':True, 'error_message': dataset_name.error}, content_type="application/json")
         add_to_chroma(dataset_name, sentence_transformer)

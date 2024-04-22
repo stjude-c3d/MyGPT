@@ -4,6 +4,7 @@ import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
 
 interface ChatHistoryProps {
 	dataset: string,
+	datasets: string[],
 	closeChatHistory: any,
 }
 
@@ -18,7 +19,6 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 	const [activeQuestionID, setActiveQuestionID] = useState(0)
 	const [questionDetails, setQuestionDetails]:[any,any] = useState({})
 	const [selectedSource, setSelectedSource] = useState(0)
-	const [datasets, setDatasets] = useState<string[]>([])
 	const [selectedDataset, setSelectedDataset] = useState(props.dataset)
 
 	useEffect(() => {
@@ -41,21 +41,13 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 
 	// fetch answers and sources for selected question
 	useEffect(() => {
+		if (activeQuestionID === 0) return
 		fetch(`http://localhost:8000/api/get_question_details/?question_id=${activeQuestionID}`)
 			.then(response => response.json())
 			.then(data => {
 				setQuestionDetails(data)
 			})
 	}, [activeQuestionID])
-
-	// fetch datasets from API
-	useEffect(() => {
-		fetch(`http://localhost:8000/api/datasets/`)
-			.then(response => response.json())
-			.then(data => {
-				setDatasets(data.results.map((d:any)=>d.dataset_name))
-			})
-	}, [])
 
 	return (
 		// create floating panel with opque background
@@ -79,7 +71,7 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 								value={selectedDataset}
 								onChange={(e) => setSelectedDataset(e.target.value)}
 							>
-								{datasets.map((dataset, index) => {
+								{props.datasets.map((dataset, index) => {
 									return (
 										<option key={index} value={dataset}>{dataset}</option>
 									)
@@ -89,7 +81,7 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 							<div className='text-white text-lg font-bold py-2 px-4'>Questions</div>
 							{
 								chatHistory && chatHistory.length === 0 ? 
-									<div className='text-lg text-white'>No chat history available</div> :
+									<div className='text-lg text-white px-4 mx-2'>No chat history available</div> :
 									chatHistory.map((message:any, index:number) => {
 									return (
 										<div 
@@ -110,7 +102,9 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 					</div>
 					{/* create right side for answers and sources list */}
 					<div className={'w-2/3 bg-panel3 max-h-[55vh] overflow-y-auto overflow-x-clip border-slate-400 border-y-2 ' + (window.screen.availHeight < 1000 ? 'h-[80vh]' : 'h-[55vh]')}>
-						<div className='py-4 px-6 m-4 bg-panel2 rounded-lg shadow-md box2 user-chat'>
+					{ activeQuestionID === 0 ? <div className='px-4 mx-2'> No Q&A to display</div> :
+						<>
+							<div className='py-4 px-6 m-4 bg-panel2 rounded-lg shadow-md box2 user-chat'>
 								<div className={'flex flex-row justify-between font-bold overflow-x-auto'}>
 									<div className='text-nav text-sm py-2'>You</div>
 									<div className='text-nav rounded-full text-xs py-2'>
@@ -162,6 +156,7 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 								))}
 								</> : <></>}
 							</div>
+						</>}
 					</div>
 				</div>
 			</div>
