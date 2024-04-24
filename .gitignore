@@ -24,9 +24,10 @@ frontend/public/*.pdf
 chroma/chroma_storage/*
 *.pyc
 .DS_Store
+frontend/.env
+frontend/.env.development
+frontend/.env.production
 mydatabase
-biogpt_api/.env
-biogpt_api/static/*
 ollama/models/blobs/*
 ollama/models/manifests/*
 installation/macOS/prebuilt_images/data/*

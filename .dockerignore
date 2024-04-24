@@ -1,2 +1,11 @@
 backend/media
 backend/chroma_storage
+backend/static/*
+backend/media/*
+backend/chroma_storage/*
+backend/chroma/*
+backend/data/data_chunks/*
+!backend/data/data_chunks/GPCR.txt
+backend/data/pdfs/*
+!backend/data/pdfs/GPCR
+backend/data/pdfs/GPCR/*_highlighted.pdf

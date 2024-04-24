@@ -51,7 +51,7 @@ def home(request):
             return render(request, 'home.html', {'success': 'Successfully uploaded dataset', 'datasets': datasets, 'form': form, 'file_count': range(1,file_count+1)})
 
     # get_collections_data('all')
-    add_pca_to_chunks()
+    # add_pca_to_chunks()
     # save_chunks_pca_to_file()
 
     return render(request, 'home.html', {'datasets': datasets, 'form': form, 'file_count': range(1,file_count+1)})
@@ -456,14 +456,14 @@ def add_pca_to_chunks():
         chunk.pca_z = embedding[2]
         chunk.save()
 
-""" def save_chunks_pca_to_file():
+def save_chunks_pca_to_file():
     chunks_objects = chunks.objects.all()
     with open('data/data_chunks/all_pca_2.txt', 'w') as file:
         for chunk in chunks_objects:
             # convert embedding into comma separated string
             embedding_str = ','.join([str(chunk.pca_x), str(chunk.pca_y), str(chunk.pca_z), chunk.chunk_dataset.dataset_name])
             file.write(embedding_str +  '\n')
- """
+
 def find_cutoff_distance(distances):
     # find the distane from where the distances start to increase
     cutoff_distance = distances[1]
