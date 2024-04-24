@@ -40,9 +40,9 @@ const AddLibrarySettings = (props: {
 				library_id: libraryId,
 				library_id_type: libraryIdType,
 				collection_id: collectionId,
-				user: props.user.user,
-				user_email: props.user.user_email,
-				user_group: props.user.isAdmin ? 'admin' : 'user'
+				user: props.user ? props.user.user: '',
+				user_email: props.user ? props.user.user_email : '',
+				user_group: props.user && props.user.isAdmin ? 'admin' : 'user'
 			})
 		}
 		fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/add_zotero_collection/`, requestOptions)
@@ -67,9 +67,9 @@ const AddLibrarySettings = (props: {
 			
 			formData.append('dataset_name', UploadLibraryName)
 			formData.append('sentence_transformer', currentSettings.selected_sentence_transformer)
-			formData.append('user', props.user.user)
-			formData.append('user_email', props.user.user_email)
-			formData.append('user_group', props.user.isAdmin ? 'admin' : 'user')
+			formData.append('user', props.user ? props.user.user: '')
+			formData.append('user_email', props.user ? props.user.user_email : '')
+			formData.append('user_group', props.user && props.user.isAdmin ? 'admin' : 'user')
 
 			uploadDocs.filter((d)=> d.file !== null && d.title !== '').forEach((doc:any) => {
 				if (doc.title && doc.file){

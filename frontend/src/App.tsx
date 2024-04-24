@@ -83,7 +83,8 @@ function App() {
             fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/get_datasets/?format=json`, requestOptions)
               .then(response => response.json())
               .then(data => {
-                setCurrentSettings({...currentSettings, datasets:data.map((d:any)=>d.dataset_name), selectedDataset:data[0].dataset_name, fetchDatasets:false})
+                if(data.length > 0)
+                  setCurrentSettings({...currentSettings, datasets:data.map((d:any)=>d.dataset_name), selectedDataset:data[0].dataset_name, fetchDatasets:false})
             })
         }
     }, [user, currentSettings])
