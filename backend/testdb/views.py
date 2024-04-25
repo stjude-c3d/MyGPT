@@ -674,29 +674,32 @@ def add_video_to_chroma(dataset_name, sentence_transformer = 'all-MiniLM-L6-v2')
 
         return
 
-def get_youtube_transcript(dataset_name, video_id, video_title):
-    transcript =  YouTubeTranscriptApi.get_transcript(video_id)
-    transcipt_json = []
-
-    #  convert trascript to json
-    for i in transcript:
-        text, start, duration = i.values()
-        transcipt_json.append({"text": text, "duration": duration, "start": start})
-
-    # join 10 transcipt into one
+def get_youtube_transcript(dataset_name, video_ids, video_titles):
     transcipt_json_10 = []
-    for i in range(0, len(transcipt_json), 10):
-        text = ""
-        start = transcipt_json[i]["start"]
-        for j in range(i, i+10):
-            if j < len(transcipt_json):
-                text += transcipt_json[j]["text"] + " "
-                end = transcipt_json[j]["start"] + transcipt_json[j]["duration"]
-        transcipt_json_10.append({"title": video_title, "content": text, "start": start, "end": end})
+    for i in range(len(video_ids)):
+        video_id = video_ids[i]
+        video_title = video_titles[i]
+        transcript =  YouTubeTranscriptApi.get_transcript(video_id)
+        
+        #  convert trascript to json
+        transcipt_json = []
+        for i in transcript:
+            text, start, duration = i.values()
+            transcipt_json.append({"text": text, "duration": duration, "start": start})
+
+        # join 10 transcipt into one 
+        for i in range(0, len(transcipt_json), 10):
+            text = ""
+            start = transcipt_json[i]["start"]
+            for j in range(i, i+10):
+                if j < len(transcipt_json):
+                    text += transcipt_json[j]["text"] + " "
+                    end = transcipt_json[j]["start"] + transcipt_json[j]["duration"]
+            transcipt_json_10.append({"title": video_title, "content": text, "start": start, "end": end})
     
     #  save transcript to csv file
     with open('data/data_chunks/'+ dataset_name +'.txt', 'w', newline='') as file:
-       for chunk in transcipt_json_10:
+        for chunk in transcipt_json_10:
             # convert chunk to string and write to file
             file.write(str(chunk) + '\n')
     print('video chunks saved to file')
@@ -1088,12 +1091,14 @@ def add_video_library(request):
     if request.method == 'POST':
         dataset_name = request.POST.get('dataset_name').replace(' ', '_')
         sentence_transformer = request.POST.get('sentence_transformer')
-        video_url = request.POST.get('video_url')
+        video_urls = request.POST.get('video_urls').split(',')
         user = request.POST.get('user')
         user_email = request.POST.get('user_email')
         user_group = request.POST.get('user_group')
-        yt = YouTube(video_url)
-        video_title = yt.title
+        video_titles = []
+        for video_url in video_urls:
+            yt = YouTube(video_url)
+            video_titles.append(yt.title)
     
         # create dataset
         dataset = Dataset.objects.filter(dataset_name=dataset_name)
@@ -1110,15 +1115,20 @@ def add_video_library(request):
             )
 
         # extract transcript from youtube video and save to chroma
-        youtube_video_id = video_url.split('=')[-1]
-        get_youtube_transcript(dataset_name, youtube_video_id, video_title)
-        add_video_to_chroma(dataset_name, sentence_transformer)
+        video_ids = []
+        for idx, video_url in enumerate(video_urls):
+            video_title = video_titles[idx]
+            youtube_video_id = video_url.split('=')[-1]
+            video_ids.append(youtube_video_id)
 
-        Videos.objects.create(
-            video_title=video_title,
-            video_link=video_url,
-            video_dataset=dataset,
-            video_date_time=make_aware(datetime.datetime.now())
-        )
+            Videos.objects.create(
+                video_title=video_title,
+                video_link=video_url,
+                video_dataset=dataset,
+                video_date_time=make_aware(datetime.datetime.now())
+            )
+        
+        get_youtube_transcript(dataset_name, video_ids, video_titles)    
+        add_video_to_chroma(dataset_name, sentence_transformer)
 
         return Response({'added':True}, content_type="application/json")

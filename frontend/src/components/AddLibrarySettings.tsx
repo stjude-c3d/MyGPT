@@ -21,7 +21,7 @@ const AddLibrarySettings = (props: {
   const [videoPanel, setVideoPanel] = useState(false)
 
   const [UploadLibraryName, setUploadLibraryName] = useState('')
-//   const [uploadDocCount, setUploadDocCount] = useState(5)
+  const [uploadDocCount, setUploadDocCount] = useState(5)
   const emptyUploadDocs = Array.from(Array(40).keys()).map((x:any) => {return {title: '', file: null}})
   const [uploadDocs, setUploadDocs] = useState(emptyUploadDocs)
   const [uploadLibrary, setUploadLibrary] = useState(false)
@@ -29,7 +29,7 @@ const AddLibrarySettings = (props: {
 
   const [videoLibraryName, setVideoLibraryName] = useState('')
   const [videoLibrary, setVideoLibrary] = useState(false)
-  const [videoDocURL, setVideoDocURL] = useState('')
+  const [videoDocURLs, setVideoDocURLs] = useState([''])
 
 //   console.log(UploadLibraryName, uploadDocs)
 
@@ -116,7 +116,7 @@ const AddLibrarySettings = (props: {
 			formData.append('user_email', props.user ? props.user.user_email : '')
 			formData.append('user_group', props.user && props.user.isAdmin ? 'admin' : 'user')
 
-			formData.append('video_url', videoDocURL)
+			formData.append('video_urls', videoDocURLs.join(',') )
 			const requestOptions = {
 				method: 'POST',
 				Headers: {
@@ -136,7 +136,7 @@ const AddLibrarySettings = (props: {
 			})
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [videoLibrary, videoLibraryName, videoDocURL])
+	}, [videoLibrary, videoLibraryName, videoDocURLs])
 
   return (
 	<div className='my-4'>
@@ -282,7 +282,6 @@ const AddLibrarySettings = (props: {
 						}}/>
 					</div>
 					<div className='flex justify-center'>
-						{/* {uploadDocCount < 41 ? <button className='text-panel1 bg-white px-4 py-2 rounded-md m-2' onClick={()=>setUploadDocCount(uploadDocCount+5)}>+5</button> : <></>} */}
 						<button className='bg-panel1 text-white px-4 py-2 rounded-md m-2'
 							onClick={() => setUploadLibrary(true)}
 						>Upload documents</button>
@@ -295,21 +294,33 @@ const AddLibrarySettings = (props: {
 			<div className='flex justify-start'>
 				<div className='flex flex-col mt-4'>
 					<div className='flex justify-start p-2'>
-						<div className='text-nav w-40 p-1'>Library Name</div>
-						<input type='text' placeholder=' Library Name' className='rounded-md w-60 px-2 py-1 text-nav' value={videoLibraryName}
+						<div className='text-nav w-40 p-1 my-2'>Library Name</div>
+						<input type='text' placeholder=' Library Name' className='rounded-md w-60 px-2 py-1 m-2 text-nav' value={videoLibraryName}
 							onChange={(e) => setVideoLibraryName(e.target.value)}
 						/>
 					</div>
 					<div className='flex justify-start p-2'>
-						<div className='text-nav w-40 p-1'>Youtube vidoe link</div>
-						<input type='text' placeholder=' Youtube video link' className='rounded-md w-60 px-2 py-1 text-nav'
-							value={videoDocURL} onChange={(e) => setVideoDocURL(e.target.value)}
-						/>
+					<div className='text-nav w-40 p-1 my-2'>YouTube vidoe links</div>
+					<div className='flex flex-col justify-start'>
+						{/* for loop for uploaddoccount */}
+						{[...Array(uploadDocCount)].map((_x:any, i:any) => (
+							<div key={i} className='m-2'>
+								<input type='text' placeholder=' Youtube video link' className='rounded-md w-60 px-2 py-1 text-nav'
+									value={videoDocURLs[i]} onChange={(e) =>{
+										const temp = [...videoDocURLs]
+										temp[i] = e.target.value
+										setVideoDocURLs(temp)
+									}}
+								/>
+							</div>
+						))}
 					</div>
+					</div>
+					{uploadDocCount < 41 ? <button className='text-panel1 bg-white px-4 py-2 rounded-md m-2' onClick={()=>setUploadDocCount(uploadDocCount+5)}>+5</button> : <></>}
 					<div className='flex justify-start'>
 						<button className='bg-panel1 text-white px-4 py-2 rounded-md m-2'
 							onClick={() => setVideoLibrary(true)}
-						>Add video</button>
+						>Add videos</button>
 					</div>
 				</div>
 			</div>

@@ -638,7 +638,7 @@ function GPTHome(props:{
 				}
 			</div>					
 			<div className='col-span-2 mt-24 max-w-5xl w-full bg-panel1 rounded-l-lg overflow-y-auto max-h-[92vh]'>
-				<div className=' p-6 text-2xl font-bold text-white'>Your publication library</div>
+				<div className=' p-6 text-2xl font-bold text-white'>{papers.length ? 'Your publication library' : 'Your video library'}</div>
 				
 				<div className='p-2 text-sm border-slate-400 border-y'>
 					<div className='text-white inline-block px-2'> Current library </div>

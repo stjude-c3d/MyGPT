@@ -33,6 +33,5 @@ def get_youtube_transcript(video_id):
 		for row in transcipt_json_10:
 			writer.writerow([yt_title, row["text"], row["start"], row["end"]])
 		
-
 video_id = "D4XjcAyCcnQ"
 get_youtube_transcript(video_id)
