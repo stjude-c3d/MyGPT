@@ -18,6 +18,7 @@ const AddLibrarySettings = (props: {
 
   const [zoteroPanel, setZoteroPanel] = useState(true)
   const [uploadPanel, setUploadPanel] = useState(false)
+  const [videoPanel, setVideoPanel] = useState(false)
 
   const [UploadLibraryName, setUploadLibraryName] = useState('')
 //   const [uploadDocCount, setUploadDocCount] = useState(5)
@@ -25,6 +26,10 @@ const AddLibrarySettings = (props: {
   const [uploadDocs, setUploadDocs] = useState(emptyUploadDocs)
   const [uploadLibrary, setUploadLibrary] = useState(false)
   const currentSettings = JSON.parse(JSON.stringify(props.currentSettings))
+
+  const [videoLibraryName, setVideoLibraryName] = useState('')
+  const [videoLibrary, setVideoLibrary] = useState(false)
+  const [videoDocURL, setVideoDocURL] = useState('')
 
 //   console.log(UploadLibraryName, uploadDocs)
 
@@ -101,6 +106,38 @@ const AddLibrarySettings = (props: {
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [uploadLibrary, UploadLibraryName, uploadDocs])
 
+	useEffect(() => {
+		if (videoLibrary){
+			const formData = new FormData()
+			
+			formData.append('dataset_name', videoLibraryName)
+			formData.append('sentence_transformer', currentSettings.selected_sentence_transformer)
+			formData.append('user', props.user ? props.user.user: '')
+			formData.append('user_email', props.user ? props.user.user_email : '')
+			formData.append('user_group', props.user && props.user.isAdmin ? 'admin' : 'user')
+
+			formData.append('video_url', videoDocURL)
+			const requestOptions = {
+				method: 'POST',
+				Headers: {
+					'Content-Type': 'multipart/form-data'
+				},
+				body: formData
+			}
+			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/add_video_library/`, requestOptions)
+			.then(response => response.json())
+			.then(data => {
+				props.settingsCallback({...currentSettings, fetchDatasets: true})
+				setVideoLibrary(false)
+				setUploadLibraryName('')
+				if (data.added){
+					setShowSuccess(true)
+				}
+			})
+		}
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [videoLibrary, videoLibraryName, videoDocURL])
+
   return (
 	<div className='my-4'>
 		<div className='text-nav p-2 mt-2 flex justify-start text-lg font-semibold'> Add new library </div>
@@ -111,18 +148,30 @@ const AddLibrarySettings = (props: {
 				onClick={() => {
 					setZoteroPanel(true)
 					setUploadPanel(false)
+					setVideoPanel(false)
 				}}
 			>
 				Add Zotero library
 			</div>
-			<div className={'inline-block px-4 py-1 shadow rounded-r-lg border-2 border-panel1 ' + 
+			<div className={'inline-block px-4 py-1 shadow border-2 border-y-panel1 ' + 
 				(uploadPanel ? 'bg-panel1 text-white cursor-default ' : 'text-panel1 bg-white cursor-pointer')}
 				onClick={() => {
 					setZoteroPanel(false)
 					setUploadPanel(true)
+					setVideoPanel(false)
 				}}
 			>
 				Upload documents
+			</div>
+			<div className={'inline-block px-4 py-1 shadow rounded-r-lg border-2 border-panel1 ' + 
+				(videoPanel ? 'bg-panel1 text-white cursor-default ' : 'text-panel1 bg-white cursor-pointer')}
+				onClick={() => {
+					setZoteroPanel(false)
+					setUploadPanel(false)
+					setVideoPanel(true)
+				}}
+			>
+				Youtube video library
 			</div>
 		</div>
 		{ zoteroPanel ?
@@ -237,6 +286,30 @@ const AddLibrarySettings = (props: {
 						<button className='bg-panel1 text-white px-4 py-2 rounded-md m-2'
 							onClick={() => setUploadLibrary(true)}
 						>Upload documents</button>
+					</div>
+				</div>
+			</div>
+			: <></>
+		}
+		{ videoPanel ?
+			<div className='flex justify-start'>
+				<div className='flex flex-col mt-4'>
+					<div className='flex justify-start p-2'>
+						<div className='text-nav w-40 p-1'>Library Name</div>
+						<input type='text' placeholder=' Library Name' className='rounded-md w-60 px-2 py-1 text-nav' value={videoLibraryName}
+							onChange={(e) => setVideoLibraryName(e.target.value)}
+						/>
+					</div>
+					<div className='flex justify-start p-2'>
+						<div className='text-nav w-40 p-1'>Youtube vidoe link</div>
+						<input type='text' placeholder=' Youtube video link' className='rounded-md w-60 px-2 py-1 text-nav'
+							value={videoDocURL} onChange={(e) => setVideoDocURL(e.target.value)}
+						/>
+					</div>
+					<div className='flex justify-start'>
+						<button className='bg-panel1 text-white px-4 py-2 rounded-md m-2'
+							onClick={() => setVideoLibrary(true)}
+						>Add video</button>
 					</div>
 				</div>
 			</div>

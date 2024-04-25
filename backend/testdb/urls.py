@@ -13,7 +13,7 @@ urlpatterns = [
     path('api/', include(router.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 	path('api/get_datasets/', views.get_datasets, name='get_datasets'),
-    path('api/get_papers/', views.get_papers, name='get_paper'),
+    path('api/get_documents/', views.get_documents, name='get_documents'),
 	path('api/get_context/', views.get_context, name='get_context'),
 	path('api/get_conversation_history/', views.get_conversations_by_dataset, name='conversation_history'),
 	path('api/get_question_details/', views.get_question_details, name='get_question_details'),
@@ -25,4 +25,5 @@ urlpatterns = [
 	path('api/add_ollama_models/', views.add_ollama_models, name='add_ollama_models'),
 	path('api/frontend_settings/', views.get_frontend_settings, name='frontend_settings'),
 	path('api/add_demo_library/', views.add_demo_dataset_api, name='add_demo_dataset'),
+	path('api/add_video_library/', views.add_video_library, name='add_video_library'),
 ]

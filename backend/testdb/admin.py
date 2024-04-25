@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Model, Dataset, Papers, chunks, Conversation, Question, Answer, Source, FrontEndSettings
+from .models import Model, Dataset, Papers, Videos, chunks, Conversation, Question, Answer, Source, FrontEndSettings
 
 class ModelAdmin(admin.ModelAdmin):
     list_display = ['model_name', 'model_size']
@@ -9,6 +9,9 @@ class DatasetAdmin(admin.ModelAdmin):
 
 class PapersAdmin(admin.ModelAdmin):
     list_display = ['paper_title', 'paper_attachment', 'highlighted_attachment', 'paper_dataset', 'paper_date_time']
+
+class VideosAdmin(admin.ModelAdmin):
+    list_display = ['video_title', 'video_link', 'video_dataset', 'video_date_time']
 
 class chunksAdmin(admin.ModelAdmin):
     list_display = ['chunk_text', 'pca_x', 'pca_y', 'pca_z', 'chunk_dataset', 'chunk_paper', 'chunk_date_time']
@@ -23,7 +26,7 @@ class AnswerAdmin(admin.ModelAdmin):
     list_display = ['answer_text', 'model_type', 'relevance_score', 'question', 'saved_date_time']
 
 class SourceAdmin(admin.ModelAdmin):
-    list_display = ['source_paper', 'source_page', 'context', 'distance', 'question']
+    list_display = ['source_doc', 'source_pointer', 'context', 'distance', 'question']
 
 class FrontEndSettingsAdmin(admin.ModelAdmin):
     list_display = ['show_no_context_switch', 'azure_login', 'saved_date_time']
@@ -31,6 +34,7 @@ class FrontEndSettingsAdmin(admin.ModelAdmin):
 admin.site.register(Model, ModelAdmin)
 admin.site.register(Dataset, DatasetAdmin)
 admin.site.register(Papers, PapersAdmin)
+admin.site.register(Videos, VideosAdmin)
 admin.site.register(chunks, chunksAdmin)
 admin.site.register(Conversation, ConversationAdmin)
 admin.site.register(Question, QuestionAdmin)

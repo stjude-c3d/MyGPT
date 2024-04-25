@@ -25,10 +25,15 @@ function GPTHome(props:{
 	const [answerReceived, setAnswerReceived] = useState<any>(false)
 	const [answers, setAnswers] = useState<any[]>([])
 	const [papers, setPapers] = useState<any[]>([])
+	const [videos, setVideos] = useState<any[]>([])
 	const [sourcePapers, setSourcePapers] = useState<any[]>([])
 	const [sourcePages, setSourcePages] = useState<any[]>([])
+	const [sourceStarts, setSourceStarts] = useState<any[]>([])
+	const [sourceStops, setSourceStops] = useState<any[]>([])
 	const [selectedPaperIdx, setselectedPaperIdx] = useState(0)
 	const [selectedPage, setSelectedPage] = useState(0)
+	const [selectedStart, setSelectedStart] = useState(0)
+	const [selectedStop, setSelectedStop] = useState(0)
 	const [fileAttachmentType, setFileAttachmentType] = useState('paper_attachment')
 	const ConfidenceScoreColor = scaleSequential()
 		.domain([0, 100])
@@ -50,10 +55,19 @@ function GPTHome(props:{
 			return
 		}
 
-		if(!papers.length || props.currentSettings.fetchPapers === true){
-			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/get_papers/?dataset=${props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset }&format=json`, requestOptions)
+		if((!papers.length && !videos.length) || props.currentSettings.fetchPapers === true){
+			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/get_documents/?dataset=${props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset }&format=json`, requestOptions)
 				.then(response => response.json())
-				.then(data => setPapers(data))
+				.then(data => {
+					if (data.dataset_type === 'papers'){ 
+						setPapers(data.documents)
+						setVideos([])
+					}
+					else if (data.dataset_type === 'videos'){
+						setVideos(data.documents)
+						setPapers([])
+					}
+				})
 			
 			props.settingsCallback({...props.currentSettings, showSettings: false, fetchPapers: false})
 			if (props.currentSettings.fetchPapers === true){
@@ -131,17 +145,29 @@ function GPTHome(props:{
 							setQuestionRelevancescore((prevQuestionRelevancescore:any)=>[...prevQuestionRelevancescore, data.relevance_score])
 							setContext('None')
 							setSourcePapers((prevSourcePapers:any)=>[...prevSourcePapers, []])
-							setSourcePages((prevSourcePages:any)=>[...prevSourcePages, []])
+							if (papers.length){
+								setSourcePages((prevSourcePages:any)=>[...prevSourcePages, []])
+							}else if (videos.length){
+								setSourceStarts((prevSourceStarts:any)=>[...prevSourceStarts, []])
+								setSourceStops((prevSourceStops:any)=>[...prevSourceStops, []])
+							}
 						}else{
 							setQuestionRelevancescore((prevQuestionRelevancescore:any)=>[...prevQuestionRelevancescore, data.relevance_score])
 							setContext(data.context)
-							setSourcePapers((prevSourcePapers:any)=>[...prevSourcePapers, data.sources.map((s:any)=>s.paper)])
-							setSourcePages((prevSourcePages:any)=>[...prevSourcePages, data.sources.map((s:any)=>s.page)])
-							setSelectedPage(data.sources[0].page)
-							const paperIndex:number = papers.findIndex((p:any)=>p.paper_title === data.sources[0].paper)
-							setselectedPaperIdx(paperIndex)
-							setFileAttachmentType('highlighted_attachment')
-							setPapers([])
+							setSourcePapers((prevSourcePapers:any)=>[...prevSourcePapers, data.sources.map((s:any)=>s.document)])
+							if (data.sources[0].page !== ''){
+								setSourcePages((prevSourcePages:any)=>[...prevSourcePages, data.sources.map((s:any)=>s.page)])
+								setSelectedPage(data.sources[0].page)
+								const paperIndex:number = papers.findIndex((p:any)=>p.paper_title === data.sources[0].document)
+								setselectedPaperIdx(paperIndex)
+								setFileAttachmentType('highlighted_attachment')
+								setPapers([])
+							} else if (data.sources[0].start !== 0){
+								setSourceStarts((prevSourceStarts:any)=>[...prevSourceStarts, data.sources.map((s:any)=>s.start)])
+								setSourceStops((prevSourceStops:any)=>[...prevSourceStops, data.sources.map((s:any)=>s.stop)])
+								const videoIndex:number = videos.findIndex((v:any)=>v.video_title === data.sources[0].document)
+								setselectedPaperIdx(videoIndex)
+							}
 							setAnswerReceived(false)
 						}
 					})
@@ -197,7 +223,6 @@ function GPTHome(props:{
 
 	useEffect(()=>{
 		if (answerReceived && answer.length !== 0){
-			console.log(selectedPaperIdx)
 			setAnswers((prevAnswers:any)=>[...prevAnswers, {'response': answer, 'source': props.currentSettings.selectedLlm}])
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -503,8 +528,38 @@ function GPTHome(props:{
 													setFileAttachmentType('highlighted_attachment')
 												}}
 											>
-												<div className='border border-gray-400'></div>
-												<div className='text-white text-sm p-2 font-normal italic'>{'Page ' + (sourcePages[query.length-i-1][index]) + ' of "' + paper + '"'}</div>
+											<div className='border border-gray-400'></div>
+												<div className='text-white text-sm p-2 font-normal italic'>{'Page ' + (sourcePages[query.length-1][index]) + ' of "' + paper + '"'}</div>
+											</div>
+										))}
+									</>
+									:
+									questionRelevancescore[query.length-1] > 0 && sourcePapers.length && sourceStarts.length && sourceStarts[query.length-1] && sourcePapers[query.length-1] && sourcePapers[query.length-1] && sourceStops.length && sourceStops[query.length-1] ?
+									<>
+									<div className='text-white text-sm font-bold pt-4'>
+											{sourcePapers[query.length-i-1].length > 1 ? 'Sources' : 'Source'}
+										</div>
+										{sourcePapers[query.length-i-1].map((paper:any, index:number)=>(
+											<div 
+												className={ 
+													selectedPaperIdx === (videos.findIndex((p:any)=>p.video_title===paper)) && 
+													selectedStart === parseInt(sourceStarts[query.length-i-1][index].split(':')[0])*3600 + parseInt(sourceStarts[query.length-i-1][index].split(':')[1])*60 + parseInt(sourceStarts[query.length-i-1][index].split(':')[2]) ? 
+													'bg-slate-500':''} 
+												key={index} onClick={
+												()=>{
+													// setSourceIdx(index)
+													setselectedPaperIdx(videos.findIndex((p:any)=>p.video_title===paper))
+													const start = sourceStarts[query.length-i-1][index].split(':')
+													const stop = sourceStops[query.length-i-1][index].split(':')
+													// convert hhmmss to seconds
+													let start_time = parseInt(start[0])*3600 + parseInt(start[1])*60 + parseInt(start[2])
+													let stop_time = parseInt(stop[0])*3600 + parseInt(stop[1])*60 + parseInt(stop[2])
+													setSelectedStart(start_time)
+													setSelectedStop(stop_time)
+												}}
+											>
+											<div className='border border-gray-400'></div>
+												<div className='text-white text-sm p-2 font-normal italic'>{sourceStarts[query.length-i-1][index] + ' to ' + sourceStops[query.length-i-1][index] + ' of "' + paper + '"'}</div>
 											</div>
 										))}
 									</>
@@ -519,7 +574,7 @@ function GPTHome(props:{
 									</div>
 									<div className='text-white whitespace-pre-wrap'>{answer.length ? answer: 'Generating answer...'}</div>
 									{
-									questionRelevancescore[query.length-1] > 0 && sourcePapers.length && sourcePages.length && sourcePapers[query.length-1] && sourcePages[query.length-1] ?
+									questionRelevancescore[query.length-1] > 0 && sourcePapers.length && sourcePages.length && sourcePages[query.length-1] && sourcePapers[query.length-1] ?
 									<>
 										<div className='text-white text-sm font-bold pt-4'>
 											{sourcePapers[query.length-1].length > 1 ? 'Sources' : 'Source'}
@@ -527,7 +582,8 @@ function GPTHome(props:{
 										{sourcePapers[query.length-1].map((paper:any, index:number)=>(
 											<div 
 												className={ 
-													selectedPaperIdx === (papers.findIndex((p:any)=>p.paper_title===paper)) && selectedPage === sourcePages[query.length-1][index] ? 
+													selectedPaperIdx === (videos.findIndex((p:any)=>p.video_title===paper)) && 
+													selectedStart === parseInt(sourceStarts[query.length-i-1][index].split(':')[0])*3600 + parseInt(sourceStarts[query.length-i-1][index].split(':')[1])*60 + parseInt(sourceStarts[query.length-i-1][index].split(':')[2]) ? 
 													'bg-slate-500':''} 
 												key={index} onClick={
 												()=>{
@@ -539,6 +595,34 @@ function GPTHome(props:{
 											>
 												<div className='border border-gray-400'></div>
 												<div className='text-white text-sm p-2 font-normal italic'>{'Page ' + (sourcePages[query.length-1][index]) + ' of "' + paper + '"'}</div>
+											</div>
+										))}
+									</>:
+									questionRelevancescore[query.length-1] > 0 && sourcePapers.length && sourceStarts.length && sourceStarts[query.length-1] && sourcePapers[query.length-1] && sourceStops.length && sourceStops[query.length-1] ?
+									<>
+									<div className='text-white text-sm font-bold pt-4'>
+											{sourcePapers[query.length-i-1].length > 1 ? 'Sources' : 'Source'}
+										</div>
+										{sourcePapers[query.length-i-1].map((paper:any, index:number)=>(
+											<div 
+												// className={ 
+												// 	selectedPaperIdx === (papers.findIndex((p:any)=>p.paper_title===paper)) && selectedPage === sourcePages[query.length-i-1][index] ? 
+												// 	'bg-slate-500':''} 
+												key={index} onClick={
+												()=>{
+													// setSourceIdx(index)
+													setselectedPaperIdx(videos.findIndex((p:any)=>p.video_title===paper))
+													const start = sourceStarts[query.length-i-1][index].split(':')
+													const stop = sourceStops[query.length-i-1][index].split(':')
+													// convert hhmmss to seconds
+													let start_time = parseInt(start[0])*3600 + parseInt(start[1])*60 + parseInt(start[2])
+													let stop_time = parseInt(stop[0])*3600 + parseInt(stop[1])*60 + parseInt(stop[2])
+													setSelectedStart(start_time)
+													setSelectedStop(stop_time)
+												}}
+											>
+											<div className='border border-gray-400'></div>
+												<div className='text-white text-sm p-2 font-normal italic'>{sourceStarts[query.length-1][index] + ' to ' + sourceStops[query.length-1][index] + ' of "' + paper + '"'}</div>
 											</div>
 										))}
 									</>
@@ -568,7 +652,7 @@ function GPTHome(props:{
 				</div>
 				<div className='mb-4 divide-y'>
 					{/* list all the papers */}
-					{
+					{ papers.length ?
 						papers.map((p:any, index:number)=>
 							<div key={index} className={'p-2 ' + (selectedPaperIdx === index ? ' bg-nav cursor-default': ' bg-panel1 cursor-pointer')}>
 								<div className='text-white text-sm '
@@ -579,7 +663,19 @@ function GPTHome(props:{
 									}}	
 								>{p['paper_title']}</div>
 							</div>
-						)
+						) :
+						videos.length ?
+						videos.map((v:any, index:number)=>
+							<div key={index} className={'p-2 ' + (selectedPaperIdx === index ? ' bg-nav cursor-default': ' bg-panel1 cursor-pointer')}>
+								<div className='text-white text-sm '
+									onClick={()=> {
+										setselectedPaperIdx(index)
+										setSelectedPage(0)
+										setFileAttachmentType('paper_attachment')
+									}}	
+								>{v['video_title']}</div>
+							</div>
+						) : <></>
 					}
 				</div>
 			</div>
@@ -596,7 +692,20 @@ function GPTHome(props:{
 									DefaultLayoutPlunginInstance, 
 									PageNavigationPluginInstance,
 								]}
-								/> :
+								/> : videos.length && videos[selectedPaperIdx] && videos[selectedPaperIdx]['video_link'] ?
+								// show embedded youtube videos
+									<div className='p-2'>
+										<iframe 
+											className='w-full h-[40vh]' 
+											src={videos[selectedPaperIdx]['video_link'].replace('watch?v=', 'embed/') + '?start=' + selectedStart + '&end=' + selectedStop + (selectedStart !== 0 ? '&autoplay=1&cc_load_policy=1': '')}
+											title={videos[selectedPaperIdx]['video_title']}
+											allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+											allowFullScreen
+											referrerPolicy='no-referrer'
+										>
+										</iframe>
+										</div>
+								:
 								<div>
 									<div className='text-center text-nav'>
 										No papers available.

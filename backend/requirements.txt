@@ -19,3 +19,5 @@ chromadb==0.4.22
 tqdm
 python-dotenv
 pytest-django
+pytube
+youtube_transcript_api

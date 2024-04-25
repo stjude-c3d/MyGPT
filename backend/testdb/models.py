@@ -43,6 +43,19 @@ class Papers(models.Model):
 	def __str__(self):
 		return self.paper_title
 	
+class Videos(models.Model):
+	video_title = models.TextField(default='-')
+	video_link = models.TextField(default='-')
+	video_dataset = models.ForeignKey('Dataset', on_delete=models.CASCADE)
+	video_date_time = models.DateTimeField(default=timezone.now, null=True)
+
+	class Meta:
+		verbose_name_plural = 'videos'
+		verbose_name = 'video'
+
+	def __str__(self):
+		return self.video_title
+	
 class chunks(models.Model):
 	chunk_text = models.TextField(default='-')
 	embedding = models.TextField(default='-')
@@ -89,14 +102,14 @@ class Answer(models.Model):
 	question = models.ForeignKey(Question, on_delete=models.CASCADE)
 
 class Source(models.Model):
-	source_paper = models.TextField(default='-')
-	source_page = models.IntegerField(default=0)
+	source_doc = models.TextField(default='-')
+	source_pointer = models.IntegerField(default=0)
 	context = models.TextField(default='-')
 	distance = models.FloatField(default=0)
 	question = models.ForeignKey(Question, on_delete=models.CASCADE, null=True)
 
 	def __str__(self):
-		return self.source_paper[:15] + ', p.' + str(self.source_page)
+		return self.source_doc[:15] + ', p.' + str(self.source_pointer)
 
 class Model(models.Model):
 	model_name = models.CharField(max_length=200, default='-')

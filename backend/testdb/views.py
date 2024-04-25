@@ -13,6 +13,8 @@ import fitz
 from tqdm import tqdm
 import chromadb
 from chromadb.utils import embedding_functions
+from youtube_transcript_api import YouTubeTranscriptApi
+from pytube import YouTube
 import numpy as np
 import pandas as pd
 import datetime
@@ -20,7 +22,7 @@ import re
 import os
 import json
 import re
-from .models import Papers, Dataset, chunks, Question, Answer, Source, Conversation, Model, FrontEndSettings
+from .models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, Model, FrontEndSettings
 from .serializers import ModelSerializer, PapersSerializer, QuestionSerializer, AnswerSerializer, DatasetSerializer
 from .forms import PapersForm
 
@@ -507,12 +509,17 @@ def nearestDataChroma(text, dataset_name, sentence_transformer='all-MiniLM-L6-v2
 
     # print('results: ', results)
     print('distances: ', results['distances'][0])
+    library_type = ''
+    if "page" in results['metadatas'][0][0]:
+        library_type = 'papers'
+    elif "start" in results['metadatas'][0][0]:
+        library_type = 'videos'
     #find highest score
     # lowest_distance = 10
     # cutoff_distance = statistics.median(results['distances'][0])
     cutoff_distance = find_cutoff_distance(results['distances'][0])
     print('cutoff_distance: ', cutoff_distance)
-    titles, pages, chunks, distances = [], [], [], []
+    titles, pages, starts, stops, chunks, distances = [], [], [], [], [], []
     context = ''
 
     # for i in range(len(results['ids'][0])):
@@ -524,14 +531,18 @@ def nearestDataChroma(text, dataset_name, sentence_transformer='all-MiniLM-L6-v2
     for i in range(len(results['ids'][0])):
         if (results['distances'][0][i] <= cutoff_distance):
             titles.append(results['metadatas'][0][i]['filename'])
-            pages.append(results['metadatas'][0][i]['page'])
+            if (library_type == 'papers'): 
+                pages.append(results['metadatas'][0][i]['page'])
+            elif (library_type == 'videos'):
+                starts.append(results['metadatas'][0][i]['start'])
+                stops.append(results['metadatas'][0][i]['end'])
             chunks.append(results['documents'][0][i])
             distances.append(results['distances'][0][i])
             context += re.sub(r'\s+', ' ', results['documents'][0][i])
     
     # Return the collected information along with the full text of the best-matching document
     ret = None
-    ret = (context, titles, pages, chunks, distances)
+    ret = (context, titles, pages, starts, stops, chunks, distances)
     return ret
 
 def get_conversation_json(question_text):
@@ -598,6 +609,106 @@ def highlight_pdf(input_file, output_file, source_grp):
 
     input_pdf.save(output_file, garbage=4, deflate=True, clean=True)
 
+def add_video_to_chroma(dataset_name, sentence_transformer = 'all-MiniLM-L6-v2'):
+    documents_directory = '/code/data/data_chunks'
+    # collection_name = 'pub_collection'
+    # Read all files in the data directory
+    documents = []
+    metadatas = []
+    files = [dataset_name + '.txt']
+
+    # Instantiate a persistent chroma client in the persist_directory.
+    # Learn more at docs.trychroma.com
+    client = chromadb.PersistentClient(path='/code/chroma_storage/.')
+
+    # use multi-qa-MiniLM-L6-cos-v1 embedding function
+    if sentence_transformer != 'all-MiniLM-L6-v2':
+        sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=sentence_transformer)
+    else:
+        sentence_transformer_ef = embedding_functions.DefaultEmbeddingFunction()
+
+    # If the collection already exists, we will delete it and create a new one.
+    client.get_or_create_collection(name=dataset_name)
+    client.delete_collection(name=dataset_name)
+    collection = client.get_or_create_collection(name=dataset_name, embedding_function=sentence_transformer_ef)
+
+    # Create ids from the current count
+    count = collection.count()
+    print(f'Collection already contains {count} documents')
+
+    # Load the documents in batches of 100
+    if count == 0:
+        for filename in files:
+            # collection_name = filename
+            with open(f'{documents_directory}/{filename}', 'r') as file:
+                for line_number, line in enumerate(
+                    tqdm((file.readlines()), desc=f'Reading {filename}'), 1
+                ):
+                    # Strip whitespace and append the line to the documents list
+                    line = line.strip()
+                    #convert line to json
+                    line_json = eval(line)
+                    documents.append(line_json['content'])
+                    metadatas.append({'filename': line_json['title'], 'start': line_json['start'], 'end' : line_json['end']})
+        ids = [str(i) for i in range(count, count + len(documents))]
+        
+        # add to vector database
+        for i in tqdm(
+            range(0, len(documents), 100), desc='Adding documents', unit_scale=100
+        ):
+            collection.add(
+                ids=ids[i : i + 100],
+                documents=documents[i : i + 100],
+                metadatas=metadatas[i : i + 100],  # type: ignore
+            )
+
+        new_count = collection.count()
+        dataset = Dataset.objects.get(dataset_name=dataset_name)
+        dataset.dataset_size = new_count
+        dataset.save()
+
+        # add embeddings to database
+        # add_embeddings_to_chunks(documents, metadatas, dataset)
+
+        print(f'Added {new_count - count} documents')
+
+        return
+
+def get_youtube_transcript(dataset_name, video_id, video_title):
+    transcript =  YouTubeTranscriptApi.get_transcript(video_id)
+    transcipt_json = []
+
+    #  convert trascript to json
+    for i in transcript:
+        text, start, duration = i.values()
+        transcipt_json.append({"text": text, "duration": duration, "start": start})
+
+    # join 10 transcipt into one
+    transcipt_json_10 = []
+    for i in range(0, len(transcipt_json), 10):
+        text = ""
+        start = transcipt_json[i]["start"]
+        for j in range(i, i+10):
+            if j < len(transcipt_json):
+                text += transcipt_json[j]["text"] + " "
+                end = transcipt_json[j]["start"] + transcipt_json[j]["duration"]
+        transcipt_json_10.append({"title": video_title, "content": text, "start": start, "end": end})
+    
+    #  save transcript to csv file
+    with open('data/data_chunks/'+ dataset_name +'.txt', 'w', newline='') as file:
+       for chunk in transcipt_json_10:
+            # convert chunk to string and write to file
+            file.write(str(chunk) + '\n')
+    print('video chunks saved to file')
+
+    return
+
+def seconds_to_hhmmss(seconds):
+    m, s = divmod(seconds, 60)
+    h, m = divmod(m, 60)
+    return "%d:%02d:%02d" % (h, m, s)
+        
+
 ####################
 # API viewSets     #
 ####################
@@ -651,21 +762,26 @@ def get_datasets(request):
         return Response(datasets)
 
 @api_view(['GET'])
-def get_papers(request):
+def get_documents(request):
     if request.method == 'GET':
         if request.GET.get('dataset'):
+            dataset_type = ''
             dataset_name = request.GET.get('dataset')
             dataset = Dataset.objects.get(dataset_name=dataset_name)
             papers = Papers.objects.filter(paper_dataset=dataset).order_by('paper_date_time')
-            papers_ = serializers.serialize('json', papers)
-        else:
-            papers = Papers.objects.all().order_by('paper_date_time')
-            papers_ = serializers.serialize('json', papers)
-        papers_json = json.loads(papers_)
-        papers = []
-        for paper in papers_json:
-            papers.append(paper['fields'])
-        return Response(papers)
+            if papers.count() > 0:
+                dataset_type = 'papers'
+                docs_ = serializers.serialize('json', papers)
+            else:
+                videos = Videos.objects.filter(video_dataset=dataset).order_by('video_date_time')
+                if videos.count() > 0:
+                    dataset_type = 'videos'
+                    docs_ = serializers.serialize('json', videos)
+        docs_json = json.loads(docs_)
+        documents = []
+        for doc in docs_json:
+            documents.append(doc['fields'])
+        return Response({'documents': documents, 'dataset_type': dataset_type})
 
 # example json: {"text": "how many inactive conformational states ABL1 has?", "dataset": "ABL1"}
 @api_view(['POST'])
@@ -681,14 +797,15 @@ def get_context(request):
         no_context = json_request['no_context']
         sentence_transformer = json_request['sentence_transformer']
         if no_context:    
-            context, titles, pages, chunks, distances = '', [], [], [], []
+            context, titles, pages, starts, stops, chunks, distances = '', [], [], [], [], [], []
             sources = []
             relevance_score = 0
         else:
-            context, titles, pages, chunks, distances = nearestDataChroma(question_text, dataset_name, sentence_transformer)
+            context, titles, pages, starts, stops, chunks, distances = nearestDataChroma(question_text, dataset_name, sentence_transformer)
             sources = []
             distances = [round(dist, 3) for dist in distances]
             relevance_score = get_relevance_score(distances)
+        library_type = 'papers' if len(pages) else 'videos'
         # save question to database
         current_date_time = make_aware(datetime.datetime.now())
         dataset = Dataset.objects.get(dataset_name=dataset_name)
@@ -720,15 +837,17 @@ def get_context(request):
         question_sources = Source.objects.filter(question=question)
         for idx, title in enumerate(titles):
             sources.append({
-                'paper': title,
-                'page': pages[idx],
+                'document': title,
+                'page': pages[idx] if library_type == 'papers' else '',
+                'start': seconds_to_hhmmss(starts[idx]) if library_type == 'videos' else '',
+                'stop': seconds_to_hhmmss(stops[idx]) if library_type == 'videos' else '',
                 'context': chunks[idx],
                 'distance': round(distances[idx],3) #round to 3 decimals
             })
             if len(question_sources) == 0:
                 Source.objects.create(
-                    source_paper=title,
-                    source_page=pages[idx],
+                    source_doc=title,
+                    source_pointer=pages[idx] if library_type == 'papers' else starts[idx],
                     context=chunks[idx].replace("\x00", "\uFFFD"),
                     distance=round(distances[idx],3),
                     question=question
@@ -741,7 +860,7 @@ def get_context(request):
             else:
                 found = False
                 for source_group in sources_grouped:
-                    if source['paper'] == source_group[0]['paper']:
+                    if source['document'] == source_group[0]['document']:
                         source_group.append(source)
                         found = True
                         break
@@ -749,33 +868,34 @@ def get_context(request):
                     sources_grouped.append([source])
 
         # hightlight pdf with source paper and page
-        for source_grp in sources_grouped:
-            paper_obj = Papers.objects.filter(paper_title=source_grp[0]['paper'])[0].paper_attachment
-            if (len(paper_obj.path.split('/')[-1].split('_')) > 1): 
-                paper_name =   paper_obj.path.split('/')[-1].split('_')[0] + '.pdf'
-            else:
-                paper_name =   paper_obj.path.split('/')[-1]
+        if library_type == 'papers':
+            for source_grp in sources_grouped:
+                paper_obj = Papers.objects.filter(paper_title=source_grp[0]['document'])[0].paper_attachment
+                if (len(paper_obj.path.split('/')[-1].split('_')) > 1): 
+                    paper_name =   paper_obj.path.split('/')[-1].split('_')[0] + '.pdf'
+                else:
+                    paper_name =   paper_obj.path.split('/')[-1]
 
-            original_pdf_path = 'data/pdfs/'+ dataset_name + '/' + paper_name
-            highlighted_pdf_path = 'data/pdfs/' + dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf'
+                original_pdf_path = 'data/pdfs/'+ dataset_name + '/' + paper_name
+                highlighted_pdf_path = 'data/pdfs/' + dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf'
 
-            # get all files with output_file name in thier name
-            files = [f for f in os.listdir('data/pdfs') if (paper_name.split('.')[0] + '_highlighted.pdf') in f]
-            # remove all files with output_file name in thier name
-            for f in files:
-                os.remove('data/pdfs/' + f)
+                # get all files with output_file name in thier name
+                files = [f for f in os.listdir('data/pdfs') if (paper_name.split('.')[0] + '_highlighted.pdf') in f]
+                # remove all files with output_file name in thier name
+                for f in files:
+                    os.remove('data/pdfs/' + f)
 
-            highlight_pdf(
-                original_pdf_path, 
-                highlighted_pdf_path, 
-                source_grp
-            )
+                highlight_pdf(
+                    original_pdf_path, 
+                    highlighted_pdf_path, 
+                    source_grp
+                )
 
-            # create highlighted paper object
-            paper = Papers.objects.filter(paper_title=source_grp[0]['paper'])[0]
-            with open(highlighted_pdf_path, 'rb') as f:
-                paper.highlighted_attachment.save(dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf', File(f), save=True)
-        
+                # create highlighted paper object
+                paper = Papers.objects.filter(paper_title=source_grp[0]['document'])[0]
+                with open(highlighted_pdf_path, 'rb') as f:
+                    paper.highlighted_attachment.save(dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf', File(f), save=True)
+            
         context_json = {
             'context': context,
             'relevance_score': relevance_score,
@@ -819,8 +939,8 @@ def get_question_details(request):
         sources_json = []
         for source in sources:
             sources_json.append({
-                'paper': source.source_paper,
-                'page': source.source_page,
+                'paper': source.source_doc,
+                'page': source.source_pointer,
                 'context': source.context,
                 'distance': source.distance
             })
@@ -850,7 +970,7 @@ def save_answer(request):
         question = Question.objects.get(question_text=question_text, model_type=model_type)
         dataset_name = json_request['dataset']
         sentence_transformer = json_request['sentence_transformer']
-        _, _, _, _, distances = nearestDataChroma(answer_text, dataset_name, sentence_transformer)
+        _, _, _, _, _, _, distances = nearestDataChroma(answer_text, dataset_name, sentence_transformer)
         distances = [round(dist, 3) for dist in distances]
         relevance_score = get_relevance_score(distances)
         Answer.objects.create(
@@ -961,4 +1081,44 @@ def add_demo_dataset_api(request):
         if datasets.count() > 0 and datasets.filter(dataset_name='GPCR').count() > 0:
             datasets.get(dataset_name='GPCR').delete()
         add_demo_dataset(sentence_transformer)
+        return Response({'added':True}, content_type="application/json")
+    
+@api_view(['POST'])
+def add_video_library(request):
+    if request.method == 'POST':
+        dataset_name = request.POST.get('dataset_name').replace(' ', '_')
+        sentence_transformer = request.POST.get('sentence_transformer')
+        video_url = request.POST.get('video_url')
+        user = request.POST.get('user')
+        user_email = request.POST.get('user_email')
+        user_group = request.POST.get('user_group')
+        yt = YouTube(video_url)
+        video_title = yt.title
+    
+        # create dataset
+        dataset = Dataset.objects.filter(dataset_name=dataset_name)
+        if dataset.count() > 0:
+            dataset = dataset[0]
+        else:
+            dataset = Dataset.objects.create(
+                dataset_name=dataset_name,
+                dataset_size=0,
+                user = user if len(user) else '-',
+                user_email = user_email if len(user_email) else '-',
+                user_group = user_group if len(user_group) else '-',
+                dataset_date_time=make_aware(datetime.datetime.now())
+            )
+
+        # extract transcript from youtube video and save to chroma
+        youtube_video_id = video_url.split('=')[-1]
+        get_youtube_transcript(dataset_name, youtube_video_id, video_title)
+        add_video_to_chroma(dataset_name, sentence_transformer)
+
+        Videos.objects.create(
+            video_title=video_title,
+            video_link=video_url,
+            video_dataset=dataset,
+            video_date_time=make_aware(datetime.datetime.now())
+        )
+
         return Response({'added':True}, content_type="application/json")

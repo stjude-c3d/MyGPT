@@ -39,7 +39,7 @@ class AnswerSerializer(serializers.HyperlinkedModelSerializer):
 class SourceSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Source
-        fields = ['source_paper', 'source_page', 'context', 'distance', 'question']
+        fields = ['source_doc', 'source_pointer', 'context', 'distance', 'question']
 
 class FrontEndSettingsSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
