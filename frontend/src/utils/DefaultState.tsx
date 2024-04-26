@@ -16,6 +16,7 @@ const defaultSettings = {
 	defaultDataset: 'None',
     selectedDataset: 'None',
 	fetchDatasets: true,
+	datasetsUpdated: false,
     default_sentence_transformer: 'all-MiniLM-L6-v2',
 	selected_sentence_transformer: 'all-MiniLM-L6-v2',
 	sentence_transformers: [

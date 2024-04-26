@@ -69,7 +69,7 @@ function App() {
             setCurrentSettings({...currentSettings, datasets:data.map((d:any)=>d.dataset_name), selectedDataset:data[0].dataset_name, fetchDatasets:false})
           })
         } 
-        else if (currentSettings.selectedDataset === 'None' && currentSettings.fetchDatasets === true) {
+        else if ((currentSettings.selectedDataset === 'None' || currentSettings.datasetsUpdated === true) && currentSettings.fetchDatasets === true) {
           const requestOptions = {
             method: 'POST',
             headers: { 
@@ -84,7 +84,7 @@ function App() {
               .then(response => response.json())
               .then(data => {
                 if(data.length > 0)
-                  setCurrentSettings({...currentSettings, datasets:data.map((d:any)=>d.dataset_name), selectedDataset:data[0].dataset_name, fetchDatasets:false})
+                  setCurrentSettings({...currentSettings, datasets:data.map((d:any)=>d.dataset_name), selectedDataset:data[0].dataset_name, fetchDatasets:false, datasetsUpdated:false})
             })
         }
     }, [user, currentSettings])

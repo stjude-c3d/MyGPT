@@ -53,7 +53,7 @@ const AddLibrarySettings = (props: {
 		fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/add_zotero_collection/`, requestOptions)
 		.then(response => response.json())
 		.then(data => {
-			props.settingsCallback({...currentSettings, fetchDatasets: true})
+			props.settingsCallback({...currentSettings, fetchDatasets: true, datasetsUpdated: true})
 			setAddLibrary(false)
 			setApiKey('')
 			setLibraryId('')
@@ -94,7 +94,7 @@ const AddLibrarySettings = (props: {
 			.then(data => {
 				console.log(data)
 				// props.reloadDatasetsCallabck()
-				props.settingsCallback({...currentSettings, fetchDatasets: true})
+				props.settingsCallback({...currentSettings, fetchDatasets: true, datasetsUpdated: true})
 				setUploadLibrary(false)
 				setUploadLibraryName('')
 				setUploadDocs(emptyUploadDocs)
@@ -127,7 +127,7 @@ const AddLibrarySettings = (props: {
 			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/add_video_library/`, requestOptions)
 			.then(response => response.json())
 			.then(data => {
-				props.settingsCallback({...currentSettings, fetchDatasets: true})
+				props.settingsCallback({...currentSettings, fetchDatasets: true, datasetsUpdated: true})
 				setVideoLibrary(false)
 				setVideoLibraryName('')
 				setVideoDocURLs([])
