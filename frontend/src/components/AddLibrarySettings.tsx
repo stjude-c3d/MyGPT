@@ -129,7 +129,8 @@ const AddLibrarySettings = (props: {
 			.then(data => {
 				props.settingsCallback({...currentSettings, fetchDatasets: true})
 				setVideoLibrary(false)
-				setUploadLibraryName('')
+				setVideoLibraryName('')
+				setVideoDocURLs([])
 				if (data.added){
 					setShowSuccess(true)
 				}
@@ -293,12 +294,23 @@ const AddLibrarySettings = (props: {
 		{ videoPanel ?
 			<div className='flex justify-start'>
 				<div className='flex flex-col mt-4'>
+					{ showSuccess ?
+						<div className='flex justify-start'>
+							<div className='text-nav p-1 text-lg bg-green-200 rounded-md'>Library uploaded successfully</div>
+						</div> : 
+						videoLibrary && !showSuccess ?
+						<div className='flex justify-start'>
+							<div className='text-nav p-1 text-lg bg-orange-200 rounded-md'>Uploading documents...</div>
+						</div> :
+						<></>
+					}
 					<div className='flex justify-start p-2'>
 						<div className='text-nav w-40 p-1 my-2'>Library Name</div>
 						<input type='text' placeholder=' Library Name' className='rounded-md w-60 px-2 py-1 m-2 text-nav' value={videoLibraryName}
 							onChange={(e) => setVideoLibraryName(e.target.value)}
 						/>
 					</div>
+					<div className='text-nav p-1 my-2'> Note: MyGPT currently supports YouTube videos with closed captions only.</div>
 					<div className='flex justify-start p-2'>
 					<div className='text-nav w-40 p-1 my-2'>YouTube vidoe links</div>
 					<div className='flex flex-col justify-start'>
