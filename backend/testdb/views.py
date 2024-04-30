@@ -403,20 +403,97 @@ def add_demo_dataset(sentence_transformer = 'all-MiniLM-L6-v2'):
            
         print(f'Added {new_count - count} documents')
 
-def add_embeddings_to_chunks(documents, metadatas, dataset):
+# def add_embeddings_to_chunks(documents, metadatas, dataset):
+#     for i in tqdm(
+#         range(0, len(documents), 100), desc='Adding embeddings', unit_scale=100
+#     ):
+#         default_ef = embedding_functions.DefaultEmbeddingFunction()
+#         for document in documents[i : i + 100]:
+#             embedding = default_ef([document])
+#             chunks.objects.create(
+#                 chunk_text=document,
+#                 embedding=embedding,
+#                 chunk_dataset=dataset,
+#                 chunk_paper=Papers.objects.filter(paper_title=metadatas[i]['filename'])[0],
+#                 chunk_date_time=make_aware(datetime.datetime.now())
+#             )
+
+def add_embeddings_to_chunks(dataset):
+    # get chunks by reading text file
+    chunks_txt = []
+    with open('data/data_chunks/'+ dataset +'.txt', 'r') as file:
+        for line in file:
+            chunk = eval(line)
+            chunks_txt.append(chunk)
+
+    # find papers or videos
+    dataset_obj = Dataset.objects.get(dataset_name=dataset)
+    library_type = ''
+    papers = Papers.objects.filter(paper_dataset=dataset_obj)
+    videos = Videos.objects.filter(video_dataset=dataset_obj)
+    if papers.count() > 0:
+        library_type = 'papers'
+    elif videos.count() > 0:
+        library_type = 'videos'
+    
     for i in tqdm(
-        range(0, len(documents), 100), desc='Adding embeddings', unit_scale=100
+        range(0, len(chunks_txt), 100), desc='Adding embeddings', unit_scale=100
     ):
         default_ef = embedding_functions.DefaultEmbeddingFunction()
-        for document in documents[i : i + 100]:
-            embedding = default_ef([document])
-            chunks.objects.create(
-                chunk_text=document,
+        for chunk in chunks_txt[i : i + 100]:
+            embedding = default_ef([chunk['content']])
+            chunk = chunks.objects.create(
+                chunk_text=chunk['content'],
                 embedding=embedding,
-                chunk_dataset=dataset,
-                chunk_paper=Papers.objects.filter(paper_title=metadatas[i]['filename'])[0],
+                chunk_dataset=dataset_obj,
+                chunk_paper= Papers.objects.filter(paper_title=chunk['title'])[0] if library_type == 'papers' else None,
+                chunk_video= Videos.objects.filter(video_title=chunk['title'])[0] if library_type == 'videos' else None,
                 chunk_date_time=make_aware(datetime.datetime.now())
             )
+    
+    #  update dataset
+    dataset = Dataset.objects.get(dataset_name=dataset)
+    dataset.embedding_added = True
+    dataset.save()
+
+    return
+
+def add_embeddings_to_qna(text, text_type = 'question', sentence_transformer = 'all-MiniLM-L6-v2'):
+    # use multi-qa-MiniLM-L6-cos-v1 embedding function
+    if sentence_transformer != 'all-MiniLM-L6-v2':
+        sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=sentence_transformer)
+    else:
+        sentence_transformer_ef = embedding_functions.DefaultEmbeddingFunction()
+
+    # get embeddings
+    embedding = sentence_transformer_ef([text])
+
+    if text_type == 'question':
+        question_obj = Question.objects.filter(question_text=text)
+        if question_obj.count() > 0:
+            question = question_obj[0]
+            question.embedding = embedding
+            question.save()
+        else:
+            question = Question.objects.create(
+                question_text=text,
+                embedding=embedding,
+                saved_date_time=make_aware(datetime.datetime.now())
+            )
+    elif text_type == 'answer':
+        answer_obj = Answer.objects.filter(answer_text=text)
+        if answer_obj.count() > 0:
+            answer = answer_obj[0]
+            answer.embedding = embedding
+            answer.save()
+        else:
+            answer = Answer.objects.create(
+                answer_text=text,
+                embedding=embedding,
+                saved_date_time=make_aware(datetime.datetime.now())
+            )
+
+    return
 
 def add_pca_to_chunks():
     chunks_objects = chunks.objects.all()
@@ -457,6 +534,80 @@ def add_pca_to_chunks():
         chunk.pca_y = embedding[1]
         chunk.pca_z = embedding[2]
         chunk.save()
+
+def add_pca_to_qna_and_dataset(question_id):
+    question = Question.objects.get(id=question_id)
+    question_embedding = eval(question.embedding)[0]
+    answer = Answer.objects.filter(question=question)[0]
+    answer_embedding = eval(answer.embedding)[0]
+    sources = Source.objects.filter(question=question)
+    source_embeddings = []
+    for source in sources:
+        chunk = chunks.objects.get(id=source.chunk.id)
+        source_embedding = eval(chunk.embedding)[0]
+        source_embeddings.append(source_embedding)
+    chunks_objects = chunks.objects.all()
+    dataset_embddings = []
+    for chunk in chunks_objects:
+       dataset_embddings.append(eval(chunk.embedding)[0])
+    
+    embeddings = []
+    embeddings.append(question_embedding)
+    embeddings.append(answer_embedding)
+    embeddings.extend(source_embeddings)
+    embeddings.extend(dataset_embddings)
+
+    # perform pca on embeddings with numpy
+    data = pd.DataFrame(embeddings)
+    data = data - data.mean()
+
+    # calculate covariance matrix
+    cov_matrix = data.cov()
+
+    # calculate eigen values and eigen vectors
+    eigen_values, eigen_vectors = np.linalg.eig(cov_matrix)
+
+    # sort eigen values and eigen vectors
+    idx = eigen_values.argsort()[::-1]
+    eigen_values = eigen_values[idx]
+    eigen_vectors = eigen_vectors[:,idx]
+
+    # select top 3 eigen vectors
+    pca = eigen_vectors[:, :3]
+
+    # project data to 2D
+    embeddings_pca = data.dot(pca)
+
+    # write pca embeddings to file
+    # remove imaginary part
+    embeddings_pca_short = np.real(embeddings_pca)
+    # convert to 2 decimal places
+    embeddings_pca_short = np.round(embeddings_pca_short, 4)
+
+    question.pca_x = embeddings_pca_short[0][0]
+    question.pca_y = embeddings_pca_short[0][1]
+    question.pca_z = embeddings_pca_short[0][2]
+    question.save()
+
+    answer.pca_x = embeddings_pca_short[1][0]
+    answer.pca_y = embeddings_pca_short[1][1]
+    answer.pca_z = embeddings_pca_short[1][2]
+    answer.save()
+
+    for idx, source in enumerate(sources):
+        chunk = chunks.objects.get(id=source.chunk.id)
+        chunk.pca_x = embeddings_pca_short[idx+2][0]
+        chunk.pca_y = embeddings_pca_short[idx+2][1]
+        chunk.pca_z = embeddings_pca_short[idx+2][2]
+        chunk.save()
+
+    for idx, chunk in enumerate(chunks_objects):
+        chunk.pca_x = embeddings_pca_short[idx+2+len(sources)][0]
+        chunk.pca_y = embeddings_pca_short[idx+2+len(sources)][1]
+        chunk.pca_z = embeddings_pca_short[idx+2+len(sources)][2]
+        chunk.save()
+
+    return
 
 def save_chunks_pca_to_file():
     chunks_objects = chunks.objects.all()
@@ -800,11 +951,11 @@ def get_context(request):
         no_context = json_request['no_context']
         sentence_transformer = json_request['sentence_transformer']
         if no_context:    
-            context, titles, pages, starts, stops, chunks, distances = '', [], [], [], [], [], []
+            context, titles, pages, starts, stops, chunks_txt, distances = '', [], [], [], [], [], []
             sources = []
             relevance_score = 0
         else:
-            context, titles, pages, starts, stops, chunks, distances = nearestDataChroma(question_text, dataset_name, sentence_transformer)
+            context, titles, pages, starts, stops, chunks_txt, distances = nearestDataChroma(question_text, dataset_name, sentence_transformer)
             sources = []
             distances = [round(dist, 3) for dist in distances]
             relevance_score = get_relevance_score(distances)
@@ -837,6 +988,10 @@ def get_context(request):
                 conversation=conversation,
                 saved_date_time=current_date_time
             )
+        
+        # add embeddings to question
+        add_embeddings_to_qna(question_text, 'question', sentence_transformer)
+
         question_sources = Source.objects.filter(question=question)
         for idx, title in enumerate(titles):
             sources.append({
@@ -844,16 +999,18 @@ def get_context(request):
                 'page': pages[idx] if library_type == 'papers' else '',
                 'start': seconds_to_hhmmss(starts[idx]) if library_type == 'videos' else '',
                 'stop': seconds_to_hhmmss(stops[idx]) if library_type == 'videos' else '',
-                'context': chunks[idx],
+                'context': chunks_txt[idx],
                 'distance': round(distances[idx],3) #round to 3 decimals
             })
             if len(question_sources) == 0:
+                chunk = chunks.objects.filter(chunk_text=chunks_txt[idx], chunk_dataset=dataset)
                 Source.objects.create(
                     source_doc=title,
                     source_pointer=pages[idx] if library_type == 'papers' else starts[idx],
-                    context=chunks[idx].replace("\x00", "\uFFFD"),
+                    context=chunks_txt[idx].replace("\x00", "\uFFFD"),
                     distance=round(distances[idx],3),
-                    question=question
+                    question=question,
+                    chunk=chunk[0] if chunk.count() else None
                 )
 
         sources_grouped = []
@@ -956,6 +1113,7 @@ def get_question_details(request):
         question_json = {
             'question': question.question_text,
             'relevance_score': question.relevance_score,
+            'ground_truth': question.ground_truth,
             'llm': question.model_type.model_name,
             'answers': answers_json,
             'sources': sources_json
@@ -982,6 +1140,8 @@ def save_answer(request):
             model_type=model_type, 
             question=question
         )
+        # add embeddings to answer
+        add_embeddings_to_qna(answer_text, 'answer', sentence_transformer)
         return Response({'saved':True, 'relevance_score': relevance_score}, content_type="application/json")
 
 @api_view(['POST'])
@@ -1131,4 +1291,60 @@ def add_video_library(request):
         get_youtube_transcript(dataset_name, video_ids, video_titles)    
         add_video_to_chroma(dataset_name, sentence_transformer)
 
+        return Response({'added':True}, content_type="application/json")
+    
+@api_view(['GET'])
+def get_vector_embeddings(request):
+    if request.method == 'GET':
+        datasets = request.GET.get('datasets').split(',')
+        question_id = request.GET.get('question_id')
+        if question_id:
+            question = Question.objects.get(id=question_id)
+            if question.pca_x == 0 and question.pca_y == 0 and question.pca_z == 0:
+                add_pca_to_qna_and_dataset(question_id)
+
+        pca_embeddings = []
+        for dataset_name in datasets:
+            dataset = Dataset.objects.get(dataset_name=dataset_name)
+            chunks_objects = chunks.objects.filter(chunk_dataset=dataset)
+            for chunk in chunks_objects:
+                pca_embeddings.append({
+                    'pca_x': chunk.pca_x,
+                    'pca_y': chunk.pca_y,
+                    'pca_z': chunk.pca_z,
+                    'dataset': chunk.chunk_dataset.dataset_name
+                })
+
+        if question_id:
+            question = Question.objects.get(id=question_id)
+            pca_embeddings.append({
+                'pca_x': question.pca_x,
+                'pca_y': question.pca_y,
+                'pca_z': question.pca_z,
+                'dataset': 'question'
+            })
+            answer = Answer.objects.filter(question=question)[0]
+            pca_embeddings.append({
+                'pca_x': answer.pca_x,
+                'pca_y': answer.pca_y,
+                'pca_z': answer.pca_z,
+                'dataset': 'answer'
+            })
+            sources = Source.objects.filter(question=question)
+            for source in sources:
+                chunk = chunks.objects.get(id=source.chunk.id)
+                pca_embeddings.append({
+                    'pca_x': chunk.pca_x,
+                    'pca_y': chunk.pca_y,
+                    'pca_z': chunk.pca_z,
+                    'dataset': 'source'
+                })
+        return Response({'pca_embeddings': pca_embeddings})
+    
+@api_view(['GET'])
+def add_dataset_embeddings(request):
+    if request.method == 'GET':
+        dataset_name = request.GET.get('dataset')
+        add_embeddings_to_chunks(dataset_name)
+        add_pca_to_chunks()
         return Response({'added':True}, content_type="application/json")

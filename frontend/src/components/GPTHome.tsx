@@ -335,7 +335,7 @@ function GPTHome(props:{
 	})
 
 	return (
-		<div className='grid grid-cols-10 p-4 bg-gray-200 max-w-[2000px] mx-auto h-screen'>
+		<div className='grid grid-cols-10 p-4 bg-gray-200 max-w-[2000px] mx-auto h-[94vh]'>
 			<div className='col-span-3 mt-24 mr-6 p-6 max-w-4xl bg-panel3 rounded-lg max-h-[92vh] overflow-y-auto'>
 				<div className='text-2xl font-bold text-nav'>Ask a Question</div>
 				<div className='text-sm text-nav my-2'>Ask a question about a paper or a topic from your publication library. We will try to answer it using the GPT models.</div>
@@ -529,7 +529,7 @@ function GPTHome(props:{
 												}}
 											>
 											<div className='border border-gray-400'></div>
-												<div className='text-white text-sm p-2 font-normal italic'>{'Page ' + (sourcePages[query.length-1][index]) + ' of "' + paper + '"'}</div>
+												<div className='text-white text-sm p-2 font-normal italic'>{'Page ' + (sourcePages[query.length-i-1][index]) + ' of "' + paper + '"'}</div>
 											</div>
 										))}
 									</>
@@ -732,7 +732,7 @@ function GPTHome(props:{
 							}
 						</div>
 					</Worker>
-					</div>
+				</div>
 			</div>
 		</div>
 	)

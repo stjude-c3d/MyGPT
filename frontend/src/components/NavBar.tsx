@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Cog6ToothIcon, InboxIcon } from '@heroicons/react/24/outline'
+import { Cog6ToothIcon, InboxIcon, ChartBarSquareIcon } from '@heroicons/react/24/outline'
 
 // -----------------------------//
 // Top Navigation with app name //
@@ -12,6 +12,8 @@ interface NavProps {
 	showAppLogo?: boolean,
 	appLogoPath?: string,
 	appLogoExternalLink?: any,
+	showPlotButton?: boolean,
+	plotButtonCallback?: any,
 	showHistoryButton?: boolean,
 	historyButtonCallback?: any,
 	showSettingsButton?: boolean,
@@ -86,6 +88,16 @@ export const NavBar = (props = defaultNavProps) => {
 					</div>
 				</div>
 				<div className='flex flex-row mx-6'>
+					{
+						props.showPlotButton ?
+						(
+							<button className='object-cover text-white bg-bsk_opp_darker rounded-full p-2 inline-block ml-2 hover:drop-shadow-sm transition ease-in-out hover:bg-panel1'
+								onClick={props.plotButtonCallback}
+							>
+								<ChartBarSquareIcon className='h-6 w-6'/>
+							</button>
+						) : (<></>)
+					}
 					{	
 						props.showHistoryButton ?
 						(

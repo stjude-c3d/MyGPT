@@ -9,7 +9,7 @@ class ModelSerializer(serializers.HyperlinkedModelSerializer):
 class DatasetSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Dataset
-        fields = ['dataset_name', 'zotero_id', 'dataset_size', 'dataset_date_time', 'user', 'user_email', 'user_group']
+        fields = ['dataset_name', 'zotero_id', 'dataset_size', 'dataset_date_time', 'user', 'user_email', 'user_group', 'embedding_added']
 
 class PapersSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
@@ -24,7 +24,7 @@ class ChunksSerializer(serializers.HyperlinkedModelSerializer):
 class QuestionSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Question
-        fields = ['question_text', 'question_dataset', 'saved_date_time']
+        fields = ['question_text', 'ground_truth', 'question_dataset', 'saved_date_time']
 
 class ConversationSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:

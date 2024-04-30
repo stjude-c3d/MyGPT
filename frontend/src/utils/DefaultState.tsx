@@ -11,7 +11,7 @@ const defaultSettings = {
 	selectedPanel: 'datasets',
 	llms: ['llama2'],
     defaultLlm: 'llama2',
-	selectedLlm: 'llama2',
+	selectedLlm: 'llama3',
     datasets: ['None'],
 	defaultDataset: 'None',
     selectedDataset: 'None',

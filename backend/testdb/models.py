@@ -24,6 +24,7 @@ class Dataset(models.Model):
 	user = models.CharField(max_length=200, default='-')
 	user_email = models.CharField(max_length=200, default='-')
 	user_group = models.CharField(max_length=200, default='-')
+	embedding_added = models.BooleanField(default=False)
 	dataset_date_time = models.DateTimeField(default=timezone.now, null=True)
 
 	def __str__(self):
@@ -63,7 +64,8 @@ class chunks(models.Model):
 	pca_y = models.FloatField(default=0)
 	pca_z = models.FloatField(default=0)
 	chunk_dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE)
-	chunk_paper = models.ForeignKey(Papers, on_delete=models.CASCADE)
+	chunk_paper = models.ForeignKey(Papers, on_delete=models.CASCADE, null=True)
+	chunk_video = models.ForeignKey(Videos, on_delete=models.CASCADE, null=True)
 	chunk_date_time = models.DateTimeField(default=timezone.now, null=True)
 
 	class Meta:
@@ -87,6 +89,11 @@ class Question(models.Model):
 	question_text = models.TextField(default='-')
 	relevance_score = models.FloatField(default=0)
 	model_type =  models.ForeignKey('Model', on_delete=models.SET_DEFAULT, default=2)
+	ground_truth = models.TextField(default='-')
+	embedding = models.TextField(default='-')
+	pca_x = models.FloatField(default=0)
+	pca_y = models.FloatField(default=0)
+	pca_z = models.FloatField(default=0)
 	question_dataset = models.ForeignKey('Dataset', on_delete=models.CASCADE)
 	conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)
 	saved_date_time = models.DateTimeField(default=timezone.now, null=True)
@@ -98,6 +105,10 @@ class Answer(models.Model):
 	relevance_score = models.FloatField(default=0)
 	rating = models.IntegerField(choices=rating_types, default=0)
 	user_comment = models.TextField(default='-')
+	embedding = models.TextField(default='-')
+	pca_x = models.FloatField(default=0)
+	pca_y = models.FloatField(default=0)
+	pca_z = models.FloatField(default=0)
 	saved_date_time = models.DateTimeField(default=timezone.now, null=True)
 	question = models.ForeignKey(Question, on_delete=models.CASCADE)
 
@@ -106,6 +117,7 @@ class Source(models.Model):
 	source_pointer = models.IntegerField(default=0)
 	context = models.TextField(default='-')
 	distance = models.FloatField(default=0)
+	chunk = models.ForeignKey(chunks, on_delete=models.CASCADE, null=True)
 	question = models.ForeignKey(Question, on_delete=models.CASCADE, null=True)
 
 	def __str__(self):

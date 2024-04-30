@@ -5,7 +5,7 @@ class ModelAdmin(admin.ModelAdmin):
     list_display = ['model_name', 'model_size']
 
 class DatasetAdmin(admin.ModelAdmin):
-    list_display = ['dataset_name', 'zotero_id', 'dataset_size', 'user', 'user_email', 'user_group', 'dataset_date_time']
+    list_display = ['dataset_name', 'zotero_id', 'dataset_size', 'user', 'user_email', 'user_group', 'embedding_added', 'dataset_date_time']
 
 class PapersAdmin(admin.ModelAdmin):
     list_display = ['paper_title', 'paper_attachment', 'highlighted_attachment', 'paper_dataset', 'paper_date_time']

@@ -6,6 +6,7 @@ import useAuthenticateUser from '../hooks/useAuthenticateUser'
 function TopNav(props:{
   setShowSettings:any,
   setShowChatHistory:any,
+  setPlotButton:any,
   showLoginButton?:boolean,
   loginCallback?:any,
 }) {
@@ -38,6 +39,8 @@ function TopNav(props:{
             showAppLogo = {true}
             appLogoPath = {'./mygpt_logo.png'}
             // appLogoLink = {'/'}
+            showPlotButton = {true}
+            plotButtonCallback = {() => {props.setPlotButton(true)}}
             showHistoryButton = {true}
             historyButtonCallback = {() => {props.setShowChatHistory(true)}}
             showSettingsButton = {true}

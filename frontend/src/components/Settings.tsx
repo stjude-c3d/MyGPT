@@ -17,43 +17,49 @@ const Settings = (props:{
 	const [workflowCollapsed, setWorkflowCollapsed] = useState(false)
 
 	const currentSettings = JSON.parse(JSON.stringify(props.currentSettings || props.defaultSettings))
-	// const [datasets, setDatasets] = useState<string[]>([])
+	const [datasets, setDatasets]:[any, any] = useState([])
 	const [selectedDataset, setSelectedDataset] = useState(props.currentSettings.selectedDataset || props.defaultSettings.selectedDataset)
 	const [deleteDataset, setDeleteDataset] = useState('')
+
+	const [addEmbeddingForDataset, setAddEmbeddingForDataset] = useState('')
 
 	const [llms, setLlms] = useState<any[]>(props.currentSettings.llms || props.defaultSettings.llms)
 	const [llm, setLlm] = useState(props.currentSettings.selectedLlm || props.defaultSettings.selectedLlm)
 
 	const [editPrompt, setEditPrompt] = useState(false)
-	// useEffect(()=>{
-	// 	const requestOptions = {
-	// 		method: 'POST',
-	// 		headers: { 
-	// 			'Content-Type': 'application/json'
-	// 		},
-	// 		body: JSON.stringify(props.user ? props.user : {'user_email': ''})
-	// 	}
-	// 	if(!datasets.length || props.currentSettings.fetchDatasets)
-	// 		fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/get_datasets/`, requestOptions)
-	// 			.then(response => response.json())
-	// 			.then(data => {
-	// 				const dataset_names = data.map((d:any)=>d.dataset_name)
-	// 				props.settingsCallback({...currentSettings, datasets: dataset_names, fetchDatasets: false})
-	// 				if (dataset_names && dataset_names.length && dataset_names.includes(props.defaultSettings.selectedDataset)){
-	// 					dataset_names.splice(dataset_names.indexOf(props.defaultSettings.selectedDataset), 1)
-	// 					dataset_names.unshift(props.defaultSettings.selectedDataset)
-	// 				} else {
-	// 					dataset_names.unshift(props.defaultSettings.selectedDataset)
-	// 				}
-	// 				setDatasets(dataset_names)
-	// 			})
-	// // eslint-disable-next-line react-hooks/exhaustive-deps
-	// },[datasets.length, props.currentSettings.fetchDatasets])
+	useEffect(()=>{
+		const requestOptions = {
+			method: 'POST',
+			headers: { 
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(props.user ? props.user : {'user_email': ''})
+		}
+		if(!datasets.length || props.currentSettings.fetchDatasets)
+			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/get_datasets/`, requestOptions)
+				.then(response => response.json())
+				.then(data => {
+					const dataset_names = data.map((d:any)=>d.dataset_name)
+					const dataset_details:any = []
+					dataset_names.forEach((dataset:string) => {
+						const dataset_detail = {'dataset': dataset, 'embedding_added': data.filter((d:any)=>d.dataset_name === dataset)[0].embedding_added}
+						dataset_details.push(dataset_detail)
+					})
+					props.settingsCallback({...currentSettings, datasets: dataset_names, fetchDatasets: false})
+					if (dataset_names && dataset_names.length && dataset_names.includes(props.defaultSettings.selectedDataset)){
+						dataset_names.splice(dataset_names.indexOf(props.defaultSettings.selectedDataset), 1)
+						dataset_names.unshift(props.defaultSettings.selectedDataset)
+					} else {
+						dataset_names.unshift(props.defaultSettings.selectedDataset)
+					}
+					setDatasets(dataset_details)
+				})
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	},[datasets.length, props.currentSettings.fetchDatasets])
 
 	useEffect(()=>{
 		currentSettings.selectedDataset = selectedDataset
 	},[selectedDataset, currentSettings])
-
 
 	useEffect(()=>{
 		if(deleteDataset){
@@ -75,6 +81,28 @@ const Settings = (props:{
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [deleteDataset, currentSettings])
+
+	useEffect(()=>{
+		if(addEmbeddingForDataset){
+			const requestOptions = {
+				method: 'GET',
+				headers: { 
+					'Content-Type': 'application/json'
+				}
+			}
+			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/add_dataset_embeddings/?dataset=${addEmbeddingForDataset}`, requestOptions)
+				.then(response => response.json())
+				.then(data => {
+					console.log(data)
+					setAddEmbeddingForDataset('')
+					const dataset_details = datasets.map((dataset:any) => {
+						if (dataset.dataset === addEmbeddingForDataset) dataset.embedding_added = true
+						return dataset
+					})
+					setDatasets(dataset_details)
+				})
+		}
+	}, [addEmbeddingForDataset, datasets])
 
 	// get llms from backend
 	useEffect(()=>{
@@ -173,23 +201,32 @@ const Settings = (props:{
 									<div className='text-nav px-2 flex justify-start mt-2 text-lg font-semibold'> Available libraries </div>
 									<div className='text-nav px-4 flex justify-start'>
 										<ul className='list-disc'>
-											{props.currentSettings.datasets.filter((d:any)=>d !== 'None').map((dataset:string, index:number) => {
+											{datasets.filter((d:any)=>d !== 'None').map((dataset:any, index:number) => {
 												return(
 													<li key={index} className='ml-4'>
 														<div className='flex justify-between m-1'>
-															{dataset.split('_').join(' ')}
+															{dataset.dataset.split('_').join(' ')}
 															<div>
 																<button className={'ml-2 text-white px-2 rounded-md w-24' 
-																	+ (dataset === currentSettings.selectedDataset ? ' bg-gray-300' : ' bg-panel1')}
+																	+ (dataset.dataset === currentSettings.selectedDataset ? ' bg-gray-300' : ' bg-panel1')}
 																	onClick={()=>{
-																		setSelectedDataset(dataset)
-																		props.settingsCallback({...currentSettings, selectedDataset: dataset, fetchPapers: true})
+																		setSelectedDataset(dataset.dataset)
+																		props.settingsCallback({...currentSettings, selectedDataset: dataset.dataset, fetchPapers: true})
 																	}}
-																	disabled={dataset === currentSettings.selectedDataset ? true : false}
-																>{ dataset === currentSettings.selectedDataset ? 'Selected' : 'Select'}</button>
+																	disabled={dataset.dataset === currentSettings.selectedDataset ? true : false}
+																>{ dataset.dataset === currentSettings.selectedDataset ? 'Selected' : 'Select'}</button>
 																
+																{/* <button className={'ml-2 text-white px-2 rounded-md w-48' + (dataset['embedding_added'] ? ' bg-gray-300' : ' bg-panel1' )}
+																	disabled={dataset['embedding_added'] ? true : false}
+																	onClick={()=>{
+																		setAddEmbeddingForDataset(dataset.dataset)
+																	}}
+																>
+																	{ dataset['embedding_added'] ? 'added in vector space' : 'add to vector space'}
+																</button> */}
+
 																<button className='ml-2 bg-red-900 text-white px-2 rounded-md'
-																	onClick={()=>{setDeleteDataset(dataset)}}
+																	onClick={()=>{setDeleteDataset(dataset.dataset)}}
 																>Delete</button>
 															</div>
 														</div>

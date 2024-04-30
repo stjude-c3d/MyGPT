@@ -26,4 +26,6 @@ urlpatterns = [
 	path('api/frontend_settings/', views.get_frontend_settings, name='frontend_settings'),
 	path('api/add_demo_library/', views.add_demo_dataset_api, name='add_demo_dataset'),
 	path('api/add_video_library/', views.add_video_library, name='add_video_library'),
+	path('api/get_vector_embeddings/', views.get_vector_embeddings, name='get_vector_embeddings'),
+	path('api/add_dataset_embeddings/', views.add_dataset_embeddings, name='add_dataset_embeddings'),
 ]
