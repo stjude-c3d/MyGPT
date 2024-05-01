@@ -66,12 +66,12 @@ We will install these two tools in the following steps:
 	You can check if Ollama is running by visiting http://localhost:11434/ in your default browser.
 
 > [!CAUTION]
-> After installing Ollama, close any open Terminal/Command Prompt before you pull Llama2.
+> After installing Ollama, close any open Terminal/Command Prompt before you pull Llama3.
 
-Once you start Ollama, you have to pull Lllama2 model by running following command:
+Once you start Ollama, you have to pull Llama3 model by running following command:
 
 ```
-ollama pull llama2
+ollama pull llama3
 ```
 
 ## MyGPT installation

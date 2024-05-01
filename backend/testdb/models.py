@@ -6,6 +6,7 @@ model_types = (
 	('AI21', 'AI21'),
 	('BioGPT', 'BioGPT'),
 	('BioGPT-ft', 'BioGPT-ft'),
+	('Llama3', 'Llama3'),
 	('Llama2', 'Llama2'),
 	('Llama2-ft', 'Llama2-ft'),
 	('-', '-')
