@@ -197,6 +197,8 @@ def add_dataset_from_upload(request):
     # make directory for pdfs
     if not os.path.exists('data/pdfs/'+ dataset_name):
         os.makedirs('data/pdfs/'+ dataset_name)
+    if not os.path.exists('data/spreadsheets/'+ dataset_name):
+        os.makedirs('data/spreadsheets/'+ dataset_name)
     
     # save pdfs
     data = []
@@ -209,41 +211,53 @@ def add_dataset_from_upload(request):
             paper_dataset=dataset,
             paper_date_time=make_aware(datetime.datetime.now())
         )
-        pdf_name = 'data/pdfs/'+ dataset_name +'/paper' + str(idx+1) + '.pdf'
-        with open(pdf_name, 'wb') as f:
-            f.write(paper_attachments[idx].read())
-        with open(pdf_name, 'rb') as f:
-            paper.paper_attachment.save(dataset_name + '/paper' + str(idx+1) + '.pdf', File(f), save=True)
+        attachment = paper_attachments[idx]
+        if attachment.name.endswith('.pdf'):
+            pdf_name = 'data/pdfs/'+ dataset_name +'/paper' + str(idx+1) + '.pdf'
+            with open(pdf_name, 'wb') as f:
+                f.write(attachment.read())
+            with open(pdf_name, 'rb') as f:
+                paper.paper_attachment.save(dataset_name + '/paper' + str(idx+1) + '.pdf', File(f), save=True)
 
-        # extract text from pdfs
-        content = getPDFContent(pdf_name)
+            # extract text from pdfs
+            content = getPDFContent(pdf_name)
 
-        if go_to_next:
-            go_to_next = False
-        for page in range(content[1]):
             if go_to_next:
-                break
-            text = content[0][page].extract_text()
-            n = 1000
-            splits = []
-            remainder = ''
-            for i in range(0, len(text), n):
-                item = remainder + text[i : i + n]
-                # if len(re.findall(r'\sReferences.*\n+\d+',item, re.I)):
-                #     go_to_next = True
-                #     break
-                item = item.replace('\n', ' ')
-                if '. ' in item:
-                    remainder = item[item.rindex('. ') + 2: ]
-                    item = item.removesuffix(remainder)
-                if len(item) > 10:
-                    splits.append(item)
-            for split in splits:
-                # if len(re.findall(r'^References .*\s+', split)):
-                #     go_to_next = True
-                #     break
-                chunk = {'title': paper_titles[idx], 'page': page+1, 'content': split, 'type': 'pagechunk'}
-                data.append(chunk)
+                go_to_next = False
+            for page in range(content[1]):
+                if go_to_next:
+                    break
+                text = content[0][page].extract_text()
+                n = 1000
+                splits = []
+                remainder = ''
+                for i in range(0, len(text), n):
+                    item = remainder + text[i : i + n]
+                    # if len(re.findall(r'\sReferences.*\n+\d+',item, re.I)):
+                    #     go_to_next = True
+                    #     break
+                    item = item.replace('\n', ' ')
+                    if '. ' in item:
+                        remainder = item[item.rindex('. ') + 2: ]
+                        item = item.removesuffix(remainder)
+                    if len(item) > 10:
+                        splits.append(item)
+                for split in splits:
+                    # if len(re.findall(r'^References .*\s+', split)):
+                    #     go_to_next = True
+                    #     break
+                    chunk = {'title': paper_titles[idx], 'page': page+1, 'content': split, 'type': 'pagechunk'}
+                    data.append(chunk)
+        elif attachment.name.endswith('.xlsx'):
+            pdf_name = 'data/spreadsheets/'+ dataset_name +'/spreadsheet' + str(idx+1) + '.xlsx'
+            with open(pdf_name, 'wb') as f:
+                f.write(attachment.read())
+            with open(pdf_name, 'rb') as f:
+                paper.paper_attachment.save(dataset_name + '/spreadsheet' + str(idx+1) + '.xlsx', File(f), save=True)
+            doc_info = pd.read_excel(pdf_name, sheet_name=None)
+            chunk = {'title': paper_titles[idx], 'page': 1, 'content': str(doc_info), 'type': 'spreadsheet'}
+            data.append(chunk)
+    
     print('zotero chunks loaded')        
 
     with open('data/data_chunks/'+ dataset_name +'.txt', 'w') as f:
