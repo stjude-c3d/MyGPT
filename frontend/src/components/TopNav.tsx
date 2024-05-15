@@ -39,7 +39,7 @@ function TopNav(props:{
             showAppLogo = {true}
             appLogoPath = {'./mygpt_logo.png'}
             // appLogoLink = {'/'}
-            showPlotButton = {true}
+            showPlotButton = {false}
             plotButtonCallback = {() => {props.setPlotButton(true)}}
             showHistoryButton = {true}
             historyButtonCallback = {() => {props.setShowChatHistory(true)}}

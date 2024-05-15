@@ -135,3 +135,7 @@ class FrontEndSettings(models.Model):
 	show_no_context_switch = models.BooleanField(default=False)
 	azure_login = models.BooleanField(default=False)
 	saved_date_time = models.DateTimeField(default=timezone.now, null=True)
+
+	class Meta:
+		verbose_name_plural = 'FrontEndSettings'
+		verbose_name = 'FrontEndSettings'
