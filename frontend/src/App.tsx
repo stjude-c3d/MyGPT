@@ -5,7 +5,7 @@ import GPTHome from './components/GPTHome'
 import Settings from './components/Settings'
 import defaultSettings from './utils/DefaultState'
 import ChatHistory from './components/ChatHistory'
-import Plots from './components/Plots'
+// import Plots from './components/Plots'
 import { PublicClientApplication } from '@azure/msal-browser'
 import { MsalProvider } from '@azure/msal-react'
 import { msalConfig } from './utils/authConfigEnv'
@@ -120,10 +120,11 @@ function App() {
           /> : <></>
         }
         {showPlotButton ?
-            <Plots
-              closePlots={() => setShowPlotButton(false)}
-              datasets = {currentSettings.datasets}   
-            /> : <></>
+            // <Plots
+            //   closePlots={() => setShowPlotButton(false)}
+            //   datasets = {currentSettings.datasets}   
+            // />
+            <></> : <></>
           }
         <GPTHome currentSettings={currentSettings} settingsCallback={settingsCallback} frontendSettings={frontendSettings}/>
         </div>

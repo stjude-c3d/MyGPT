@@ -336,7 +336,8 @@ function GPTHome(props:{
 
 	return (
 		<div className='grid grid-cols-10 p-4 bg-gray-200 max-w-[2000px] mx-auto h-[94vh]'>
-			<div className='col-span-3 mt-24 mr-6 p-6 max-w-4xl bg-panel3 rounded-lg max-h-[92vh] overflow-y-auto'>
+			<div className={'mt-24 p-6 bg-panel3 rounded-lg max-h-[92vh] overflow-y-auto duration-300 ease-in-out peer-checked:bg-panel1 after:w-4 after:h-4 after:bg-white after:rounded-full after:shadow-md after:duration-300' + 
+				(answerWithoutContext ? ' col-span-12 max-w-full' : ' col-span-3 max-w-4xl mr-6') }>
 				<div className='text-2xl font-bold text-nav'>Ask a Question</div>
 				<div className='text-sm text-nav my-2'>Ask a question about a paper or a topic from your publication library. We will try to answer it using the GPT models.</div>
 				{ answers.length && answers[answers.length-1].response ?
@@ -425,8 +426,23 @@ function GPTHome(props:{
 					</div>
 					 : null } */}
 				{ props.frontendSettings && props.frontendSettings.show_no_context_switch ? 
-					<div className='p-1 mx-4 flex'>
-						<input type='checkbox' 
+					<div className='p-1 mx-2 flex'>
+						<label className='relative flex justify-between items-center group p-2 text-md text-nav'>
+						<input 
+							type='checkbox' 
+							className='absolute left-1/2 -translate-x-1/2 w-full h-full peer appearance-none rounded-md'
+							role={'switch'}
+							checked={answerWithoutContext}
+							onChange={
+								(e:any)=>{
+									setAnswerWithoutContext(e.target.checked)
+								}
+							}
+						/>
+						<span className='w-10 h-4 flex items-center flex-shrink-0 mx-2 p-0 bg-gray-300 rounded-full duration-300 ease-in-out peer-checked:bg-panel1 after:w-4 after:h-4 after:bg-white after:rounded-full after:shadow-md after:duration-300 peer-checked:after:translate-x-6 group-hover:after:translate-x-1'></span>
+							Chat to LLM without documents
+						</label>
+						{/* <input type='checkbox' 
 						// className="mr-2 mt-[0.3rem] h-3.5 w-8 appearance-none rounded-[0.4375rem] bg-neutral-300 before:pointer-events-none before:absolute before:h-3.5 before:w-3.5 before:rounded-full before:bg-transparent before:content-[''] after:absolute after:z-[2] after:-mt-[0.1875rem] after:h-5 after:w-5 after:rounded-full after:border-none after:bg-neutral-100 after:shadow-[0_0px_3px_0_rgb(0_0_0_/_7%),_0_2px_2px_0_rgb(0_0_0_/_4%)] after:transition-[background-color_0.2s,transform_0.2s] after:content-[''] checked:bg-primary checked:after:absolute checked:after:z-[2] checked:after:-mt-[3px] checked:after:ml-[1.0625rem] checked:after:h-5 checked:after:w-5 checked:after:rounded-full checked:after:border-none checked:after:bg-primary checked:after:shadow-[0_3px_1px_-2px_rgba(0,0,0,0.2),_0_2px_2px_0_rgba(0,0,0,0.14),_0_1px_5px_0_rgba(0,0,0,0.12)] checked:after:transition-[background-color_0.2s,transform_0.2s] checked:after:content-[''] hover:cursor-pointer focus:outline-none focus:ring-0 focus:before:scale-100 focus:before:opacity-[0.12] focus:before:shadow-[3px_-1px_0px_13px_rgba(0,0,0,0.6)] focus:before:transition-[box-shadow_0.2s,transform_0.2s] focus:after:absolute focus:after:z-[1] focus:after:block focus:after:h-5 focus:after:w-5 focus:after:rounded-full focus:after:content-[''] checked:focus:border-primary checked:focus:bg-primary checked:focus:before:ml-[1.0625rem] checked:focus:before:scale-100"
 							role={'switch'}
 							checked={answerWithoutContext}
@@ -438,7 +454,7 @@ function GPTHome(props:{
 						/>
 						<p className='inline-block mx-2 text-sm text-nav'>
 							Answer without context
-						</p>
+						</p> */}
 					</div>
 					 : null }
 				{
@@ -636,7 +652,9 @@ function GPTHome(props:{
 						<div className='inline-block mx-2 my-1 text-center font-bold w-full text-nav'>Loading...</div> :
 						null
 				}
-			</div>					
+			</div>
+			{ !answerWithoutContext ? 
+			<>				
 			<div className='col-span-2 mt-24 max-w-5xl w-full bg-panel1 rounded-l-lg overflow-y-auto max-h-[92vh]'>
 				<div className=' p-6 text-2xl font-bold text-white'>{papers.length ? 'Your publication library' : 'Your video library'}</div>
 				
@@ -734,6 +752,9 @@ function GPTHome(props:{
 					</Worker>
 				</div>
 			</div>
+			</>	:
+			<></>
+			}
 		</div>
 	)
 }
