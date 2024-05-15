@@ -21,7 +21,7 @@ import datetime
 import re
 import os
 import json
-import re
+import pdfkit
 from .models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, Model, FrontEndSettings
 from .serializers import ModelSerializer, PapersSerializer, QuestionSerializer, AnswerSerializer, DatasetSerializer
 from .forms import PapersForm
@@ -197,8 +197,6 @@ def add_dataset_from_upload(request):
     # make directory for pdfs
     if not os.path.exists('data/pdfs/'+ dataset_name):
         os.makedirs('data/pdfs/'+ dataset_name)
-    if not os.path.exists('data/spreadsheets/'+ dataset_name):
-        os.makedirs('data/spreadsheets/'+ dataset_name)
     
     # save pdfs
     data = []
@@ -249,22 +247,36 @@ def add_dataset_from_upload(request):
                     chunk = {'title': paper_titles[idx], 'page': page+1, 'content': split, 'type': 'pagechunk'}
                     data.append(chunk)
         elif attachment.name.endswith('.xlsx'):
-            pdf_name = 'data/spreadsheets/'+ dataset_name +'/spreadsheet' + str(idx+1) + '.xlsx'
-            with open(pdf_name, 'wb') as f:
-                f.write(attachment.read())
-            with open(pdf_name, 'rb') as f:
-                paper.paper_attachment.save(dataset_name + '/spreadsheet' + str(idx+1) + '.xlsx', File(f), save=True)
-            doc_info = pd.read_excel(pdf_name, sheet_name=None)
-            chunk = {'title': paper_titles[idx], 'page': 1, 'content': str(doc_info), 'type': 'spreadsheet'}
-            data.append(chunk)
-    
-    print('zotero chunks loaded')        
 
+            print('working on excel')
+            base_name = 'data/pdfs/'+ dataset_name + '/paper' + str(idx+1)
+
+            with open(base_name + '.xlsx', 'wb') as f:
+                f.write(attachment.read())
+            print('Excel written to data file.')
+
+            
+            df = pd.read_excel(base_name + '.xlsx')
+            df.to_html(base_name + '.html')
+            pdfkit.from_file(base_name + '.html', base_name + '.pdf')
+            for i, row in df.iterrows():
+                print(row)
+                doc_info = row.to_string(header=True)
+                doc_info = ','.join(doc_info.split('\n'))
+                doc_info = ': '.join(re.split('\s+', doc_info))
+                doc_info = ', '.join(doc_info.split(','))
+                chunk = {'title': paper_titles[idx], 'page': i+1, 'content': doc_info, 'type': 'pagechunk'}
+                data.append(chunk)
+
+            with open(base_name + '.pdf', 'rb') as f:
+                paper.paper_attachment.save(dataset_name + '/paper' + str(idx+1) + '.xlsx', File(f), save=True)
+            
+    print('Documents chunked')
     with open('data/data_chunks/'+ dataset_name +'.txt', 'w') as f:
         for chunk in data:
             # convert chunk to string and write to file
             f.write(str(chunk) + '\n')
-    print('zotero chunks saved to file')
+    print('Chunks saved')
     return dataset_name
 
 

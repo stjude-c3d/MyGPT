@@ -11,6 +11,7 @@ RUN apt install -y build-essential
 RUN apt install -y curl
 # RUN pip install llama-cpp-python --force-reinstall --upgrade --no-cache-dir
 COPY requirements.txt /code/
+RUN apt-get update && apt-get install -y wkhtmltopdf
 RUN pip install -r requirements.txt
 COPY . /code/
 COPY ./env_example /code/.env
