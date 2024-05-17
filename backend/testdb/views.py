@@ -22,6 +22,9 @@ import re
 import os
 import json
 import pdfkit
+import base64
+from langchain_community.llms import Ollama
+from pandasql import sqldf
 from .models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, Model, FrontEndSettings
 from .serializers import ModelSerializer, PapersSerializer, QuestionSerializer, AnswerSerializer, DatasetSerializer
 from .forms import PapersForm
@@ -68,6 +71,23 @@ def getPDFContent(path):
     pdfReader = PyPDF2.PdfReader(file)
     context = pdfReader.pages
     return (context, len(pdfReader.pages))
+
+def extractPDFImages(path, title, data_list):
+    pdf_file = fitz.open(path)
+    for page_index in range(len(pdf_file)):
+        page = pdf_file[page_index]
+        image_list = page.get_images()
+        for image_index, img in enumerate(image_list, start=1):
+            xref = img[0]
+            base_image = pdf_file.extract_image(xref)
+            image_bytes = base_image["image"]
+            image_b64 = base64.b64encode(image_bytes).decode("utf-8")
+            # image_ext = base_image["ext"]
+            prompt = 'Describe this image and make sure to include anything notable about it (include text you see in the image): '
+            ollama = ChatOllama(base_url="http://localhost:11434", model="llava")
+            response = ollama.invoke(prompt, images=[image_b64])
+            print(response, end='', flush=True)
+            data_list.append({'title': title, 'page': page_index, 'content': response, 'type': 'image'})
 
 # Collects chunks of text from PDFs stored in a Zotero collection.
 def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key, user='', user_email='', user_group=''):
@@ -220,6 +240,8 @@ def add_dataset_from_upload(request):
             # extract text from pdfs
             content = getPDFContent(pdf_name)
 
+            # extractPDFImages(pdf_name, paper_titles[idx], data)
+
             if go_to_next:
                 go_to_next = False
             for page in range(content[1]):
@@ -257,19 +279,31 @@ def add_dataset_from_upload(request):
 
             
             df = pd.read_excel(base_name + '.xlsx')
+            fulltext = df.to_json(orient='records')
+            fulltext = str(fulltext)
             df.to_html(base_name + '.html')
-            pdfkit.from_file(base_name + '.html', base_name + '.pdf')
+            options = {
+                'page-size': 'A0',
+                'margin-top': '0.75in',
+                'margin-right': '0.75in',
+                'margin-bottom': '0.75in',
+                'margin-left': '0.75in'
+            }
+            pdfkit.from_file(base_name + '.html', base_name + '.pdf', options = options)
+            content = ''
+            fulltext_chunk = {'title': paper_titles[idx], 'page': 1, 'content': fulltext, 'type': 'spreadsheet_full'}
+            data.append(fulltext_chunk)
             for i, row in df.iterrows():
                 print(row)
                 doc_info = row.to_string(header=True)
                 doc_info = ','.join(doc_info.split('\n'))
                 doc_info = ': '.join(re.split('\s+', doc_info))
                 doc_info = ', '.join(doc_info.split(','))
-                chunk = {'title': paper_titles[idx], 'page': i+1, 'content': doc_info, 'type': 'pagechunk'}
+                chunk = {'title': paper_titles[idx], 'page': i, 'content': doc_info, 'type': 'spreadsheet_chunk'}
                 data.append(chunk)
 
             with open(base_name + '.pdf', 'rb') as f:
-                paper.paper_attachment.save(dataset_name + '/paper' + str(idx+1) + '.xlsx', File(f), save=True)
+                paper.paper_attachment.save(dataset_name + '/paper' + str(idx+1) + '.pdf', File(f), save=True)
             
     print('Documents chunked')
     with open('data/data_chunks/'+ dataset_name +'.txt', 'w') as f:
@@ -320,7 +354,7 @@ def add_to_chroma(dataset_name, sentence_transformer = 'all-MiniLM-L6-v2'):
                     #convert line to json
                     line_json = eval(line)
                     documents.append(line_json['content'])
-                    metadatas.append({'filename': line_json['title'], 'page': line_json['page']})
+                    metadatas.append({'filename': line_json['title'], 'page': line_json['page'], 'type': line_json['type']})
         ids = [str(i) for i in range(count, count + len(documents))]
         
         # add to vector database
@@ -679,10 +713,13 @@ def nearestDataChroma(text, dataset_name, sentence_transformer='all-MiniLM-L6-v2
 
     results = collection.query(
         query_texts=[text],
-        n_results=10,
+        n_results=15,
+        where={'type': {"$ne": "spreadsheet_full"}}
         # where={'metadata_field': 'is_equal_to_this'}, # optional filter
         # where_document={'$contains':'search_string'}  # optional filter
     )
+
+        
 
     # print('results: ', results)
     print('distances: ', results['distances'][0])
@@ -695,6 +732,7 @@ def nearestDataChroma(text, dataset_name, sentence_transformer='all-MiniLM-L6-v2
     # lowest_distance = 10
     # cutoff_distance = statistics.median(results['distances'][0])
     cutoff_distance = find_cutoff_distance(results['distances'][0])
+    #     cutoff_distance = 5
     print('cutoff_distance: ', cutoff_distance)
     titles, pages, starts, stops, chunks, distances = [], [], [], [], [], []
     context = ''
@@ -716,11 +754,85 @@ def nearestDataChroma(text, dataset_name, sentence_transformer='all-MiniLM-L6-v2
             chunks.append(results['documents'][0][i])
             distances.append(results['distances'][0][i])
             context += re.sub(r'\s+', ' ', results['documents'][0][i])
+    if results['metadatas'][0][0]['type'] == 'spreadsheet_chunk':
+        fulltext_results = collection.query(
+            query_texts=[text],
+            n_results=3,
+            where={"type": "spreadsheet_full"}
+        )
+        fulltext = fulltext_results['documents'][0][0]
+        text_json = json.loads(fulltext)
+        df = pd.DataFrame.from_records(text_json)
+        answer_format = "{"+"'SQL': sql_code"+"}"
+        prompt = f'''
+        SYSTEM: Given a table with the following information, write a sql query to answer this question.
+        The column names can be found in the table. Only answer with sql code.
+        The name of the table is "df". The names of the columns are as follows: {str(df.columns.tolist())}
+        Do not include any explanation, please only include the SQL code in your answer.
+        The table layed out in the following manner: {str(df.head)}
+        QUERY: {fulltext}
+        ANSWER FORMAT: {answer_format}
+        ANSWER: '''
+        ollama = Ollama(base_url="http://host.docker.internal:11434", model="llama3")
+        response = ollama.invoke(prompt)
+        with open("copy.txt", "w") as file:
+            file.write(response)
+        # new_df = sqldf(f'''{response}''')
+        # final_table = str(new_df.to_json(orient='records'))
+        context += fulltext
+
     
     # Return the collected information along with the full text of the best-matching document
     ret = None
     ret = (context, titles, pages, starts, stops, chunks, distances)
     return ret
+
+# def get_chunks_by_keyword(question_text, dataset_name, sentence_transformer='all-MiniLM-L6-v2'):
+#     if sentence_transformer != 'all-MiniLM-L6-v2':
+#         sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=sentence_transformer)
+#     else:
+#         sentence_transformer_ef = embedding_functions.DefaultEmbeddingFunction()
+#     prompt = f'''
+#     INSTRUCTIONS: Please extract keywords from the provided query and put them into a list.
+
+#     QUERY: {question_text}
+
+#     ANSWER FORMAT: ['keyword_1', 'keyword_2', 'keyword_3']
+
+#     ANSWER:
+#     '''
+#     response = ollama.generate(model='llama3:7b', prompt=prompt)
+#     keyword_list = ast.literal_eval(response['response'])
+
+#     client = chromadb.PersistentClient(path='/code/chroma_storage/.')
+#     collection = client.get_collection(name=dataset_name, embedding_function=sentence_transformer_ef)
+#     docs = collection.get()
+
+#     titles, pages, starts, stops, chunks = [], [], [], [], []
+#     context = ''
+
+#     library_type = ''
+#     if "page" in docs['metadatas'][0][0]:
+#         library_type = 'papers'
+#     elif "start" in docs['metadatas'][0][0]:
+#         library_type = 'videos'
+    
+#     for i in range(len(docs['ids'])):
+#         for j in range(len(docs['ids'][i])):
+#             if any(keyword in docs['documents'][i][j] for keyword in keyword_list):
+#                 titles.append(docs['metadatas'][i][j]['filename'])
+#                 if (library_type == 'papers'): 
+#                     pages.append(docs['metadatas'][i][j]['page'])
+#                 elif (library_type == 'videos'):
+#                     starts.append(docs['metadatas'][i][j]['start'])
+#                     stops.append(docs['metadatas'][i][j]['end'])
+#                 chunks.append(docs['documents'][i][j])
+#                 context += re.sub(r'\s+', ' ', docs['documents'][i][j])
+    
+#     # Return the collected information along with the full text of the best-matching document
+#     ret = None
+#     ret = (context, titles, pages, starts, stops, chunks)
+#     return ret
 
 def get_conversation_json(question_text):
     conversation_id = Question.objects.filter(question_text=question_text)[0].conversation.id
@@ -826,7 +938,7 @@ def add_video_to_chroma(dataset_name, sentence_transformer = 'all-MiniLM-L6-v2')
                     #convert line to json
                     line_json = eval(line)
                     documents.append(line_json['content'])
-                    metadatas.append({'filename': line_json['title'], 'start': line_json['start'], 'end' : line_json['end']})
+                    metadatas.append({'filename': line_json['title'], 'start': line_json['start'], 'end' : line_json['end'], 'type' : line_json['type']})
         ids = [str(i) for i in range(count, count + len(documents))]
         
         # add to vector database
@@ -1061,7 +1173,7 @@ def get_context(request):
                     paper_name =   paper_obj.path.split('/')[-1].split('_')[0] + '.pdf'
                 else:
                     paper_name =   paper_obj.path.split('/')[-1]
-
+                print("paper_name: " + paper_name)
                 original_pdf_path = 'data/pdfs/'+ dataset_name + '/' + paper_name
                 highlighted_pdf_path = 'data/pdfs/' + dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf'
 
@@ -1070,17 +1182,17 @@ def get_context(request):
                 # remove all files with output_file name in thier name
                 for f in files:
                     os.remove('data/pdfs/' + f)
+                if original_pdf_path.endswith('.pdf'):
+                    highlight_pdf(
+                        original_pdf_path, 
+                        highlighted_pdf_path, 
+                        source_grp
+                    )
 
-                highlight_pdf(
-                    original_pdf_path, 
-                    highlighted_pdf_path, 
-                    source_grp
-                )
-
-                # create highlighted paper object
-                paper = Papers.objects.filter(paper_title=source_grp[0]['document'])[0]
-                with open(highlighted_pdf_path, 'rb') as f:
-                    paper.highlighted_attachment.save(dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf', File(f), save=True)
+                    # create highlighted paper object
+                    paper = Papers.objects.filter(paper_title=source_grp[0]['document'])[0]
+                    with open(highlighted_pdf_path, 'rb') as f:
+                        paper.highlighted_attachment.save(dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf', File(f), save=True)
             
         context_json = {
             'context': context,

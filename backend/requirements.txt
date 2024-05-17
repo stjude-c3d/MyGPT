@@ -24,3 +24,8 @@ youtube_transcript_api
 xlrd
 openpyxl
 pdfkit
+ollama
+PyMuPDF
+Pillow
+langchain_community
+pandasql
