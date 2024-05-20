@@ -771,7 +771,7 @@ def nearestDataChroma(text, dataset_name, sentence_transformer='all-MiniLM-L6-v2
         response = ollama.invoke(prompt + '{')
         with open("generated_sql_query.txt", "w") as file:
             file.write(response)
-        parsed_response = json.loads(response.replace('\n', ''))
+        parsed_response = json.loads(response.replace('\n', ' '))
         new_df = con.sql(parsed_response['code']).df()
         
         final_table = str(new_df.to_json(orient='records'))
