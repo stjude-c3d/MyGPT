@@ -21,3 +21,9 @@ python-dotenv
 pytest-django
 pytube
 youtube_transcript_api
+xlrd
+openpyxl
+pdfkit
+ollama
+langchain_community
+duckdb
