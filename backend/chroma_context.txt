@@ -1,0 +1,1 @@
+SQL query: {"code": "SELECT COUNT(*) FROM sql_df WHERE Specimen = 'DIAGNOSIS';"}; SQL parsing results: [{"count_star()":62}]

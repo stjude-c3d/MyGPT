@@ -1,0 +1,5 @@
+{"code": "
+SELECT *
+FROM sql_df
+WHERE Specimen = 'DIAGNOSIS'
+"};

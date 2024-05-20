@@ -17,6 +17,7 @@ from youtube_transcript_api import YouTubeTranscriptApi
 from pytube import YouTube
 import numpy as np
 import pandas as pd
+import duckdb
 import datetime
 import re
 import os
@@ -24,12 +25,12 @@ import json
 import pdfkit
 import base64
 from langchain_community.llms import Ollama
-from pandasql import sqldf
 from .models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, Model, FrontEndSettings
 from .serializers import ModelSerializer, PapersSerializer, QuestionSerializer, AnswerSerializer, DatasetSerializer
 from .forms import PapersForm
 
 app_config = apps.get_app_config('testdb')
+con = duckdb.connect()
 
 def home(request):
     datasets = Dataset.objects.all()
@@ -84,7 +85,7 @@ def extractPDFImages(path, title, data_list):
             image_b64 = base64.b64encode(image_bytes).decode("utf-8")
             # image_ext = base_image["ext"]
             prompt = 'Describe this image and make sure to include anything notable about it (include text you see in the image): '
-            ollama = ChatOllama(base_url="http://localhost:11434", model="llava")
+            ollama = Ollama(base_url="http://localhost:11434", model="llava")
             response = ollama.invoke(prompt, images=[image_b64])
             print(response, end='', flush=True)
             data_list.append({'title': title, 'page': page_index, 'content': response, 'type': 'image'})
@@ -762,24 +763,22 @@ def nearestDataChroma(text, dataset_name, sentence_transformer='all-MiniLM-L6-v2
         )
         fulltext = fulltext_results['documents'][0][0]
         text_json = json.loads(fulltext)
-        df = pd.DataFrame.from_records(text_json)
-        answer_format = "{"+"'SQL': sql_code"+"}"
-        prompt = f'''
-        SYSTEM: Given a table with the following information, write a sql query to answer this question.
-        The column names can be found in the table. Only answer with sql code.
-        The name of the table is "df". The names of the columns are as follows: {str(df.columns.tolist())}
-        Do not include any explanation, please only include the SQL code in your answer.
-        The table layed out in the following manner: {str(df.head)}
-        QUERY: {fulltext}
-        ANSWER FORMAT: {answer_format}
-        ANSWER: '''
+        sql_df = pd.DataFrame.from_records(text_json)
+        instructions = f'Given a table with the following information, write a sql query that condenses the table to only include information useful to answering the provided query. The name of the table is "sql_df". The names of the columns are as follows: {str(sql_df.columns.tolist())}. Do not include any explanation, please only include the SQL code in your answer. The SQL code should result in another smaller table of only useful entries.'
+        prompt = f'SYSTEM: {instructions}; QUERY: {text}; ANSWER FORMAT: {{"code": sql_code}}; ANSWER: '
         ollama = Ollama(base_url="http://host.docker.internal:11434", model="llama3")
-        response = ollama.invoke(prompt)
-        with open("copy.txt", "w") as file:
+        response = ollama.invoke(prompt + '{')
+        with open("generated_sql_query.txt", "w") as file:
             file.write(response)
-        # new_df = sqldf(f'''{response}''')
-        # final_table = str(new_df.to_json(orient='records'))
-        context += fulltext
+        parsed_response = json.loads(response)
+        new_df = con.sql(parsed_response['code']).df()
+        
+        final_table = str(new_df.to_json(orient='records'))
+        with open("final_table.txt", "w") as file:
+            file.write(final_table)
+        context = f"SQL query: {response}; SQL parsing results: {final_table}"
+    with open("chroma_context.txt", "w") as file:
+        file.write(context)
 
     
     # Return the collected information along with the full text of the best-matching document
