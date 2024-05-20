@@ -1,1 +1,1 @@
-{"code": "SELECT * FROM sql_df WHERE mutation = 'V600E';"}
+{"code": "SELECT subgroup, COUNT(*) AS count FROM sql_df WHERE mutation='V600E' GROUP BY subgroup ORDER BY count DESC LIMIT 1"};

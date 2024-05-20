@@ -24,6 +24,7 @@ import os
 import json
 import pdfkit
 import base64
+import mammoth
 from langchain_community.llms import Ollama
 from .models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, Model, FrontEndSettings
 from .serializers import ModelSerializer, PapersSerializer, QuestionSerializer, AnswerSerializer, DatasetSerializer
@@ -231,45 +232,8 @@ def add_dataset_from_upload(request):
             paper_date_time=make_aware(datetime.datetime.now())
         )
         attachment = paper_attachments[idx]
-        if attachment.name.endswith('.pdf'):
-            pdf_name = 'data/pdfs/'+ dataset_name +'/paper' + str(idx+1) + '.pdf'
-            with open(pdf_name, 'wb') as f:
-                f.write(attachment.read())
-            with open(pdf_name, 'rb') as f:
-                paper.paper_attachment.save(dataset_name + '/paper' + str(idx+1) + '.pdf', File(f), save=True)
-
-            # extract text from pdfs
-            content = getPDFContent(pdf_name)
-
-            # extractPDFImages(pdf_name, paper_titles[idx], data)
-
-            if go_to_next:
-                go_to_next = False
-            for page in range(content[1]):
-                if go_to_next:
-                    break
-                text = content[0][page].extract_text()
-                n = 1000
-                splits = []
-                remainder = ''
-                for i in range(0, len(text), n):
-                    item = remainder + text[i : i + n]
-                    # if len(re.findall(r'\sReferences.*\n+\d+',item, re.I)):
-                    #     go_to_next = True
-                    #     break
-                    item = item.replace('\n', ' ')
-                    if '. ' in item:
-                        remainder = item[item.rindex('. ') + 2: ]
-                        item = item.removesuffix(remainder)
-                    if len(item) > 10:
-                        splits.append(item)
-                for split in splits:
-                    # if len(re.findall(r'^References .*\s+', split)):
-                    #     go_to_next = True
-                    #     break
-                    chunk = {'title': paper_titles[idx], 'page': page+1, 'content': split, 'type': 'pagechunk'}
-                    data.append(chunk)
-        elif attachment.name.endswith('.xlsx'):
+        
+        if attachment.name.endswith('.xlsx'):
 
             print('working on excel')
             base_name = 'data/pdfs/'+ dataset_name + '/paper' + str(idx+1)
@@ -305,6 +269,67 @@ def add_dataset_from_upload(request):
 
             with open(base_name + '.pdf', 'rb') as f:
                 paper.paper_attachment.save(dataset_name + '/paper' + str(idx+1) + '.pdf', File(f), save=True)
+        else:
+
+            base_name = 'data/pdfs/'+ dataset_name +'/paper' + str(idx+1)
+            pdf_name = base_name + '.pdf'
+            if attachment.name.endswith('.pdf'):
+                with open(pdf_name, 'wb') as f:
+                    f.write(attachment.read())
+                with open(pdf_name, 'rb') as f:
+                    paper.paper_attachment.save(dataset_name + '/paper' + str(idx+1) + '.pdf', File(f), save=True)
+            elif attachment.name.endswith('.docx'):
+                with open(base_name + '.docx', 'wb') as f:
+                    f.write(attachment.read())
+                with open(base_name + '.docx', 'rb') as f:
+                    html_result = mammoth.convert_to_html(f)
+                with open(base_name + '.html', 'w') as f:
+                    f.write(html_result.value)
+                pdfkit.from_file(base_name + '.html', base_name + '.pdf')
+                with open(pdf_name, 'rb') as f:
+                    paper.paper_attachment.save(dataset_name + '/paper' + str(idx+1) + '.pdf', File(f), save=True)
+            elif attachment.name.endswith('.html'):
+                with open(base_name + '.html', 'wb') as f:
+                    f.write(attachment.read())
+                pdfkit.from_file(base_name + '.html', base_name + '.pdf')
+                with open(pdf_name, 'rb') as f:
+                    paper.paper_attachment.save(dataset_name + '/paper' + str(idx+1) + '.pdf', File(f), save=True)
+                    
+
+
+
+            # extract text from pdfs
+            content = getPDFContent(pdf_name)
+
+            # extractPDFImages(pdf_name, paper_titles[idx], data)
+
+            if go_to_next:
+                go_to_next = False
+            for page in range(content[1]):
+                if go_to_next:
+                    break
+                text = content[0][page].extract_text()
+                n = 1000
+                splits = []
+                remainder = ''
+                for i in range(0, len(text), n):
+                    item = remainder + text[i : i + n]
+                    # if len(re.findall(r'\sReferences.*\n+\d+',item, re.I)):
+                    #     go_to_next = True
+                    #     break
+                    item = item.replace('\n', ' ')
+                    if '. ' in item:
+                        remainder = item[item.rindex('. ') + 2: ]
+                        item = item.removesuffix(remainder)
+                    if len(item) > 10:
+                        splits.append(item)
+                for split in splits:
+                    # if len(re.findall(r'^References .*\s+', split)):
+                    #     go_to_next = True
+                    #     break
+                    chunk = {'title': paper_titles[idx], 'page': page+1, 'content': split, 'type': 'pagechunk'}
+                    data.append(chunk)
+
             
     print('Documents chunked')
     with open('data/data_chunks/'+ dataset_name +'.txt', 'w') as f:
