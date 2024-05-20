@@ -1,1 +1,1 @@
-[{"sample":"SJALL014935_D1"},{"sample":"SJNBL078391_D1"},{"sample":"SJALL015667_D1"},{"sample":"SJLGG029_D"},{"sample":"SJLGG030_D"},{"sample":"SJMEL001003_D2"},{"sample":"SJHGG033_D"},{"sample":"SJALL043863_R1"},{"sample":"SJLGG025_D"},{"sample":"SJNBL017130_D1"},{"sample":"SJNBL015_D"},{"sample":"SJNBL026_D"},{"sample":null},{"sample":"SJST030329_D1"}]
+[{"count_star()":62}]

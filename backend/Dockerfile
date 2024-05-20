@@ -13,5 +13,6 @@ RUN apt install -y wkhtmltopdf
 RUN apt install -y libreoffice
 COPY requirements.txt /code/
 RUN pip install -r requirements.txt
+RUN pip install duckdb --upgrade --force-reinstall
 COPY . /code/
 COPY ./env_example /code/.env
