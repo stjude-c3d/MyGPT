@@ -21,10 +21,10 @@ import duckdb
 import datetime
 import re
 import os
+import subprocess
 import json
 import pdfkit
 import base64
-import mammoth
 from langchain_community.llms import Ollama
 from .models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, Model, FrontEndSettings
 from .serializers import ModelSerializer, PapersSerializer, QuestionSerializer, AnswerSerializer, DatasetSerializer
@@ -73,6 +73,21 @@ def getPDFContent(path):
     pdfReader = PyPDF2.PdfReader(file)
     context = pdfReader.pages
     return (context, len(pdfReader.pages))
+
+def convert_to_pdf(input_file, output_dir):
+    
+    # Construct the command to convert PPTX to PDF
+    command = [
+        "soffice",
+        "--headless",
+        "--convert-to", "pdf",
+        "--outdir", output_dir,
+        input_file
+    ]
+    
+    # Run the command
+    subprocess.run(command, check=True)
+
 
 def extractPDFImages(path, title, data_list):
     pdf_file = fitz.open(path)
@@ -141,7 +156,6 @@ def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key,
         os.makedirs('data/pdfs/'+ dataset_name)
     
     # Loop through PDF attachments, extract content, and store it in 'data' list
-    go_to_next = False
     for idx, title, attachment, abstract in zip( range(1, len(titles)+1), titles, pdf_attachments, abstracts):
         with open('data/pdfs/'+ dataset_name +'/paper' + str(idx) + '.pdf', 'wb') as f:
             f.write(zot.file(attachment['data']['key']))
@@ -159,30 +173,21 @@ def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key,
             )
             with open('data/pdfs/'+ dataset_name +'/paper' + str(idx) + '.pdf', 'rb') as f:
                 paper.paper_attachment.save(dataset_name + '/paper' + str(idx) + '.pdf', File(f), save=True)
-        if go_to_next:
-            go_to_next = False
+
         for page in range(content[1]):
-            if go_to_next:
-                break
             text = content[0][page].extract_text()
             n = 1000
             splits = []
             remainder = ''
             for i in range(0, len(text), n):
                 item = remainder + text[i : i + n]
-                # if len(re.findall(r'\sReferences.*\n+\d+',item, re.I)):
-                #     go_to_next = True
-                #     break
-                item = item.replace('\n', ' ')
+                item = ' '.join(item.split())
                 if '. ' in item:
                     remainder = item[item.rindex('. ') + 2: ]
                     item = item.removesuffix(remainder)
                 if len(item) > 10:
                     splits.append(item)
             for split in splits:
-                # if len(re.findall(r'^References .*\s+', split)):
-                #     go_to_next = True
-                #     break
                 chunk = {'title': title, 'page': page+1, 'content': split, 'type': 'pagechunk'}
                 data.append(chunk)
     print('zotero chunks loaded')        
@@ -222,7 +227,6 @@ def add_dataset_from_upload(request):
     
     # save pdfs
     data = []
-    go_to_next = False
     for idx in range(len(paper_titles)):
         if paper_titles[idx] == '' or paper_titles[idx] == '-':
             continue
@@ -232,20 +236,18 @@ def add_dataset_from_upload(request):
             paper_date_time=make_aware(datetime.datetime.now())
         )
         attachment = paper_attachments[idx]
-        
-        if attachment.name.endswith('.xlsx'):
+        doctype = '.' + attachment.name.split('.')[-1]
+        base_name = 'data/pdfs/'+ dataset_name + '/paper' + str(idx+1)
 
-            print('working on excel')
-            base_name = 'data/pdfs/'+ dataset_name + '/paper' + str(idx+1)
-
-            with open(base_name + '.xlsx', 'wb') as f:
+        if doctype in ['.xlsx', '.xls', '.csv']:
+            with open(base_name + doctype, 'wb') as f:
                 f.write(attachment.read())
-            print('Excel written to data file.')
 
-            
-            df = pd.read_excel(base_name + '.xlsx')
-            fulltext = df.to_json(orient='records')
-            fulltext = str(fulltext)
+            if doctype in ['.xlsx', '.xls']:
+                df = pd.read_excel(base_name + doctype)
+            elif doctype == '.csv':
+                df = pd.read_csv(base_name + doctype)
+
             df.to_html(base_name + '.html')
             options = {
                 'page-size': 'A0',
@@ -255,88 +257,58 @@ def add_dataset_from_upload(request):
                 'margin-left': '0.75in'
             }
             pdfkit.from_file(base_name + '.html', base_name + '.pdf', options = options)
-            content = ''
+
+            fulltext = str(df.to_json(orient='records'))
             fulltext_chunk = {'title': paper_titles[idx], 'page': 1, 'content': fulltext, 'type': 'spreadsheet_full'}
             data.append(fulltext_chunk)
+
             for i, row in df.iterrows():
-                print(row)
+
                 doc_info = row.to_string(header=True)
+
                 doc_info = ','.join(doc_info.split('\n'))
                 doc_info = ': '.join(re.split('\s+', doc_info))
                 doc_info = ', '.join(doc_info.split(','))
+
                 chunk = {'title': paper_titles[idx], 'page': i, 'content': doc_info, 'type': 'spreadsheet_chunk'}
                 data.append(chunk)
 
             with open(base_name + '.pdf', 'rb') as f:
                 paper.paper_attachment.save(dataset_name + '/paper' + str(idx+1) + '.pdf', File(f), save=True)
         else:
-
-            base_name = 'data/pdfs/'+ dataset_name +'/paper' + str(idx+1)
             pdf_name = base_name + '.pdf'
-            if attachment.name.endswith('.pdf'):
-                with open(pdf_name, 'wb') as f:
-                    f.write(attachment.read())
-                with open(pdf_name, 'rb') as f:
-                    paper.paper_attachment.save(dataset_name + '/paper' + str(idx+1) + '.pdf', File(f), save=True)
-            elif attachment.name.endswith('.docx'):
-                with open(base_name + '.docx', 'wb') as f:
-                    f.write(attachment.read())
-                with open(base_name + '.docx', 'rb') as f:
-                    html_result = mammoth.convert_to_html(f)
-                with open(base_name + '.html', 'w') as f:
-                    f.write(html_result.value)
-                pdfkit.from_file(base_name + '.html', base_name + '.pdf')
-                with open(pdf_name, 'rb') as f:
-                    paper.paper_attachment.save(dataset_name + '/paper' + str(idx+1) + '.pdf', File(f), save=True)
-            elif attachment.name.endswith('.html'):
-                with open(base_name + '.html', 'wb') as f:
-                    f.write(attachment.read())
-                pdfkit.from_file(base_name + '.html', base_name + '.pdf')
-                with open(pdf_name, 'rb') as f:
-                    paper.paper_attachment.save(dataset_name + '/paper' + str(idx+1) + '.pdf', File(f), save=True)
+            with open(base_name + doctype, 'wb') as f:
+                f.write(attachment.read())
+            
+            if doctype != '.pdf':
+                convert_to_pdf(base_name + doctype, base_name.removesuffix(f'/paper{str(idx+1)}'))
+            
+            with open(pdf_name, 'rb') as f:
+                paper.paper_attachment.save(dataset_name + '/paper' + str(idx+1) + '.pdf', File(f), save=True)
                     
-
-
-
-            # extract text from pdfs
             content = getPDFContent(pdf_name)
 
-            # extractPDFImages(pdf_name, paper_titles[idx], data)
-
-            if go_to_next:
-                go_to_next = False
             for page in range(content[1]):
-                if go_to_next:
-                    break
                 text = content[0][page].extract_text()
                 n = 1000
                 splits = []
                 remainder = ''
                 for i in range(0, len(text), n):
                     item = remainder + text[i : i + n]
-                    # if len(re.findall(r'\sReferences.*\n+\d+',item, re.I)):
-                    #     go_to_next = True
-                    #     break
-                    item = item.replace('\n', ' ')
+                    item = ' '.join(item.split())
                     if '. ' in item:
                         remainder = item[item.rindex('. ') + 2: ]
                         item = item.removesuffix(remainder)
                     if len(item) > 10:
                         splits.append(item)
                 for split in splits:
-                    # if len(re.findall(r'^References .*\s+', split)):
-                    #     go_to_next = True
-                    #     break
                     chunk = {'title': paper_titles[idx], 'page': page+1, 'content': split, 'type': 'pagechunk'}
                     data.append(chunk)
 
-            
-    print('Documents chunked')
     with open('data/data_chunks/'+ dataset_name +'.txt', 'w') as f:
         for chunk in data:
-            # convert chunk to string and write to file
             f.write(str(chunk) + '\n')
-    print('Chunks saved')
+
     return dataset_name
 
 

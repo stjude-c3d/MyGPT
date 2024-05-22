@@ -10,6 +10,7 @@ RUN pip install --upgrade setuptools wheel
 RUN apt install -y build-essential
 RUN apt install -y curl
 RUN apt install -y wkhtmltopdf
+RUN apt install -y libreoffice
 # RUN pip install llama-cpp-python --force-reinstall --upgrade --no-cache-dir
 COPY requirements.txt /code/
 RUN pip install -r requirements.txt
