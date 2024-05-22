@@ -7,7 +7,7 @@ from rest_framework import viewsets
 from django.apps import apps
 from django.utils.timezone import make_aware
 from django.core import serializers
-import PyPDF2
+from pypdf import PdfReader
 from pyzotero import zotero
 import fitz
 from tqdm import tqdm
@@ -17,7 +17,6 @@ from youtube_transcript_api import YouTubeTranscriptApi
 from pytube import YouTube
 import numpy as np
 import pandas as pd
-import duckdb
 import datetime
 import re
 import os
@@ -31,7 +30,6 @@ from .serializers import ModelSerializer, PapersSerializer, QuestionSerializer, 
 from .forms import PapersForm
 
 app_config = apps.get_app_config('testdb')
-con = duckdb.connect()
 
 def home(request):
     datasets = Dataset.objects.all()
@@ -69,10 +67,8 @@ def home(request):
 
 # Extracts content from a given PDF file and returns it along with the number of pages.
 def getPDFContent(path):
-    file = open(path, 'rb')
-    pdfReader = PyPDF2.PdfReader(file)
-    context = pdfReader.pages
-    return (context, len(pdfReader.pages))
+    reader = PdfReader(path)
+    return reader.pages
 
 def convert_to_pdf(input_file, output_dir):
     
@@ -87,7 +83,6 @@ def convert_to_pdf(input_file, output_dir):
     
     # Run the command
     subprocess.run(command, check=True)
-
 
 def extractPDFImages(path, title, data_list):
     pdf_file = fitz.open(path)
@@ -159,7 +154,7 @@ def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key,
     for idx, title, attachment, abstract in zip( range(1, len(titles)+1), titles, pdf_attachments, abstracts):
         with open('data/pdfs/'+ dataset_name +'/paper' + str(idx) + '.pdf', 'wb') as f:
             f.write(zot.file(attachment['data']['key']))
-        content = getPDFContent('data/pdfs/'+ dataset_name +'/paper' + str(idx) + '.pdf')
+        pages = getPDFContent('data/pdfs/'+ dataset_name +'/paper' + str(idx) + '.pdf')
         papers = Papers.objects.filter(paper_title=title, paper_dataset=dataset)
         if papers.count() > 0:
             paper = papers[0]
@@ -174,21 +169,29 @@ def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key,
             with open('data/pdfs/'+ dataset_name +'/paper' + str(idx) + '.pdf', 'rb') as f:
                 paper.paper_attachment.save(dataset_name + '/paper' + str(idx) + '.pdf', File(f), save=True)
 
-        for page in range(content[1]):
-            text = content[0][page].extract_text()
+        for page_num, page in enumerate(pages):
+            text = page.extract_text()
+            text = text.replace('-\n', '-').replace('\n', ' ')
+            text = ' '.join(text.split())
             n = 1000
             splits = []
             remainder = ''
             for i in range(0, len(text), n):
                 item = remainder + text[i : i + n]
-                item = ' '.join(item.split())
                 if '. ' in item:
                     remainder = item[item.rindex('. ') + 2: ]
                     item = item.removesuffix(remainder)
+                if '(' in item and ')' not in item:
+                    remainder = item[item.rindex('(') + 1: ]
+                    item = item.removesuffix(remainder)
+                elif '(' in item and ')' in item and item.rindex('(') > item.rindex(')'):
+                    remainder = item[item.rindex('(') + 1: ]
+                    item = item.removesuffix(remainder)
+
                 if len(item) > 10:
                     splits.append(item)
             for split in splits:
-                chunk = {'title': title, 'page': page+1, 'content': split, 'type': 'pagechunk'}
+                chunk = {'title': title, 'page': page_num+1, 'content': split, 'type': 'pagechunk'}
                 data.append(chunk)
     print('zotero chunks loaded')        
 
@@ -286,10 +289,10 @@ def add_dataset_from_upload(request):
             with open(pdf_name, 'rb') as f:
                 paper.paper_attachment.save(dataset_name + '/paper' + str(idx+1) + '.pdf', File(f), save=True)
                     
-            content = getPDFContent(pdf_name)
+            pages = getPDFContent(pdf_name)
 
-            for page in range(content[1]):
-                text = content[0][page].extract_text()
+            for page_num, page in enumerate(pages):
+                text = page.extract_text()
                 n = 1000
                 splits = []
                 remainder = ''
@@ -299,10 +302,16 @@ def add_dataset_from_upload(request):
                     if '. ' in item:
                         remainder = item[item.rindex('. ') + 2: ]
                         item = item.removesuffix(remainder)
+                    if '(' in item and ')' not in item:
+                        remainder = item[item.rindex('('): ]
+                        item = item.removesuffix(remainder)
+                    elif '(' in item and ')' in item and item.rindex('(') > item.rindex(')'):
+                        remainder = item[item.rindex('('): ]
+                        item = item.removesuffix(remainder)
                     if len(item) > 10:
                         splits.append(item)
                 for split in splits:
-                    chunk = {'title': paper_titles[idx], 'page': page+1, 'content': split, 'type': 'pagechunk'}
+                    chunk = {'title': paper_titles[idx], 'page': page_num+1, 'content': split, 'type': 'pagechunk'}
                     data.append(chunk)
 
     with open('data/data_chunks/'+ dataset_name +'.txt', 'w') as f:
