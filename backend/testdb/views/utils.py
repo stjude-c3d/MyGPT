@@ -47,6 +47,21 @@ def convert_to_pdf(input_file, output_dir):
     # Run the command
     subprocess.run(command, check=True)
 
+def convert_to_pdf(input_file, output_dir):
+    
+    # Construct the command to convert PPTX to PDF
+    command = [
+        "soffice",
+        "--headless",
+        "--convert-to", "pdf",
+        "--outdir", output_dir,
+        input_file
+    ]
+    
+    # Run the command
+    subprocess.run(command, check=True)
+
+
 def extractPDFImages(path, title, data_list):
     pdf_file = fitz.open(path)
     for page_index in range(len(pdf_file)):
