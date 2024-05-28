@@ -29,7 +29,7 @@ const LLMSettings = (props: {
 
 			// fetch using async await
 			const postData = async () => {
-				const response = await fetch(`http://localhost:11434/api/pull`, {body, method: 'POST'})
+				const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/pull`, {body, method: 'POST'})
 				const reader:any = response.body?.getReader()
 				while (true) {
 					const { done, value } = await reader.read()
@@ -107,7 +107,7 @@ const LLMSettings = (props: {
 						}]})
 				}
 				let llm_endpoint = 'add_ollama_models'
-				fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/${llm_endpoint}/?format=json`, requestOptions)
+				fetch(`${process.env.REACT_APP_BACKEND_API}api/${llm_endpoint}/?format=json`, requestOptions)
 					.then(response => response.json())
 					.then((data:any) => {
 						props.settingsCallback({...currentSettings, llms:llm.name})
@@ -153,36 +153,39 @@ const LLMSettings = (props: {
 					</ul>
 				</div>
 			</div>
-			<div className='flex flex-col justify-start my-4'>
-				<div className='text-nav px-2 flex justify-start my-2 text-lg font-semibold'> LLMs ready to download </div>
-				{ 
-					message === '' ? <></> :
-					<div className={'ml-2 text-nav px-2 rounded-md' + (modelLoaded ? ' bg-green-200' : ' bg-orange-200')}>
-						{message}
+			{ 
+				currentSettings.restrictions_without_login ? <></> :
+				<div className='flex flex-col justify-start my-4'>
+					<div className='text-nav px-2 flex justify-start my-2 text-lg font-semibold'> LLMs ready to download </div>
+					{ 
+						message === '' ? <></> :
+						<div className={'ml-2 text-nav px-2 rounded-md' + (modelLoaded ? ' bg-green-200' : ' bg-orange-200')}>
+							{message}
+						</div>
+					}
+					<div className='text-nav px-4 flex justify-start'>
+						<ul className='list-disc'>
+							{llmsDownload.map((llm:string, index:number) => {
+								return(
+									<li key={index} className='ml-4'>
+										<div className='flex justify-between m-1 text-nav'>
+											<div className='w-32'>
+												{llm}
+											</div>
+											<div>
+												<button className={'ml-2 text-white px-2 rounded-md' + (message.length ? ' bg-gray-300' : ' bg-panel1')} 
+													onClick={()=>{addOllamaModel(llm)}}
+													disabled={message.length && !modelLoaded ? true : false}
+												>{'Download'}</button>
+											</div>
+										</div>
+									</li>
+								)
+							})}
+						</ul>
 					</div>
-				}
-				<div className='text-nav px-4 flex justify-start'>
-					<ul className='list-disc'>
-						{llmsDownload.map((llm:string, index:number) => {
-							return(
-								<li key={index} className='ml-4'>
-									<div className='flex justify-between m-1 text-nav'>
-										<div className='w-32'>
-											{llm}
-										</div>
-										<div>
-											<button className={'ml-2 text-white px-2 rounded-md' + (message.length ? ' bg-gray-300' : ' bg-panel1')} 
-												onClick={()=>{addOllamaModel(llm)}}
-												disabled={message.length && !modelLoaded ? true : false}
-											>{'Download'}</button>
-										</div>
-									</div>
-								</li>
-							)
-						})}
-					</ul>
 				</div>
-		</div>
+	}
 	</div>
   );
 }
