@@ -10,9 +10,8 @@ RUN pip install --upgrade setuptools wheel
 RUN apt install -y build-essential
 RUN apt install -y curl
 RUN apt install -y wkhtmltopdf
-# RUN pip install llama-cpp-python --force-reinstall --upgrade --no-cache-dir
+RUN apt install -y libreoffice
 COPY requirements.txt /code/
 RUN pip install -r requirements.txt
-# RUN pip install duckdb --upgrade --force-reinstall
 COPY . /code/
 COPY ./env_example /code/.env

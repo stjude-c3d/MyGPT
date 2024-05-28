@@ -3,12 +3,9 @@ psycopg2-binary>=2.8
 requests>=2.0
 djangorestframework
 django-cors-headers
-transformers
-sentence_transformers
-torch
 sacremoses
-pypdf2
-pandas==1.3.5
+pypdf
+pandas
 pyzotero
 pymupdf
 nltk
@@ -21,6 +18,6 @@ pytube
 youtube_transcript_api
 pdfkit
 ollama
-langchain_community
 duckdb
-mammoth
+openpyxl
+langchain_community
