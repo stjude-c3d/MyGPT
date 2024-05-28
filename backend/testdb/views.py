@@ -1106,6 +1106,20 @@ def get_context(request):
             distances = [round(dist, 3) for dist in distances]
             relevance_score = get_relevance_score(distances)
         library_type = 'papers' if len(pages) else 'videos'
+
+        # if no_context is true, create or get dataset
+        if no_context:
+            dataset_name = model + '_direct_chat'
+            dataset_exist = Dataset.objects.filter(dataset_name=dataset_name).exists()
+            if not dataset_exist:
+                dataset = Dataset.objects.create(
+                    dataset_name=dataset_name,
+                    dataset_size=0,
+                    dataset_date_time=make_aware(datetime.datetime.now()),
+                    direct_chat_without_docs = True,
+                    user_email='-'
+                )
+
         # save question to database
         current_date_time = make_aware(datetime.datetime.now())
         dataset = Dataset.objects.get(dataset_name=dataset_name)
@@ -1136,7 +1150,8 @@ def get_context(request):
             )
         
         # add embeddings to question
-        add_embeddings_to_qna(question_text, 'question', sentence_transformer)
+        if not no_context:
+            add_embeddings_to_qna(question_text, 'question', sentence_transformer)
 
         question_sources = Source.objects.filter(question=question)
         for idx, title in enumerate(titles):
@@ -1277,9 +1292,13 @@ def save_answer(request):
         question = Question.objects.get(question_text=question_text, model_type=model_type)
         dataset_name = json_request['dataset']
         sentence_transformer = json_request['sentence_transformer']
-        _, _, _, _, _, _, distances = nearestDataChroma(answer_text, dataset_name, sentence_transformer)
-        distances = [round(dist, 3) for dist in distances]
-        relevance_score = get_relevance_score(distances)
+        no_context = json_request['no_context']
+        if not no_context:
+            _, _, _, _, _, _, distances = nearestDataChroma(answer_text, dataset_name, sentence_transformer)
+            distances = [round(dist, 3) for dist in distances]
+            relevance_score = get_relevance_score(distances)
+        else:
+            relevance_score = 0
         Answer.objects.create(
             answer_text=answer_text,
             relevance_score=relevance_score, 
@@ -1287,7 +1306,8 @@ def save_answer(request):
             question=question
         )
         # add embeddings to answer
-        add_embeddings_to_qna(answer_text, 'answer', sentence_transformer)
+        if not no_context:
+            add_embeddings_to_qna(answer_text, 'answer', sentence_transformer)
         return Response({'saved':True, 'relevance_score': relevance_score}, content_type="application/json")
 
 @api_view(['POST'])
@@ -1371,6 +1391,7 @@ def get_frontend_settings(request):
             FrontEndSettings.objects.create(
                 show_no_context_switch=False,
                 azure_login=False,
+                restriction_without_login=False,
                 saved_date_time=make_aware(datetime.datetime.now())
             )
         
@@ -1378,6 +1399,7 @@ def get_frontend_settings(request):
         frontend_settings = FrontEndSettings.objects.latest('saved_date_time')
         frontend_settings_obj = {
             'show_no_context_switch': frontend_settings.show_no_context_switch,
+            'restriction_without_login': frontend_settings.restriction_without_login,
             'azure_login': frontend_settings.azure_login
         }
         return Response({'settings':frontend_settings_obj})

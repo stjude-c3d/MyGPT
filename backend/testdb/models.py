@@ -26,6 +26,7 @@ class Dataset(models.Model):
 	user_email = models.CharField(max_length=200, default='-')
 	user_group = models.CharField(max_length=200, default='-')
 	embedding_added = models.BooleanField(default=False)
+	direct_chat_without_docs = models.BooleanField(default=False)
 	dataset_date_time = models.DateTimeField(default=timezone.now, null=True)
 
 	def __str__(self):
@@ -135,6 +136,7 @@ class FrontEndSettings(models.Model):
 	show_no_context_switch = models.BooleanField(default=False)
 	azure_login = models.BooleanField(default=False)
 	saved_date_time = models.DateTimeField(default=timezone.now, null=True)
+	restriction_without_login = models.BooleanField(default=False)
 
 	class Meta:
 		verbose_name_plural = 'FrontEndSettings'

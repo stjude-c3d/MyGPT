@@ -5,7 +5,7 @@ class ModelAdmin(admin.ModelAdmin):
     list_display = ['model_name', 'model_size']
 
 class DatasetAdmin(admin.ModelAdmin):
-    list_display = ['dataset_name', 'zotero_id', 'dataset_size', 'user', 'user_email', 'user_group', 'embedding_added', 'dataset_date_time']
+    list_display = ['dataset_name', 'zotero_id', 'dataset_size', 'user', 'user_email', 'user_group', 'embedding_added', 'direct_chat_without_docs', 'dataset_date_time']
 
 class PapersAdmin(admin.ModelAdmin):
     list_display = ['paper_title', 'paper_attachment', 'highlighted_attachment', 'paper_dataset', 'paper_date_time']
@@ -29,7 +29,7 @@ class SourceAdmin(admin.ModelAdmin):
     list_display = ['source_doc', 'source_pointer', 'context', 'distance', 'question']
 
 class FrontEndSettingsAdmin(admin.ModelAdmin):
-    list_display = ['show_no_context_switch', 'azure_login', 'saved_date_time']
+    list_display = ['show_no_context_switch', 'azure_login', 'restriction_without_login', 'saved_date_time']
 
 admin.site.register(Model, ModelAdmin)
 admin.site.register(Dataset, DatasetAdmin)

@@ -33,7 +33,8 @@ const defaultSettings = {
 		best: 0.4,
 		worst: 1.5
 	},
-	restrictions_without_login: false,
+	restriction_without_login: false,
+	answerWithoutContext: false,
 	papers: [
 		{
 			"paper_title": "Control of G protein-coupled receptor function via membrane-interacting intrinsically disordered C-terminal domains",

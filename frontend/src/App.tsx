@@ -14,7 +14,8 @@ const msalInstance = new PublicClientApplication(msalConfig)
 
 const default_frontend_settings = {
   'show_no_context_switch': false,
-  'azure_login': false
+  'azure_login': false, 
+  'restriction_without_login': false,
 }
 
 function App() {  
@@ -27,6 +28,7 @@ function App() {
   const [user, setUser] = useState<any>(null)
 
   const settingsCallback = (newSettings:any) => {
+    newSettings.restriction_without_login = frontendSettings.restriction_without_login
     setCurrentSettings(newSettings)
     if (newSettings.showSettings){
       setShowSettings(newSettings.showSettings)

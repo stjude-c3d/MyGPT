@@ -7,6 +7,7 @@ import { pageNavigationPlugin } from '@react-pdf-viewer/page-navigation'
 import '@react-pdf-viewer/default-layout/lib/styles/index.css'
 import { PaperAirplaneIcon, Cog6ToothIcon } from '@heroicons/react/24/outline'
 import { scaleSequential, interpolateRdYlGn } from 'd3'
+import Markdown from 'react-markdown'
 // import Feedback from './Feedback'
 
 
@@ -39,7 +40,7 @@ function GPTHome(props:{
 		.domain([0, 100])
 		.interpolator(interpolateRdYlGn)
 
-	const [answerWithoutContext, setAnswerWithoutContext] = useState(false)
+	const [answerWithoutContext, setAnswerWithoutContext] = useState(props.currentSettings.answerWithoutContext)
 
 	const [addDemoLibrary, setAddDemoLibrary] = useState(false)
 
@@ -55,7 +56,7 @@ function GPTHome(props:{
 			return
 		}
 
-		if((!papers.length && !videos.length) || props.currentSettings.fetchPapers === true){
+		if((!props.currentSettings.answerWithoutContext && !papers.length && !videos.length) || props.currentSettings.fetchPapers === true){
 			fetch(`${process.env.REACT_APP_BACKEND_API}api/get_documents/?dataset=${props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset }&format=json`, requestOptions)
 				.then(response => response.json())
 				.then(data => {
@@ -84,6 +85,11 @@ function GPTHome(props:{
 	},[papers, query, props.currentSettings.defaultDataset, props.currentSettings.selectedDataset, props.currentSettings.fetchPapers, props.currentSettings.selectedDataset])
 	
 	// console.log(props.currentSettings.selectedDataset, props.currentSettings.defaultDataset)
+
+	// change answer without context 
+	useEffect(()=>{
+		setAnswerWithoutContext(props.currentSettings.answerWithoutContext)
+	},[props.currentSettings.answerWithoutContext])
 
 	// add demo library
 	useEffect(()=>{
@@ -243,6 +249,7 @@ function GPTHome(props:{
 					model_type: answers[answers.length-1].source,
 					dataset: props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset,
 					sentence_transformer: props.currentSettings.selected_sentence_transformer,
+					no_context: answerWithoutContext,
 				})
 			}
 			fetch(`${process.env.REACT_APP_BACKEND_API}api/save_answer/?format=json`, requestOptions)
@@ -254,7 +261,7 @@ function GPTHome(props:{
 					setAnswer('')
 				})
 		}
-	},[answers, query, props.currentSettings.selectedDataset, props.currentSettings.defaultDataset, props.currentSettings.selected_sentence_transformer])
+	},[answers, query, props.currentSettings.selectedDataset, props.currentSettings.defaultDataset, props.currentSettings.selected_sentence_transformer, answerWithoutContext])
 
 	const PageNavigationPluginInstance = pageNavigationPlugin()
 
@@ -465,7 +472,7 @@ function GPTHome(props:{
 								<div className='flex flex-row justify-between font-bold'>
 									<div className='text-nav text-sm py-2'>You</div>
 									{
-										questionRelevancescore[query.length-i-1] !== undefined ? 
+										questionRelevancescore[query.length-i-1] !== undefined  && !answerWithoutContext ? 
 										(
 											<div className='text-nav rounded-full text-xs py-2'>
 												Relevance 
@@ -487,7 +494,7 @@ function GPTHome(props:{
 									<div className='text-white text-sm py-2'>{answers[query.length-i-1].source.split(':')[0]}</div>
 									<div className='text-white text-xs py-2'>
 									{
-										answerRelevancescore[answers.length-1] !== undefined ? 
+										answerRelevancescore[answers.length-1] !== undefined && !answerWithoutContext ? 
 										(
 											<div className='text-white rounded-full text-xs py-1'>
 												Relevance 
@@ -500,7 +507,11 @@ function GPTHome(props:{
 									}
 									</div>
 								</div>
-								<div className='text-white whitespace-pre-wrap'>{answers[query.length-i-1].response}</div>
+								<div className='text-white whitespace-pre-wrap'>
+									<Markdown>
+										{answers[query.length-i-1].response}
+									</Markdown>
+								</div>
 								{/* <Feedback
 									answer={JSON.parse(JSON.stringify(answers[query.length-i-1]))}
 									feedbackReceived={(answers[query.length-i-1].rating && answers[query.length-i-1].rating !== 0) ? true : false}
@@ -588,7 +599,7 @@ function GPTHome(props:{
 									<div className='flex flex-row justify-between font-bold mt-2 mb-4'>
 										<div className='text-white text-sm py-1'>{props.currentSettings.selectedLlm}</div>
 									</div>
-									<div className='text-white whitespace-pre-wrap'>{answer.length ? answer: 'Generating answer...'}</div>
+									<div className='text-white whitespace-pre-wrap'><Markdown>{answer.length ? answer: 'Generating answer...'}</Markdown></div>
 									{
 									questionRelevancescore[query.length-1] > 0 && sourcePapers.length && sourcePages.length && sourcePages[query.length-1] && sourcePapers[query.length-1] ?
 									<>

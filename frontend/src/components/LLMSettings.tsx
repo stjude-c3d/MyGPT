@@ -154,7 +154,7 @@ const LLMSettings = (props: {
 				</div>
 			</div>
 			{ 
-				currentSettings.restrictions_without_login ? <></> :
+				currentSettings.restriction_without_login ? <></> :
 				<div className='flex flex-col justify-start my-4'>
 					<div className='text-nav px-2 flex justify-start my-2 text-lg font-semibold'> LLMs ready to download </div>
 					{ 

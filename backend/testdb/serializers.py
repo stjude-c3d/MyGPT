@@ -9,7 +9,7 @@ class ModelSerializer(serializers.HyperlinkedModelSerializer):
 class DatasetSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Dataset
-        fields = ['dataset_name', 'zotero_id', 'dataset_size', 'dataset_date_time', 'user', 'user_email', 'user_group', 'embedding_added']
+        fields = ['dataset_name', 'zotero_id', 'dataset_size', 'dataset_date_time', 'user', 'user_email', 'user_group', 'embedding_added', 'direct_chat_without_docs']
 
 class PapersSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
@@ -44,4 +44,4 @@ class SourceSerializer(serializers.HyperlinkedModelSerializer):
 class FrontEndSettingsSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = FrontEndSettings
-        fields = ['show_no_context_switch', 'azure_login', 'saved_date_time']
+        fields = ['show_no_context_switch', 'azure_login', 'restriction_without_login', 'saved_date_time']

@@ -143,7 +143,7 @@ const AddLibrarySettings = (props: {
   return (
 	<div className='my-4'>
 		<div className='text-nav p-2 mt-2 flex justify-start text-lg font-semibold'> Add new library </div>
-		{ currentSettings.restrictions_without_login && !props.user ?
+		{ currentSettings.restriction_without_login && !props.user ?
 			<div className='text-nav p-2 mb-2 flex justify-start text-lg font-semibold'> Note: Please login to add library </div> : <></>
 		}
 		{/*  add choice button with 2 options */}
@@ -184,7 +184,7 @@ const AddLibrarySettings = (props: {
 				<div className='flex flex-col mt-4'>
 					<div className='flex py-2'>
 						<div className='text-nav w-40 p-1'>Zotero API key*</div>
-						<input type='text' disabled={currentSettings.restrictions_without_login && !props.user} placeholder=' Zotero API key' className='rounded-md w-72 p-1 text-nav' value={apiKey} onChange={(e) => setApiKey(e.target.value)}/>
+						<input type='text' disabled={currentSettings.restriction_without_login && !props.user} placeholder=' Zotero API key' className='rounded-md w-72 p-1 text-nav' value={apiKey} onChange={(e) => setApiKey(e.target.value)}/>
 						<div className='text-white text-lg font-bold cursor-pointer mx-1 p-1 hover:bg-panel1 rounded-md' onClick={()=>{setShowAPIHelp(!showAPIHelp)}}>
 							<QuestionMarkCircleIcon className='h-6 w-6 text-white cursor-pointer'/>
 						</div>
@@ -202,7 +202,7 @@ const AddLibrarySettings = (props: {
 					</div> */}
 					<div className='flex pb-2'>
 						<div className='text-nav w-40 p-1'>Zotero library ID*</div>
-						<input type='text' disabled={currentSettings.restrictions_without_login && !props.user} placeholder='Zotero user ID or group ID e.g. 1234567' className='rounded-md w-72 p-1 text-nav h-8' value={libraryId} onChange={(e) => setLibraryId(e.target.value)}/>
+						<input type='text' disabled={currentSettings.restriction_without_login && !props.user} placeholder='Zotero user ID or group ID e.g. 1234567' className='rounded-md w-72 p-1 text-nav h-8' value={libraryId} onChange={(e) => setLibraryId(e.target.value)}/>
 						<div className='text-white text-lg font-bold cursor-pointer mx-1 p-1 hover:bg-panel1 rounded-md h-8' onClick={()=>{setShowLibraryIDHelp(!showLibraryIDHelp)}}>
 							<QuestionMarkCircleIcon className='h-6 w-6 text-white cursor-pointer'/>
 						</div>
@@ -231,7 +231,7 @@ const AddLibrarySettings = (props: {
 					</div>
 					<div className='flex'>
 						<div className='text-nav w-40 p-1'>Zotero collection ID*</div>	
-						<input type='text' disabled={currentSettings.restrictions_without_login && !props.user} placeholder='Zotero collection ID e.g. ABC12DEF' className='rounded-md w-72 p-1 text-nav h-8' value={collectionId} onChange={(e) => setCollectionId(e.target.value)}/>
+						<input type='text' disabled={currentSettings.restriction_without_login && !props.user} placeholder='Zotero collection ID e.g. ABC12DEF' className='rounded-md w-72 p-1 text-nav h-8' value={collectionId} onChange={(e) => setCollectionId(e.target.value)}/>
 						<div className='text-white text-lg font-bold cursor-pointer mx-1 p-1 hover:bg-panel1 rounded-md h-8' onClick={()=>{setShowCollectionIDHelp(!showCollectionIDHelp)}}>
 							<QuestionMarkCircleIcon className='h-6 w-6 text-white cursor-pointer'/>
 						</div>
@@ -272,13 +272,13 @@ const AddLibrarySettings = (props: {
 					}
 					<div className='flex justify-start p-2'>
 						<div className='text-nav w-32 p-1'>Library Name</div>
-						<input type='text' placeholder=' Library Name' disabled={currentSettings.restrictions_without_login && !props.user} className='rounded-md w-60 px-2 py-1 text-nav' value={UploadLibraryName}
+						<input type='text' placeholder=' Library Name' disabled={currentSettings.restriction_without_login && !props.user} className='rounded-md w-60 px-2 py-1 text-nav' value={UploadLibraryName}
 							onChange={(e) => setUploadLibraryName(e.target.value)}
 						/>
 					</div>
 					<div className='flex flex-col mt-2'>
 						{/* multiple documents upload */}
-						<input type='file' disabled={currentSettings.restrictions_without_login && !props.user} multiple className='rounded-md w-60 p-1 text-nav' onChange={(e) => {
+						<input type='file' disabled={currentSettings.restriction_without_login && !props.user} multiple className='rounded-md w-60 p-1 text-nav' onChange={(e) => {
 							const files = e.target.files
 							if (files){
 								const docs = Array.from(files).map((file:any) => {return {title: file.name.split('.pdf')[0], file: file}})
@@ -310,7 +310,7 @@ const AddLibrarySettings = (props: {
 					}
 					<div className='flex justify-start p-2'>
 						<div className='text-nav w-40 p-1 my-2'>Library Name</div>
-						<input disabled={currentSettings.restrictions_without_login && !props.user} type='text' placeholder=' Library Name' className='rounded-md w-60 px-2 py-1 m-2 text-nav' value={videoLibraryName}
+						<input disabled={currentSettings.restriction_without_login && !props.user} type='text' placeholder=' Library Name' className='rounded-md w-60 px-2 py-1 m-2 text-nav' value={videoLibraryName}
 							onChange={(e) => setVideoLibraryName(e.target.value)}
 						/>
 					</div>
@@ -321,7 +321,7 @@ const AddLibrarySettings = (props: {
 						{/* for loop for uploaddoccount */}
 						{[...Array(uploadDocCount)].map((_x:any, i:any) => (
 							<div key={i} className='m-2'>
-								<input disabled={currentSettings.restrictions_without_login && !props.user} type='text' placeholder=' Youtube video link' className='rounded-md w-60 px-2 py-1 text-nav'
+								<input disabled={currentSettings.restriction_without_login && !props.user} type='text' placeholder=' Youtube video link' className='rounded-md w-60 px-2 py-1 text-nav'
 									value={videoDocURLs[i]} onChange={(e) =>{
 										const temp = [...videoDocURLs]
 										temp[i] = e.target.value
@@ -332,7 +332,7 @@ const AddLibrarySettings = (props: {
 						))}
 					</div>
 					</div>
-					{uploadDocCount < 41 ? <button className='text-panel1 bg-white px-4 py-2 rounded-md m-2' disabled={currentSettings.restrictions_without_login && !props.user} onClick={()=>setUploadDocCount(uploadDocCount+5)}>+5</button> : <></>}
+					{uploadDocCount < 41 ? <button className='text-panel1 bg-white px-4 py-2 rounded-md m-2' disabled={currentSettings.restriction_without_login && !props.user} onClick={()=>setUploadDocCount(uploadDocCount+5)}>+5</button> : <></>}
 					<div className='flex justify-start'>
 						<button className='bg-panel1 text-white px-4 py-2 rounded-md m-2'
 							onClick={() => setVideoLibrary(true)}

@@ -42,7 +42,7 @@ const Settings = (props:{
 					const dataset_names = data.map((d:any)=>d.dataset_name)
 					const dataset_details:any = []
 					dataset_names.forEach((dataset:string) => {
-						const dataset_detail = {'dataset': dataset, 'embedding_added': data.filter((d:any)=>d.dataset_name === dataset)[0].embedding_added}
+						const dataset_detail = {'dataset': dataset, 'embedding_added': data.filter((d:any)=>d.dataset_name === dataset)[0].embedding_added, 'direct_chat_without_docs': data.filter((d:any)=>d.dataset_name === dataset)[0].direct_chat_without_docs}
 						dataset_details.push(dataset_detail)
 					})
 					props.settingsCallback({...currentSettings, datasets: dataset_names, fetchDatasets: false})
@@ -211,7 +211,7 @@ const Settings = (props:{
 																	+ (dataset.dataset === currentSettings.selectedDataset ? ' bg-gray-300' : ' bg-panel1')}
 																	onClick={()=>{
 																		setSelectedDataset(dataset.dataset)
-																		props.settingsCallback({...currentSettings, selectedDataset: dataset.dataset, fetchPapers: true})
+																		props.settingsCallback({...currentSettings, selectedDataset: dataset.dataset, answerWithoutContext: dataset.direct_chat_without_docs,  fetchPapers: !dataset.direct_chat_without_docs})
 																	}}
 																	disabled={dataset.dataset === currentSettings.selectedDataset ? true : false}
 																>{ dataset.dataset === currentSettings.selectedDataset ? 'Selected' : 'Select'}</button>
@@ -225,7 +225,7 @@ const Settings = (props:{
 																	{ dataset['embedding_added'] ? 'added in vector space' : 'add to vector space'}
 																</button> */}
 																{ 
-																	(props.currentSettings.restrictions_without_login && props.user) || !props.currentSettings.restrictions_without_login ?
+																	(props.currentSettings.restriction_without_login && props.user) || !props.currentSettings.restriction_without_login ?
 																	<button className='ml-2 bg-red-900 text-white px-2 rounded-md'
 																		onClick={()=>{setDeleteDataset(dataset.dataset)}}
 																	>Delete</button>

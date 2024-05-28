@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { scaleSequential, interpolateRdYlGn } from 'd3'
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
+import Markdown from 'react-markdown'
 
 interface ChatHistoryProps {
 	dataset: string,
@@ -132,7 +133,11 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 												</div>
 											</div>
 										</div>
-									<div className='text-white whitespace-pre-wrap'>{questionDetails.answers[0].answer}</div>
+									<div className='text-white whitespace-pre-wrap'>
+										<Markdown>
+											{questionDetails.answers[0].answer}
+										</Markdown>
+									</div>
 									<div className='text-white text-sm font-bold pt-4'>
 									{questionDetails.sources.length > 1 ? 'Sources' : 'Source'}
 								</div>
