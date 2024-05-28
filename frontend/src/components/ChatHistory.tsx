@@ -23,7 +23,7 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 
 	useEffect(() => {
 		// fetch chat history from API
-		fetch(`http://localhost:8000/api/get_conversation_history/?dataset=${selectedDataset}`)
+		fetch(`${process.env.REACT_APP_BACKEND_API}api/get_conversation_history/?dataset=${selectedDataset}`)
 			.then(response => response.json())
 			.then(data => {
 				const questions_array:any = []
@@ -42,7 +42,7 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 	// fetch answers and sources for selected question
 	useEffect(() => {
 		if (activeQuestionID === 0) return
-		fetch(`http://localhost:8000/api/get_question_details/?question_id=${activeQuestionID}`)
+		fetch(`${process.env.REACT_APP_BACKEND_API}api/get_question_details/?question_id=${activeQuestionID}`)
 			.then(response => response.json())
 			.then(data => {
 				setQuestionDetails(data)

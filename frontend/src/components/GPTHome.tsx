@@ -56,7 +56,7 @@ function GPTHome(props:{
 		}
 
 		if((!papers.length && !videos.length) || props.currentSettings.fetchPapers === true){
-			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/get_documents/?dataset=${props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset }&format=json`, requestOptions)
+			fetch(`${process.env.REACT_APP_BACKEND_API}api/get_documents/?dataset=${props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset }&format=json`, requestOptions)
 				.then(response => response.json())
 				.then(data => {
 					if (data.dataset_type === 'papers'){ 
@@ -97,7 +97,7 @@ function GPTHome(props:{
 					sentence_transformer: props.currentSettings.selected_sentence_transformer
 				})
 			}
-			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/add_demo_library/?format=json`, requestOptions)
+			fetch(`${process.env.REACT_APP_BACKEND_API}api/add_demo_library/?format=json`, requestOptions)
 				.then(response => response.json())
 				.then(data => {
 					console.log(data)
@@ -137,7 +137,7 @@ function GPTHome(props:{
 			// setselectedPaperIdx(0)
 			setRelatedQuery(false)
 			let llm_endpoint = 'get_context'
-				fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/${llm_endpoint}/?format=json`, requestOptions)
+				fetch(`${process.env.REACT_APP_BACKEND_API}api/${llm_endpoint}/?format=json`, requestOptions)
 					.then(response => response.json())
 					.then((data:any) => {
 						setAnswerReceived(false)
@@ -191,7 +191,7 @@ function GPTHome(props:{
 			// fetch using async await
 			const postData = async () => {
 				let content = ''
-				const response = await fetch(`http://localhost:11434/api/generate`, {body, method: 'POST'})
+				const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/generate`, {body, method: 'POST'})
 				const reader:any = response.body?.getReader()
 				while (true) {
 					const { done, value } = await reader.read()
@@ -245,7 +245,7 @@ function GPTHome(props:{
 					sentence_transformer: props.currentSettings.selected_sentence_transformer,
 				})
 			}
-			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/save_answer/?format=json`, requestOptions)
+			fetch(`${process.env.REACT_APP_BACKEND_API}api/save_answer/?format=json`, requestOptions)
 				.then(response => response.json())
 				.then(data => {
 					console.log(data)
@@ -518,7 +518,7 @@ function GPTHome(props:{
 												user_comment: feedback.user_comment,
 											})
 										}
-										fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/feedback/?format=json`, requestOptions)
+										fetch(`${process.env.REACT_APP_BACKEND_API}api/feedback/?format=json`, requestOptions)
 											.then(response => response.json())
 											.then(data => {
 												console.log(data)
@@ -703,7 +703,7 @@ function GPTHome(props:{
 						<div  className='h-[76vh]'>
 							{papers.length ?
 								<Viewer
-								fileUrl={`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}media/${papers.length ? papers[selectedPaperIdx][fileAttachmentType] : ''}`}
+								fileUrl={`${process.env.REACT_APP_BACKEND_API}media/${papers.length ? papers[selectedPaperIdx][fileAttachmentType] : ''}`}
 								defaultScale={SpecialZoomLevel.ActualSize}
 								initialPage={selectedPage-1}
 								plugins={[

@@ -45,8 +45,8 @@ const Plots = (props: plotsProps) => {
 					'Content-Type': 'application/json'
 				}
 			}
-			// fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/get_vector_embeddings/?format=json&datasets=${selectedDatasets}&question_id=817`, requestOptions)
-			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/get_vector_embeddings/?format=json&datasets=${selectedDatasets}`, requestOptions)
+			// fetch(`${process.env.REACT_APP_BACKEND_API}api/get_vector_embeddings/?format=json&datasets=${selectedDatasets}&question_id=817`, requestOptions)
+			fetch(`${process.env.REACT_APP_BACKEND_API}api/get_vector_embeddings/?format=json&datasets=${selectedDatasets}`, requestOptions)
 				.then(response => response.json())
 				.then(data => {
 					const point_dataset:any = data.pca_embeddings.map((point:any) => point.dataset)

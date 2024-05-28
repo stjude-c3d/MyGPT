@@ -9,20 +9,20 @@ const defaultSettings = {
 		{key:'relevance_score', text:'Relevance score parameters'},
 ],
 	selectedPanel: 'datasets',
-	llms: ['llama3'],
-    defaultLlm: 'llama3',
-	selectedLlm: 'llama3',
+	llms: [process.env.REACT_APP_DEFAULT_LLM || 'llama3'],
+    defaultLlm: process.env.REACT_APP_DEFAULT_LLM || 'llama3',
+	selectedLlm: process.env.REACT_APP_DEFAULT_LLM || 'llama3',
     datasets: ['None'],
 	defaultDataset: 'None',
     selectedDataset: 'None',
 	fetchDatasets: true,
 	datasetsUpdated: false,
-    default_sentence_transformer: 'all-MiniLM-L6-v2',
-	selected_sentence_transformer: 'all-MiniLM-L6-v2',
+    default_sentence_transformer: 'multi-qa-MiniLM-L6-cos-v1',
+	selected_sentence_transformer: 'multi-qa-MiniLM-L6-cos-v1',
 	sentence_transformers: [
+		'multi-qa-MiniLM-L6-cos-v1',
 		'all-MiniLM-L6-v2',
 		'all-MiniLM-L12-v2',
-		'multi-qa-MiniLM-L6-cos-v1', 
 		'all-mpnet-base-v2', 
 		'multi-qa-mpnet-base-dot-v1',
 		'paraphrase-albert-small-v2'
@@ -33,6 +33,7 @@ const defaultSettings = {
 		best: 0.4,
 		worst: 1.5
 	},
+	restrictions_without_login: false,
 	papers: [
 		{
 			"paper_title": "Control of G protein-coupled receptor function via membrane-interacting intrinsically disordered C-terminal domains",

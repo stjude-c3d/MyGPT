@@ -45,7 +45,7 @@ function App() {
 				'Content-Type': 'application/json'
 			}
 		}
-		fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/frontend_settings/?format=json`, requestOptions)
+		fetch(`${process.env.REACT_APP_BACKEND_API}api/frontend_settings/?format=json`, requestOptions)
 			.then(response => response.json())
 			.then(data => {
 				setFrontendSettings(data.settings)
@@ -65,7 +65,7 @@ function App() {
             'user_email': user.user_email
           })
         }
-        fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/get_datasets/?format=json`, requestOptions)
+        fetch(`${process.env.REACT_APP_BACKEND_API}api/get_datasets/?format=json`, requestOptions)
           .then(response => response.json())
           .then(data => {
             setCurrentSettings({...currentSettings, datasets:data.map((d:any)=>d.dataset_name), selectedDataset:data[0].dataset_name, fetchDatasets:false})
@@ -82,7 +82,7 @@ function App() {
               'user_email': ''
             })
           }
-            fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/get_datasets/?format=json`, requestOptions)
+            fetch(`${process.env.REACT_APP_BACKEND_API}api/get_datasets/?format=json`, requestOptions)
               .then(response => response.json())
               .then(data => {
                 if(data.length > 0)

@@ -36,7 +36,7 @@ const Settings = (props:{
 			body: JSON.stringify(props.user ? props.user : {'user_email': ''})
 		}
 		if(!datasets.length || props.currentSettings.fetchDatasets)
-			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/get_datasets/`, requestOptions)
+			fetch(`${process.env.REACT_APP_BACKEND_API}api/get_datasets/`, requestOptions)
 				.then(response => response.json())
 				.then(data => {
 					const dataset_names = data.map((d:any)=>d.dataset_name)
@@ -69,7 +69,7 @@ const Settings = (props:{
 					'Content-Type': 'application/json'
 				}
 			}
-			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/delete_dataset/?dataset=${deleteDataset}`, requestOptions)
+			fetch(`${process.env.REACT_APP_BACKEND_API}api/delete_dataset/?dataset=${deleteDataset}`, requestOptions)
 				.then(response => response.json())
 				.then(data => {
 					console.log(data)
@@ -90,7 +90,7 @@ const Settings = (props:{
 					'Content-Type': 'application/json'
 				}
 			}
-			fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/add_dataset_embeddings/?dataset=${addEmbeddingForDataset}`, requestOptions)
+			fetch(`${process.env.REACT_APP_BACKEND_API}api/add_dataset_embeddings/?dataset=${addEmbeddingForDataset}`, requestOptions)
 				.then(response => response.json())
 				.then(data => {
 					console.log(data)
@@ -108,11 +108,11 @@ const Settings = (props:{
 	useEffect(()=>{
 
 		const postData = async () => {
-			const response = await fetch(`http://localhost:11434/api/tags`, {method: 'GET'})
+			const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/tags`, {method: 'GET'})
 				const data = await response.json()
 
 				// set models
-				const llms = data.models.map((model:any) => model.name.split(':')[0])
+				const llms = data.models.map((model:any) => model.name)
 				const llm = llms[0]
 				setLlms(llms)
 				setLlm(llm)
@@ -137,7 +137,7 @@ const Settings = (props:{
 				setTimeout: 10000,
 				body: JSON.stringify({'llms': llms_object})
 				}
-				const response2 = await fetch(`${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_API_PROD : process.env.REACT_APP_API_DEV}api/add_ollama_models/`, requestOptions)
+				const response2 = await fetch(`${process.env.REACT_APP_BACKEND_API}api/add_ollama_models/`, requestOptions)
 				const data2 = await response2.json()
 				console.log(data2)
 
@@ -224,10 +224,13 @@ const Settings = (props:{
 																>
 																	{ dataset['embedding_added'] ? 'added in vector space' : 'add to vector space'}
 																</button> */}
-
-																<button className='ml-2 bg-red-900 text-white px-2 rounded-md'
-																	onClick={()=>{setDeleteDataset(dataset.dataset)}}
-																>Delete</button>
+																{ 
+																	(props.currentSettings.restrictions_without_login && props.user) || !props.currentSettings.restrictions_without_login ?
+																	<button className='ml-2 bg-red-900 text-white px-2 rounded-md'
+																		onClick={()=>{setDeleteDataset(dataset.dataset)}}
+																	>Delete</button>
+																	: <></>
+																}
 															</div>
 														</div>
 													</li>
