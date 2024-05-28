@@ -72,6 +72,7 @@ const AddLibrarySettings = (props: {
 			
 			formData.append('dataset_name', UploadLibraryName)
 			formData.append('sentence_transformer', currentSettings.selected_sentence_transformer)
+			console.log(currentSettings.selected_sentence_transformer)
 			formData.append('user', props.user ? props.user.user: '')
 			formData.append('user_email', props.user ? props.user.user_email : '')
 			formData.append('user_group', props.user && props.user.isAdmin ? 'admin' : 'user')

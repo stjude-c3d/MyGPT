@@ -1,1 +1,5 @@
-{"code": "SELECT * FROM sql_df WHERE NOT EXISTS (SELECT * FROM (SELECT * FROM sql_df WHERE 'cancer' IN (subgroup, subtype)) AS temp);"}
+{"code":
+"SELECT sample 
+FROM sql_df 
+WHERE 'tumor_mutant_allele_fraction' >= 0.2 AND 'tumor_mutant_allele_fraction' <= 0.4
+"};
