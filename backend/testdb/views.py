@@ -17,6 +17,7 @@ from youtube_transcript_api import YouTubeTranscriptApi
 from pytube import YouTube
 import numpy as np
 import pandas as pd
+import duckdb
 import datetime
 import re
 import os
@@ -30,6 +31,7 @@ from .serializers import ModelSerializer, PapersSerializer, QuestionSerializer, 
 from .forms import PapersForm
 
 app_config = apps.get_app_config('testdb')
+con = duckdb.connect()
 
 def home(request):
     datasets = Dataset.objects.all()
