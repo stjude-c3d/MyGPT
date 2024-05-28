@@ -1,5 +1,1 @@
-{"code":
-"SELECT sample 
-FROM sql_df 
-WHERE 'tumor_mutant_allele_fraction' >= 0.2 AND 'tumor_mutant_allele_fraction' <= 0.4
-"};
+{"code": "SELECT * FROM sql_df WHERE ['please_note'] BETWEEN 'SJALL014935_D1' AND 'SJNBL078391_D1' OR ['please_note'] = 'SJLGG029_D' OR ['please_note'] = 'SJLGG030_D';"}
