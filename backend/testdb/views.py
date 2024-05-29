@@ -252,6 +252,7 @@ def add_dataset_from_upload(request):
                 df = pd.read_excel(base_name + doctype)
             elif doctype == '.csv':
                 df = pd.read_csv(base_name + doctype)
+            df.dropna(axis = 0, how = 'all', inplace = True)
 
             df.to_html(base_name + '.html')
             options = {
@@ -772,10 +773,17 @@ def nearestDataChroma(text, dataset_name, sentence_transformer='all-MiniLM-L6-v2
         fulltext = fulltext_results['documents'][0][0]
         text_json = json.loads(fulltext)
         sql_df = pd.DataFrame.from_records(text_json)
-        sql_df.columns = [re.sub("[^\w\s]", "", col_name).replace(" ", "_").lower() for col_name in sql_df.columns.tolist()]
-        instructions = f'Given a table with the following information, write a sql query that condenses the table to only include information useful to answering the provided query. The name of the table is sql_df. The names of the columns are as follows: {str(sql_df.columns.tolist())}. Do not include any explanation, please only include the SQL code in your answer. The SQL code should result in another smaller table of only useful entries.'
+        sql_df.columns = [re.sub("[^\w\s]", "", col_name).replace(" ", "_").lower().replace("unnamed_", "position_") for col_name in sql_df.columns.tolist()]
+        final_cols = [x for x in sql_df.columns.tolist() if not x.removeprefix("position_").isnumeric()]
+        numbered_cols = [x for x in sql_df.columns.tolist() if x.removeprefix("position_").isnumeric()]
+        numbered_col_mention = ""
+        if len(numbered_cols) > 0:
+            numbered_col_mention = f", and numbered columns ranging from {numbered_cols[0]} to {numbered_cols[-1]}"
+        instructions = f'Given a table with the following information, write a sql query that condenses the table to only include information useful to answering the provided query. The name of the table is sql_df. The names of the columns are as follows: {str(final_cols)}{numbered_col_mention}. Do not include any explanation, please only include the SQL code in your answer. The SQL code should result in another smaller table of only useful entries.'
         prompt = f'SYSTEM: {instructions}; QUERY: {text}; ANSWER FORMAT: {{"code": sql_code}}; ANSWER: '
-        ollama = Ollama(base_url="http://host.docker.internal:11434", model="llama3")
+        with open("sql_prompt.txt", "w") as file:
+            file.write(prompt)
+        ollama = Ollama(base_url="http://10.220.17.160:11434", model="llama3:70b")
         response = ollama.invoke(prompt + '{')
         with open("generated_sql_query.txt", "w") as file:
             file.write(response)
