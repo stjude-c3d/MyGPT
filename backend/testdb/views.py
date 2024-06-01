@@ -14,7 +14,7 @@ from tqdm import tqdm
 import chromadb
 from chromadb.utils import embedding_functions
 from youtube_transcript_api import YouTubeTranscriptApi
-from pytube import YouTube
+from pytube import YouTube, Playlist
 import numpy as np
 import pandas as pd
 import duckdb
@@ -783,7 +783,7 @@ def nearestDataChroma(text, dataset_name, sentence_transformer='multi-qa-MiniLM-
         prompt = f'SYSTEM: {instructions}; QUERY: {text}; ANSWER FORMAT: {{"code": sql_code}}; ANSWER: '
         with open("sql_prompt.txt", "w") as file:
             file.write(prompt)
-        ollama = Ollama(base_url="http://10.220.17.160:11434", model="llama3:70b")
+        ollama = Ollama(base_url="http://host.docker.internal:11434", model="llama3")
         response = ollama.invoke(prompt + '{')
         with open("generated_sql_query.txt", "w") as file:
             file.write(response)
@@ -984,7 +984,7 @@ def get_youtube_transcript(dataset_name, video_ids, video_titles):
     for i in range(len(video_ids)):
         video_id = video_ids[i]
         video_title = video_titles[i]
-        transcript =  YouTubeTranscriptApi.get_transcript(video_id)
+        transcript =  YouTubeTranscriptApi.get_transcript(video_id, languages=['en', 'en-US'])
         
         #  convert trascript to json
         transcipt_json = []
@@ -1428,10 +1428,14 @@ def add_video_library(request):
         dataset_name = request.POST.get('dataset_name').replace(' ', '_')
         sentence_transformer = request.POST.get('sentence_transformer')
         video_urls = request.POST.get('video_urls').split(',')
+        playlist_url = request.POST.get('playlist_url')
         user = request.POST.get('user')
         user_email = request.POST.get('user_email')
         user_group = request.POST.get('user_group')
         video_titles = []
+        if len(playlist_url):
+            videos = Playlist(playlist_url)
+            video_urls = videos.video_urls
         for video_url in video_urls:
             yt = YouTube(video_url)
             video_titles.append(yt.title)

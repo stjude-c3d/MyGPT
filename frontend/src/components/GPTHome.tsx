@@ -507,7 +507,7 @@ function GPTHome(props:{
 									}
 									</div>
 								</div>
-								<div className='text-white whitespace-pre-wrap'>
+								<div className='text-white whitespace-pre-wrap answer-div'>
 									<Markdown>
 										{answers[query.length-i-1].response}
 									</Markdown>
@@ -599,7 +599,7 @@ function GPTHome(props:{
 									<div className='flex flex-row justify-between font-bold mt-2 mb-4'>
 										<div className='text-white text-sm py-1'>{props.currentSettings.selectedLlm}</div>
 									</div>
-									<div className='text-white whitespace-pre-wrap'>
+									<div className='text-white whitespace-pre-wrap answer-div'>
 										<Markdown>
 											{answer.length ? answer: 'Generating answer...'}
 										</Markdown>

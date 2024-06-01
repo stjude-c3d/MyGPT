@@ -29,6 +29,7 @@ const AddLibrarySettings = (props: {
 
   const [videoLibraryName, setVideoLibraryName] = useState('')
   const [videoLibrary, setVideoLibrary] = useState(false)
+  const [videoPlaylistURL, setVideoPlaylistURL] = useState('')
   const [videoDocURLs, setVideoDocURLs] = useState([''])
 
 //   console.log(UploadLibraryName, uploadDocs)
@@ -118,6 +119,8 @@ const AddLibrarySettings = (props: {
 			formData.append('user_group', props.user && props.user.isAdmin ? 'admin' : 'user')
 
 			formData.append('video_urls', videoDocURLs.join(',') )
+			formData.append('playlist_url', videoPlaylistURL)
+
 			const requestOptions = {
 				method: 'POST',
 				Headers: {
@@ -315,24 +318,33 @@ const AddLibrarySettings = (props: {
 						/>
 					</div>
 					<div className='text-nav p-1 my-2'> Note: MyGPT currently supports YouTube videos with closed captions only.</div>
-					<div className='flex justify-start p-2'>
-					<div className='text-nav w-40 p-1 my-2'>YouTube vidoe links</div>
-					<div className='flex flex-col justify-start'>
-						{/* for loop for uploaddoccount */}
-						{[...Array(uploadDocCount)].map((_x:any, i:any) => (
-							<div key={i} className='m-2'>
-								<input disabled={currentSettings.restriction_without_login && !props.user} type='text' placeholder=' Youtube video link' className='rounded-md w-60 px-2 py-1 text-nav'
-									value={videoDocURLs[i]} onChange={(e) =>{
-										const temp = [...videoDocURLs]
-										temp[i] = e.target.value
-										setVideoDocURLs(temp)
-									}}
-								/>
+					<div className='flex justify-start p-2 flex-col'>
+						<div>
+							<div className='text-nav w-40 p-1 my-2'>YouTube Playlist link</div>
+							<input disabled={currentSettings.restriction_without_login && !props.user} type='text' placeholder=' YouTube playlist link' className='rounded-md w-72 px-2 py-1 m-2 text-nav' value={videoPlaylistURL}
+								onChange={(e) => setVideoPlaylistURL(e.target.value)}
+							/>
+						</div>
+						<div className='flex justify-start text-nav font-bold p-1 my-2 mx-auto w-72'> OR </div>
+						<div className='w-72'>
+							<div className='text-nav p-1 my-2'>YouTube vidoe links</div>
+							<div className='flex flex-col justify-start'>
+								{/* for loop for uploaddoccount */}
+								{[...Array(uploadDocCount)].map((_x:any, i:any) => (
+									<div key={i} className='m-2'>
+										<input disabled={currentSettings.restriction_without_login && !props.user} type='text' placeholder=' Youtube video link' className='rounded-md w-72 px-2 py-1 text-nav'
+											value={videoDocURLs[i]} onChange={(e) =>{
+												const temp = [...videoDocURLs]
+												temp[i] = e.target.value
+												setVideoDocURLs(temp)
+											}}
+										/>
+									</div>
+								))}
 							</div>
-						))}
+							{uploadDocCount < 41 ? <button className='text-panel1 bg-white px-4 py-2 rounded-md mx-2' disabled={currentSettings.restriction_without_login && !props.user} onClick={()=>setUploadDocCount(uploadDocCount+5)}>+5</button> : <></>}
+						</div>
 					</div>
-					</div>
-					{uploadDocCount < 41 ? <button className='text-panel1 bg-white px-4 py-2 rounded-md m-2' disabled={currentSettings.restriction_without_login && !props.user} onClick={()=>setUploadDocCount(uploadDocCount+5)}>+5</button> : <></>}
 					<div className='flex justify-start'>
 						<button className='bg-panel1 text-white px-4 py-2 rounded-md m-2'
 							onClick={() => setVideoLibrary(true)}

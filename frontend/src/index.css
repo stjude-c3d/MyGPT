@@ -28,14 +28,14 @@ code {
     font-weight: 400;
 }
 
-ol {
+div.answer-div ol {
   list-style: decimal;
   padding-left: 2rem;
   margin-top: -1rem;
   margin-bottom: -1rem;
 }
 
-li {
+div.answer-div li {
   margin-top: -5px;
   margin-bottom: -5px;
 }

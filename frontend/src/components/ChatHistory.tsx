@@ -133,7 +133,7 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 												</div>
 											</div>
 										</div>
-									<div className='text-white whitespace-pre-wrap'>
+									<div className='text-white whitespace-pre-wrap answer-div'>
 										<Markdown>
 											{questionDetails.answers[0].answer}
 										</Markdown>
