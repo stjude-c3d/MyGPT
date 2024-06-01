@@ -120,7 +120,8 @@ const Settings = (props:{
 				// add new model to backend API
 				let llms_object:any = []
 				data.models.forEach((model:any) => {
-					let llm_name = model.name.split(':')[0]
+					// let llm_name = model.name.split(':')[0]
+					let llm_name = model.name
 					let llm_size = model.size* 1e-9
 					let llm_size_gb = llm_size.toFixed(2)
 					llms_object.push({name: llm_name, size: llm_size_gb})

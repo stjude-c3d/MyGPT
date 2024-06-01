@@ -139,7 +139,7 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 										</Markdown>
 									</div>
 									<div className='text-white text-sm font-bold pt-4'>
-									{questionDetails.sources.length > 1 ? 'Sources' : 'Source'}
+									{questionDetails.sources.length > 1 ? 'Sources' : questionDetails.sources.length === 1 ? 'Source': ''}
 								</div>
 								{questionDetails.sources.map((source:any, index:number)=>(
 									<div key={index}>

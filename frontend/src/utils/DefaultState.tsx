@@ -28,6 +28,7 @@ const defaultSettings = {
 		'paraphrase-albert-small-v2'
 	],
     system_prompt: 'Use following information to answer the question in less than 100 words, try not to use anything else:',
+	direct_chat_system_prompt: 'Answer the question in less than 200 words.',
 	fetchPapers: false,
 	relevance_score_cutoff: {
 		best: 0.4,

@@ -387,7 +387,7 @@ def add_to_chroma(dataset_name, sentence_transformer = 'all-MiniLM-L6-v2'):
 
         print(f'Added {new_count - count} documents')
 
-def add_demo_dataset(sentence_transformer = 'all-MiniLM-L6-v2'):
+def add_demo_dataset(sentence_transformer = 'multi-qa-MiniLM-L6-cos-v1'):
     documents_directory = '/code/data'
     # collection_name = 'pub_collection'
     # Read all files in the data directory
@@ -528,7 +528,7 @@ def add_embeddings_to_chunks(dataset):
 
     return
 
-def add_embeddings_to_qna(text, text_type = 'question', sentence_transformer = 'all-MiniLM-L6-v2'):
+def add_embeddings_to_qna(text, text_type = 'question', sentence_transformer = 'multi-qa-MiniLM-L6-cos-v1'):
     # use multi-qa-MiniLM-L6-cos-v1 embedding function
     if sentence_transformer != 'all-MiniLM-L6-v2':
         sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=sentence_transformer)
@@ -702,7 +702,7 @@ def find_cutoff_distance(distances):
             break
     return cutoff_distance
 
-def nearestDataChroma(text, dataset_name, sentence_transformer='all-MiniLM-L6-v2'):
+def nearestDataChroma(text, dataset_name, sentence_transformer='multi-qa-MiniLM-L6-cos-v1'):
     # collection_name = 'pub_collection'
     # client = chromadb.Client()
     # use multi-qa-MiniLM-L6-cos-v1 embedding function
@@ -803,7 +803,7 @@ def nearestDataChroma(text, dataset_name, sentence_transformer='all-MiniLM-L6-v2
     ret = (context, titles, pages, starts, stops, chunks, distances)
     return ret
 
-# def get_chunks_by_keyword(question_text, dataset_name, sentence_transformer='all-MiniLM-L6-v2'):
+# def get_chunks_by_keyword(question_text, dataset_name, sentence_transformer='multi-qa-MiniLM-L6-cos-v1'):
 #     if sentence_transformer != 'all-MiniLM-L6-v2':
 #         sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=sentence_transformer)
 #     else:
@@ -914,7 +914,7 @@ def highlight_pdf(input_file, output_file, source_grp):
 
     input_pdf.save(output_file, garbage=4, deflate=True, clean=True)
 
-def add_video_to_chroma(dataset_name, sentence_transformer = 'all-MiniLM-L6-v2'):
+def add_video_to_chroma(dataset_name, sentence_transformer = 'multi-qa-MiniLM-L6-cos-v1'):
     documents_directory = '/code/data/data_chunks'
     # collection_name = 'pub_collection'
     # Read all files in the data directory
@@ -1000,7 +1000,7 @@ def get_youtube_transcript(dataset_name, video_ids, video_titles):
                 if j < len(transcipt_json):
                     text += transcipt_json[j]["text"] + " "
                     end = transcipt_json[j]["start"] + transcipt_json[j]["duration"]
-            transcipt_json_10.append({"title": video_title, "content": text, "start": start, "end": end})
+            transcipt_json_10.append({"title": video_title, "content": text, "start": start, "end": end, "type": "video_chunk"})
     
     #  save transcript to csv file
     with open('data/data_chunks/'+ dataset_name +'.txt', 'w', newline='') as file:

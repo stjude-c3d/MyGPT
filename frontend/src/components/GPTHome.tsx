@@ -184,13 +184,13 @@ function GPTHome(props:{
 	// get answer from the ollama
 	useEffect(()=>{
 		const question =  query[query.length-1] && query[query.length-1].question ? query[query.length-1].question.replaceAll('"',"'") : ''
-		const systemPrompt = props.currentSettings.system_prompt + context
+		const systemPrompt = answerWithoutContext ? props.currentSettings.direct_chat_system_prompt : props.currentSettings.system_prompt + context
 		
-		const body = JSON.stringify({
+		const body:any = JSON.stringify({
 			'model': props.currentSettings.selectedLlm,
 			'prompt': question,
-			'system': systemPrompt,
-			'context': []
+			'stream': true,
+			'system': answerWithoutContext ? '' : systemPrompt,
 		})
 		
 		if(context.length > 1 && question.length > 1){
@@ -599,7 +599,11 @@ function GPTHome(props:{
 									<div className='flex flex-row justify-between font-bold mt-2 mb-4'>
 										<div className='text-white text-sm py-1'>{props.currentSettings.selectedLlm}</div>
 									</div>
-									<div className='text-white whitespace-pre-wrap'><Markdown>{answer.length ? answer: 'Generating answer...'}</Markdown></div>
+									<div className='text-white whitespace-pre-wrap'>
+										<Markdown>
+											{answer.length ? answer: 'Generating answer...'}
+										</Markdown>
+									</div>
 									{
 									questionRelevancescore[query.length-1] > 0 && sourcePapers.length && sourcePages.length && sourcePages[query.length-1] && sourcePapers[query.length-1] ?
 									<>

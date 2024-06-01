@@ -84,7 +84,8 @@ const LLMSettings = (props: {
 			const postData = async () => {
 				const response = await fetch(`http://localhost:11434/api/tags`, {method: 'GET'})
 				const data = await response.json()
-				const llm = data.models.filter((model:any) => model.name.split(':')[0] === currentSettings.selectedLlm.toLowerCase())[0]
+				// const llm = data.models.filter((model:any) => model.name.split(':')[0] === currentSettings.selectedLlm.toLowerCase())[0]
+				const llm = data.models.filter((model:any) => model.name === currentSettings.selectedLlm.toLowerCase())[0]
 				// convert bytes to GB
 				const llm_size = llm.size* 1e-9
 				const llm_size_gb = llm_size.toFixed(2)

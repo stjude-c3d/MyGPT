@@ -27,3 +27,15 @@ code {
   src: local('Edge-regular'), url('./fonts/EdgeDisplay-Regular.otf') format('opentype');
     font-weight: 400;
 }
+
+ol {
+  list-style: decimal;
+  padding-left: 2rem;
+  margin-top: -1rem;
+  margin-bottom: -1rem;
+}
+
+li {
+  margin-top: -5px;
+  margin-bottom: -5px;
+}
