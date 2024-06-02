@@ -1,0 +1,9 @@
+static/*
+media/*
+chroma_storage/*
+chroma/*
+data/data_chunks/*
+!data/data_chunks/GPCR.txt
+data/pdfs/*
+!data/pdfs/GPCR
+data/pdfs/GPCR/*_highlighted.pdf
