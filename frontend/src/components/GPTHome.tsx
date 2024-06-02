@@ -29,6 +29,7 @@ function GPTHome(props:{
 	const [videos, setVideos] = useState<any[]>([])
 	const [sourcePapers, setSourcePapers] = useState<any[]>([])
 	const [sourcePages, setSourcePages] = useState<any[]>([])
+	const [sourceContexts, setSourceContexts] = useState<any[]>([])
 	const [sourceStarts, setSourceStarts] = useState<any[]>([])
 	const [sourceStops, setSourceStops] = useState<any[]>([])
 	const [selectedPaperIdx, setselectedPaperIdx] = useState(0)
@@ -151,6 +152,7 @@ function GPTHome(props:{
 							setQuestionRelevancescore((prevQuestionRelevancescore:any)=>[...prevQuestionRelevancescore, data.relevance_score])
 							setContext('None')
 							setSourcePapers((prevSourcePapers:any)=>[...prevSourcePapers, []])
+							setSourceContexts((prevSourceContexts:any)=>[...prevSourceContexts, []])
 							if (papers.length){
 								setSourcePages((prevSourcePages:any)=>[...prevSourcePages, []])
 							}else if (videos.length){
@@ -158,9 +160,11 @@ function GPTHome(props:{
 								setSourceStops((prevSourceStops:any)=>[...prevSourceStops, []])
 							}
 						}else{
+							console.log(data)
 							setQuestionRelevancescore((prevQuestionRelevancescore:any)=>[...prevQuestionRelevancescore, data.relevance_score])
 							setContext(data.context)
 							setSourcePapers((prevSourcePapers:any)=>[...prevSourcePapers, data.sources.map((s:any)=>s.document)])
+							setSourceContexts((prevSourceContexts:any)=>[...prevSourceContexts, data.sources.map((s:any)=>s.context)])
 							if (data.sources[0].page !== ''){
 								setSourcePages((prevSourcePages:any)=>[...prevSourcePages, data.sources.map((s:any)=>s.page)])
 								setSelectedPage(data.sources[0].page)
@@ -557,6 +561,12 @@ function GPTHome(props:{
 											>
 											<div className='border border-gray-400'></div>
 												<div className='text-white text-sm p-2 font-normal italic'>{'Page ' + (sourcePages[query.length-i-1][index]) + ' of "' + paper + '"'}</div>
+												{selectedPaperIdx === (papers.findIndex((p:any)=>p.paper_title===paper)) && selectedPage === sourcePages[query.length-i-1][index] ? 
+													<div className='text-white text-sm p-2 bg-slate-500'>
+														<div className='text-white font-bold'>Context</div>
+														{sourceContexts[query.length-i-1][index]}
+													</div> : <></>
+												}
 											</div>
 										))}
 									</>
@@ -587,6 +597,12 @@ function GPTHome(props:{
 											>
 											<div className='border border-gray-400'></div>
 												<div className='text-white text-sm p-2 font-normal italic'>{sourceStarts[query.length-i-1][index] + ' to ' + sourceStops[query.length-i-1][index] + ' of "' + paper + '"'}</div>
+												{selectedPaperIdx === (papers.findIndex((p:any)=>p.paper_title===paper)) && selectedPage === sourcePages[query.length-i-1][index] ? 
+													<div className='text-white text-sm p-2 bg-slate-500'>
+														<div className='text-white font-bold'>Context</div>
+														{sourceContexts[query.length-i-1][index]}
+													</div> : <></>
+												}
 											</div>
 										))}
 									</>

@@ -156,7 +156,7 @@ const Settings = (props:{
 				</div>
 				<div className={'flex justify-between my-6 '+ (window.screen.availHeight < 1000 ? 'h-[78vh]' : 'h-[62vh]')}>
 					{/* create left side vericle tabs */}
-					<div className={'w-1/4 border-slate-400 border-y-2 ' + (window.screen.availHeight < 1000 ? 'h-[80vh]' : 'h-[55vh]')}>
+					<div className={'w-1/4 border-slate-400 border-y-2 ' + (window.screen.availHeight < 1000 ? 'h-[80vh]' : 'h-[62vh]')}>
 						<div className='grid grid-cols-1 divide-y'>
 							{ props.defaultSettings.settingsPanels.map((panel:any, index:number) => {
 								return(
@@ -174,7 +174,7 @@ const Settings = (props:{
 						</div>
 					</div>
 					{/* create right side list of settings */}
-					<div className={'w-3/4 bg-panel2 overflow-y-auto ' + (window.screen.availHeight < 1000 ? 'h-[80vh]' : 'h-[55vh]')}>
+					<div className={'w-3/4 bg-panel2 overflow-y-auto ' + (window.screen.availHeight < 1000 ? 'h-[80vh]' : 'h-[62vh]')}>
 						<div className={'mx-4 my-4 px-4 bg-gray-300 rounded-md ' + (workflowZoomedIn ? 'h-[45vh]' : workflowCollapsed ? 'h-8' : 'h-[29vh]')}>
 							<div className='flex justify-between m-1'>
 								<div className='text-panel1 text-lg font-bold'>MyGPT Workflow</div>
@@ -335,13 +335,16 @@ const Settings = (props:{
 								<div className='m-2'>
 									<div className='text-nav inline-block px-2 mx-4 my-2 text-lg font-semibold'>Relevance Score Cutoff</div>
 									<div className='mx-4 px-2 w-[200px]'>
+										<div className='flex justify-between font-light text-nav m-2 mb-4'>
+											(work in progress)
+										</div>
 										<div className='flex justify-between'>
 											<div className='text-nav p-1 my-1'>Best</div>
-											<input type='number' placeholder='Best' className='rounded-md w-20 p-1 m-1' value={currentSettings.relevance_score_cutoff.best} onChange={(e)=>props.settingsCallback({...currentSettings, relevance_score_cutoff: {...currentSettings.relevance_score_cutoff, best: e.target.value}})}/>
+											<input type='number' placeholder='Best' disabled={true} className='rounded-md w-20 p-1 m-1' value={currentSettings.relevance_score_cutoff.best} onChange={(e)=>props.settingsCallback({...currentSettings, relevance_score_cutoff: {...currentSettings.relevance_score_cutoff, best: e.target.value}})}/>
 										</div>
 										<div className='flex justify-between'>
 											<div className='text-nav p-1 my-1'>Worst</div>
-											<input type='number' placeholder='Worst' className='rounded-md w-20 p-1 m-1' value={currentSettings.relevance_score_cutoff.worst} onChange={(e)=>props.settingsCallback({...currentSettings, relevance_score_cutoff: {...currentSettings.relevance_score_cutoff, worst: e.target.value}})}/>
+											<input type='number' placeholder='Worst' disabled={true} className='rounded-md w-20 p-1 m-1' value={currentSettings.relevance_score_cutoff.worst} onChange={(e)=>props.settingsCallback({...currentSettings, relevance_score_cutoff: {...currentSettings.relevance_score_cutoff, worst: e.target.value}})}/>
 										</div>
 									</div>
 									<button className='bg-panel1 text-white px-4 py-1 rounded-md mx-4 my-2' onClick={()=>props.settingsCallback(currentSettings)}>Save</button>

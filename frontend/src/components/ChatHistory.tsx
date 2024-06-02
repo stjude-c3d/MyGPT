@@ -60,7 +60,7 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 				</div>
 				<div className={'flex justify-between my-6 '+ (window.screen.availHeight < 1000 ? 'h-[78vh]' : 'h-[62vh]')}>
 					{/* create left side panel for questions */}
-					<div className={'w-1/3 border-slate-400 border-y-2 overflow-y-auto ' + (window.screen.availHeight < 1000 ? 'h-[80vh]' : 'h-[55vh]')}>
+					<div className={'w-1/3 border-slate-400 border-y-2 overflow-y-auto ' + (window.screen.availHeight < 1000 ? 'h-[80vh]' : 'h-[62vh]')}>
 						<div className='grid grid-cols-1 divide-y'>
 							<div className='text-white py-2 px-4'>
 								<div className='text-lg font-bold inline-block'>
@@ -102,7 +102,7 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 						</div>
 					</div>
 					{/* create right side for answers and sources list */}
-					<div className={'w-2/3 bg-panel3 max-h-[55vh] overflow-y-auto overflow-x-clip border-slate-400 border-y-2 ' + (window.screen.availHeight < 1000 ? 'h-[80vh]' : 'h-[55vh]')}>
+					<div className={'w-2/3 bg-panel3 max-h-[62vh] overflow-y-auto overflow-x-clip border-slate-400 border-y-2 ' + (window.screen.availHeight < 1000 ? 'h-[80vh]' : 'h-[62vh]')}>
 					{ activeQuestionID === 0 ? <div className='px-4 mx-2'> No Q&A to display</div> :
 						<>
 							<div className='py-4 px-6 m-4 bg-panel2 rounded-lg shadow-md box2 user-chat'>
