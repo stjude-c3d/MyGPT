@@ -157,13 +157,16 @@ function App() {
     </div>
   }
   {/* add footer */}
-  <div className='col-span-10 text-center text-xs text-nav bg-[#2A4759] my-auto py-4 h-[6vh]'>
-				<div className='text-center text-sm text-white'>
-					{/* <p className='inline-block mx-2'>Designed by </p> */}
-					<img src={process.env.PUBLIC_URL + '/stjude-logo-child.png'} alt='St. Jude logo' className='h-[3vh] inline-block'/>
-          <p className='inline-block mx-2'>St. Jude Children's Research Hospital</p>
-				</div>
-			</div>
+  <div className='flex justify-between text-nav bg-[#2A4759] my-auto py-4 h-[6vh]'>
+    <div className='text-sm text-white mx-8 my-auto'>
+      {/* <p className='inline-block mx-2'>Designed by </p> */}
+      <img src={process.env.PUBLIC_URL + '/stjude-logo-child.png'} alt='St. Jude logo' className='h-[3vh] inline-block'/>
+      <p className='inline-block mx-2'>St. Jude Children's Research Hospital</p>
+    </div>
+    <div className='text-sm text-white mx-8 my-auto'>
+      <a href='https://form.asana.com/?k=rHXv4eSjiOICn2Ln1p1H_Q&d=12574667816162' target='_blank' rel='noreferrer'>feedback</a>
+    </div>
+	</div>
   </>
   )
 }
