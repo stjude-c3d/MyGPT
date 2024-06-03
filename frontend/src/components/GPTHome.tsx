@@ -160,7 +160,6 @@ function GPTHome(props:{
 								setSourceStops((prevSourceStops:any)=>[...prevSourceStops, []])
 							}
 						}else{
-							console.log(data)
 							setQuestionRelevancescore((prevQuestionRelevancescore:any)=>[...prevQuestionRelevancescore, data.relevance_score])
 							setContext(data.context)
 							setSourcePapers((prevSourcePapers:any)=>[...prevSourcePapers, data.sources.map((s:any)=>s.document)])
@@ -199,6 +198,7 @@ function GPTHome(props:{
 		
 		if(context.length > 1 && question.length > 1){
 			// fetch using async await
+			let leftover:any = ''
 			const postData = async () => {
 				let content = ''
 				const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/generate`, {body, method: 'POST'})
@@ -208,13 +208,26 @@ function GPTHome(props:{
 					if (done) {
 						break;
 					}
-					const rawjson = new TextDecoder().decode(value);
+					let rawjson = new TextDecoder().decode(value);
 					let jsons = []
+					if (leftover.length > 0){
+						rawjson = leftover + rawjson
+						leftover = ''
+					}
 					if (rawjson.includes('\n')){
-						jsons = rawjson.split('\n').filter((j:any)=>j.length)
+						jsons = rawjson.split('\n')
+							.filter((j:any)=>j.length)
 					}else{
 						jsons = [rawjson]
 					}
+					let last_json:any = ''
+					if (rawjson.includes('\n') && rawjson.length > 1000){
+						last_json = jsons.pop()
+						if (last_json[last_json.length-1] !== '}'){
+							leftover = last_json
+						}
+					}
+
 					for (const j of jsons){
 						const json = JSON.parse(j)
 						if (json.done === false) {
@@ -224,6 +237,13 @@ function GPTHome(props:{
 						}
 					}
 					setAnswer(content)
+
+					if (last_json.length && last_json[last_json.length - 1] === '}'){
+						const last_json_obj = JSON.parse(last_json)
+						if (last_json_obj.done === true){
+							setAnswerReceived(true)
+						}
+					}
 				}
 			}
 			postData()
