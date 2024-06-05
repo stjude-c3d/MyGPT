@@ -194,6 +194,11 @@ function GPTHome(props:{
 			'prompt': question,
 			'stream': true,
 			'system': answerWithoutContext ? '' : systemPrompt,
+			'options': {
+				'temperature': props.currentSettings.temperature,
+				'top_k': props.currentSettings.top_k,
+				'top_p': props.currentSettings.top_p,
+			}
 		})
 		
 		if(context.length > 1 && question.length > 1){

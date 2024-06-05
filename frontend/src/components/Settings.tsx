@@ -287,6 +287,55 @@ const Settings = (props:{
 									}
 									
 								</div>
+								<div className='text-nav inline-block px-2 mx-4 my-2 text-lg font-semibold'>LLM Parameters</div>
+								<div className='flex flex-row my-4'>
+									<div className='h-[20px] text-nav inline-block px-2 mx-4 my-auto text-lg -rotate-90'>Precise</div>
+									<div className='w-[500px]'>
+										<div className='flex flex-column'>
+											<div className='text-nav inline-block px-2 mx-4 my-2 text-md w-[100px]'>Temperature</div>
+											{/* slider from value 0 to 1 in increament of 0.1 */}
+											<div className='mx-4'>
+												<input type='range' min='0' max='1' step='0.1' value={currentSettings.temperature} 
+													onChange={(e)=>props.settingsCallback({...currentSettings, temperature: parseFloat(e.target.value)})}
+													className='w-80 p-1'
+												/>
+												<div className='text-nav text-sm text-center'>{currentSettings.temperature}</div>
+											</div>
+										</div>
+										<div className='flex flex-column'>
+											<div className='text-nav inline-block px-2 mx-4 my-2 text-md w-[100px]'>Top K</div>
+											{/* slider from value 0 to 1000 in increament of 50 */}
+											<div className='mx-4'>
+												<input type='range' min='5' max='100' step='5' value={currentSettings.top_k} 
+													onChange={(e)=>props.settingsCallback({...currentSettings, top_k: parseInt(e.target.value)})}
+													className='w-80 p-1'
+												/>
+												<div className='text-nav text-sm text-center'>{currentSettings.top_k}</div>
+											</div>
+										</div>
+										<div className='flex flex-column'>
+											<div className='text-nav inline-block px-2 mx-4 my-2 text-md w-[100px]'>Top P</div>
+											{/* slider from value 0 to 1 in increament of 0.1 */}
+											<div className='mx-4'>
+												<input type='range' min='0.4' max='1.0' step='0.05' value={currentSettings.top_p} 
+													onChange={(e)=>props.settingsCallback({...currentSettings, top_p: parseFloat(e.target.value)})}
+													className='w-80 p-1'
+												/>
+												<div className='text-nav text-sm text-center'>{currentSettings.top_p}</div>
+											</div>
+										</div>
+									</div>
+									<div className='h-[20px] text-nav inline-block px-2 mx-4 my-auto text-lg -rotate-90'>Creative</div>
+								</div>
+								{
+									props.defaultSettings.temperature !== currentSettings.temperature || 
+									props.defaultSettings.top_k !== currentSettings.top_k ||
+									props.defaultSettings.top_p !== currentSettings.top_p
+									?
+									<button className='bg-panel1 text-white px-4 py-1 rounded-md mx-auto w-32' onClick={()=>{
+										props.settingsCallback({...currentSettings, temperature: props.defaultSettings.temperature, top_k: props.defaultSettings.top_k, top_p: props.defaultSettings.top_p})
+									}}>Reset</button> : <></>
+								}
 							</div> : <></>
 						}
 						{

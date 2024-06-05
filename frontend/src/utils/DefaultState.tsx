@@ -30,6 +30,9 @@ const defaultSettings = {
     system_prompt: 'Use following information to answer the question in less than 100 words, try not to use anything else:',
 	direct_chat_system_prompt: 'Answer the question in less than 200 words.',
 	fetchPapers: false,
+	temperature: 0.4,
+	top_k: 20,
+	top_p: 0.7,
 	relevance_score_cutoff: {
 		best: 0.4,
 		worst: 1.5
