@@ -291,37 +291,49 @@ const Settings = (props:{
 								<div className='flex flex-row my-4'>
 									<div className='h-[20px] text-nav inline-block px-2 mx-4 my-auto text-lg -rotate-90'>Precise</div>
 									<div className='w-[500px]'>
-										<div className='flex flex-column'>
+										<div className='flex flex-column mt-2'>
 											<div className='text-nav inline-block px-2 mx-4 my-2 text-md w-[100px]'>Temperature</div>
 											{/* slider from value 0 to 1 in increament of 0.1 */}
 											<div className='mx-4'>
 												<input type='range' min='0' max='1' step='0.1' value={currentSettings.temperature} 
 													onChange={(e)=>props.settingsCallback({...currentSettings, temperature: parseFloat(e.target.value)})}
-													className='w-80 p-1'
+													className='w-80 p-1 accent-panel1'
 												/>
-												<div className='text-nav text-sm text-center'>{currentSettings.temperature}</div>
+												<div className='flex flex-row justify-between'>
+													<div className='text-nav text-sm text-center'>0</div>
+													<div className='text-nav text-sm text-center font-semibold'>{currentSettings.temperature}</div>
+													<div className='text-nav text-sm text-center'>1</div>
+												</div>
 											</div>
 										</div>
-										<div className='flex flex-column'>
+										<div className='flex flex-column mt-2'>
 											<div className='text-nav inline-block px-2 mx-4 my-2 text-md w-[100px]'>Top K</div>
 											{/* slider from value 0 to 1000 in increament of 50 */}
 											<div className='mx-4'>
 												<input type='range' min='5' max='100' step='5' value={currentSettings.top_k} 
 													onChange={(e)=>props.settingsCallback({...currentSettings, top_k: parseInt(e.target.value)})}
-													className='w-80 p-1'
+													className='w-80 p-1 accent-panel1'
 												/>
-												<div className='text-nav text-sm text-center'>{currentSettings.top_k}</div>
+												<div className='flex flex-row justify-between'>
+													<div className='text-nav text-sm text-center'>5</div>
+													<div className='text-nav text-sm text-center font-semibold'>{currentSettings.top_k}</div>
+													<div className='text-nav text-sm text-center'>100</div>
+												</div>
 											</div>
 										</div>
-										<div className='flex flex-column'>
+										<div className='flex flex-column mt-2'>
 											<div className='text-nav inline-block px-2 mx-4 my-2 text-md w-[100px]'>Top P</div>
 											{/* slider from value 0 to 1 in increament of 0.1 */}
 											<div className='mx-4'>
 												<input type='range' min='0.4' max='1.0' step='0.05' value={currentSettings.top_p} 
 													onChange={(e)=>props.settingsCallback({...currentSettings, top_p: parseFloat(e.target.value)})}
-													className='w-80 p-1'
+													className='w-80 p-1 accent-panel1'
 												/>
-												<div className='text-nav text-sm text-center'>{currentSettings.top_p}</div>
+												<div className='flex flex-row justify-between'>
+													<div className='text-nav text-sm text-center'>0.4</div>
+													<div className='text-nav text-sm text-center font-semibold'>{currentSettings.top_p}</div>
+													<div className='text-nav text-sm text-center'>1.0</div>
+												</div>
 											</div>
 										</div>
 									</div>
