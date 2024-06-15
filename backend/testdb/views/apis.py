@@ -63,16 +63,17 @@ def get_context(request):
         model = json_request['model_type']
         model_type = Model.objects.get(model_name=model)
         dataset_name = json_request['dataset']
+        dataset = Dataset.objects.get(dataset_name=dataset_name)
+        embedding_model = dataset.embedding_model
         new_conversation = json_request['new_conversation']
         previous_question = json_request['previous_query']
         no_context = json_request['no_context']
-        sentence_transformer = json_request['sentence_transformer']
         if no_context:    
             context, titles, pages, starts, stops, chunks_txt, distances = '', [], [], [], [], [], []
             sources = []
             relevance_score = 0
         else:
-            context, titles, pages, starts, stops, chunks_txt, distances = nearestDataChroma(question_text, dataset_name, sentence_transformer)
+            context, titles, pages, starts, stops, chunks_txt, distances = nearestDataChroma(question_text, dataset_name, embedding_model)
             sources = []
             distances = [round(dist, 3) for dist in distances]
             relevance_score = get_relevance_score(distances)
@@ -122,7 +123,7 @@ def get_context(request):
         
         # add embeddings to question
         if not no_context:
-            add_embeddings_to_qna(question_text, 'question', sentence_transformer)
+            add_embeddings_to_qna(question_text, 'question', embedding_model)
 
         question_sources = Source.objects.filter(question=question)
         for idx, title in enumerate(titles):
@@ -262,10 +263,11 @@ def save_answer(request):
         model_type = Model.objects.get(model_name=model)
         question = Question.objects.get(question_text=question_text, model_type=model_type)
         dataset_name = json_request['dataset']
-        sentence_transformer = json_request['sentence_transformer']
+        dataset = Dataset.objects.get(dataset_name=dataset_name)
+        embedding_model = dataset.embedding_model
         no_context = json_request['no_context']
         if not no_context:
-            _, _, _, _, _, _, distances = nearestDataChroma(answer_text, dataset_name, sentence_transformer)
+            _, _, _, _, _, _, distances = nearestDataChroma(answer_text, dataset_name, embedding_model)
             distances = [round(dist, 3) for dist in distances]
             relevance_score = get_relevance_score(distances)
         else:
@@ -278,7 +280,7 @@ def save_answer(request):
         )
         # add embeddings to answer
         if not no_context:
-            add_embeddings_to_qna(answer_text, 'answer', sentence_transformer)
+            add_embeddings_to_qna(answer_text, 'answer', embedding_model)
         return Response({'saved':True, 'relevance_score': relevance_score}, content_type="application/json")
 
 @api_view(['POST'])

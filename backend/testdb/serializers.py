@@ -9,7 +9,7 @@ class ModelSerializer(serializers.HyperlinkedModelSerializer):
 class DatasetSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Dataset
-        fields = ['dataset_name', 'zotero_id', 'dataset_size', 'dataset_date_time', 'user', 'user_email', 'user_group', 'embedding_added', 'direct_chat_without_docs']
+        fields = ['dataset_name', 'zotero_id', 'dataset_size', 'dataset_date_time', 'user', 'user_email', 'user_group', 'embedding_model', 'embedding_added', 'direct_chat_without_docs']
 
 class PapersSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:

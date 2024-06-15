@@ -299,7 +299,8 @@ def add_to_chroma(dataset_name, sentence_transformer = 'all-MiniLM-L6-v2'):
 
     # use multi-qa-MiniLM-L6-cos-v1 embedding function
     if sentence_transformer != 'all-MiniLM-L6-v2':
-        sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=sentence_transformer)
+        # sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=sentence_transformer)
+        sentence_transformer_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=sentence_transformer)
     else:
         sentence_transformer_ef = embedding_functions.DefaultEmbeddingFunction()
 
@@ -341,6 +342,7 @@ def add_to_chroma(dataset_name, sentence_transformer = 'all-MiniLM-L6-v2'):
         new_count = collection.count()
         dataset = Dataset.objects.get(dataset_name=dataset_name)
         dataset.dataset_size = new_count
+        dataset.embedding_model = sentence_transformer
         dataset.save()
 
         # add embeddings to database
@@ -360,7 +362,8 @@ def add_demo_dataset(sentence_transformer = 'multi-qa-MiniLM-L6-cos-v1'):
 
     # use multi-qa-MiniLM-L6-cos-v1 embedding function
     if sentence_transformer != 'all-MiniLM-L6-v2':
-        sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=sentence_transformer)
+        sentence_transformer_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=sentence_transformer)
+        # sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=sentence_transformer)
     else:
         sentence_transformer_ef = embedding_functions.DefaultEmbeddingFunction()
 
@@ -492,7 +495,8 @@ def add_embeddings_to_chunks(dataset):
 def add_embeddings_to_qna(text, text_type = 'question', sentence_transformer = 'multi-qa-MiniLM-L6-cos-v1'):
     # use multi-qa-MiniLM-L6-cos-v1 embedding function
     if sentence_transformer != 'all-MiniLM-L6-v2':
-        sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=sentence_transformer)
+        sentence_transformer_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=sentence_transformer)
+        # sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=sentence_transformer)
     else:
         sentence_transformer_ef = embedding_functions.DefaultEmbeddingFunction()
 
@@ -668,7 +672,8 @@ def nearestDataChroma(text, dataset_name, sentence_transformer='multi-qa-MiniLM-
     # client = chromadb.Client()
     # use multi-qa-MiniLM-L6-cos-v1 embedding function
     if sentence_transformer != 'all-MiniLM-L6-v2':
-        sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=sentence_transformer)
+        # sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=sentence_transformer)
+        sentence_transformer_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=sentence_transformer)
     else:
         sentence_transformer_ef = embedding_functions.DefaultEmbeddingFunction()
 
@@ -889,7 +894,8 @@ def add_video_to_chroma(dataset_name, sentence_transformer = 'multi-qa-MiniLM-L6
 
     # use multi-qa-MiniLM-L6-cos-v1 embedding function
     if sentence_transformer != 'all-MiniLM-L6-v2':
-        sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=sentence_transformer)
+        # sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=sentence_transformer)
+        sentence_transformer_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=sentence_transformer)
     else:
         sentence_transformer_ef = embedding_functions.DefaultEmbeddingFunction()
 
@@ -931,6 +937,7 @@ def add_video_to_chroma(dataset_name, sentence_transformer = 'multi-qa-MiniLM-L6
         new_count = collection.count()
         dataset = Dataset.objects.get(dataset_name=dataset_name)
         dataset.dataset_size = new_count
+        dataset.embedding_model = sentence_transformer
         dataset.save()
 
         # add embeddings to database

@@ -26,6 +26,7 @@ class Dataset(models.Model):
 	user_email = models.CharField(max_length=200, default='-')
 	user_group = models.CharField(max_length=200, default='-')
 	embedding_added = models.BooleanField(default=False)
+	embedding_model = models.CharField(max_length=60, default='-')
 	direct_chat_without_docs = models.BooleanField(default=False)
 	dataset_date_time = models.DateTimeField(default=timezone.now, null=True)
 

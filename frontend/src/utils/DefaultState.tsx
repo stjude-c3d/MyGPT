@@ -25,7 +25,8 @@ const defaultSettings = {
 		'all-MiniLM-L12-v2',
 		'all-mpnet-base-v2', 
 		'multi-qa-mpnet-base-dot-v1',
-		'paraphrase-albert-small-v2'
+		'paraphrase-albert-small-v2',
+		'Snowflake/snowflake-arctic-embed-m'
 	],
     system_prompt: 'Use following information to answer the question in less than 100 words, try not to use anything else:',
 	direct_chat_system_prompt: 'Answer the question in less than 200 words.',
