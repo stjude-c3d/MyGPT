@@ -313,12 +313,13 @@ def add_to_chroma(dataset_name, sentence_transformer = 'all-MiniLM-L6-v2'):
     client = chromadb.PersistentClient(path='/code/chroma_storage/.')
 
     # use multi-qa-MiniLM-L6-cos-v1 embedding function
-    if sentence_transformer != 'all-MiniLM-L6-v2':
-        # sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=sentence_transformer)
-        sentence_transformer_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=sentence_transformer)
-    else:
+    if sentence_transformer == 'all-MiniLM-L6-v2':
         sentence_transformer_ef = embedding_functions.DefaultEmbeddingFunction()
-
+    elif '/' in sentence_transformer:
+        sentence_transformer_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=sentence_transformer)
+    else:    
+        sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=sentence_transformer)
+        
     # If the collection already exists, we will delete it and create a new one.
     client.get_or_create_collection(name=dataset_name)
     client.delete_collection(name=dataset_name)
@@ -376,11 +377,12 @@ def add_demo_dataset(sentence_transformer = 'multi-qa-MiniLM-L6-cos-v1'):
     client = chromadb.PersistentClient(path='/code/chroma_storage/.')
 
     # use multi-qa-MiniLM-L6-cos-v1 embedding function
-    if sentence_transformer != 'all-MiniLM-L6-v2':
-        sentence_transformer_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=sentence_transformer)
-        # sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=sentence_transformer)
-    else:
+    if sentence_transformer == 'all-MiniLM-L6-v2':
         sentence_transformer_ef = embedding_functions.DefaultEmbeddingFunction()
+    elif '/' in sentence_transformer:
+        sentence_transformer_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=sentence_transformer)
+    else:    
+        sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=sentence_transformer)
 
     # If the collection already exists, we will delete it and create a new one.
     if len(client.list_collections()):
@@ -509,11 +511,12 @@ def add_embeddings_to_chunks(dataset):
 
 def add_embeddings_to_qna(text, text_type = 'question', sentence_transformer = 'multi-qa-MiniLM-L6-cos-v1'):
     # use multi-qa-MiniLM-L6-cos-v1 embedding function
-    if sentence_transformer != 'all-MiniLM-L6-v2':
-        sentence_transformer_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=sentence_transformer)
-        # sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=sentence_transformer)
-    else:
+    if sentence_transformer == 'all-MiniLM-L6-v2':
         sentence_transformer_ef = embedding_functions.DefaultEmbeddingFunction()
+    elif '/' in sentence_transformer:
+        sentence_transformer_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=sentence_transformer)
+    else:    
+        sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=sentence_transformer)
 
     # get embeddings
     embedding = sentence_transformer_ef([text])
@@ -686,11 +689,12 @@ def nearestDataChroma(text, dataset_name, sentence_transformer='multi-qa-MiniLM-
     # collection_name = 'pub_collection'
     # client = chromadb.Client()
     # use multi-qa-MiniLM-L6-cos-v1 embedding function
-    if sentence_transformer != 'all-MiniLM-L6-v2':
-        # sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=sentence_transformer)
-        sentence_transformer_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=sentence_transformer)
-    else:
+    if sentence_transformer == 'all-MiniLM-L6-v2':
         sentence_transformer_ef = embedding_functions.DefaultEmbeddingFunction()
+    elif '/' in sentence_transformer:
+        sentence_transformer_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=sentence_transformer)
+    else:    
+        sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=sentence_transformer)
 
     # If the collection already exists, we just return it. This allows us to add more
     # data to an existing collection.
@@ -908,11 +912,12 @@ def add_video_to_chroma(dataset_name, sentence_transformer = 'multi-qa-MiniLM-L6
     client = chromadb.PersistentClient(path='/code/chroma_storage/.')
 
     # use multi-qa-MiniLM-L6-cos-v1 embedding function
-    if sentence_transformer != 'all-MiniLM-L6-v2':
-        # sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=sentence_transformer)
-        sentence_transformer_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=sentence_transformer)
-    else:
+    if sentence_transformer == 'all-MiniLM-L6-v2':
         sentence_transformer_ef = embedding_functions.DefaultEmbeddingFunction()
+    elif '/' in sentence_transformer:
+        sentence_transformer_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=sentence_transformer)
+    else:    
+        sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=sentence_transformer)
 
     # If the collection already exists, we will delete it and create a new one.
     client.get_or_create_collection(name=dataset_name)
