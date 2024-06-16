@@ -21,3 +21,4 @@ pdfkit
 ollama
 duckdb
 openpyxl
+langchain_community
