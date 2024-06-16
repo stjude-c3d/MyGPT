@@ -148,7 +148,7 @@ const Settings = (props:{
 
 	return (
 		// create floating panel with opque background
-		<div className='fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center'>
+		<div className='fixed inset-0 z-50 bg-black bg-opacity-70 flex items-center justify-center'>
 			<div className={'bg-panel1 w-3/4 max-h-[1100px] max-w-[1200px] rounded-lg ' + (window.screen.availHeight < 1000 ? 'h-[95vh]' : 'h-[75vh]')}>
 				<div className='flex justify-between'>
 					<div className='text-2xl font-bold text-white mt-8 mx-8'>Settings</div>
@@ -197,8 +197,14 @@ const Settings = (props:{
 						</div>
 						{ activeTab === 'datasets' ?
 							<div className={'px-8 py-2 flex flex-col divide-y ' + (workflowCollapsed ? ' h-[60vh] max-h-[770px]' : ' h-[40vh] max-h-[470px]')}>
+								{/* add new library */}
+								<AddLibrarySettings
+									currentSettings={currentSettings}
+									settingsCallback={props.settingsCallback}
+									user={props.user}
+								/>
 								{/* list of available libraries */}
-								<div className='flex flex-col justify-start mt-4'>
+								<div className='flex flex-col justify-start mb-8'>
 									<div className='text-nav px-2 flex justify-start mt-2 text-lg font-semibold'> Available libraries </div>
 									<div className='text-nav px-4 flex justify-start'>
 										<ul className='list-disc'>
@@ -239,19 +245,12 @@ const Settings = (props:{
 											})}
 										</ul>
 									</div>
-									<div className='flex justify-start text-sm text-nav mt-4'>
+									<div className='flex justify-start text-sm text-nav my-4'>
 										<p>
 											<b>Note:</b> Deleting a library is irreversible action and will remove all papers and annotations associated with it.
 										</p>
 										</div>
 								</div>
-
-									{/* add new library */}
-									<AddLibrarySettings
-										currentSettings={currentSettings}
-										settingsCallback={props.settingsCallback}
-										user={props.user}
-									/>
 								</div> : <></>
 							}
 							{ activeTab === 'llms' ?

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
+import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
+import { DropdownOptions } from './DropDownMenu'
 
 const AddLibrarySettings = (props: {
 	currentSettings: any,
@@ -16,8 +17,8 @@ const AddLibrarySettings = (props: {
   const [addLibrary, setAddLibrary] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
 
-  const [zoteroPanel, setZoteroPanel] = useState(true)
-  const [uploadPanel, setUploadPanel] = useState(false)
+  const [uploadPanel, setUploadPanel] = useState(true)
+  const [zoteroPanel, setZoteroPanel] = useState(false)
   const [videoPanel, setVideoPanel] = useState(false)
 
   const [UploadLibraryName, setUploadLibraryName] = useState('')
@@ -152,16 +153,6 @@ const AddLibrarySettings = (props: {
 		{/*  add choice button with 2 options */}
 		<div className='flex justify-start'>
 			<div className={'inline-block px-4 py-1 shadow rounded-l-lg border-2 border-panel1 ' + 
-				(zoteroPanel ? 'bg-panel1 text-white cursor-default ' : 'text-panel1 bg-white cursor-pointer')}
-				onClick={() => {
-					setZoteroPanel(true)
-					setUploadPanel(false)
-					setVideoPanel(false)
-				}}
-			>
-				Add Zotero library
-			</div>
-			<div className={'inline-block px-4 py-1 shadow border-2 border-y-panel1 ' + 
 				(uploadPanel ? 'bg-panel1 text-white cursor-default ' : 'text-panel1 bg-white cursor-pointer')}
 				onClick={() => {
 					setZoteroPanel(false)
@@ -170,6 +161,16 @@ const AddLibrarySettings = (props: {
 				}}
 			>
 				Upload documents
+			</div>
+			<div className={'inline-block px-4 py-1 shadow border-2 border-y-panel1 ' + 
+				(zoteroPanel ? 'bg-panel1 text-white cursor-default ' : 'text-panel1 bg-white cursor-pointer')}
+				onClick={() => {
+					setZoteroPanel(true)
+					setUploadPanel(false)
+					setVideoPanel(false)
+				}}
+			>
+				Add Zotero library
 			</div>
 			<div className={'inline-block px-4 py-1 shadow rounded-r-lg border-2 border-panel1 ' + 
 				(videoPanel ? 'bg-panel1 text-white cursor-default ' : 'text-panel1 bg-white cursor-pointer')}
@@ -186,7 +187,7 @@ const AddLibrarySettings = (props: {
 			<div className='flex justify-start'>
 				<div className='flex flex-col mt-4'>
 					<div className='flex py-2'>
-						<div className='text-nav w-40 p-1'>Zotero API key*</div>
+						<div className='text-nav w-48 p-1'>Zotero API key*</div>
 						<input type='text' disabled={currentSettings.restriction_without_login && !props.user} placeholder=' Zotero API key' className='rounded-md w-72 p-1 text-nav' value={apiKey} onChange={(e) => setApiKey(e.target.value)}/>
 						<div className='text-white text-lg font-bold cursor-pointer mx-1 p-1 hover:bg-panel1 rounded-md' onClick={()=>{setShowAPIHelp(!showAPIHelp)}}>
 							<QuestionMarkCircleIcon className='h-6 w-6 text-white cursor-pointer'/>
@@ -204,7 +205,7 @@ const AddLibrarySettings = (props: {
 						<div className='text-nav p-1 text-lg'>+</div>
 					</div> */}
 					<div className='flex pb-2'>
-						<div className='text-nav w-40 p-1'>Zotero library ID*</div>
+						<div className='text-nav w-48 p-1'>Zotero library ID*</div>
 						<input type='text' disabled={currentSettings.restriction_without_login && !props.user} placeholder='Zotero user ID or group ID e.g. 1234567' className='rounded-md w-72 p-1 text-nav h-8' value={libraryId} onChange={(e) => setLibraryId(e.target.value)}/>
 						<div className='text-white text-lg font-bold cursor-pointer mx-1 p-1 hover:bg-panel1 rounded-md h-8' onClick={()=>{setShowLibraryIDHelp(!showLibraryIDHelp)}}>
 							<QuestionMarkCircleIcon className='h-6 w-6 text-white cursor-pointer'/>
@@ -220,7 +221,7 @@ const AddLibrarySettings = (props: {
 						</>: <></>}
 					</div>
 					{/* add switch to indicate user ID or group UD */}
-					<div className='flex pb-2 ml-40'>
+					<div className='flex pb-2 ml-48'>
 						{/* add toggle button switch */}
 						<div className='flex items-center'>
 							<div className='text-nav p-1'>User ID</div>
@@ -232,8 +233,8 @@ const AddLibrarySettings = (props: {
 							<div className='text-nav p-1'>Group ID</div>
 							</div>
 					</div>
-					<div className='flex'>
-						<div className='text-nav w-40 p-1'>Zotero collection ID*</div>	
+					<div className='flex pb-2'>
+						<div className='text-nav w-48 p-1'>Zotero collection ID*</div>	
 						<input type='text' disabled={currentSettings.restriction_without_login && !props.user} placeholder='Zotero collection ID e.g. ABC12DEF' className='rounded-md w-72 p-1 text-nav h-8' value={collectionId} onChange={(e) => setCollectionId(e.target.value)}/>
 						<div className='text-white text-lg font-bold cursor-pointer mx-1 p-1 hover:bg-panel1 rounded-md h-8' onClick={()=>{setShowCollectionIDHelp(!showCollectionIDHelp)}}>
 							<QuestionMarkCircleIcon className='h-6 w-6 text-white cursor-pointer'/>
@@ -247,6 +248,17 @@ const AddLibrarySettings = (props: {
 						</div>
 						</>: <></>}
 					
+					</div>
+					<div className='flex'>
+						<div className='text-nav w-48 p-1'>Sentence Transformer*</div>
+						<DropdownOptions
+							width={'280px'}
+							optionsList={props.currentSettings.sentence_transformers}
+							defaultOption={currentSettings.sentence_transformer}
+							dropDownCallback={(option:string)=>{
+								props.settingsCallback({...currentSettings, selected_sentence_transformer: option})
+							}}
+						/>
 					</div>
 					<div className='flex justify-start'>
 						<button className='bg-panel1 text-white px-4 py-2 rounded-md my-2' onClick={()=>setAddLibrary(true)}>Add library</button>
@@ -273,14 +285,15 @@ const AddLibrarySettings = (props: {
 						</div> :
 						<></>
 					}
-					<div className='flex justify-start p-2'>
-						<div className='text-nav w-32 p-1'>Library Name</div>
-						<input type='text' placeholder=' Library Name' disabled={currentSettings.restriction_without_login && !props.user} className='rounded-md w-60 px-2 py-1 text-nav' value={UploadLibraryName}
+					<div className='flex justify-start m-2'>
+						<div className='text-nav p-1 w-48'>Library Name</div>
+						<input type='text' placeholder=' Library Name' disabled={currentSettings.restriction_without_login && !props.user} className='rounded-md w-[270px] px-2 py-1 text-nav' value={UploadLibraryName}
 							onChange={(e) => setUploadLibraryName(e.target.value)}
 						/>
 					</div>
-					<div className='flex flex-col mt-2'>
+					<div className='flex justify-start m-2'>
 						{/* multiple documents upload */}
+						<div className='text-nav p-1 w-48'>Select Documents</div>
 						<input type='file' disabled={currentSettings.restriction_without_login && !props.user} multiple className='rounded-md w-60 p-1 text-nav' onChange={(e) => {
 							const files = e.target.files
 							if (files){
@@ -288,6 +301,17 @@ const AddLibrarySettings = (props: {
 								setUploadDocs(docs)
 							}
 						}}/>
+					</div>
+					<div className='flex justify-start m-2'>
+						<div className='text-nav p-1 w-48'>Sentence Transformer</div>
+						<DropdownOptions
+							width={'270px'}
+							optionsList={props.currentSettings.sentence_transformers}
+							defaultOption={currentSettings.sentence_transformer}
+							dropDownCallback={(option:string)=>{
+								props.settingsCallback({...currentSettings, selected_sentence_transformer: option})
+							}}
+						/>
 					</div>
 					<div className='flex justify-center'>
 						<button className='bg-panel1 text-white px-4 py-2 rounded-md m-2'
@@ -344,6 +368,18 @@ const AddLibrarySettings = (props: {
 							</div>
 							{uploadDocCount < 41 ? <button className='text-panel1 bg-white px-4 py-2 rounded-md mx-2' disabled={currentSettings.restriction_without_login && !props.user} onClick={()=>setUploadDocCount(uploadDocCount+5)}>+5</button> : <></>}
 						</div>
+					</div>
+					<div className='flex justify-start text-nav font-bold p-1 my-2 mx-auto w-72'> AND </div>
+					<div className='flex justify-start p-2 flex-col'>
+						<div className='text-nav w-48 p-1 my-2'>Sentence Transformer</div>
+						<DropdownOptions
+							width={'280px'}
+							optionsList={props.currentSettings.sentence_transformers}
+							defaultOption={currentSettings.sentence_transformer}
+							dropDownCallback={(option:string)=>{
+								props.settingsCallback({...currentSettings, selected_sentence_transformer: option})
+							}}
+						/>
 					</div>
 					<div className='flex justify-start'>
 						<button className='bg-panel1 text-white px-4 py-2 rounded-md m-2'

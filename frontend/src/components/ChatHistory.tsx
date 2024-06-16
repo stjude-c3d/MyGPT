@@ -52,7 +52,7 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 
 	return (
 		// create floating panel with opque background
-		<div className='fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center'>
+		<div className='fixed inset-0 z-50 bg-black bg-opacity-70 flex items-center justify-center'>
 			<div className={'bg-panel1 w-3/4 max-h-[1100px] max-w-[1200px] rounded-lg ' + (window.screen.availHeight < 1000 ? 'h-[95vh]' : 'h-[75vh]')}>
 				<div className='flex justify-between'>
 					<div className='text-2xl font-bold text-white mt-8 mx-8'>Chat History</div>

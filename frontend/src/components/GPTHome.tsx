@@ -16,6 +16,7 @@ function GPTHome(props:{
 	settingsCallback:any,
 	frontendSettings: any
 }){
+	const [llms, setLlms] = useState<any[]>([])
 	const [searchTerm, setSearchTerm] = useState<any>('')
 	const [query, setQuery] = useState<any[]>([])
 	const [questionRelevancescore, setQuestionRelevancescore] = useState<any[]>([])
@@ -44,6 +45,46 @@ function GPTHome(props:{
 	const [answerWithoutContext, setAnswerWithoutContext] = useState(props.currentSettings.answerWithoutContext)
 
 	const [addDemoLibrary, setAddDemoLibrary] = useState(false)
+
+		// get llms from backend
+		useEffect(()=>{
+
+			const postData = async () => {
+				const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/tags`, {method: 'GET'})
+					const data = await response.json()
+	
+					// set models
+					const llms = data.models.map((model:any) => model.name)
+					setLlms(llms)
+	
+					// add new model to backend API
+					let llms_object:any = []
+					data.models.forEach((model:any) => {
+						// let llm_name = model.name.split(':')[0]
+						let llm_name = model.name
+						let llm_size = model.size* 1e-9
+						let llm_size_gb = llm_size.toFixed(2)
+						llms_object.push({name: llm_name, size: llm_size_gb})
+					})
+					
+					const requestOptions = {
+						method: 'POST',
+						headers: { 
+							'Content-Type': 'application/json',
+							'Authorization': `${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_AUTH_TOKEN_PROD : process.env.REACT_APP_AUTH_TOKEN_DEV}`
+						},
+					setConnection: 'keep-alive',
+					keepalive: true,
+					setTimeout: 10000,
+					body: JSON.stringify({'llms': llms_object})
+					}
+					const response2 = await fetch(`${process.env.REACT_APP_BACKEND_API}api/add_ollama_models/`, requestOptions)
+					const data2 = await response2.json()
+					console.log(data2)
+	
+			}
+			postData()
+		},[])
 
 	useEffect(()=>{
 		const requestOptions = {
@@ -398,13 +439,17 @@ function GPTHome(props:{
 				}
 				<div className='mt-4 p-1 mx-4 flex'>
 					<div className='text-sm text-nav my-auto mx-1'>GPT model</div>
-					<div className='inline-block px-2 bg-panel1 text-white rounded-md cursor-default'>{props.currentSettings.selectedLlm}</div>
-					<div className='pb-1 mx-2 inline-block px-2 bg-white rounded-md cursor-pointer hover:bg-slate-200' 
-						onClick={()=>{
-							props.settingsCallback({...props.currentSettings, selectedPanel: 'llms', showSettings: true})
-						}}>
-						<Cog6ToothIcon className='w-4 h-4 inline-block'/>
-					</div>
+					<select 
+						className='text-md text-nav bg-panel2 py-1 px-2 mx-2 rounded-md w-32'
+						value={props.currentSettings.selectedLlm}
+						onChange={(e) => props.settingsCallback({...props.currentSettings, selectedLlm: e.target.value})}
+					>
+						{llms.map((model:any) => {
+							return (
+								<option key={model} value={model}>{model}</option>
+							)
+						})}
+					</select>
 					
 				</div>
 				<div className='pt-4 mb-2 mx-4 flex'>
@@ -716,8 +761,19 @@ function GPTHome(props:{
 				
 				<div className='p-2 text-sm border-slate-400 border-y'>
 					<div className='text-white inline-block px-2'> Current library </div>
-					<div className='inline-block px-2 py-1 bg-panel3 rounded-md cursor-default'>{props.currentSettings.selectedDataset.split('_').join(' ')}</div>
-					<div className='mx-2 inline-block px-2 py-1 bg-white rounded-md cursor-pointer hover:bg-slate-200' 
+					{/* <div className='inline-block px-2 py-1 bg-panel3 rounded-md cursor-default'>{props.currentSettings.selectedDataset.split('_').join(' ')}</div> */}
+					<select 
+						className='text-md text-nav bg-panel3 py-1 px-2 mx-1 rounded-md w-28 inline-block'
+						value={props.currentSettings.selectedDataset}
+						onChange={(e) => props.settingsCallback({...props.currentSettings, selectedDataset: e.target.value, fetchPapers: true})}
+					>
+						{props.currentSettings.datasets.map((dataset:any) => {
+							return (
+								<option key={dataset} value={dataset}>{dataset.split('_').join(' ')}</option>
+							)
+						})}
+					</select>
+					<div className='mx-1 inline-block px-2 py-1 bg-white rounded-md cursor-pointer hover:bg-slate-200' 
 						onClick={()=>{
 							props.settingsCallback({...props.currentSettings, selectedPanel: 'datasets', showSettings: true})
 						}}>
