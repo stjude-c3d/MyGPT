@@ -1,6 +1,6 @@
 from datasets import Dataset, load_dataset
 from ragas import evaluate
-from ragas.metrics import (answer_relevancy, answer_similarity, context_relevancy)
+from ragas.metrics import (context_relevancy, context_entity_recall)
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.chat_models import ChatOllama
 import os
@@ -15,19 +15,22 @@ llm = ChatOllama(model="llama3:latest", base_url="http://10.220.17.160:11434", h
 
 os.environ["RAGAS_DO_NOT_TRACK"] = "false"
 
-models = ['llama3', 'phi3', 'vicuna', 'gemma', 'mistral-latest', 'llama3-70b']
-embed_num = 6
+# models = ['llama3', 'phi3', 'vicuna', 'gemma', 'mistral-latest', 'llama3-70b']
+# embed_num = 6
+embed_shorthands = ['mini-l6', 'mini-l12', 'qa-cos', 'qa-dot']
+datasets = ['mygpt-CAR-T', 'mygpt-GPCR', 'mygpt-Kinase']
 
-for model in models:
-	for n in range(embed_num):
-		with open(f'results/{model}/query_results_{model}_embed{n+1}.json', 'r') as f:
-			data = json.load(f)
+for shorthand in embed_shorthands:
+	data = []
+	for dataset in datasets:
+		with open(f'evaluation/utils/eval_context/{shorthand}/{dataset}-{shorthand}.json', 'r') as f:
+			data += json.load(f)
 
-		df = pd.DataFrame.from_records(data)
-		print(df)
-		dataset = Dataset.from_pandas(df)
-		scores = evaluate(dataset, metrics=[context_relevancy, answer_similarity, answer_relevancy], embeddings=embeddings, llm=llm)
+	df = pd.DataFrame.from_records(data)
+	print(df)
+	dataset = Dataset.from_pandas(df)
+	scores = evaluate(dataset, metrics=[context_relevancy, context_entity_recall], embeddings=embeddings, llm=llm)
 
-		df = scores.to_pandas()
-		# save the scores to a csv file
-		df.to_csv(f'scores/{model}/{model}_embed{n+1}_score.csv', index=False)
+	df = scores.to_pandas()
+	# save the scores to a csv file
+	df.to_csv(f'scores/context_scores/{shorthand}.csv', index=False)

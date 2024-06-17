@@ -14,8 +14,8 @@ groundtruth_list = eval_doc['ground_truth'].tolist()
 lib_list = eval_doc['library'].tolist()
 
 # List of models and embeddings to evaluate
-embeds = ['multi-qa-mpnet-base-dot-v1']
-embed_shorthands = ['qa-dot']
+embeds = ['Snowflake/snowflake-arctic-embed-m']
+embed_shorthands = ['snowflake']
 datasets = ['mygpt-GPCR', 'mygpt-Kinase', 'mygpt-CAR-T']
 
 # Function to query APIs with payload and measure time taken
@@ -62,7 +62,7 @@ for embed, shorthand in zip(embeds, embed_shorthands):
                     contexts = []
 
                 # Store QA results
-                qa_result = {'question': question, 'context': contexts, 'ground_truth': groundtruth, 'dataset': dataset}
+                qa_result = {'question': question, 'contexts': contexts, 'ground_truth': groundtruth, 'dataset': dataset}
                 # Prepare file path
                 result_file_path = f'evaluation/utils/eval_context/{shorthand}/{proper_dataset}.json'
 
