@@ -61,6 +61,7 @@ def get_context(request):
         json_request = JSONParser().parse(request)
         question_text = json_request['text']
         model = json_request['model_type']
+        skip_highlight = json_request['skip_highlight']
         model_type = Model.objects.get(model_name=model)
         dataset_name = json_request['dataset']
         dataset = Dataset.objects.get(dataset_name=dataset_name)
@@ -161,7 +162,7 @@ def get_context(request):
                     sources_grouped.append([source])
 
         # hightlight pdf with source paper and page
-        if library_type == 'papers':
+        if library_type == 'papers' and not skip_highlight:
             for source_grp in sources_grouped:
                 paper_obj = Papers.objects.filter(paper_title=source_grp[0]['document'])[0].paper_attachment
                 if (len(paper_obj.path.split('/')[-1].split('_')) > 1): 
