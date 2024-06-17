@@ -61,7 +61,10 @@ def get_context(request):
         json_request = JSONParser().parse(request)
         question_text = json_request['text']
         model = json_request['model_type']
-        skip_highlight = json_request['skip_highlight']
+        if 'skip_highlight' in json_request:
+            skip_highlight = json_request['skip_highlight']
+        else:
+            skip_highlight = False
         model_type = Model.objects.get(model_name=model)
         dataset_name = json_request['dataset']
         dataset = Dataset.objects.get(dataset_name=dataset_name)
