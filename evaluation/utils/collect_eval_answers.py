@@ -1,0 +1,84 @@
+import requests
+import os
+import pandas as pd
+import time
+import json
+
+# Define API endpoints
+answer_api = 'https://svlpgpt001a.stjude.org/api/generate/'
+
+# Load evaluation documents and questions
+eval_doc = pd.read_csv('evaluation/documents/mygpt_eval_doc.csv').dropna()
+question_list = eval_doc['question'].tolist()
+groundtruth_list = eval_doc['ground_truth'].tolist()
+lib_list = eval_doc['library'].tolist()
+
+# List of models and embeddings to evaluate
+models = ['llama3:latest', 'gemma:latest', 'mistral:latest', 'llama3:70b', 'llama2:latest', 'vicuna:latest']
+old_embeds = ['all-MiniLM-L6-v2', 'all-MiniLM-L12-v2', 'multi-qa-MiniLM-l6-cos-v1', 'all-mpnet-base-v2', 'multi-qa-mpnet-base-dot-v1', 'paraphrase-albert-small-v2']
+embeds = ['multi-qa-MiniLM-l6-cos-v1', 'all-MiniLM-L6-v2', 'all-MiniLM-L12-v2', 'multi-qa-mpnet-base-dot-v1']
+embed_shorthands = ['qa-cos', 'mini-l6', 'mini-l12', 'qa-dot']
+datasets = ['mygpt-GPCR', 'mygpt-Kinase']
+
+# Function to query APIs with payload and measure time taken
+def query_api(url, payload):
+    headers = {'Content-Type': 'application/json'}
+    start_time = time.time()
+    response = requests.post(url, headers=headers, json=payload)
+    end_time = time.time()
+    print(f"API call to {url} took {end_time - start_time:.2f} seconds.")
+    if response.status_code == 200:
+        return response.json()
+    else:
+        print(f"Error: {response.status_code}")
+        print(response.reason)
+        return None
+
+# Main processing loop
+for embed, shorthand in zip(embeds, embed_shorthands):
+    # Process each model for QA
+    for model in models:
+        for j, (question, library, groundtruth) in enumerate(zip(question_list, lib_list, groundtruth_list)):
+            if f'mygpt-{library}' in datasets:
+                # Log query info
+                print('\n')
+                print(f'MODEL: {model}; EMBEDDING: {embed};')
+                print(f'Loading Question {str(j+1)}...')
+
+                dataset_name = f'mygpt-{library}-{shorthand}'
+                contexts = pd.DataFrame.from_records(f'evaluation/eval_context/{shorthand}/{dataset_name}.json')['context'].tolist()[j]
+
+                # Generate answer prompt (assuming query_api function remains unchanged)
+                system_prompt = 'Use following information to answer the question in less than 100 words, try not to use anything else: ' + str(contexts)
+                answer_prompt = {
+                    "model": model,
+                    "prompt": question,
+                    "stream": False,
+                    'system': system_prompt,
+                    "options": {
+                        "temperature": 0.4,
+                        "top_k": 20,
+                        "top_p": 0.7
+                    }
+                }
+
+                # Choose API endpoint based on model type (assuming query_api function remains unchanged)
+                answer = query_api(answer_api, answer_prompt).get('response', '')
+
+                # Store QA results
+                if answer:
+                    qa_result = {'question': question, 'context': contexts, 'answer': answer, 'ground_truth': groundtruth}
+                    # Prepare file path
+                    model_name = model.removesuffix(":latest").replace(":", "-")
+                    result_file_path = f'evaluation/utils/eval_answers/{model_name}/results-{model_name}-{shorthand}.json'
+
+                    # Check if the file exists to decide whether to append or create new
+                    if os.path.exists(result_file_path):
+                        with open(result_file_path, 'r+') as result_file:
+                            result_data = json.load(result_file)
+                            result_data.append(qa_result)
+                            result_file.seek(0)
+                            json.dump(result_data, result_file, indent=4)
+                    else:
+                        with open(result_file_path, 'w') as result_file:
+                            json.dump([qa_result], result_file, indent=4)
