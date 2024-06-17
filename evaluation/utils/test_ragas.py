@@ -33,4 +33,4 @@ for shorthand in embed_shorthands:
 
 	df = scores.to_pandas()
 	# save the scores to a csv file
-	df.to_csv(f'scores/context_scores/{shorthand}.csv', index=False)
+	df.to_csv(f'evaluation/utils/eval_scores/context_scores/{shorthand}.csv', index=False)
