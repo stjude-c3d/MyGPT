@@ -54,7 +54,6 @@ for embed, shorthand in zip(embeds, embed_shorthands):
                     "no_context": False,
                     "sentence_transformer": embed
                 }
-                print(context_payload)
                 context_raw = query_api(context_api, context_payload)
                 if context_raw:
                     contexts = [source['context'] for source in context_raw.get('sources', [])]

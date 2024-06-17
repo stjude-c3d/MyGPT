@@ -39,3 +39,4 @@ backend/generated_sql_query.txt
 backend/chroma_context.txt
 evaluation/utils/eval_trial_1/results/*
 evaluation/utils/eval_trial_1/scores/*
+evaluation/utils/eval_datasets/*
