@@ -14,9 +14,9 @@ groundtruth_list = eval_doc['ground_truth'].tolist()
 lib_list = eval_doc['library'].tolist()
 
 # List of models and embeddings to evaluate
-embeds = ['multi-qa-MiniLM-l6-cos-v1', 'all-MiniLM-L6-v2', 'all-MiniLM-L12-v2', 'multi-qa-mpnet-base-dot-v1']
-embed_shorthands = ['qa-cos', 'mini-l6', 'mini-l12', 'qa-dot']
-datasets = ['mygpt-GPCR', 'mygpt-Kinase']
+embeds = ['multi-qa-mpnet-base-dot-v1']
+embed_shorthands = ['qa-dot']
+datasets = ['mygpt-GPCR', 'mygpt-Kinase', 'mygpt-CAR-T']
 
 # Function to query APIs with payload and measure time taken
 def query_api(url, payload):
@@ -52,7 +52,8 @@ for embed, shorthand in zip(embeds, embed_shorthands):
                     "related_query": False,
                     "previous_query": "",
                     "no_context": False,
-                    "sentence_transformer": embed
+                    "sentence_transformer": embed,
+                    "skip_highlight": True
                 }
                 context_raw = query_api(context_api, context_payload)
                 if context_raw:
