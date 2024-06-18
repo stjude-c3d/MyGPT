@@ -42,7 +42,7 @@ for shorthand in embed_shorthands:
                 # Log query info
                 print('\n')
                 proper_dataset = f'mygpt-{library}-{shorthand}'
-                print(f'DATASET: {proper_dataset}; EMBEDDING: {embed_shorthands};')
+                print(f'DATASET: {proper_dataset}; EMBEDDING: {shorthand};')
                 print(f'Loading Question {str(j+1)}...')
                 # Get context for the question (assuming query_api function remains unchanged)
                 context_payload = {
