@@ -8,7 +8,7 @@ import json
 answer_api = 'https://svlpgpt001a.stjude.org/api/generate/'
 
 # Load evaluation documents and questions
-eval_doc = pd.read_csv('evaluation/documents/mygpt_eval_doc.csv').dropna()
+eval_doc = pd.read_csv('evaluation/documents/mygpt_eval_doc.csv', encoding = 'ISO-8859-1').dropna()
 question_list = eval_doc['question'].tolist()
 groundtruth_list = eval_doc['ground_truth'].tolist()
 lib_list = eval_doc['library'].tolist()
