@@ -190,8 +190,15 @@ def add_dataset_from_upload(request):
     use_overlap = request.POST.get('use_overlap')
     chunk_size = request.POST.get('chunk_size')
 
+
     use_overlap = True if use_overlap == 'Yes' else False
     chunk_size = int(chunk_size)
+
+    print(f'Sentence Transformer: {request.POST.get("sentence_transformer")}')
+    print(f'Chunk Size: {chunk_size}')
+    print(f'Use Overlap: {use_overlap}')
+    overlap_size = int(0.2 * chunk_size) if use_overlap else 0
+    print(f'Overlap Size: {overlap_size}')
 
     # create dataset
     dataset = Dataset.objects.filter(dataset_name=dataset_name)
@@ -245,6 +252,9 @@ def add_dataset_from_upload(request):
             }
             pdfkit.from_file(base_name + '.html', base_name + '.pdf', options = options)
 
+            with open(base_name + '.pdf', 'rb') as f:
+                paper.paper_attachment.save(dataset_name + '/paper' + str(idx+1) + '.pdf', File(f), save=True)
+
             fulltext = str(df.to_json(orient='records'))
             fulltext_chunk = {'title': paper_titles[idx], 'page': 1, 'content': fulltext, 'type': 'spreadsheet_full'}
             data.append(fulltext_chunk)
@@ -259,9 +269,7 @@ def add_dataset_from_upload(request):
 
                 chunk = {'title': paper_titles[idx], 'page': i, 'content': doc_info, 'type': 'spreadsheet_chunk'}
                 data.append(chunk)
-
-            with open(base_name + '.pdf', 'rb') as f:
-                paper.paper_attachment.save(dataset_name + '/paper' + str(idx+1) + '.pdf', File(f), save=True)
+            
         else:
             pdf_name = base_name + '.pdf'
             with open(base_name + doctype, 'wb') as f:
@@ -278,20 +286,13 @@ def add_dataset_from_upload(request):
             for page_num, page in enumerate(pages):
                 text = page.extract_text()
                 n = chunk_size
-                overlap_size = 0.1 * chunk_size if use_overlap else 0
                 splits = []
                 remainder = ''
                 for i in range(0, len(text), n - overlap_size):
                     item = remainder + text[i : i + n]
                     item = ' '.join(item.split())
-                    if '. ' in item:
-                        remainder = item[item.rindex('. ') + 2: ]
-                        item = item.removesuffix(remainder)
-                    if '(' in item and ')' not in item:
-                        remainder = item[item.rindex('('): ]
-                        item = item.removesuffix(remainder)
-                    elif '(' in item and ')' in item and item.rindex('(') > item.rindex(')'):
-                        remainder = item[item.rindex('('): ]
+                    if '. ' in item and not use_overlap:
+                        remainder = item.split('. ')[-1]
                         item = item.removesuffix(remainder)
                     if len(item) > 10:
                         splits.append(item)

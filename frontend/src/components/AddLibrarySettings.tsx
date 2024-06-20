@@ -33,8 +33,8 @@ const AddLibrarySettings = (props: {
   const [videoPlaylistURL, setVideoPlaylistURL] = useState('')
   const [videoDocURLs, setVideoDocURLs] = useState([''])
 
-  const [useOverlap, setUseOverlap] = useState('')
-  const [chunkSize, setChunkSize] = useState('')
+  const [useOverlap, setUseOverlap] = useState('No')
+  const [chunkSize, setChunkSize] = useState('1000')
 
 //   console.log(UploadLibraryName, uploadDocs)
 
