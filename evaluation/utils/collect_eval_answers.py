@@ -13,9 +13,10 @@ question_list = eval_doc['question'].tolist()
 groundtruth_list = eval_doc['ground_truth'].tolist()
 
 # List of models and embeddings to evaluate
-models = ['llama3:latest', 'gemma:latest', 'mistral:latest', 'llama3:70b', 'llama2:latest', 'vicuna:latest']
-embed_shorthands = ['qa-cos', 'mini-l12', 'snowflake']
-datasets = ['mygpt-GPCR', 'mygpt-Kinase']
+models = ['llama3:latest', 'llama3:70b', 'llama2:latest', 'gemma:latest', 'mistral:latest', 'vicuna:latest']
+# embed_shorthands = ['qa-cos', 'qa-dot', 'mini-l6', 'mini-l12', 'snowflake']
+embed_shorthands = ['qa-cos']
+datasets = ['mygpt-GPCR', 'mygpt-Kinase','mygpt-CAR-T', 'mygpt-IDR', 'mygpt-PTM']
 
 # Function to query APIs with payload and measure time taken
 def query_api(url, payload):
@@ -33,30 +34,34 @@ def query_api(url, payload):
 
 # Main processing loop
 for shorthand in embed_shorthands:
-    dataset_name = f'mygpt-all-{shorthand}'
-    with open(f'evaluation/utils/eval_context/{shorthand}/{dataset_name}.json') as f:
-        context_lists = pd.DataFrame.from_dict(json.loads(f.read()))['contexts'].tolist()
     # Process each model for QA
     for model in models:
-        for j, (question, groundtruth, contexts) in enumerate(zip(question_list, groundtruth_list, context_lists)):
-            # Log query info
-            print('\n')
-            print(f'MODEL: {model}; EMBEDDING: {shorthand};')
-            print(f'Loading Question {str(j+1)}...')
+        for j, (question, library, groundtruth) in enumerate(zip(question_list, lib_list, groundtruth_list)):
+            if f'mygpt-{library}' in datasets:
+                # Log query info
+                print('\n')
+                print(f'MODEL: {model}; EMBEDDING: {shorthand};')
+                print(f'Loading Question {str(j+1)}...')
 
-            # Generate answer prompt (assuming query_api function remains unchanged)
-            system_prompt = 'Use following information to answer the question in less than 100 words, try not to use anything else: ' + str(contexts)
-            answer_prompt = {
-                "model": model,
-                "prompt": question,
-                "stream": False,
-                'system': system_prompt,
-                "options": {
-                    "temperature": 0.4,
-                    "top_k": 20,
-                    "top_p": 0.7
+                dataset_name = f'mygpt-all-{shorthand}'
+                # read json file and get context for the question j
+                with open(f'evaluation/utils/eval_context/{shorthand}/{dataset_name}.json', 'r') as f:
+                    json_data = json.load(f)
+                    contexts = json_data['contexts'][j]
+
+                # Generate answer prompt (assuming query_api function remains unchanged)
+                system_prompt = 'Use following information to answer the question in less than 100 words, try not to use anything else: ' + str(contexts)
+                answer_prompt = {
+                    "model": model,
+                    "prompt": question,
+                    "stream": False,
+                    'system': system_prompt,
+                    "options": {
+                        "temperature": 0.4,
+                        "top_k": 20,
+                        "top_p": 0.7
+                    }
                 }
-            }
 
             # Choose API endpoint based on model type (assuming query_api function remains unchanged)
             answer = query_api(answer_api, answer_prompt).get('response', '')
