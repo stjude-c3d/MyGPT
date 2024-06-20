@@ -187,6 +187,11 @@ def add_dataset_from_upload(request):
     user = request.POST.get('user')
     user_email = request.POST.get('user_email')
     user_group = request.POST.get('user_group')
+    use_overlap = request.POST.get('use_overlap')
+    chunk_size = request.POST.get('chunk_size')
+
+    use_overlap = True if use_overlap == 'Yes' else False
+    chunk_size = int(chunk_size)
 
     # create dataset
     dataset = Dataset.objects.filter(dataset_name=dataset_name)
@@ -272,10 +277,11 @@ def add_dataset_from_upload(request):
 
             for page_num, page in enumerate(pages):
                 text = page.extract_text()
-                n = 1000
+                n = chunk_size
+                overlap_size = 0.1 * chunk_size if use_overlap else 0
                 splits = []
                 remainder = ''
-                for i in range(0, len(text), n):
+                for i in range(0, len(text), n - overlap_size):
                     item = remainder + text[i : i + n]
                     item = ' '.join(item.split())
                     if '. ' in item:

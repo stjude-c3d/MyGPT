@@ -33,6 +33,9 @@ const AddLibrarySettings = (props: {
   const [videoPlaylistURL, setVideoPlaylistURL] = useState('')
   const [videoDocURLs, setVideoDocURLs] = useState([''])
 
+  const [useOverlap, setUseOverlap] = useState('')
+  const [chunkSize, setChunkSize] = useState('')
+
 //   console.log(UploadLibraryName, uploadDocs)
 
   useEffect(() => {
@@ -78,6 +81,8 @@ const AddLibrarySettings = (props: {
 			formData.append('user', props.user ? props.user.user: '')
 			formData.append('user_email', props.user ? props.user.user_email : '')
 			formData.append('user_group', props.user && props.user.isAdmin ? 'admin' : 'user')
+			formData.append('use_overlap', useOverlap)
+			formData.append('chunk_size', chunkSize)
 
 			uploadDocs.filter((d)=> d.file !== null && d.title !== '').forEach((doc:any) => {
 				if (doc.title && doc.file){
@@ -310,6 +315,28 @@ const AddLibrarySettings = (props: {
 							defaultOption={currentSettings.sentence_transformer}
 							dropDownCallback={(option:string)=>{
 								props.settingsCallback({...currentSettings, selected_sentence_transformer: option})
+							}}
+						/>
+					</div>
+					<div className='flex justify-start m-2'>
+						<div className='text-nav p-1 w-48'>Use Overlap</div>
+						<DropdownOptions
+							width={'270px'}
+							optionsList={['Yes', 'No']}
+							defaultOption={'No'}
+							dropDownCallback={(option:string)=>{
+								setUseOverlap(option)
+							}}
+						/>
+					</div>
+					<div className='flex justify-start m-2'>
+						<div className='text-nav p-1 w-48'>Chunk Size</div>
+						<DropdownOptions
+							width={'270px'}
+							optionsList={['500', '1000', '1500']}
+							defaultOption={'1000'}
+							dropDownCallback={(option:string)=>{
+								setChunkSize(option)
 							}}
 						/>
 					</div>
