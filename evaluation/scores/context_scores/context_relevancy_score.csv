@@ -1,4 +1,4 @@
-library,question,qa_cos_context_relevancy,qa_dot,mini_l6,mini_l12,snowflake
+library,question,qa_cos,qa_dot,mini_l6,mini_l12,snowflake
 GPCR,"Despite the diversity among GPCRs, are there similarities in their activation pathways?",0.357142857,0.25,0.2,0.214285714,0.294117647
 GPCR,What are the residues and their contacts that contribute to the similarities in activation pathways?,0.3,0.078947368,0.130434783,0.25,0.157894737
 GPCR,Are these residues conserved and significantly part of certain structural elements?,0.235294118,0.2,0.166666667,0.142857143,0.25
