@@ -1,0 +1,233 @@
+library,question,qa_cos_context_relevancy,qa_dot,mini_l6,mini_l12,snowflake
+GPCR,"Despite the diversity among GPCRs, are there similarities in their activation pathways?",0.357142857,0.25,0.2,0.214285714,0.294117647
+GPCR,What are the residues and their contacts that contribute to the similarities in activation pathways?,0.3,0.078947368,0.130434783,0.25,0.157894737
+GPCR,Are these residues conserved and significantly part of certain structural elements?,0.235294118,0.2,0.166666667,0.142857143,0.25
+GPCR,Are there significant rearrangements in the process of activation?,0.173913043,0.6,0.125,0.081081081,0.173913043
+GPCR,Do different patterns of receptor phosphorylation can influence the conformation of arrestins leading to various functional outcomes?,0.352941176,0.6,0.214285714,0.130434783,0.352941176
+GPCR,What is the mechanism by which arrestins are activated and how different patterns of receptor phosphorylation induce distinct conformational changes in arrestins?,0.384615385,0.04,0.125,0.210526316,0.157894737
+GPCR,Is there any preference for the phosphorylation of regions in receptors?,0.035714286,0.015873016,0.148148148,0.058823529,0.130434783
+GPCR,How do the phosphorylation sites interact with arrestins and what are the conserved interaction sites in arrestins?,0.12,0.073170732,0.125,0.136363636,0.157894737
+GPCR,"Is there the existence of a ""selectivity barcode"" on each of the 16 human G proteins for GPCR binding?",0.466666667,0.142857143,0.214285714,0.090909091,0.161290323
+GPCR,Which residue positions in the barcode are universally conserved? ,0.363636364,0.272727273,0.15,0.176470588,0.130434783
+GPCR,How GPCRs recognize G-protein barcodes?,0.142857143,0,0.115384615,0.15,0.111111111
+GPCR,What is the over model for the GPCR-G protein interaction selectivities?,0.090909091,0.428571429,0.125,0.071428571,0.083333333
+GPCR,Is there a selectivity bar code in RGS for GPCR binding?,0.263157895,0.166666667,0.166666667,0.181818182,0.115384615
+GPCR,What is the structural preference for selectivity barcode residues of RGS?,0.1875,0.176470588,0.263157895,0.136363636,0.1875
+GPCR,How are non-synonymous variants in selectivity barcodes of RGS proteins and their impact on signaling?,0.25,0,0.15,0.222222222,0.173913043
+GPCR,What is the overall mechanism for RGS-Galpha-based signaling?,0.111111111,0.0375,0.071428571,0.214285714,0.02173913
+GPCR,What is the mechanism through which the sensor works?,0.307692308,0.6,0.333333333,0,0.125
+GPCR,In which cell lines did the sensor give predicted or unexpected results?,0.266666667,0.333333333,0.125,0.111111111,0.136363636
+GPCR,How were unexpected results validated? Which orthogonal assays were used?,0.081081081,0.125,0,0.222222222,0
+GPCR,What is the sequence of G protein activation steps?,0.058823529,0.6,0.272727273,0.363636364,0.222222222
+GPCR,Summarize what is happening with GPCR during G protein activation?,0.25,0.25,0.277777778,0.285714286,0
+GPCR,Which technologies were used to measure G protein activation?,0.194444444,0.09375,0.176470588,0.026315789,0.136363636
+GPCR,What is the difference between cell surface membrane signaling and endosomal signaling?,0.05,0.111111111,0.076923077,0.076923077,0.2
+GPCR,Which sensors or assays can be used to explain different compartmentalization of signaling?,0.115384615,0.333333333,0.5,0.4,0.111111111
+GPCR,How _arrestin-biased GPCR interact with _arrestin and why it doesnï¿½t interact with G proteins?,0.071428571,0.061538462,0.125,0.041666667,0.5625
+GPCR,"Which sequence or structural motifs differentiate neutral, G protein and _arrestin-biased GPCRs? ",0.069767442,0.333333333,0.185185185,0,0.217391304
+GPCR,Which regions of GPCR modulate ligand efficacy and which potency?,0.545454545,0.063829787,0.166666667,0.2,0.333333333
+GPCR,How do human and mouse TAAR1 differentiate between different ligands?,0.136363636,0.075,0.2,0.15,0.1875
+GPCR,What is the basis of polypharmacology on TAAR1 receptors?,0.272727273,0.076923077,0.210526316,0.090909091,0.2
+GPCR,Do different ligands on the TAAR1 receptor induce different G protein signaling?,0.176470588,0.065217391,0.230769231,0.142857143,0.217391304
+GPCR,In which physiological or pathophysiological processes is TAAR1 signaling active?,0.666666667,0.2,0.136363636,0.054545455,0.096774194
+GPCR,How are GPCR and kinase signaling connected?,0.19047619,0.020833333,0.056603774,0.136363636,0.181818182
+GPCR,Which studies and how identified crosstalk between the GPCR and kinase signaling?,0.166666667,0.129032258,0.06122449,0.157894737,0.25
+GPCR,In which therapeutic areas we could target RTK/GPCR crosstalk?,0.25,0.5,0.4,0.05,0.142857143
+GPCR,What is the mechanism of GPCR-related gene transcription? ,0.157894737,0,0.114285714,0.210526316,0.307692308
+GPCR,Which G-proteins have been assayed in the paper - Direct interrogation of context-dependent GPCR activity with auniversal biosensor platform?,0.027777778,0.073170732,0.666666667,0.428571429,0.714285714
+GPCR,What is the read-out of the sensors in the paper - Direct interrogation of context-dependent GPCR activity with auniversal biosensor platform?,0.214285714,0.375,0.272727273,0.230769231,0.428571429
+GPCR,What is the cell-line in which the sensor has been validated in the paper - Direct interrogation of context-dependent GPCR activity with auniversal biosensor platform?,0.230769231,0,0.214285714,0.3,0.5
+GPCR,Is the sensor multiplexed in the paper - Direct interrogation of context-dependent GPCR activity with auniversal biosensor platform?,0.333333333,0.375,0.3,0.3,0.375
+GPCR,How much dynamic range was achieved with this sensor in the article - A high-throughput CRISPR interference screen for dissecting functional regulators of GPCR/cAMP signaling?,0.166666667,0.230769231,0.230769231,0.090909091,0.071428571
+GPCR,Was the sensor engineered further in the article - A high-throughput CRISPR interference screen for dissecting functional regulators of GPCR/cAMP signaling?,0.5,0.333333333,0.111111111,0.096774194,0.25
+GPCR,Which signaling molecule does the sensor measure in the article - A high-throughput CRISPR interference screen for dissecting functional regulators of GPCR/cAMP signaling?,0.333333333,1,0.272727273,0.111111111,0.285714286
+GPCR,How much is the specificity achieved in the article - A high-throughput CRISPR interference screen for dissecting functional regulators of GPCR/cAMP signaling?,0.230769231,0.125,0.142857143,0.081081081,0.25
+GPCR,Which transcription factor response element has been used for the sensor in the article - A high-throughput CRISPR interference screen for dissecting functional regulators of GPCR/cAMP signaling?,0.090909091,0.375,0,0.071428571,0.363636364
+GPCR,Which model system has been used in the work - DCyFIR: a high-throughput CRISPR platform for multiplexed G protein-coupled receptor profiling and ligand discovery?,0.214285714,0.75,0.142857143,0.096774194,0.142857143
+GPCR,How many GPCRs have been targeted  in this paper - DCyFIR: a high-throughput CRISPR platform for multiplexed G protein-coupled receptor profiling and ligand discovery?,0.411764706,0.3,0.12,0.051282051,0.2
+GPCR,Which molecules have been tested for the sensor response in this article - DCyFIR: a high-throughput CRISPR platform for multiplexed G protein-coupled receptor profiling and ligand discovery?,0.214285714,0.039215686,0.136363636,0.083333333,0.111111111
+GPCR,Did they build a stable cell-line for this work - DCyFIR: a high-throughput CRISPR platform for multiplexed G protein-coupled receptor profiling and ligand discovery?,0.2,0.333333333,0.136363636,0.019607843,0.111111111
+GPCR,What was the rate of false-positive in the article - DCyFIR: a high-throughput CRISPR platform for multiplexed G protein-coupled receptor profiling and ligand discovery?,0.157894737,0.125,0.176470588,0.285714286,0.047619048
+GPCR,What are the key capabilities and features of the G-protein activity biosensors?,0.333333333,0.114285714,0.2,0.363636364,1
+GPCR,What are some potential limitations of the biosensor design mentioned in the article - Revealing the Activity of Trimeric G-proteins in Live Cells with a Versatile Biosensor Design?,0.103448276,0.333333333,0.166666667,0.136363636,0.173913043
+GPCR,How does the expression level of the biosensors impact normal G-protein signaling? ,0.1875,0.333333333,0.176470588,0.111111111,0.25
+GPCR,Does levels of biosensor expression interfere with downstream signaling pathways?,0.296296296,0.1875,0.3,0.2,0.428571429
+GPCR,Are any beta-arrestins measured in this article - Revealing the Activity of Trimeric G-proteins in Live Cells with a Versatile Biosensor Design?,0.103448276,0,0.09375,0.16,0.272727273
+GPCR,What is the CRISPR-coupled GPCR ChaCha system? ,0.166666667,0,0.181818182,0.235294118,0.176470588
+GPCR,What ligands can activate the CRISPR ChaCha systems?,0.12,0.081632653,0.642857143,0.108695652,0.103448276
+GPCR,What advantages does the ChaCha system offer over the Tango architecture? ,0.153846154,0.3,0.166666667,0.071428571,0.173913043
+GPCR,What are the limitations of the CRISPR ChaCha system? ,0.166666667,0,0.25,0.166666667,0.235294118
+GPCR,Which other systems can CRISPR ChaCha be applied to?,0.176470588,0.266666667,0.157894737,0.285714286,0.142857143
+Kinases,What are the proofs of pathogenic gain-of-mutations can shift the equilibrium towards the active state in FGFRs?,0.363636364,0.25,0.230769231,0.214285714,0.3125
+Kinases,List all the FGFR mutations that were used in the experiments.,0,1,0.125,0.307692308,0.12
+Kinases,Which FGFR2 mutant has the lowest substrate phosphorylation activity?,0.096774194,0,0.214285714,0.230769231,0.085714286
+Kinases,"Is there any binding data about FGFR2 kinase domain and C-terminal interaction? If yes, list the binding affinity values too.",0.12,0.15,0.2,0.157894737,0.1
+Kinases,"What is the interaction mechanism between FGFR2, SHP2 and PLC_1? Summarize it in a bulleted list.",0.125,0.5,0.136363636,0.3,0.172413793
+Kinases,"Provide me all the affinity binding data for FGFR2 ï¿½ SHP2, FGFR2 - PLC_1, FGFR8 ï¿½ SHP2 and SHP2 - PLC_1.",0.2,0,0.176470588,0.2,0.111111111
+Kinases,What things can affect the interaction between FGFR2 and SHP2?,0.136363636,0.130434783,0.103448276,0.222222222,0
+Kinases,How can be the FGFR2-SHP2 interaction affected?,0.157894737,0.066666667,0.15,0.266666667,0.181818182
+Kinases,What is the difference between a canonical and non-canonical SH2 domain interaction?,0.142857143,0.333333333,0.230769231,0,0.115384615
+Kinases,Provide a bulleted list of the main findings from the paper ï¿½Group I and II mammalian PAKs have different modes of activation by Cdc42ï¿½. ,0.2,1,0.172413793,0.157894737,0.263157895
+Kinases,Does regulatory domain inhibit PAK4?,0.235294118,0,0.214285714,0.285714286,0
+Kinases,What are the Kd values for peptide binding of PAK4? ,0.12,0.018518519,0.130434783,0.041666667,0.157894737
+Kinases,List me the construct boundaries of PAK4 in the experiments.,0,0.115384615,0.136363636,0.176470588,0.1
+Kinases,List me the PAK4 construct boundaries in the experiments.,0.2,0.107142857,0.1875,0.2,0.12
+Kinases,What is known about the inhibition and activation of PAK4?,0,0,0.5625,0.115384615,0.111111111
+Kinases,What is known about PAK4 structure?,0.130434783,0.015384615,0.210526316,0.142857143,0.176470588
+Kinases,Is there any interaction between PAKs and FGFRs?,0.15,0.181818182,0.153846154,0.107142857,0.235294118
+Kinases,What is the main substrate of MNK1 kinase?,0.102564103,0.09375,0.222222222,0.136363636,0.049180328
+Kinases,"How many variants of PAK, FGFR and MASP exist in the human body? List me the names too.",0.0625,0,0.214285714,0.142857143,0.2
+Kinases,"Does the study suggest that  the regions with low modeled confidence, as predicted by AF2, undergo significant atomic displacement?",0.081632653,0,0.157894737,0.021276596,0.043478261
+Kinases,Were any notable differences observed in the conformational landscape of AlphaFold2 predicted protein kinase structures as compared to the experimentally determined structures?                         OR                                                                                                                         Did the study identify significant disparities in the conformational landscape between AlphaFold2-predicted protein kinase structures and experimentally determined ones?,0.266666667,0.0625,0.176470588,0.444444444,0.1875
+Kinases,Does combining a shallow MSA with state annotated templates achieve accuracy in predicting the active state of kinase?,0.176470588,0.096774194,0.3125,0.157894737,0.107142857
+Kinases,How does the proposed pipeline address neural network biases and biases towards specific structural conformations within the AlphaFold2 training set?,0.05,0.034883721,0.09375,0.15,0.15
+Kinases,Tabulate the different ligand types in kinase  and their associated details.,0.088235294,0.6,0.230769231,0.285714286,0.12
+Kinases,Provide the number of unique ligands in each combination of conformation and ligand type.,0.136363636,0.333333333,0.166666667,0.090909091,0.15
+Kinases,What does MMS stand for?,0.230769231,0,0.666666667,0.111111111,0.272727273
+Kinases,How does the benzylamine group impact target selectivity?,0.1875,0,0.088235294,0.25,0.088235294
+Kinases,What did the high-resolution structures of CAK-bound pyrazolopyrimidine inhibitor complexes unravel?,0.266666667,0.052631579,0.111111111,0.088235294,0.2
+Kinases,"What new perspective about the signalling events of the CDK1, CDK2, CDK4 and CDK6 kinase subfamilies did the work decipher?",0.073170732,0,0.166666667,0.5,0.25
+Kinases,How many sites of the  human Ser/Thr phosphoproteome were annotated?,0.3,0.25,0.214285714,0.214285714,0.4
+Kinases,Is chemical proteomics an infalliable approach? Give pointwise justification.                                                                                           OR                                                                                                                                                                                                            Should chemical proteomics be used? Give point wise justification.,0.050847458,0.12,0.105263158,0.069767442,0.076923077
+Kinases,How was machine learning used in the current study?,0.052631579,0.044776119,0.078431373,0.153846154,0.102564103
+Kinases,Define the different kinase conformations?,0.235294118,0.285714286,0.166666667,0.142857143,0.148148148
+Kinases,What are the steps in the Foldseek method?,0.173913043,0.173913043,0.322580645,0.294117647,0.117647059
+Kinases,"Provide rationale for determining which of the two methods, AlphaFold2 or Foldseek, exhibits superior performance.",0.083333333,0,0.107142857,0.130434783,0.075
+Kinases,What is the novelty of this paper?,0.272727273,1,0.75,0.047619048,0.033333333
+Kinases,Describe the NMR method used to identify the p38 kinase conformation.,0.15,0,0.066666667,0.136363636,0.073170732
+Kinases,What algorithmic bottleneck do GAT networks address? ,0.285714286,0,0.142857143,0.25,0.1875
+Kinases,Explain the difference between transductive and inductive tasks in the context of graph neural networks.,0.216216216,0.069767442,0.162790698,0.333333333,1
+Kinases,How does the GAT mechanism work in graph-neural networks? Summarize the individual steps of the algorithm.,0.25,0.071428571,0,0.333333333,0.130434783
+Kinases,What is the EFFECT benchmark suite?,0.3,0,0.210526316,0.363636364,0.333333333
+Kinases,How does the EFFECT benchmark suite control for dataset biases when evaluating cancer dependency predictors?,0.230769231,0.096774194,0.125,0.115384615,0.25
+Kinases,What practical guideline do the authors from the EFFECT benchmark suite suggest to critically evaluate ML models?,0.1875,0.032258065,0.214285714,0.176470588,0.583333333
+Kinases,Why is a systematic evaluation and comparison of performance of methods for cancer survival and gene essentiality needed?,0.073170732,0.090909091,0.2,0.111111111,0.176470588
+Kinases,What confounding biases are present in cancer depedency datasets and how do they influecne objective comparison of prediction methods?,0.142857143,0.073170732,0.2,0.235294118,0.15
+Kinases,Summarize the state of the art of machine-learning methods currently in use to predict cancer dependencies from DepMap data.,0.2,0.088235294,0.181818182,0.1875,0.15
+Kinases,What are the main advantages of SSS compared to transformer based architectures?,0.12,0.117647059,0.15,0.173913043,0.153846154
+Kinases,What sources contribute to RNA-seq profiles being very different between patient derived cancer samples and CCLE samples?,0.066666667,0,0.125,0.15,0.25
+Kinases,Explain how celligner results allow to analyze cancer sub-type organisation. ,0.073170732,0,0.115384615,0.166666667,0.176470588
+Kinases,Does Celligner perform equally well on all cancer types?,0.2,1,0.4,0.173913043,0.333333333
+Kinases,What do you think are the weaknesses and limitations of Masif? Can you suggest ideas to address them?,0.285714286,0.090909091,0.052631579,0.285714286,0.2
+Kinases,How does Masif compare to other state of the art methods for large scale docking? What are these methods and which metrics were used for the comparison?,0.15,0.057692308,0.3,0.428571429,0.75
+Kinases,"Summarize the workflow of MASIF, a deep-learning framework method to analyze protein surfaces and interactions.",0.357142857,0.176470588,0.1875,0.166666667,0.235294118
+Kinases,What challenges are faced when trying to deploy a prediction model trained on CCLE data to cancer derived patient samples?,0.073170732,0,0.210526316,0.230769231,0.111111111
+CAR-T,How many cars were approved by FDA thus far to treat cancer? And which companies sell them? What cancers does  these FDA approved cars treat? Are these fda approved cars mono-/bi-/tri-/tetra-specific? What antigens do these fda approved cars target?,0.06779661,0.352941176,0.115384615,0.25,0.25
+CAR-T,How much does it cost to treat cancer with CARs? Are there any cars designed in india?,0.25,0.020547945,0.391304348,0.666666667,0.307692308
+CAR-T,"How does linkers impact protein folding? Are there any evidence to demonstrate that linkers enhanced protein/CAR stability, folding, aggregation and expression?",0.833333333,1,0.222222222,0.15,0.631578947
+CAR-T,What are the limitations of CAR therapy? What strategies researchers adopt to researchers adopt to develop CARs to overcome these limitations?,1,0.026315789,0.129032258,0.2,0.473684211
+CAR-T,"Are there any CAR therapies approved for treating solid tumors? If yes, who designed it? If no, why is it hard to design a CAR for solid tumors?",0.214285714,0.030927835,0.068181818,0.333333333,0.214285714
+CAR-T,Are there any machine learning/deep learning/artificial intelligence methodologies carried on CAR proteins?,0.25,0.076923077,0.081081081,0.25,0.026315789
+CAR-T,Define a Chimeric antigen receptor (CAR),0.142857143,0.090909091,0.0625,0.208333333,0.157894737
+CAR-T,List all viral transduction methods that have been used to introduce genetic material into T-cells to generate CAR-T cells,0.266666667,0.078431373,0.166666667,0.5,0.214285714
+CAR-T,What are the most promising CAR-T designs that go beyond monospecific constructs?,0.214285714,0.428571429,0.117647059,1,0.214285714
+CAR-T,What are the biggest issues facing the development of better CAR-T therapies? Rank them in order of difficulty and provide examples with citations on all potential strategies to overcome these limitations. ,0.285714286,0.02,0.166666667,0.6,0.647058824
+CAR-T,What is known about the mechanism of mechanotransduction in transmitting a receptor binding event into a cellular signal? ,0.102564103,0.072727273,0.307692308,0.428571429,0.049180328
+CAR-T,How does the composition of the hinge region affect the efficiency of signal transduction in CARs.,0.227272727,0.130434783,0.727272727,0.6,0.227272727
+CAR-T,How does the composition of the hinge region affect the efficiency target cell killing in CARs.,0.375,0.136363636,0.166666667,0.5,0.28
+CAR-T,"List all cancer types that have been targeted by CARs, and list which antigens are targeted in each case. ",1,0.051724138,0.4,0.571428571,0.75
+CAR-T,"List all CARs that are approved by the FDA, and for which cancer their use is approved for.",1,0.176470588,0.125,0.5,0.155555556
+CAR-T,Which promoters have been used to drive CAR expression? Create an exhaustive list. ,0.166666667,0.166666667,0.444444444,0.375,0.137931034
+CAR-T,List the normal cell types that cause off-target effects with CARs and explain why off-target effects occur. ,0.2,0.173913043,0.043478261,0.115384615,0.25
+CAR-T,Why are loop-CARs a superior design over tandem CARs?,0.157894737,0.166666667,1,0.75,0.157894737
+CAR-T,How do you match CAR expression level to antigen density?,0.088235294,0,0.166666667,0.25,0.081081081
+CAR-T,List all costimulatory domains that have been used in CAR constructs and list the Pros and Cons of each.,0.222222222,0.8,0.363636364,0.444444444,0.357142857
+CAR-T,How will single-cell RNA sequencing and related technologies affect the design of new CARs?,0.153846154,0.012820513,0.117647059,0.266666667,0.130434783
+CAR-T,What are the differences between B-cells and T-cells in terms of cell surface receptors?,0.09375,0.078947368,0.09375,0.073170732,0.057692308
+CAR-T,What cancer type is the CAR-T targeting? ,0.315789474,0.068181818,0.142857143,0.142857143,0.125
+CAR-T,What is the size of the library used in the article - Leucine zipper-based sorting system enables generation of multi-1 functional CAR T cells?,0.307692308,0.020979021,0,0.210526316,0.272727273
+CAR-T,What assays have been discussed in the article - Leucine zipper-based sorting system enables generation of multi-1 functional CAR T cells?,0.428571429,0.048192771,0.130434783,0.1875,0.176470588
+CAR-T,How many transgenes could be incorporated in T-cells?,0.15,0.136363636,0.4,0.25,0.272727273
+CAR-T,What signal peptide did they use for membrane targeting in the article - Leucine zipper-based sorting system enables generation of multi-1 functional CAR T cells?,0.176470588,0.0375,0.176470588,0.25,0.428571429
+CAR-T,Which ScFvs have been used in this study - Conditional Control of Universal CAR T Cells by Cleavable OFFSwitch Adaptors?,0.136363636,0.016393443,0.157894737,0.333333333,0.176470588
+CAR-T,What small molecule have been used to control the switch in the article - Conditional Control of Universal CAR T Cells by Cleavable OFFSwitch Adaptors?,0.210526316,0.103448276,0.096774194,0.277777778,0.157894737
+CAR-T,What was the optimal concentration of the small molecule?,0.176470588,0.125,0.375,0.25,0.2
+CAR-T,What potential advantages does the small-molecule cleaving system offer in comparison to traditional antibody adaptors for controlling mSA2 CAR T cell activity?,0.3,0.025862069,0.166666667,0.19047619,0.45
+CAR-T,"What are the proposed methods for administering adaptors and controlling OFF-switch activity in vivo, particularly in mouse models, and how might these methods differ depending on whether its antibody adaptor pretreatment or simultaneous T cell and adaptor administration?",0.135135135,0.040540541,1,0.142857143,0.153846154
+CAR-T,In what ways could the cleavable OFF-switch adaptor technology be further applied or generalized beyond controlling mSA2 CAR T cell activity?,1,0.041666667,0.115384615,0.142857143,0.181818182
+CAR-T,What are some of the challenges in developing CAR T cells for treating solid tumors?,0.136363636,0,0.176470588,0.583333333,0.2
+CAR-T,How does the concept of Boolean-logic AND-gate CAR T cells aim to address these challenges? ,0.1875,0.069767442,0.2,0.230769231,0.125
+CAR-T,"How does the LINK CAR system differ from other engineered CAR systems, such as SynNotch and SPLIT CAR, in terms of specificity, efficacy, and potential clinical applicability? ",0.230769231,0.176470588,0.214285714,0.75,0.344827586
+CAR-T,"What advantages do proximal signaling CARs, such as ZAP-70 CARs, demonstrate over traditional CD3_ CARs in terms of reduced tonic signaling, T cell exhaustion, expansion, and persistence? ",1,0,0.307692308,0.318181818,0.3
+CAR-T,What are the implications of the antigen-density thresholds for the functionality of the LINK CAR system?,0.25,0.088235294,0.210526316,0.1875,0.1875
+CAR-T,How does the ProCAR platform utilize tumor-colonizing probiotics to guide the cytotoxicity of engineered T cells?,0.111111111,0.428571429,0.115384615,0.05,0.130434783
+CAR-T,what are the key findings regarding its efficacy in mouse models of cancer? ,0.078947368,0.022857143,0.148148148,0.070175439,0.111111111
+CAR-T,What challenges do current CAR T cell therapies face regarding antigen dependence? ,0.19047619,0.022222222,0.176470588,0.3,0.5
+CAR-T,What advantages does the ProCAR system offer over other strategies for targeting solid tumors?,0.15,0.039370079,0.125,0.15,0.142857143
+IDR, how does ProCAR utilize bacteria to enhance tumor-specific target delivery?,0.007751938,0.016393443,0.078947368,0.107142857,0.042857143
+IDR,What is a KID domain?,0.272727273,0,0.272727273,0.214285714,0.272727273
+IDR,"Provide a list of disordered proteins that do not fit the classic structure-function paradigm, and briefly list their relevant propeties.",0.09375,0.06,0.142857143,0.044776119,0.09375
+IDR,Does the DNA-related function of LEF-1 involve the structural transition of the protein and the DNA?,0.125,0.05,0.103448276,0.1,0.125
+IDR,How long is the peptide required to bind to eIF4E?,0.03030303,0.010204082,0.058823529,0.111111111,0.03030303
+IDR,What does the structure-function paradigm state and why does it need to be re-assessed?,0.736842105,0.057692308,0.2,0.088235294,0.736842105
+IDR,What is the function of the disordered regions of myoglobin?,0.15,0.057692308,0.352941176,0.090909091,0.15
+IDR,Why are highly flexible proteins incompatible with our previous view of how structure and function are related? ,0.192307692,0.09375,0.333333333,0.1,0.192307692
+IDR,What is a molten globue?,0.162162162,0,0.130434783,0.111111111,0.162162162
+IDR,List the main features of a protein sequence that will determine whether the sequence will or will not fold into a stable structure.,0.078947368,0.041666667,0.176470588,0.081081081,0.078947368
+IDR,Is the NCBD domain of CBP folded or disordered?,0.333333333,0.037037037,0.384615385,0.111111111,0.333333333
+IDR,Where are the leukaemia-related breakpoints located in CBP/p300?,0.272727273,0.014084507,0.01754386,0.016666667,0.272727273
+IDR,What are the functions that are enabled by the fact that disordered proteins do not have a stable structure?,0.333333333,0.085714286,0.230769231,0.043478261,0.333333333
+IDR,What is the role of the disordered protein HMGA1?,0.227272727,0.133333333,0.272727273,0.085714286,0.227272727
+IDR,What biological roles can disordered proteins fulfill thanks to their structural properties?,0.176470588,0.070175439,0.142857143,0,0.176470588
+IDR,What is a nanny protein?,0.015151515,0.057142857,0.210526316,0.057971014,0.015151515
+IDR,"Provide a list of ways IDPs are regulated, together with the implications of these reulatory mechanisms.",0.238095238,0.037974684,0.147058824,0.235294118,0.238095238
+IDR,Is the tight regulation of dosage-sensitive genes linked to avoiding detrimental abundance of proteins?,0.166666667,0,0.545454545,0.625,0.166666667
+IDR,Which IDP-phosphorylating kinase is regulated in a cell cycle dependent manner?,0.25,0,0.25,0.2,0.222222222
+IDR,Why do IDPs have unique regulatory mechanisms compared to folded proteins?,0.136363636,0.076923077,0.266666667,0.157894737,0.136363636
+IDR,What is the effect of targeting the DEP domain of Dishevelled with peptides?,0.130434783,0.022222222,0.157894737,0,0.130434783
+IDR,The regulation of disordered proteins is characteristically different from that of ordered ones; explain the reasons for this!,0.333333333,0.053571429,0.346153846,0.0375,0.333333333
+IDR,What is ELM?,0.130434783,0.032258065,0.214285714,0.130434783,0.130434783
+IDR,What are the main attributes of short linear motifs?,0.176470588,0.148148148,0.2,0.1875,0.176470588
+IDR,Is the motif LIG_PCNA present in archaea?,0.142857143,0.6,0.357142857,0.034482759,0.142857143
+IDR,What is the difference in charge and hydrophobicity between disordered proteins in general and Ligand motif instances?,0.194444444,0.015384615,0.2,0.1,0.194444444
+IDR,"Why do short linear motifs typically reside in disordered protein regions, and what are the biological consequences of this?",0.15,0,0.125,0.073170732,0.15
+IDR,What are degradation motifs (degrons)?,0.166666667,0,0.2,0.071428571,0.125
+IDR,Why is it biologically important that motifs are commonly found in unstructred parts of proteins?,0.2,0.142857143,0.25,0.09375,0.2
+IDR,What are PTMs?,0.25,0.115384615,0.3,0.285714286,0.25
+IDR,List the main factors that can initiate the transition of a protein between a folded and an unfolded state?,0.222222222,0.029126214,0.25,0.166666667,0.222222222
+IDR,Can interactions with a small molecule unfold a protein?,0.375,0.053571429,0.571428571,0.085714286,0.102564103
+IDR,How much surface area is buried during the dimerization of HdeA?,0.1875,0.043478261,0.230769231,0.066666667,0.1875
+IDR,What are the main differences between passive and active factors that can induce the unfolding of proteins?,0.206896552,0.023809524,0.380952381,0.523809524,0.206896552
+IDR,What induces the unfolding of the cytoplasmic tails of integrins?,0.2,0.103448276,0.125,0.0625,0.2
+IDR,What is the basis of differentiating two kinds of factors that can change the structural states of conditionally unfolded proteins?,0.357142857,0,0.1,0.066666667,0.357142857
+IDR,What is an NLS?,0.0125,0.018518519,0.033333333,0.5,0.0125
+IDR,Give a summary of the main functions of short liear motifs in the human proteome!,0.166666667,0.5,0.214285714,0.235294118,0.166666667
+IDR,Do human phosphorylation sites predominantly reside in ordered regions of proteins?,0.147058824,0.02970297,0.1875,0.027777778,0.09375
+IDR,How many motifs are estimated to exist in the human proteome?,0.352941176,0.6,0.416666667,0.235294118,0.352941176
+IDR,How do different motifs play a role in the general function of various proteins?,0.142857143,0.055555556,0.375,0.5,0.142857143
+IDR,What are the motifs present in human CBP?,0.444444444,0.6,0.285714286,0.0625,0.444444444
+IDR,What is the effect that the presence of a motif exerts on the fate of the full protein?,0.12,0.034482759,0.176470588,0.166666667,0.12
+IDR,What are RHIM sequences?,0.114285714,0.129032258,0.05,0.02173913,0.114285714
+IDR,What are the key ways in which post-translational modifications regulate disordered proteins?,0.25,0.025641026,0.2,0.054545455,0.25
+IDR,Does p120 catenin regulate cell adhesion?,0.1,0,0.088235294,0.3,0.1
+IDR,What signaling is affected by MSI-1436?,0.018518519,0.045454545,0.15,0.157894737,0.085714286
+IDR,What are the special biophysical and cellular features of how disordered proteins interact with their partners?,0.075,0.115384615,0.107142857,0.036144578,0.075
+IDR,How is the binding of the LAT protein regulated?,0.068181818,0.017857143,0.1,0.029411765,0.039473684
+IDR,"In a physical and biological sense, what makes the protein-protein interaction modes of disordered proteins special?",0.15,0.103448276,0.157894737,0.014925373,0.15
+IDR,What is CALVADOS?,0.133333333,0.115384615,0.166666667,0.0625,0.148148148
+IDR,What are the main steps to computationally generating conformational ensembles of disordered proteins?,0.09375,0.042253521,0.12,0.052631579,0.09375
+IDR,Are compact IDRs generally longer than extended IDRs?,0.15625,0.048387097,0.19047619,0.266666667,0.15625
+IDR,How many disordered regions were identified in the human proteome?,0.142857143,0.043478261,0.166666667,0.088235294,0.142857143
+IDR,What are the effects of the compaction of disordered proteins on their biological functions?,0.15,0.059701493,0.15,0.00862069,0.15
+PTM,What is the compaction of human p53?,0,0.1,0,0.12,0.06
+PTM,How is the biological role of a disordered protein dependent on the degree to which it has a compact overall structure?,0.01369863,0.103448276,0.1,0.090909091,0
+PTM,What is CoA?,0,0.103448276,0.352941176,0.266666667,0.230769231
+PTM,What is acetyl-CoA?,0.285714286,0,0.12,0.266666667,0
+PTM,What is succinyl-CoA?,0.235294118,0,0.2,0.1,0.157894737
+PTM,What reactions does SIRT5 catalyze?,0.411764706,0.034090909,0.333333333,0.1875,0.25
+PTM,What is lysine acylation?,0.214285714,0.0375,0.315789474,0.5,0.1875
+PTM,What is lysine acetylation?,0.268292683,0.03125,0.266666667,0.225806452,0.25
+PTM,"Where, within cells, is succinyl-CoA found?",0.111111111,0.066666667,0.115384615,0.1,0.106382979
+PTM,What species is succinyl-CoA found in?,0.176470588,0.3,0.130434783,0.090909091,0.266666667
+PTM,What processes do lysine acylations regulate?,0.266666667,0.01369863,0.04,0.434782609,0.185185185
+PTM,"Where, within proteins, does lysine acetylation happen?",0.083333333,0.008849558,0,0.085714286,0.058823529
+PTM,Are there lysine acylation reader domains in bacteria?,0.115384615,0.013157895,0,0.181818182,0.217391304
+PTM,What lysine acylation reader domains are known in mammals?,0.148148148,0,0.088235294,0.2,0.210526316
+PTM,"What enzymes succinylate lysines outside of mitochondria, and where does their succinyl-CoA come from?",0.24,0.050847458,0.176470588,0.15,0.266666667
+PTM,"What PTM does succinylation overlap with, and to what percentage?",0.157894737,0.6,0.272727273,0.15,0.214285714
+PTM,What evidence is there for demalonylation by SIRT5?,0.15,0.075,0.6,0.1,0.15
+PTM,"Is there a known ""writer"" enzyme for lysine malonylation?",0.063829787,0.04109589,0.2,0.045454545,0.032258065
+PTM,Whats a possible source of non-enzymatic lysine acetylation?,0,0.047619048,0.3,0.125,0.277777778
+PTM,What species does acetylphosphate-dependent lysine acetylation occur in?,0.013157895,0.04,0.036144578,0.1875,0.013888889
+PTM,What acylation-related enzymes are used by pathogenic bacteria to attack their hosts?,0.214285714,0.065217391,0.5,0.125,0.230769231
+PTM,What does alpha-ketoglutarate do in the context of lysine acylations?,0.176470588,0.043103448,0.054545455,0.25,0.2
