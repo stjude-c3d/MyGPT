@@ -1,5 +1,5 @@
-FROM python:3.8
-
+FROM ghcr.io/chroma-core/chroma:latest
+# Note: don't change chorma image to python
 RUN mkdir /code
 WORKDIR /code
 RUN apt update
