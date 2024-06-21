@@ -3,6 +3,7 @@ import os
 import pandas as pd
 import time
 import json
+from tqdm import tqdm
 
 # Define API endpoints
 answer_api = 'https://svlpgpt001a.stjude.org/api/generate/'
@@ -42,8 +43,6 @@ def collect_answers():
             if (model, shorthand) in collected:
                 continue
             for j, (question, groundtruth, contexts) in enumerate(zip(question_list, groundtruth_list, context_lists)):
-                if model == 'llama3:70b' and j in range(180):
-                    continue
                 # Log query info
                 print('\n')
                 print(f'MODEL: {model}; EMBEDDING: {shorthand};')
@@ -83,20 +82,28 @@ def collect_answers():
                     else:
                         with open(result_file_path, 'w') as result_file:
                             json.dump([qa_result], result_file, indent=4)
-def repair_incomplete(path, model, shorthand):
-    dataset_name = f'mygpt-all-{shorthand}'
-    with open(f'evaluation/utils/eval_context/{shorthand}/{dataset_name}.json') as f:
-        context_lists = pd.DataFrame.from_dict(json.loads(f.read()))['contexts'].tolist()
-    df = pd.DataFrame.from_records(path)
+def repair_incomplete(model, shorthand):
+    print(f'Repairing MODEL {model} EMBED {shorthand} data...')
+    model_name = model.removesuffix(':latest').replace(':', '-')
+    with open(f'evaluation/utils/eval_context/{shorthand}/mygpt-all-{shorthand}.json') as f:
+        df = pd.DataFrame.from_dict(json.loads(f.read()))
+        context_lists = df['contexts'].tolist()
+        full_questions = df['question'].tolist()
+        full_groundtruths = df['ground_truth'].tolist()
+    with open(f'evaluation/utils/eval_answers/{model_name}/results-{model_name}-{shorthand}.json') as f:
+        current_df = pd.DataFrame.from_records(json.loads(f.read()))
+    print(current_df)
     broken = {
-        'question': df['question'].tolist(),
-        'answer': df['answer'].tolist(),
-        'context': df['context'].tolist(),
-        'ground_truth': df['ground_truth'].tolist()
+        'question': current_df['question'].tolist(),
+        'answer': current_df['answer'].tolist(),
+        'context': current_df['context'].tolist(),
+        'ground_truth': current_df['ground_truth'].tolist()
     }
 
-    for i, (question, groundtruth, contexts) in enumerate(zip(question_list, groundtruth_list, context_lists)):
+    for i, (question, groundtruth, contexts) in tqdm(enumerate(zip(full_questions, full_groundtruths, context_lists)), desc='Repair Progress: '):
         if question not in broken['question']:
+            print('\n')
+            print(f'Repairing on Question {i + 1}...')
             broken['question'].insert(i, question)
             system_prompt = 'Use following information to answer the question in less than 100 words, try not to use anything else: ' + str(contexts)
             answer_prompt = {
@@ -117,5 +124,6 @@ def repair_incomplete(path, model, shorthand):
             broken['context'].insert(i, contexts)
             broken['ground_truth'].insert(i, groundtruth)
     fixed_df = pd.DataFrame.from_dict(broken)
-    fixed_df.to_json(f'evaluation/utils/eval_context/{shorthand}/{dataset_name}.json', orient='records')
+    fixed_df.to_json(f'evaluation/utils/eval_answers/{model_name}/results-{model_name}-{shorthand}.json', orient='records')
 
+repair_incomplete('llama3:70b', 'snowflake')
