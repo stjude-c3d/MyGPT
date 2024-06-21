@@ -14,6 +14,7 @@ datasets = eval_doc['library'].tolist()
 # questions = [x for i, x in enumerate(eval_doc['question'].tolist()) if datasets[i] == 'GPCR']
 questions = eval_doc['question'].tolist()
 groundtruths = eval_doc['ground_truth'].tolist()
+libraries = eval_doc['library'].tolist()
 
 # List of models and embeddings to evaluate
 model = 'llama3:latest'
@@ -35,12 +36,17 @@ def query_api(url, payload):
 
 def collect_answers():
     # Main processing loop
+    collected = ['500', '1000']
     for dataset_ref in ['500', '1000', '1500', '500-overlap', '1000-overlap', '1500-overlap']:
+        if dataset_ref in collected:
+            continue
         # Prepare file path
         result_file_path = f'evaluation/utils/eval_parameters/chunksize-{dataset_ref}.json'
         for dataset in ['GPCR', 'Kinase', 'CAR-T', 'IDR', 'PTM']:
-            for i, (question, groundtruth) in enumerate(zip(questions, groundtruths)):
-                if dataset_ref == '500' and i in range(156):
+            for i, (question, groundtruth, library) in enumerate(zip(questions, groundtruths, libraries)):
+                if dataset_ref == '1500' and i in range(23):
+                    continue
+                if library != dataset:
                     continue
                 # Log query info
                 print('\n')

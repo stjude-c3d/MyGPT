@@ -82,22 +82,22 @@ def collect_answers():
                     else:
                         with open(result_file_path, 'w') as result_file:
                             json.dump([qa_result], result_file, indent=4)
+
+
 def repair_incomplete(model, shorthand):
     print(f'Repairing MODEL {model} EMBED {shorthand} data...')
     model_name = model.removesuffix(':latest').replace(':', '-')
-    with open(f'evaluation/utils/eval_context/{shorthand}/mygpt-all-{shorthand}.json') as f:
-        df = pd.DataFrame.from_dict(json.loads(f.read()))
-        context_lists = df['contexts'].tolist()
-        full_questions = df['question'].tolist()
-        full_groundtruths = df['ground_truth'].tolist()
+    df = pd.read_csv(f'evaluation/scores/context_scores/{shorthand}.csv')
+    context_lists = df['contexts'].tolist()
+    full_questions = df['question'].tolist()
+    full_groundtruths = df['ground_truth'].tolist()
     with open(f'evaluation/utils/eval_answers/{model_name}/results-{model_name}-{shorthand}.json') as f:
-        current_df = pd.DataFrame.from_records(json.loads(f.read()))
-    print(current_df)
+        broken_raw = json.loads(f.read())
     broken = {
-        'question': current_df['question'].tolist(),
-        'answer': current_df['answer'].tolist(),
-        'context': current_df['context'].tolist(),
-        'ground_truth': current_df['ground_truth'].tolist()
+        'question': [x['question'] for x in broken_raw],
+        'answer': [x['answer'] for x in broken_raw],
+        'context': [x['context'] for x in broken_raw],
+        'ground_truth': [x['ground_truth'] for x in broken_raw]
     }
 
     for i, (question, groundtruth, contexts) in tqdm(enumerate(zip(full_questions, full_groundtruths, context_lists)), desc='Repair Progress: '):
@@ -105,6 +105,8 @@ def repair_incomplete(model, shorthand):
             print('\n')
             print(f'Repairing on Question {i + 1}...')
             broken['question'].insert(i, question)
+            broken['context'].insert(i, contexts)
+            broken['ground_truth'].insert(i, groundtruth)
             system_prompt = 'Use following information to answer the question in less than 100 words, try not to use anything else: ' + str(contexts)
             answer_prompt = {
                 "model": model,
@@ -121,9 +123,9 @@ def repair_incomplete(model, shorthand):
             # Choose API endpoint based on model type (assuming query_api function remains unchanged)
             answer = query_api(answer_api, answer_prompt).get('response', '')
             broken['answer'].insert(i, answer)
-            broken['context'].insert(i, contexts)
-            broken['ground_truth'].insert(i, groundtruth)
     fixed_df = pd.DataFrame.from_dict(broken)
     fixed_df.to_json(f'evaluation/utils/eval_answers/{model_name}/results-{model_name}-{shorthand}.json', orient='records')
 
-repair_incomplete('llama3:70b', 'snowflake')
+for shorthand in ['qa-cos', 'mini-l6', 'snowflake']:
+    for model in ['gemma:latest', 'llama2:latest', 'llama3:latest', 'llama3:70b', 'mistral:latest', 'vicuna:latest']:
+        repair_incomplete(model, shorthand)

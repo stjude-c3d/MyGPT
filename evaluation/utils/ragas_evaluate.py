@@ -69,9 +69,43 @@ def generate_parameter_context_scores():
 		# save the scores to a csv file
 		df.to_csv(f'evaluation/scores/param_context_scores/test-chunksize-{shorthand}-context-recall.csv', index=False)
 
-def generate_answer_scores():
+def generate_answer_correctness():
 	shorthands = ['qa-cos', 'mini-l6', 'snowflake']
 	models = ['gemma', 'llama2', 'llama3', 'llama3-70b', 'mistral', 'vicuna']
+	qa_indices = random.sample(range(232), 20)
+	for shorthand in shorthands:
+		for model in models:
+			data = []
+			with open(f'evaluation/utils/eval_answers/{model}/results-{model}-{shorthand}.json', 'r', encoding = 'utf-8') as f:
+				
+				data = json.load(f)
+				# create new dataset with 20 samples
+				new_data = {
+					'question': [],
+					'answer': [],
+					# 'contexts': [],
+					'ground_truth': []
+				}
+				print(f'Model {model}, Embed {shorthand} has {len(data)} questions.')
+				for i in qa_indices:
+					new_data['question'].append(data[i]['question'])
+					new_data['answer'].append(data[i]['answer'])
+					# new_data['contexts'].append(x['context'])
+					new_data['ground_truth'].append(data[i]['ground_truth'])
+
+			# df = pd.DataFrame.from_records(data)
+			# print(df)
+			dataset = Dataset.from_dict(new_data)
+			print(dataset)
+			scores = evaluate(dataset, metrics=[answer_correctness], embeddings=embeddings, llm=llm)
+
+			df = scores.to_pandas()
+			result_file_path = f'evaluation/scores/answer_scores/{model}/{model}-{shorthand}-answer-correctness.json'
+			df.to_json(result_file_path, orient='records')
+			# save the scores to a csv file
+
+def generate_answer_scores(model, shorthand):
+
 	for shorthand in shorthands:
 		for model in models:
 			data = []
@@ -93,12 +127,11 @@ def generate_answer_scores():
 			# df = pd.DataFrame.from_records(data)
 			# print(df)
 			dataset = Dataset.from_dict(new_data)
-			scores = evaluate(dataset, metrics=[answer_correctness], embeddings=embeddings, llm=llm)
+			scores = evaluate(dataset, metrics=[answer_relevancy, answer_similarity], embeddings=embeddings, llm=llm)
 
 			df = scores.to_pandas()
-			result_file_path = f'evaluation/scores/answer_scores/{model}/{model}-{shorthand}-answer-correctness.json'
-			df.to_records(result_file_path)
-			# save the scores to a csv file
+			result_file_path = f'evaluation/scores/answer_scores/{model}/{model}-{shorthand}-answer-evaluation.csv'
+			df.to_csv(result_file_path)
 
 def generate_parameter_answer_scores():
 	shorthands = ['500', '1000', '1500', '500-overlap', '1000-overlap', '1500-overlap']
@@ -151,4 +184,14 @@ def combine_json_files():
 			json.dump(question_answer_json, f)
 
 # combine_json_files()
-generate_answer_scores()
+
+
+shorthands = ['qa-cos', 'mini-l6', 'snowflake']
+models = ['gemma', 'llama2', 'llama3', 'llama3-70b', 'mistral', 'vicuna']
+
+needs_rescoring = [('gemma', 'qa-cos'), ('llama2', 'qa-cos'), ('llama3', 'qa-cos'),
+				   ('llama3-70b', 'qa-cos'), ('mistral', 'qa-cos'), ('vicuna', 'qa-cos')
+				   ('llama3', 'mini-l6')]
+
+for model, embed in needs_rescoring:
+	generate_answer_scores(model, embed)
