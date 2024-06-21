@@ -6,7 +6,7 @@ import json
 
 # Define API endpoints
 context_api = 'http://localhost:8000/api/get_context/'
-answer_api = 'http://10.220.17.160:11434/api/generate/'
+answer_api = 'https://svlpgpt001a.stjude.org/api/generate/'
 
 # Load evaluation documents and questions
 eval_doc = pd.read_csv('evaluation/documents/eval_dataset.csv', encoding = 'ISO-8859-1').dropna()
@@ -40,6 +40,8 @@ def collect_answers():
         result_file_path = f'evaluation/utils/eval_parameters/chunksize-{dataset_ref}.json'
         for dataset in ['GPCR', 'Kinase', 'CAR-T', 'IDR', 'PTM']:
             for i, (question, groundtruth) in enumerate(zip(questions, groundtruths)):
+                if dataset_ref == '500' and i in range(156):
+                    continue
                 # Log query info
                 print('\n')
                 print(f'MODEL: {model}; EMBEDDING: {shorthand};')

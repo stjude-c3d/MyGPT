@@ -1,6 +1,6 @@
 from datasets import Dataset
 from ragas import evaluate
-from ragas.metrics import context_relevancy, context_entity_recall, answer_relevancy, answer_similarity
+from ragas.metrics import context_relevancy, context_entity_recall, answer_relevancy, answer_similarity, answer_correctness
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.chat_models import ChatOllama
 import os
@@ -75,7 +75,7 @@ def generate_answer_scores():
 	for shorthand in shorthands:
 		for model in models:
 			data = []
-			with open(f'evaluation/utils/eval_answers/{model}/mygpt-{model}-{shorthand}.json', 'r', encoding = 'utf-8') as f:
+			with open(f'evaluation/utils/eval_answers/{model}/results-{model}-{shorthand}.json', 'r', encoding = 'utf-8') as f:
 				data = json.load(f)
 				# create new dataset with 20 samples
 				new_data = {
@@ -84,20 +84,21 @@ def generate_answer_scores():
 					'contexts': [],
 					'ground_truth': []
 				}
-				for i in random.sample(range(len(data), 20)):
-					new_data['question'].append(data['question'][i])
-					new_data['answer'].append(data['answer'][i])
-					new_data['contexts'].append(data['contexts'][i])
-					new_data['ground_truth'].append(data['ground_truth'][i])
+				for x in data:
+					new_data['question'].append(x['question'])
+					new_data['answer'].append(x['answer'])
+					new_data['contexts'].append(x['context'])
+					new_data['ground_truth'].append(x['ground_truth'])
 
 			# df = pd.DataFrame.from_records(data)
 			# print(df)
 			dataset = Dataset.from_dict(new_data)
-			scores = evaluate(dataset, metrics=[answer_relevancy, answer_similarity], embeddings=embeddings, llm=llm)
+			scores = evaluate(dataset, metrics=[answer_correctness], embeddings=embeddings, llm=llm)
 
 			df = scores.to_pandas()
+			result_file_path = f'evaluation/scores/answer_scores/{model}/{model}-{shorthand}-answer-correctness.json'
+			df.to_records(result_file_path)
 			# save the scores to a csv file
-			df.to_csv(f'evaluation/scores/answer_scores/{model}-{shorthand}-answer-evaluation.csv', index=False)
 
 def generate_parameter_answer_scores():
 	shorthands = ['500', '1000', '1500', '500-overlap', '1000-overlap', '1500-overlap']
@@ -150,4 +151,4 @@ def combine_json_files():
 			json.dump(question_answer_json, f)
 
 # combine_json_files()
-generate_parameter_context_scores()
+generate_answer_scores()
