@@ -26,15 +26,21 @@ def generate_scores(input, output, metrics, random_sample = None):
 		if random_sample:
 			for i in random_sample:
 				new_data['question'].append(data[i]['question'])
-				new_data['answer'].append(data[i]['answer'])#.split('. '))
-				new_data['contexts'].append(data[i]['context'])
-				new_data['ground_truth'].append(data[i]['ground_truth'])#.split('. '))
+				new_data['answer'].append(data[i]['answer'])
+				if data[i]['context'][0] in ['"', "'"]:
+					new_data['contexts'].append(json.loads(data[i]['context']))
+				else:
+					new_data['contexts'].append(list(data[i]['context']))
+				new_data['ground_truth'].append(data[i]['ground_truth'])
 		else:
 			for x in data:
 				new_data['question'].append(x['question'])
-				new_data['answer'].append(x['answer'])#.split('. '))
-				new_data['contexts'].append(x['context'])
-				new_data['ground_truth'].append(x['ground_truth'])#.split('. '))
+				new_data['answer'].append(x['answer'])
+				if x['context'][0] in ['"', "'"]:
+					new_data['contexts'].append(json.loads(x['context']))
+				else:
+					new_data['contexts'].append(list(x['context']))
+				new_data['ground_truth'].append(x['ground_truth'])
 
 	dataset = Dataset.from_dict(new_data)
 	scores = evaluate(dataset, metrics=metrics, embeddings=embeddings, llm=llm)
@@ -113,18 +119,14 @@ def repair_answer_scores(score_doc, answer_doc):
 # shorthands = ['qa-cos', 'mini-l6', 'snowflake']
 # models = ['gemma', 'llama2', 'llama3', 'llama3-70b', 'mistral', 'vicuna']
 
-# # needs_rescoring = [('gemma', 'qa-cos'), ('llama2', 'qa-cos'), ('llama3', 'qa-cos'),
-# # 				   ('llama3-70b', 'qa-cos'), ('mistral', 'qa-cos'), ('vicuna', 'qa-cos'),
-# # 				   ('llama3', 'mini-l6')]
-
 # for model, embed in itertools.product(models, shorthands):
 # 	print(f'MODEL: {model}; EMBED: {embed};')
 # 	input = f'evaluation/utils/eval_answers/{model}/results-{model}-{embed}.json'
-# 	output = f'evaluation/scores/answer_scores/{model}/{model}-{embed}-answer-correctness.csv'
-# 	generate_scores(input, output, [answer_correctness], random_sample=random.sample(range(232), 20))
+# 	output = f'evaluation/scores/answer_correctness_scores/{model}/{model}-{embed}-answer-correctness.csv'
+# 	generate_scores(input, output, [answer_correctness])#, random_sample=random.sample(range(232), 20))
 
 for suffix in ['500', '1000', '1500', '500-overlap', '1000-overlap', '1500-overlap']:
 	print(f'CHUNKSIZE: {suffix};')
 	input = f'evaluation/utils/eval_parameters/chunksize-{suffix}.json'
-	output = f'evaluation/scores/param_answer_scores/evaluation-{suffix}.csv'
-	generate_scores(input, output, [answer_relevancy, answer_similarity])
+	output = f'evaluation/scores/param_context_scores/evaluation-{suffix}.csv'
+	generate_scores(input, output, [context_relevancy, context_entity_recall])
