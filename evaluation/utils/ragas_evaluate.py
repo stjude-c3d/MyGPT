@@ -14,25 +14,27 @@ llm = ChatOllama(model="llama3:latest", base_url="http://10.220.17.160:11434")
 os.environ["RAGAS_DO_NOT_TRACK"] = "false"
 
 def generate_scores(input, output, metrics, random_sample = None):
-	if random_sample: qa_indices = random.sample(range(232), random_sample)
 	data = []
 	with open(input, 'r', encoding = 'utf-8') as f:
 		data = json.load(f)
 		new_data = {
 			'question': [],
 			'answer': [],
+			'contexts': [],
 			'ground_truth': []
 		}
 		if random_sample:
-			for i in qa_indices:
+			for i in random_sample:
 				new_data['question'].append(data[i]['question'])
-				new_data['answer'].append(data[i]['answer'])
-				new_data['ground_truth'].append(data[i]['ground_truth'])
+				new_data['answer'].append(data[i]['answer'])#.split('. '))
+				new_data['contexts'].append(data[i]['context'])
+				new_data['ground_truth'].append(data[i]['ground_truth'])#.split('. '))
 		else:
 			for x in data:
 				new_data['question'].append(x['question'])
-				new_data['answer'].append(x['answer'])
-				new_data['ground_truth'].append(x['ground_truth'])
+				new_data['answer'].append(x['answer'])#.split('. '))
+				new_data['contexts'].append(x['context'])
+				new_data['ground_truth'].append(x['ground_truth'])#.split('. '))
 
 	dataset = Dataset.from_dict(new_data)
 	scores = evaluate(dataset, metrics=metrics, embeddings=embeddings, llm=llm)
@@ -108,15 +110,21 @@ def repair_answer_scores(score_doc, answer_doc):
 	full_score_df.to_csv(score_doc, index=False)
 
 
-shorthands = ['qa-cos', 'mini-l6', 'snowflake']
-models = ['gemma', 'llama2', 'llama3', 'llama3-70b', 'mistral', 'vicuna']
+# shorthands = ['qa-cos', 'mini-l6', 'snowflake']
+# models = ['gemma', 'llama2', 'llama3', 'llama3-70b', 'mistral', 'vicuna']
 
-# needs_rescoring = [('gemma', 'qa-cos'), ('llama2', 'qa-cos'), ('llama3', 'qa-cos'),
-# 				   ('llama3-70b', 'qa-cos'), ('mistral', 'qa-cos'), ('vicuna', 'qa-cos'),
-# 				   ('llama3', 'mini-l6')]
+# # needs_rescoring = [('gemma', 'qa-cos'), ('llama2', 'qa-cos'), ('llama3', 'qa-cos'),
+# # 				   ('llama3-70b', 'qa-cos'), ('mistral', 'qa-cos'), ('vicuna', 'qa-cos'),
+# # 				   ('llama3', 'mini-l6')]
 
-for model, embed in itertools.product(models, shorthands):
-	print(f'MODEL: {model}; EMBED: {embed};')
-	input = f'evaluation/utils/eval_answers/{model}/results-{model}-{embed}.json'
-	output = f'evaluation/scores/answer_scores/{model}/{model}-{embed}-answer-correctness.csv'
-	generate_scores(input, output, [answer_correctness], random_sample=20)
+# for model, embed in itertools.product(models, shorthands):
+# 	print(f'MODEL: {model}; EMBED: {embed};')
+# 	input = f'evaluation/utils/eval_answers/{model}/results-{model}-{embed}.json'
+# 	output = f'evaluation/scores/answer_scores/{model}/{model}-{embed}-answer-correctness.csv'
+# 	generate_scores(input, output, [answer_correctness], random_sample=random.sample(range(232), 20))
+
+for suffix in ['500', '1000', '1500', '500-overlap', '1000-overlap', '1500-overlap']:
+	print(f'CHUNKSIZE: {suffix};')
+	input = f'evaluation/utils/eval_parameters/chunksize-{suffix}.json'
+	output = f'evaluation/scores/param_answer_scores/evaluation-{suffix}.csv'
+	generate_scores(input, output, [answer_relevancy, answer_similarity])

@@ -1,4 +1,5 @@
 import pandas as pd
+import json
 
 shorthands = ['qa-cos', 'mini-l6', 'snowflake']
 models = ['gemma', 'llama2', 'llama3', 'llama3-70b', 'mistral', 'vicuna']
@@ -43,4 +44,30 @@ def reconstruct_answer_data(feature):
     final_df = pd.DataFrame.from_records(data=data)
     final_df.to_csv(f'evaluation/documents/{feature}.csv')
 
-reconstruct_answer_data('answer_similarity')
+def reconstruct_chunksize_data(feature):
+    dataset = {
+        'with_overlap': [],
+        'chunksize_500': [],
+        'chunksize_1000': [],
+        'chunksize_1500': []
+    }
+    for overlap in [True, False]:
+        add_overlap = True
+        for chunksize in ['500', '1000', '1500']:
+            if overlap:
+                input_path = f'evaluation/scores/param_answer_scores/evaluation-{chunksize}-overlap.csv'
+            else:
+                input_path = f'evaluation/scores/param_answer_scores/evaluation-{chunksize}.csv'
+            df = pd.read_csv(input_path)
+            for x in df[feature].tolist():
+                dataset[f'chunksize_{chunksize}'].append(x)
+                if add_overlap:
+                    dataset['with_overlap'].append(overlap)
+            add_overlap = False
+    final_df = pd.DataFrame.from_dict(dataset)
+    final_df.to_csv(f'evaluation/documents/chunksize_{feature}.csv')
+
+
+
+reconstruct_chunksize_data('answer_relevancy')
+reconstruct_chunksize_data('answer_similarity')

@@ -37,7 +37,7 @@ def query_api(url, payload):
 
 def collect_answers():
     # Main processing loop
-    collected = ['500', '1000', '1500', '500-overlap']
+    collected = ['500-overlap', '1000-overlap', '1500-overlap']
     for dataset_ref in ['500', '1000', '1500', '500-overlap', '1000-overlap', '1500-overlap']:
         if dataset_ref in collected:
             continue
@@ -48,7 +48,8 @@ def collect_answers():
                                                         total = len(questions),
                                                         desc = f"Loading for chunksize {dataset_ref}..."):
             # Log query info
-            
+            if library != 'Kinase':
+                continue
             context_payload = {
                 "text": f"Represent this sentence for searching relevant passages: {question}",
                 "model_type": "llama3:latest",
@@ -89,7 +90,7 @@ def collect_answers():
                 if os.path.exists(result_file_path):
                     with open(result_file_path, 'r+') as result_file:
                         result_data = json.load(result_file)
-                        result_data.append(qa_result)
+                        result_data.insert(i, qa_result)
                         result_file.seek(0)
                         json.dump(result_data, result_file, indent=4)
                 else:
