@@ -43,4 +43,4 @@ def reconstruct_answer_data(feature):
     final_df = pd.DataFrame.from_records(data=data)
     final_df.to_csv(f'evaluation/documents/{feature}.csv')
 
-reconstruct_answer_data('answer_relevancy')
+reconstruct_answer_data('answer_similarity')

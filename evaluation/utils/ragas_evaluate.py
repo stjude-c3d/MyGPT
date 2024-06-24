@@ -7,160 +7,38 @@ import os
 import pandas as pd
 import json
 import random
+import itertools
 
-#  embeddin_models = [
-# 	'multi-qa-MiniLM-l6-cos-v1', 
-# 	'multi-qa-mpnet-base-dot-v1', 
-# 	'all-MiniLM-L6-v2', 
-# 	'all-MiniLM-L12-v2', 
-# 	'snowflake/arctic-embed-s'
-# ]
-# embed_shorthands = ['mini-l6', 'mini-l12', 'qa-cos', 'qa-dot', 'snowflake']
-# datasets = ['mygpt-GPCR', 'mygpt-Kinase','mygpt-CAR-T', 'mygpt-IDR', 'mygpt-PTM']
-# models = ['llama3:latest', 'llama3:70b', 'llama2:latest', 'gemma:latest', 'mistral:latest', 'vicuna:latest']
 embeddings = HuggingFaceEmbeddings(model_name="multi-qa-MiniLM-l6-cos-v1")
 llm = ChatOllama(model="llama3:latest", base_url="http://10.220.17.160:11434")
 os.environ["RAGAS_DO_NOT_TRACK"] = "false"
 
-def generate_context_scores():
-	embed_shorthands = ['mini-l6', 'mini-l12', 'qa-cos', 'qa-dot', 'snowflake']
-	for shorthand in embed_shorthands:
-		data = []
-		with open(f'evaluation/utils/eval_context/{shorthand}/mygpt-all-{shorthand}.json', 'r', encoding = 'utf-8') as f:
-			data = json.load(f)
-			# create new dataset with 20 samples
-			new_data = {
-				'question': [],
-				'contexts': [],
-				'ground_truth': []
-			}
-			for i in random.sample(range(len(data), 20)):
-				new_data['question'].append(data['question'][i])
-				new_data['contexts'].append(data['contexts'][i])
-				new_data['ground_truth'].append(data['ground_truth'][i])
+def generate_scores(input, output, metrics, random_sample = None):
+	if random_sample: qa_indices = random.sample(range(232), random_sample)
+	data = []
+	with open(input, 'r', encoding = 'utf-8') as f:
+		data = json.load(f)
+		new_data = {
+			'question': [],
+			'answer': [],
+			'ground_truth': []
+		}
+		if random_sample:
+			for i in qa_indices:
+				new_data['question'].append(data[i]['question'])
+				new_data['answer'].append(data[i]['answer'])
+				new_data['ground_truth'].append(data[i]['ground_truth'])
+		else:
+			for x in data:
+				new_data['question'].append(x['question'])
+				new_data['answer'].append(x['answer'])
+				new_data['ground_truth'].append(x['ground_truth'])
 
-		# df = pd.DataFrame.from_records(data)
-		# print(df)
-		dataset = Dataset.from_dict(new_data)
-		scores = evaluate(dataset, metrics=[context_relevancy, context_entity_recall], embeddings=embeddings, llm=llm)
+	dataset = Dataset.from_dict(new_data)
+	scores = evaluate(dataset, metrics=metrics, embeddings=embeddings, llm=llm)
 
-		df = scores.to_pandas()
-		# save the scores to a csv file
-		df.to_csv(f'evaluation/scores/context_scores/{shorthand}-context-recall.csv', index=False)
-
-def generate_parameter_context_scores():
-	shorthands = ['500', '1000', '1500', '500-overlap', '1000-overlap', '1500-overlap']
-	model = 'llama3'
-	for shorthand in shorthands:
-		data = []
-		with open(f'evaluation/utils/eval_parameters/results-{model}-{shorthand}.json', 'r', encoding = 'utf-8') as f:
-			data = json.load(f)
-			df = pd.DataFrame.from_records(data)
-			new_data = {
-				'question': df['question'].tolist(),
-				'contexts': df['context'].tolist(),
-				'ground_truth': df['ground_truth'].tolist()
-			}
-		# print(df)
-		dataset = Dataset.from_dict(new_data)
-		scores = evaluate(dataset, metrics=[context_relevancy, context_entity_recall], embeddings=embeddings, llm=llm)
-
-		df = scores.to_pandas()
-		# save the scores to a csv file
-		df.to_csv(f'evaluation/scores/param_context_scores/test-chunksize-{shorthand}-context-recall.csv', index=False)
-
-def generate_answer_correctness():
-	shorthands = ['qa-cos', 'mini-l6', 'snowflake']
-	models = ['gemma', 'llama2', 'llama3', 'llama3-70b', 'mistral', 'vicuna']
-	qa_indices = random.sample(range(232), 20)
-	for shorthand in shorthands:
-		for model in models:
-			data = []
-			with open(f'evaluation/utils/eval_answers/{model}/results-{model}-{shorthand}.json', 'r', encoding = 'utf-8') as f:
-				
-				data = json.load(f)
-				# create new dataset with 20 samples
-				new_data = {
-					'question': [],
-					'answer': [],
-					# 'contexts': [],
-					'ground_truth': []
-				}
-				print(f'Model {model}, Embed {shorthand} has {len(data)} questions.')
-				for i in qa_indices:
-					new_data['question'].append(data[i]['question'])
-					new_data['answer'].append(data[i]['answer'])
-					# new_data['contexts'].append(x['context'])
-					new_data['ground_truth'].append(data[i]['ground_truth'])
-
-			# df = pd.DataFrame.from_records(data)
-			# print(df)
-			dataset = Dataset.from_dict(new_data)
-			print(dataset)
-			scores = evaluate(dataset, metrics=[answer_correctness], embeddings=embeddings, llm=llm)
-
-			df = scores.to_pandas()
-			result_file_path = f'evaluation/scores/answer_scores/{model}/{model}-{shorthand}-answer-correctness.json'
-			df.to_json(result_file_path, orient='records')
-			# save the scores to a csv file
-
-def generate_answer_scores(model, shorthand):
-
-	for shorthand in shorthands:
-		for model in models:
-			data = []
-			with open(f'evaluation/utils/eval_answers/{model}/results-{model}-{shorthand}.json', 'r', encoding = 'utf-8') as f:
-				data = json.load(f)
-				# create new dataset with 20 samples
-				new_data = {
-					'question': [],
-					'answer': [],
-					'contexts': [],
-					'ground_truth': []
-				}
-				for x in data:
-					new_data['question'].append(x['question'])
-					new_data['answer'].append(x['answer'])
-					new_data['contexts'].append(x['context'])
-					new_data['ground_truth'].append(x['ground_truth'])
-
-			# df = pd.DataFrame.from_records(data)
-			# print(df)
-			dataset = Dataset.from_dict(new_data)
-			scores = evaluate(dataset, metrics=[answer_relevancy, answer_similarity], embeddings=embeddings, llm=llm)
-
-			df = scores.to_pandas()
-			result_file_path = f'evaluation/scores/answer_scores/{model}/{model}-{shorthand}-answer-evaluation.csv'
-			df.to_csv(result_file_path)
-
-def generate_parameter_answer_scores():
-	shorthands = ['500', '1000', '1500', '500-overlap', '1000-overlap', '1500-overlap']
-	model = 'llama3'
-	for shorthand in shorthands:
-		data = []
-		with open(f'evaluation/utils/eval_parameters/results-{model}-{shorthand}.json', 'r', encoding = 'utf-8') as f:
-			data = json.load(f)
-			# create new dataset with 20 samples
-			new_data = {
-				'question': [],
-				'answer': [],
-				'contexts': [],
-				'ground_truth': []
-			}
-			for i in random.sample(range(len(data), 20)):
-				new_data['question'].append(data['question'][i])
-				new_data['answer'].append(data['answer'][i])
-				new_data['contexts'].append(data['contexts'][i])
-				new_data['ground_truth'].append(data['ground_truth'][i])
-
-		# df = pd.DataFrame.from_records(data)
-		# print(df)
-		dataset = Dataset.from_dict(new_data)
-		scores = evaluate(dataset, metrics=[context_relevancy, context_entity_recall], embeddings=embeddings, llm=llm)
-
-		df = scores.to_pandas()
-		# save the scores to a csv file
-		df.to_csv(f'evaluation/scores/param_answer_scores/chunksize-{shorthand}-answer-evaluation.csv', index=False)
+	df = scores.to_pandas()
+	df.to_csv(output, index=False)
 
 def combine_json_files():
 	question_answer_json = {
@@ -183,15 +61,62 @@ def combine_json_files():
 		with open(f'evaluation/utils/eval_context/{shorthand}/mygpt-all-{shorthand}.json', 'w') as f:
 			json.dump(question_answer_json, f)
 
-# combine_json_files()
+def repair_answer_scores(score_doc, answer_doc):
+	current_score_df = pd.read_csv(score_doc)
+	questions = current_score_df['question'].tolist()
+	relevancy_scores = current_score_df['answer_relevancy'].tolist()
+	data = []
+	with open(answer_doc, 'r', encoding = 'utf-8') as f:
+		data = json.load(f)
+		# create new dataset with 20 samples
+		new_data = {
+			'index': [],
+			'question': [],
+			'answer': [],
+			'contexts': [],
+			'ground_truth': []
+		}
+		all_questions = []
+		for i, x in enumerate(data):
+			all_questions.append(x['question'])
+			if (x['question'] not in questions) or (relevancy_scores[questions.index(x['question'])] in [None, 0, '', 0.0]):
+				new_data['question'].append(x['question'])
+				new_data['answer'].append(x['answer'])
+				if x['context'][0] not in ["'", '"']:
+					new_data['contexts'].append(list(x['context']))
+				else:
+					new_data['contexts'].append(json.loads(x['context']))
+				new_data['ground_truth'].append(x['ground_truth'])
+				new_data['index'].append(str(i))
+
+	rescore_df = pd.DataFrame.from_dict(new_data)
+	rescore_df.to_json('evaluation/utils/test.json', orient='records')
+	rescore_dataset = Dataset.from_dict(new_data)
+	new_scores_raw = evaluate(rescore_dataset, metrics=[answer_relevancy, answer_similarity], embeddings=embeddings, llm=llm)
+
+	new_score_records = new_scores_raw.to_pandas().to_dict('records')
+	score_records = current_score_df.to_dict('records')
+
+	next_score = iter(new_score_records)
+	for i, question in zip(rescore_df['index'].tolist(), rescore_df['question'].tolist()):
+		if question in questions:
+			score_records[questions.index(question)] = next(next_score)
+		else:
+			score_records.insert(i, next(next_score))
+
+	full_score_df = pd.DataFrame.from_records(score_records).drop(columns=['index'])
+	full_score_df.to_csv(score_doc, index=False)
 
 
 shorthands = ['qa-cos', 'mini-l6', 'snowflake']
 models = ['gemma', 'llama2', 'llama3', 'llama3-70b', 'mistral', 'vicuna']
 
-needs_rescoring = [('gemma', 'qa-cos'), ('llama2', 'qa-cos'), ('llama3', 'qa-cos'),
-				   ('llama3-70b', 'qa-cos'), ('mistral', 'qa-cos'), ('vicuna', 'qa-cos')
-				   ('llama3', 'mini-l6')]
+# needs_rescoring = [('gemma', 'qa-cos'), ('llama2', 'qa-cos'), ('llama3', 'qa-cos'),
+# 				   ('llama3-70b', 'qa-cos'), ('mistral', 'qa-cos'), ('vicuna', 'qa-cos'),
+# 				   ('llama3', 'mini-l6')]
 
-for model, embed in needs_rescoring:
-	generate_answer_scores(model, embed)
+for model, embed in itertools.product(models, shorthands):
+	print(f'MODEL: {model}; EMBED: {embed};')
+	input = f'evaluation/utils/eval_answers/{model}/results-{model}-{embed}.json'
+	output = f'evaluation/scores/answer_scores/{model}/{model}-{embed}-answer-correctness.csv'
+	generate_scores(input, output, [answer_correctness], random_sample=20)
