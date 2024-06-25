@@ -1,6 +1,6 @@
 from datasets import Dataset
 from ragas import evaluate
-from ragas.metrics import context_relevancy, context_entity_recall, answer_relevancy, answer_similarity, answer_correctness
+from ragas.metrics import context_relevancy, context_entity_recall, context_precision, answer_relevancy, answer_similarity, answer_correctness
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.chat_models import ChatOllama
 import os
@@ -115,18 +115,40 @@ def repair_answer_scores(score_doc, answer_doc):
 	full_score_df = pd.DataFrame.from_records(score_records).drop(columns=['index'])
 	full_score_df.to_csv(score_doc, index=False)
 
-
-# shorthands = ['qa-cos', 'mini-l6', 'snowflake']
-# models = ['gemma', 'llama2', 'llama3', 'llama3-70b', 'mistral', 'vicuna']
-
-# for model, embed in itertools.product(models, shorthands):
-# 	print(f'MODEL: {model}; EMBED: {embed};')
-# 	input = f'evaluation/utils/eval_answers/{model}/results-{model}-{embed}.json'
-# 	output = f'evaluation/scores/answer_correctness_scores/{model}/{model}-{embed}-answer-correctness.csv'
-# 	generate_scores(input, output, [answer_correctness])#, random_sample=random.sample(range(232), 20))
-
-for suffix in ['500', '1000', '1500', '500-overlap', '1000-overlap', '1500-overlap']:
+print('Scoring context relevancy on chunk variants...')
+for suffix in ['1500-overlap']:
 	print(f'CHUNKSIZE: {suffix};')
 	input = f'evaluation/utils/eval_parameters/chunksize-{suffix}.json'
 	output = f'evaluation/scores/param_context_scores/evaluation-{suffix}.csv'
-	generate_scores(input, output, [context_relevancy, context_entity_recall])
+	generate_scores(input, output, [context_relevancy])
+
+print('Scoring context entity recall on chunk variants...')
+for suffix in ['500', '1000', '1500', '500-overlap', '1000-overlap', '1500-overlap']:
+	print(f'CHUNKSIZE: {suffix};')
+	input = f'evaluation/utils/eval_parameters/chunksize-{suffix}.json'
+	output = f'evaluation/scores/param_context_scores/recall-{suffix}.csv'
+	generate_scores(input, output, [context_entity_recall])
+
+print('Scoring context precision on chunk variants...')
+for suffix in ['500', '1000', '1500', '500-overlap', '1000-overlap', '1500-overlap']:
+	print(f'CHUNKSIZE: {suffix};')
+	input = f'evaluation/utils/eval_parameters/chunksize-{suffix}.json'
+	output = f'evaluation/scores/param_context_scores/precision-{suffix}.csv'
+	generate_scores(input, output, [context_precision])
+
+shorthands = ['qa-cos', 'mini-l6', 'snowflake']
+models = ['gemma', 'llama2', 'llama3', 'llama3-70b', 'mistral', 'vicuna']
+
+print('Scoring answer correctness on chunk variants...')
+for suffix in ['500', '1000', '1500', '500-overlap', '1000-overlap', '1500-overlap']:
+	print(f'CHUNKSIZE: {suffix};')
+	input = f'evaluation/utils/eval_parameters/chunksize-{suffix}.json'
+	output = f'evaluation/scores/param_answer_scores/correctness-{suffix}.csv'
+	generate_scores(input, output, [answer_correctness])
+
+print('Scoring answer correctness on model and embed variants...')
+for model, embed in itertools.product(models, shorthands):
+	print(f'MODEL: {model}; EMBED: {embed};')
+	input = f'evaluation/utils/eval_answers/{model}/results-{model}-{embed}.json'
+	output = f'evaluation/scores/answer_correctness_scores/{model}/{model}-{embed}-answer-correctness.csv'
+	generate_scores(input, output, [answer_correctness])
