@@ -55,9 +55,9 @@ def reconstruct_chunksize_data(feature):
         add_overlap = True
         for chunksize in ['500', '1000', '1500']:
             if overlap:
-                input_path = f'evaluation/scores/param_answer_scores/evaluation-{chunksize}-overlap.csv'
+                input_path = f'evaluation/scores/param_context_scores/recall-{chunksize}-overlap.csv'
             else:
-                input_path = f'evaluation/scores/param_answer_scores/evaluation-{chunksize}.csv'
+                input_path = f'evaluation/scores/param_context_scores/recall-{chunksize}.csv'
             df = pd.read_csv(input_path)
             for x in df[feature].tolist():
                 dataset[f'chunksize_{chunksize}'].append(x)
@@ -69,5 +69,4 @@ def reconstruct_chunksize_data(feature):
 
 
 
-reconstruct_chunksize_data('answer_relevancy')
-reconstruct_chunksize_data('answer_similarity')
+reconstruct_chunksize_data('context_entity_recall')
