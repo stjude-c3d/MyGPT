@@ -1,7 +1,7 @@
 from datasets import Dataset
 from ragas import evaluate
 from ragas.metrics import context_relevancy, context_entity_recall, context_precision, answer_relevancy, answer_similarity, answer_correctness, faithfulness
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.embeddings import SentenceTransformerEmbeddings
 from langchain_community.chat_models import ChatOllama
 import os
 import pandas as pd
@@ -9,8 +9,8 @@ import json
 import random
 import itertools
 
-embeddings = HuggingFaceEmbeddings(model_name="multi-qa-MiniLM-l6-cos-v1")
-llm = ChatOllama(model="llama3:latest", base_url="http://10.220.17.160:11434")
+embeddings = SentenceTransformerEmbeddings(model_name="multi-qa-MiniLM-l6-cos-v1")
+llm = ChatOllama(model="llama3:latest", base_url="https://svlpgpt001a.stjude.org")
 os.environ["RAGAS_DO_NOT_TRACK"] = "false"
 
 def generate_scores(input, output, metrics, random_sample = None):
@@ -43,7 +43,7 @@ def generate_scores(input, output, metrics, random_sample = None):
 				new_data['ground_truth'].append(x['ground_truth'])
 
 	dataset = Dataset.from_dict(new_data)
-	scores = evaluate(dataset, metrics=metrics, embeddings=embeddings, llm=llm)
+	scores = evaluate(dataset, metrics=metrics, embeddings=embeddings, llm=llm, is_async=True)
 
 	df = scores.to_pandas()
 	df.to_csv(output, index=False)
@@ -132,30 +132,18 @@ def repair_answer_scores(score_doc, answer_doc):
 shorthands = ['qa-cos', 'mini-l6', 'snowflake']
 models = ['gemma', 'llama2', 'llama3', 'llama3-70b', 'mistral', 'vicuna']
 
-print('Scoring answer correctness on model and embed variants...')
-for model, embed in itertools.product(models, shorthands):
-	print(f'MODEL: {model}; EMBED: {embed};')
-	input = f'evaluation/utils/eval_answers/{model}/results-{model}-{embed}.json'
-	output = f'evaluation/scores/correctness_scores/{model}/{model}-{embed}-answer-correctness.csv'
-	generate_scores(input, output, [answer_correctness])
+q_sample = random.sample(range(232), 50)
 
 print('Scoring answer correctness on model and embed variants...')
 for model, embed in itertools.product(models, shorthands):
 	print(f'MODEL: {model}; EMBED: {embed};')
 	input = f'evaluation/utils/eval_answers/{model}/results-{model}-{embed}.json'
-	output = f'evaluation/scores/faithfulness_scores/{model}/{model}-{embed}-faithfulness.csv'
-	generate_scores(input, output, [faithfulness])
+	output = f'evaluation/scores/correctness_scores/{model}/{model}-{embed}-answer-correctness.csv'
+	generate_scores(input, output, [answer_correctness, faithfulness])
 
 print('Scoring answer correctness on chunk variants...')
 for suffix in ['500', '1000', '1500', '500-overlap', '1000-overlap', '1500-overlap']:
 	print(f'CHUNKSIZE: {suffix};')
 	input = f'evaluation/utils/eval_parameters/chunksize-{suffix}.json'
 	output = f'evaluation/scores/param_answer_scores/correctness-{suffix}.csv'
-	generate_scores(input, output, [answer_correctness])
-
-print('Scoring faithfulness on chunk variants...')
-for suffix in ['500', '1000', '1500', '500-overlap', '1000-overlap', '1500-overlap']:
-	print(f'CHUNKSIZE: {suffix};')
-	input = f'evaluation/utils/eval_parameters/chunksize-{suffix}.json'
-	output = f'evaluation/scores/param_answer_scores/faithfulness-{suffix}.csv'
-	generate_scores(input, output, [faithfulness])
+	generate_scores(input, output, [answer_correctness, faithfulness])
