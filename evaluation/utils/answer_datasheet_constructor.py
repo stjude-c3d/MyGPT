@@ -1,6 +1,21 @@
 import pandas as pd
 import json
 
+def reconstruct_speed_data(models):
+    data = []
+    for model in models:
+        df = pd.read_json(f'evaluation/answer_speeds/local/{model}-speeds.json')
+        speeds = df['speed'].tolist()
+        indices = df['index'].tolist()
+        print(len(speeds))
+        for i in range(len(speeds)):
+            item = {'model': model, 'speed': speeds[i], 'index': indices[i]}
+            data.append(item)
+    final_df = pd.DataFrame.from_records(data=data)
+    final_df.to_csv(f'evaluation/documents/local_speeds.csv')
+        
+
+
 def reconstruct_answer_data(feature, shorthands, models, folder, suffix, num_q):
     data = []
     for model in models:
@@ -41,5 +56,6 @@ def reconstruct_chunksize_data(feature):
 
 
 shorthands = ['qa-cos', 'mini-l6', 'snowflake']
-models = ['gemma', 'llama2', 'llama3']#, 'llama3-70b', 'mistral', 'vicuna']
-reconstruct_answer_data('answer_correctness', shorthands, models, 'correctness_scores', 'answer-correctness', 50)
+models = ['gemma', 'llama2', 'llama3', 'mistral', 'vicuna']
+reconstruct_speed_data(models)
+# reconstruct_answer_data('answer_correctness', shorthands, models, 'correctness_scores', 'answer-correctness', 50)
