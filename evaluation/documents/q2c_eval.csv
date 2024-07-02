@@ -1,0 +1,269 @@
+﻿#,"Question (in 200 words or less, please answer:)",,Questions relevance to papers,Library,Evaluator
+1,"Despite the diversity among GPCRs, are there similarities in their activation pathways?",Partially Correct,83%,GPCR,BS
+2,What are the residues and their contacts that contribute to the similarities in activation pathways?,Not Correct,65%,GPCR,BS
+3,Are these residues conserved and significantly part of certain structural elements?,Not Correct,50%,GPCR,BS
+4,Are there significant rearrangements in the process of activation?,Correct,33%,GPCR,BS
+5,Do different patterns of receptor phosphorylation can influence the conformation of arrestins leading to various functional outcomes?,Correct,100%,GPCR,BS
+6,What is the mechanism by which arrestins are activated and how different patterns of receptor phosphorylation induce distinct conformational changes in arrestins?,Correct,99%,GPCR,BS
+7,Is there any preference for the phosphorylation of regions in receptors?,Partially Correct,40%,GPCR,BS
+8,How do the phosphorylation sites interact with arrestins and what are the conserved interaction sites in arrestins?,Partially Correct,91%,GPCR,BS
+9,"Is there the existence of a ""selectivity barcode"" on each of the 16 human G proteins for GPCR binding?",Partially Correct,88%,GPCR,BS
+10,Which residue positions in the barcode are universally conserved? ,Partially Correct,45%,GPCR,BS
+11,How GPCRs recognize G-protein barcodes?,Correct,84%,GPCR,BS
+12,What is the over model for the GPCR-G protein interaction selectivities?,Correct,80%,GPCR,BS
+13,Is there a selectivity bar code in RGS for GPCR binding?,Correct,80%,GPCR,BS
+14,What is the structural preference for selectivity barcode residues of RGS?,Correct,67%,GPCR,BS
+15,How are non-synonymous variants in selectivity barcodes of RGS proteins and their impact on signaling?,Correct,84%,GPCR,BS
+16,What is the overall mechanism for RGS-Galpha-based signaling?,Correct,71%,GPCR,BS
+17,What is the mechanism through which the sensor works?,Correct,16%,GPCR,KN
+18,In which cell lines did the sensor give predicted or unexpected results?,Correct,43%,GPCR,KN
+19,How were unexpected results validated? Which orthogonal assays were used?,Correct,27%,GPCR,KN
+20,What is the sequence of G protein activation steps?,Not Correct,71%,GPCR,KN
+21,Summarize what is happening with GPCR during G protein activation?,Correct,89%,GPCR,KN
+22,Which technologies were used to measure G protein activation?,Correct,70%,GPCR,KN
+23,What is the difference between cell surface membrane signaling and endosomal signaling?,Correct,51%,GPCR,KN
+24,Which sensors or assays can be used to explain different compartmentalization of signaling?,Correct,44%,GPCR,KN
+25,How βarrestin-biased GPCR interact with βarrestin and why it doesn’t interact with G proteins?,Not Correct,75%,GPCR,KN
+26,"Which sequence or structural motifs differentiate neutral, G protein and βarrestin-biased GPCRs? ",Correct,82%,GPCR,KN
+27,Which regions of GPCR modulate ligand efficacy and which potency?,Correct,81%,GPCR,KN
+28,How do human and mouse TAAR1 differentiate between different ligands?,Not Correct,72%,GPCR,KN
+29,What is the basis of polypharmacology on TAAR1 receptors?,Correct,72%,GPCR,KN
+30,Do different ligands on the TAAR1 receptor induce different G protein signaling?,Correct,88%,GPCR,KN
+31,In which physiological or pathophysiological processes is TAAR1 signaling active?,Correct,68%,GPCR,KN
+32,How are GPCR and kinase signaling connected?,Correct,79%,GPCR,KN
+33,Which studies and how identified crosstalk between the GPCR and kinase signaling?,Correct,70%,GPCR,KN
+34,In which therapeutic areas we could target RTK/GPCR crosstalk?,Correct,61%,GPCR,KN
+35,List names of designing principles and biosensors are used for multiplexed detection of GPCR signaling?,Correct,69%,GPCR,KN
+36,What is the mechanism of GPCR-related gene transcription? ,Not Correct,66%,GPCR,KN
+37,Which G-proteins have been assayed in the paper - Direct interrogation of context-dependent GPCR activity with auniversal biosensor platform?,Correct,90%,GPCR,VTG
+38,What is the read-out of the sensors in the paper - Direct interrogation of context-dependent GPCR activity with auniversal biosensor platform?,Correct,77%,GPCR,VTG
+39,What is the cell-line in which the sensor has been validated in the paper - Direct interrogation of context-dependent GPCR activity with auniversal biosensor platform?,Not Correct,79%,GPCR,VTG
+40,Which GPCRs have been studied in the article - Direct interrogation of context-dependent GPCR activity with auniversal biosensor platform?,Partially Correct,89%,GPCR,VTG
+41,Is the sensor multiplexed in the paper - Direct interrogation of context-dependent GPCR activity with auniversal biosensor platform?,Correct,76%,GPCR,VTG
+42,How much dynamic range was achieved with this sensor in the article - A high-throughput CRISPR interference screen for dissecting functional regulators of GPCR/cAMP signaling?,Not Correct,39%,GPCR,VTG
+43,Was the sensor engineered further in the article - A high-throughput CRISPR interference screen for dissecting functional regulators of GPCR/cAMP signaling?,Not Correct,73%,GPCR,VTG
+44,Which signaling molecule does the sensor measure in the article - A high-throughput CRISPR interference screen for dissecting functional regulators of GPCR/cAMP signaling?,Correct,80%,GPCR,VTG
+45,How much is the specificity achieved in the article - A high-throughput CRISPR interference screen for dissecting functional regulators of GPCR/cAMP signaling?,Not Correct,79%,GPCR,VTG
+46,Which transcription factor response element has been used for the sensor in the article - A high-throughput CRISPR interference screen for dissecting functional regulators of GPCR/cAMP signaling?,Correct,74%,GPCR,VTG
+47,Which model system has been used in the work - DCyFIR: a high-throughput CRISPR platform for multiplexed G protein-coupled receptor profiling and ligand discovery?,Not Correct,80%,GPCR,VTG
+48,How many GPCRs have been targeted  in this paper - DCyFIR: a high-throughput CRISPR platform for multiplexed G protein-coupled receptor profiling and ligand discovery?,Not Correct,92%,GPCR,VTG
+49,Which molecules have been tested for the sensor response in this article - DCyFIR: a high-throughput CRISPR platform for multiplexed G protein-coupled receptor profiling and ligand discovery?,Not Correct,86%,GPCR,VTG
+50,Did they build a stable cell-line for this work - DCyFIR: a high-throughput CRISPR platform for multiplexed G protein-coupled receptor profiling and ligand discovery?,Correct,76%,GPCR,VTG
+51,What was the rate of false-positive in the article - DCyFIR: a high-throughput CRISPR platform for multiplexed G protein-coupled receptor profiling and ligand discovery?,Not Correct,78%,GPCR,VTG
+52,What are the key capabilities and features of the G-protein activity biosensors?,Correct,74%,GPCR,VTG
+53,What are some potential limitations of the biosensor design mentioned in the article - Revealing the Activity of Trimeric G-proteins in Live Cells with a Versatile Biosensor Design?,Correct,87%,GPCR,VTG
+54,How does the expression level of the biosensors impact normal G-protein signaling? ,Not Correct,76%,GPCR,VTG
+55,Does levels of biosensor expression interfere with downstream signaling pathways?,Not Correct,49%,GPCR,VTG
+56,Are any beta-arrestins measured in this article - Revealing the Activity of Trimeric G-proteins in Live Cells with a Versatile Biosensor Design?,Not Correct,80%,GPCR,VTG
+57,What is the CRISPR-coupled GPCR ChaCha system? ,Correct,83%,GPCR,VTG
+58,What ligands can activate the CRISPR ChaCha systems?,Correct,77%,GPCR,VTG
+59,What advantages does the ChaCha system offer over the Tango architecture? ,Not Correct,53%,GPCR,VTG
+60,What are the limitations of the CRISPR ChaCha system? ,Correct,65%,GPCR,VTG
+61,Which other systems can CRISPR ChaCha be applied to?,Not Correct,67%,GPCR,VTG
+62,What are the proofs of pathogenic gain-of-mutations can shift the equilibrium towards the active state in FGFRs?,Correct,59%,Kinases,KP
+63,List all the FGFR mutations that were used in the experiments.,Partially Correct,57%,Kinases,KP
+64,Which FGFR2 mutant has the lowest substrate phosphorylation activity?,Correct,74%,Kinases,KP
+65,"Is there any binding data about FGFR2 kinase domain and C-terminal interaction? If yes, list the binding affinity values too.",Not Correct,64%,Kinases,KP
+66,"What is the interaction mechanism between FGFR2, SHP2 and PLCγ1? Summarize it in a bulleted list.",Correct,75%,Kinases,KP
+67,"Provide me all the affinity binding data for FGFR2 – SHP2, FGFR2 - PLCγ1, FGFR8 – SHP2 and SHP2 - PLCγ1.",Not Correct,60%,Kinases,KP
+68,What things can affect the interaction between FGFR2 and SHP2?,Correct,75%,Kinases,KP
+69,How can be the FGFR2-SHP2 interaction affected?,Correct,78%,Kinases,KP
+70,What is the difference between a canonical and non-canonical SH2 domain interaction?,Not Correct,28%,Kinases,KP
+71,"Summarize the scientific results about FGFRs based on the different experimental method types but only from the results sections of the papers (exclude the abstracts, introductions and discussion sections).",Correct,33%,Kinases,KP
+72,Provide a bulleted list of the main findings from the paper “Group I and II mammalian PAKs have different modes of activation by Cdc42”. ,Correct,79%,Kinases,KP
+73,Does regulatory domain inhibit PAK4?,Correct,78%,Kinases,KP
+74,What are the Kd values for peptide binding of PAK4? ,Not Correct,62%,Kinases,KP
+75,List me the construct boundaries of PAK4 in the experiments.,Not Correct,39%,Kinases,KP
+76,List me the PAK4 construct boundaries in the experiments.,Not Correct,32%,Kinases,KP
+77,What is known about the inhibition and activation of PAK4?,Correct,76%,Kinases,KP
+78,What is known about PAK4 structure?,Correct,54%,Kinases,KP
+79,Is there any interaction between PAKs and FGFRs?,Not Correct,37%,Kinases,KP
+80,What is the main substrate of MNK1 kinase?,Not Correct,65%,Kinases,KP
+81,"How many variants of PAK, FGFR and MASP exist in the human body? List me the names too.",Not Correct,34%,Kinases,KP
+82,"Does the study suggest that  the regions with low modeled confidence, as predicted by AF2, undergo significant atomic displacement?",Not Correct,86%,Kinases,PB
+83,Were any notable differences observed in the conformational landscape of AlphaFold2 predicted protein kinase structures as compared to the experimentally determined structures?                         OR                                                                                                                         Did the study identify significant disparities in the conformational landscape between AlphaFold2-predicted protein kinase structures and experimentally determined ones?,Correct,98%,Kinases,PB
+84,Does combining a shallow MSA with state annotated templates achieve accuracy in predicting the active state of kinase?,Not Correct,63%,Kinases,PB
+85,How does the proposed pipeline address neural network biases and biases towards specific structural conformations within the AlphaFold2 training set?,Not Correct,60%,Kinases,PB
+86,Tabulate the different ligand types in kinase  and their associated details.,Not Correct,76%,Kinases,PB
+87,Provide the number of unique ligands in each combination of conformation and ligand type.,Correct,43%,Kinases,PB
+88,What does MMS stand for?,Correct,76%,Kinases,PB
+89,Justify how the study shows that the Inhibitor combinations are predicted to improve selectivity over the most selective single inhibitors for single GPCr targets using chemogenomic datasets?,Not Correct,90%,Kinases,PB
+90,How does the benzylamine group impact target selectivity?,Correct,69%,Kinases,PB
+91,What did the high-resolution structures of CAK-bound pyrazolopyrimidine inhibitor complexes unravel?,Correct,79%,Kinases,PB
+92,"What new perspective about the signalling events of the CDK1, CDK2, CDK4 and CDK6 kinase subfamilies did the work decipher?",Correct,57%,Kinases,PB
+93,How many sites of the  human Ser/Thr phosphoproteome were annotated?,Not Correct,47%,Kinases,PB
+94,List the kinases that were included to study the target landscape ,Correct,88%,Kinases,PB
+95,Is chemical proteomics an infalliable approach? Give pointwise justification.                                                                                           OR                                                                                                                                                                                                            Should chemical proteomics be used? Give point wise justification.,Correct,42% OR 37%,Kinases,PB
+96,How was machine learning used in the current study?,Correct,72%,Kinases,PB
+97,Define the different kinase conformations?,Correct,100%,Kinases,PB
+98,What are the steps in the Foldseek method?,Not Correct,32%,Kinases,PB
+99,"Provide rationale for determining which of the two methods, AlphaFold2 or Foldseek, exhibits superior performance.",Correct,46%,Kinases,PB
+100,What is the novelty of this paper?,Correct,63%,Kinases,PB
+101,Describe the NMR method used to identify the p38 kinase conformation.,Not Correct,71%,Kinases,PB
+102,What algorithmic bottleneck do GAT networks address? ,Not Correct,46%,Kinases,DM
+103,Explain the difference between transductive and inductive tasks in the context of graph neural networks.,Correct,58%,Kinases,DM
+104,How does the GAT mechanism work in graph-neural networks? Summarize the individual steps of the algorithm.,Correct,64%,Kinases,DM
+105,What is the EFFECT benchmark suite?,Not Correct,42%,Kinases,DM
+106,How does the EFFECT benchmark suite control for dataset biases when evaluating cancer dependency predictors?,Correct,69%,Kinases,DM
+107,What practical guideline do the authors from the EFFECT benchmark suite suggest to critically evaluate ML models?,Not Correct,48%,Kinases,DM
+108,Why is a systematic evaluation and comparison of performance of methods for cancer survival and gene essentiality needed?,Correct,49%,Kinases,DM
+109,What confounding biases are present in cancer depedency datasets and how do they influecne objective comparison of prediction methods?,Correct,62%,Kinases,DM
+110,Summarize the state of the art of machine-learning methods currently in use to predict cancer dependencies from DepMap data.,Correct,77%,Kinases,DM
+111,What are the main advantages of SSS compared to transformer based architectures?,Not Correct,28%,Kinases,DM
+112,Summarize and explain the MAMBA neural network architecture. What main challenges does it address?,Not Correct,52%,Kinases,DM
+113,"What implementation details render MAMBA particularly efficient, and how does the computational cost compare to attention based networks?",Not Correct,56%,Kinases,DM
+114,What sources contribute to RNA-seq profiles being very different between patient derived cancer samples and CCLE samples?,Correct,63%,Kinases,DM
+115,"Summarize the algorithmic steps of Celligher. Present the steps in logical order, first giving a high level overview, and then going into more details for each individual step.",Not Correct,17%,Kinases,DM
+116,Explain how celligner results allow to analyze cancer sub-type organisation. ,Correct,56%,Kinases,DM
+117,Does Celligner perform equally well on all cancer types?,Correct,58%,Kinases,DM
+118,What do you think are the weaknesses and limitations of Masif? Can you suggest ideas to address them?,Correct,15%,Kinases,DM
+119,How does Masif compare to other state of the art methods for large scale docking? What are these methods and which metrics were used for the comparison?,Correct,52%,Kinases,DM
+120,"Summarize the workflow of MASIF, a deep-learning framework method to analyze protein surfaces and interactions.",Correct,84%,Kinases,DM
+121,What challenges are faced when trying to deploy a prediction model trained on CCLE data to cancer derived patient samples?,Not Correct,66%,Kinases,DM
+122,Can ML dependency prediction models rationalize patient-specific cancer survival rates?,Not Correct,62%,Kinases,DM
+123,How can a pretrained model trained on TCGA data improve cancer dependency predictions on CCLE data?,Correct,64%,Kinases,DM
+124,How many cars were approved by FDA thus far to treat cancer? And which companies sell them? What cancers does  these FDA approved cars treat? Are these fda approved cars mono-/bi-/tri-/tetra-specific? What antigens do these fda approved cars target?,Correct,60%,CAR-T,KI
+125,How much does it cost to treat cancer with CARs? Are there any cars designed in india?,Correct,73%,CAR-T,KI
+126,"How does linkers impact protein folding? Are there any evidence to demonstrate that linkers enhanced protein/CAR stability, folding, aggregation and expression?",Correct,72%,CAR-T,KI
+127,What are the limitations of CAR therapy? What strategies researchers adopt to researchers adopt to develop CARs to overcome these limitations?,Not Correct,45%,CAR-T,KI
+128,"Are there any CAR therapies approved for treating solid tumors? If yes, who designed it? If no, why is it hard to design a CAR for solid tumors?",Correct,53%,CAR-T,KI
+129,"Are there any loop cars/diabodies ever designed/reported for treating cancers? If yes, when were they designed and who designed them and did they succeed in the clinical trials? which antigens do these loop cars target? What linkers are used in these loop cars?",Not Correct,49%,CAR-T,KI
+130,How are loop cars different from tandem cars? is there evidence to show if loop CARs work better than tandem?,Correct,24%,CAR-T,KI
+131,Are there any tri- or tetra-specific CARs that are designed to treat cancers?,Correct,60%,CAR-T,KI
+132,What are CAR nanodomains? What tools are used to identify CAR nanodomains? Are there any studies to demonstrate if cars form nanodomains?,Correct,66%,CAR-T,KI
+133, Are any cryo-em structures of CARs or CAR complexes reported?,Not Correct,28%,CAR-T,KI
+134,"Were any CARs simulated via molecular dynamics simulations? If yes, which CARs were simulated? What software was used and what were the conclusions?",Not Correct,38%,CAR-T,KI
+135,Are there any CARs designed via computationally strategies? What are these CARs and what antigens do they target?,Correct,70%,CAR-T,KI
+136,Are there any machine learning/deep learning/artificial intelligence methodologies carried on CAR proteins?,Correct,41%,CAR-T,KI
+137,Does the domain order influence the activity of CARs?,Correct,26%,CAR-T,KI
+138,Does linker lengths impact the expression and activity of proteins/CARs?,Correct,62%,CAR-T,KI
+139,What strategies are being used now to overcome the roadblocks in the CAR tcell therapy?,Correct,44%,CAR-T,KI
+140,What strategies are routinely used to improve stability and folding in antibodies/CARs?,Correct,62%,CAR-T,KI
+141,What are car nanobodies? How are they different from tandem or loop CARs?,Correct,46%,CAR-T,KI
+142,Size of CARs and their correlation with activity?,Correct,28%,CAR-T,KI
+143,What are the basic principles of CAR-T design?,Correct,33%,CAR-T,KI
+144,Summarize this paper titled ‘Decoding CAR T cell phenotype using combinatorial signaling motif libraries and machine learning’,Correct,88%,CAR-T,KI
+145,Define Chimeric antigen receptor (CAR)-T cell therapy ,Correct,95%,CAR-T,BLJ
+146,Define a Chimeric antigen receptor (CAR),Correct,79%,CAR-T,BLJ
+147,"There are four main protein domains, or components, of a CAR. They are: (1) an extracellular target antigen- binding domain, (2) a hinge region, (3) a transmembrane domain, and (4) one or more intracellular signaling domains. For each domain, list all proteins that have been used for that component, and provide a bibliographic citation that references its use. Provide details from that article that describe the rationale for the selection of that particular protein.",Correct,72%,CAR-T,BLJ
+148,List all ScFvs that have been used as antigen-binding domains in CARs.,Correct,87%,CAR-T,BLJ
+149,List all proteins other than ScFVs that have ben used for antigen-targeting in CARs.,Correct,80%,CAR-T,BLJ
+150,List all viral transduction methods that have been used to introduce genetic material into T-cells to generate CAR-T cells,Correct,78%,CAR-T,BLJ
+151,What are the most promising CAR-T designs that go beyond monospecific constructs?,Correct,42%,CAR-T,BLJ
+152,What are the biggest issues facing the development of better CAR-T therapies? Rank them in order of difficulty and provide examples with citations on all potential strategies to overcome these limitations. ,Correct,51%,CAR-T,BLJ
+153,"Enumerate the amino acid sequences of spacers, the short sequences inserted in between CAR domains. Provide bibliographic citations for each example.",Correct,39%,CAR-T,BLJ
+154,What is known about the mechanism of mechanotransduction in transmitting a receptor binding event into a cellular signal? ,Correct,38%,CAR-T,BLJ
+155,How does the composition of the hinge region affect the efficiency of signal transduction in CARs.,Correct,30%,CAR-T,BLJ
+156,How does the composition of the hinge region affect the efficiency target cell killing in CARs.,Not Correct,48%,CAR-T,BLJ
+157,"List all cancer types that have been targeted by CARs, and list which antigens are targeted in each case. ",Correct,65%,CAR-T,BLJ
+158,"List all cancer types that have been targeted by CARs, and list which antigens are targeted in each case. Create a table to display these data. ",Correct,54%,CAR-T,BLJ
+159,"List all CARs that are approved by the FDA, and for which cancer their use is approved for.",Correct,45%,CAR-T,BLJ
+160,Which promoters have been used to drive CAR expression? Create an exhaustive list. ,Not Correct,30%,CAR-T,BLJ
+161,List the normal cell types that cause off-target effects with CARs and explain why off-target effects occur. ,Correct,48%,CAR-T,BLJ
+162,List all topologies of bispecific CARs. Provide bibliographic citations for all examples. ,Correct,42%,CAR-T,BLJ
+163,Why are loop-CARs a superior design over tandem CARs?,Correct,30%,CAR-T,BLJ
+164,How do you match CAR expression level to antigen density?,Not Correct,58%,CAR-T,BLJ
+165,Are there mechanisms or strategies that have been used to allow CAR-T therapies to dynamically adjust the strength of antigen response?,Correct,76%,CAR-T,BLJ
+166,List all costimulatory domains that have been used in CAR constructs and list the Pros and Cons of each.,Correct,28%,CAR-T,BLJ
+167,"I don’t know much about the design of CARs for CAR-T therapies. Could you suggest three review articles I can read to gain a thorough understanding of the state of the field, and current challenges limiting advancement? Please explain why you selected each article.",Correct,52%,CAR-T,BLJ
+168,How will single-cell RNA sequencing and related technologies affect the design of new CARs?,Correct,46%,CAR-T,BLJ
+169,What are the differences between B-cells and T-cells in terms of cell surface receptors?,Correct,46%,CAR-T,BLJ
+170,What cancer type is the CAR-T targeting? ,Not Correct,76%,CAR-T,VKC
+171,What is the size of the library used in the article - Leucine zipper-based sorting system enables generation of multi-1 functional CAR T cells?,Correct,66%,CAR-T,VKC
+172,What assays have been discussed in the article - Leucine zipper-based sorting system enables generation of multi-1 functional CAR T cells?,Not Correct,86%,CAR-T,VKC
+173,How many transgenes could be incorporated in T-cells?,Correct,63%,CAR-T,VKC
+174,What signal peptide did they use for membrane targeting in the article - Leucine zipper-based sorting system enables generation of multi-1 functional CAR T cells?,Not Correct,71%,CAR-T,VKC
+175,Which ScFvs have been used in this study - Conditional Control of Universal CAR T Cells by Cleavable OFFSwitch Adaptors?,Not Correct,83%,CAR-T,VKC
+176,What small molecule have been used to control the switch in the article - Conditional Control of Universal CAR T Cells by Cleavable OFFSwitch Adaptors?,Not Correct,86%,CAR-T,VKC
+177,What was the optimal concentration of the small molecule?,Not Correct,83%,CAR-T,VKC
+178,What potential advantages does the small-molecule cleaving system offer in comparison to traditional antibody adaptors for controlling mSA2 CAR T cell activity?,Not Correct,80%,CAR-T,VKC
+179,"What are the proposed methods for administering adaptors and controlling OFF-switch activity in vivo, particularly in mouse models, and how might these methods differ depending on whether it's antibody adaptor pretreatment or simultaneous T cell and adaptor administration?",Correct,42%,CAR-T,VKC
+180,In what ways could the cleavable OFF-switch adaptor technology be further applied or generalized beyond controlling mSA2 CAR T cell activity?,Not Correct,69%,CAR-T,VKC
+181,What are some of the challenges in developing CAR T cells for treating solid tumors?,Correct,85%,CAR-T,VKC
+182,How does the concept of Boolean-logic AND-gate CAR T cells aim to address these challenges? ,Correct,68%,CAR-T,VKC
+183,"How does the LINK CAR system differ from other engineered CAR systems, such as SynNotch and SPLIT CAR, in terms of specificity, efficacy, and potential clinical applicability? ",Not Correct,49%,CAR-T,VKC
+184,"What advantages do proximal signaling CARs, such as ZAP-70 CARs, demonstrate over traditional CD3ζ CARs in terms of reduced tonic signaling, T cell exhaustion, expansion, and persistence? ",Correct,80%,CAR-T,VKC
+185,What are the implications of the antigen-density thresholds for the functionality of the LINK CAR system?,Correct,72%,CAR-T,VKC
+186,How does the ProCAR platform utilize tumor-colonizing probiotics to guide the cytotoxicity of engineered T cells?,Correct,83%,CAR-T,VKC
+187,what are the key findings regarding its efficacy in mouse models of cancer? ,Correct,56%,CAR-T,VKC
+188,What challenges do current CAR T cell therapies face regarding antigen dependence? ,Correct,88%,CAR-T,VKC
+189,What advantages does the ProCAR system offer over other strategies for targeting solid tumors?,Correct,41%,CAR-T,VKC
+190, how does ProCAR utilize bacteria to enhance tumor-specific target delivery?,Correct,67%,CAR-T,VKC
+191,What is a KID domain?,Correct,15%,IDR,BM
+192,"Provide a list of disordered proteins that do not fit the classic structure-function paradigm, and briefly list their relevant propeties.",Correct,73%,IDR,BM
+193,Does the DNA-related function of LEF-1 involve the structural transition of the protein and the DNA?,Correct,62%,IDR,BM
+194,How long is the peptide required to bind to eIF4E?,Not Correct,47%,IDR,BM
+195,What does the structure-function paradigm state and why does it need to be re-assessed?,Correct,49%,IDR,BM
+196,What is the function of the disordered regions of myoglobin?,Not Correct,53%,IDR,BM
+197,Why are highly flexible proteins incompatible with our previous view of how structure and function are related? ,Correct,71%,IDR,BM
+198,What is a molten globue?,Correct,42%,IDR,BM
+199,List the main features of a protein sequence that will determine whether the sequence will or will not fold into a stable structure.,Partially Correct,62%,IDR,BM
+200,Is the NCBD domain of CBP folded or disordered?,Correct,64%,IDR,BM
+201,Where are the leukaemia-related breakpoints located in CBP/p300?,Not Correct,26%,IDR,BM
+202,What are the functions that are enabled by the fact that disordered proteins do not have a stable structure?,Correct,73%,IDR,BM
+203,What is the role of the disordered protein HMGA1?,Not Correct,60%,IDR,BM
+204,What biological roles can disordered proteins fulfill thanks to their structural properties?,Correct,82%,IDR,BM
+205,What is a nanny protein?,Not Correct,30%,IDR,BM
+206,"Provide a list of ways IDPs are regulated, together with the implications of these reulatory mechanisms.",Partially Correct,78%,IDR,BM
+207,Is the tight regulation of dosage-sensitive genes linked to avoiding detrimental abundance of proteins?,Correct,82%,IDR,BM
+208,Which IDP-phosphorylating kinase is regulated in a cell cycle dependent manner?,Correct,77%,IDR,BM
+209,Why do IDPs have unique regulatory mechanisms compared to folded proteins?,Correct,79%,IDR,BM
+210,What is the effect of targeting the DEP domain of Dishevelled with peptides?,Not Correct,41%,IDR,BM
+211,The regulation of disordered proteins is characteristically different from that of ordered ones; explain the reasons for this!,Correct,69%,IDR,BM
+212,What is ELM?,Not Correct,59%,IDR,BM
+213,What are the main attributes of short linear motifs?,Not Correct,56%,IDR,BM
+214,Is the motif LIG_PCNA present in archaea?,Not Correct,35%,IDR,BM
+215,What is the difference in charge and hydrophobicity between disordered proteins in general and Ligand motif instances?,Not Correct,70%,IDR,BM
+216,"Why do short linear motifs typically reside in disordered protein regions, and what are the biological consequences of this?",Partially Correct,76%,IDR,BM
+217,What are degradation motifs (degrons)?,Correct,40%,IDR,BM
+218,Why is it biologically important that motifs are commonly found in unstructred parts of proteins?,Correct,73%,IDR,BM
+219,What are PTMs?,Correct,32%,IDR,BM
+220,List the main factors that can initiate the transition of a protein between a folded and an unfolded state?,Correct,70%,IDR,BM
+221,Can interactions with a small molecule unfold a protein?,Correct,58%,IDR,BM
+222,How much surface area is buried during the dimerization of HdeA?,Correct,32%,IDR,BM
+223,What are the main differences between passive and active factors that can induce the unfolding of proteins?,Correct,67%,IDR,BM
+224,What induces the unfolding of the cytoplasmic tails of integrins?,Not Correct,37%,IDR,BM
+225,What is the basis of differentiating two kinds of factors that can change the structural states of conditionally unfolded proteins?,Correct,62%,IDR,BM
+226,What is an NLS?,Correct,58%,IDR,BM
+227,Give a summary of the main functions of short liear motifs in the human proteome!,Correct,33%,IDR,BM
+228,Do human phosphorylation sites predominantly reside in ordered regions of proteins?,Correct,70%,IDR,BM
+229,How many motifs are estimated to exist in the human proteome?,Correct,66%,IDR,BM
+230,How do different motifs play a role in the general function of various proteins?,Correct,82%,IDR,BM
+231,What are the motifs present in human CBP?,Not Correct,51%,IDR,BM
+232,What is the effect that the presence of a motif exerts on the fate of the full protein?,Correct,70%,IDR,BM
+233,What are RHIM sequences?,Not Correct,23%,IDR,BM
+234,What are the key ways in which post-translational modifications regulate disordered proteins?,Not Correct,77%,IDR,BM
+235,Does p120 catenin regulate cell adhesion?,Correct,42%,IDR,BM
+236,What signaling is affected by MSI-1436?,Correct,38%,IDR,BM
+237,What are the special biophysical and cellular features of how disordered proteins interact with their partners?,Not Correct,77%,IDR,BM
+238,How is the binding of the LAT protein regulated?,Not Correct,58%,IDR,BM
+239,"In a physical and biological sense, what makes the protein-protein interaction modes of disordered proteins special?",Not Correct,80%,IDR,BM
+240,What is CALVADOS?,Correct,21%,IDR,BM
+241,What are the main steps to computationally generating conformational ensembles of disordered proteins?,Not Correct,68%,IDR,BM
+242,Are compact IDRs generally longer than extended IDRs?,Not Correct,54%,IDR,BM
+243,How many disordered regions were identified in the human proteome?,Not Correct,58%,IDR,BM
+244,What are the effects of the compaction of disordered proteins on their biological functions?,Correct,71%,IDR,BM
+245,What is the compaction of human p53?,Not Correct,34%,IDR,BM
+246,How is the biological role of a disordered protein dependent on the degree to which it has a compact overall structure?,Correct,80%,IDR,BM
+247,What is CoA?,Correct,50%,PTM,BL
+248,What is acetyl-CoA?,Correct,73%,PTM,BL
+249,What is succinyl-CoA?,Correct,77%,PTM,BL
+250,What reactions does SIRT5 catalyze?,Not Correct,79%,PTM,BL
+251,What is lysine acylation?,Correct,86%,PTM,BL
+252,What is lysine acetylation?,Correct,88%,PTM,BL
+253,"Where, within cells, is succinyl-CoA found?",Correct,78%,PTM,BL
+254,What species is succinyl-CoA found in?,Not Correct,61%,PTM,BL
+255,What processes do lysine acylations regulate?,Not Correct,84%,PTM,BL
+256,"Where, within proteins, does lysine acetylation happen?",Not Correct,90%,PTM,BL
+257,Are there lysine acylation reader domains in bacteria?,Not Correct,79%,PTM,BL
+258,What lysine acylation reader domains are known in mammals?,Not Correct,74%,PTM,BL
+259,"What enzymes succinylate lysines outside of mitochondria, and where does their succinyl-CoA come from?",Correct,94%,PTM,BL
+260,"What PTM does succinylation overlap with, and to what percentage?",Not Correct,49%,PTM,BL
+261,What evidence is there for demalonylation by SIRT5?,Correct,73%,PTM,BL
+262,"Is there a known ""writer"" enzyme for lysine succinylation?",Not Correct,72%,PTM,BL
+263,"Is there a known ""writer"" enzyme for lysine malonylation?",Not Correct,83%,PTM,BL
+264,Explain the roles of L- and D-lysine.,Not Correct,61%,PTM,BL
+265,What's a possible source of non-enzymatic lysine acetylation?,Correct,90%,PTM,BL
+266,What species does acetylphosphate-dependent lysine acetylation occur in?,Correct,77%,PTM,BL
+267,What acylation-related enzymes are used by pathogenic bacteria to attack their hosts?,Correct,82%,PTM,BL
+268,What does alpha-ketoglutarate do in the context of lysine acylations?,Not Correct,67%,PTM,BL
