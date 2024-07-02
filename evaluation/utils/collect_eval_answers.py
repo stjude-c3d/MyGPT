@@ -14,9 +14,10 @@ question_list = eval_doc['question'].tolist()
 groundtruth_list = eval_doc['ground_truth'].tolist()
 
 # List of models and embeddings to evaluate
-models = ['llama3:latest', 'gemma:latest', 'mistral:latest', 'llama3:70b', 'llama2:latest', 'vicuna:latest']
-embed_shorthands = ['mini-l6', 'snowflake']
-collected = [('llama3:latest', 'mini-l6'), ('gemma:latest', 'mini-l6'), ('mistral:latest', 'mini-l6')]
+# models = ['llama3:latest', 'gemma:latest', 'mistral:latest', 'llama3:70b', 'llama2:latest', 'vicuna:latest']
+embed_shorthands = ['qa-cos', 'mini-l6', 'snowflake']
+collected = []#[('llama3:latest', 'mini-l6'), ('gemma:latest', 'mini-l6'), ('mistral:latest', 'mini-l6')]
+models = ['gemma2:latest']
 
 # Function to query APIs with payload and measure time taken
 def query_api(url, payload):
@@ -127,5 +128,5 @@ def repair_incomplete(model, shorthand):
     fixed_df.to_json(f'evaluation/utils/eval_answers/{model_name}/results-{model_name}-{shorthand}.json', orient='records')
 
 for shorthand in ['qa-cos', 'mini-l6', 'snowflake']:
-    for model in ['gemma:latest', 'llama2:latest', 'llama3:latest', 'llama3:70b', 'mistral:latest', 'vicuna:latest']:
+    for model in ['gemma2:latest', 'llama2:latest', 'llama3:latest', 'llama3:70b', 'mistral:latest', 'vicuna:latest']:
         repair_incomplete(model, shorthand)
