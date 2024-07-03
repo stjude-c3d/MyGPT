@@ -1,0 +1,122 @@
+[
+    {
+        "index": 16,
+        "question": "What is the mechanism through which the sensor works?",
+        "answer": "The passage describes several types of sensors, but doesn't explicitly detail the mechanism of *how* each one works.  \n\nIt does say that GRAB sensors \"enable detection of specific neuropeptide binding at nanomolar concentrations\" and that fluorescent sensors based on nanobodies \"detect active and inactive opioid receptor states.\" \n\n\nLet me know if you'd like me to elaborate on a specific type of sensor mentioned! \n",
+        "speed": 25.713745832443237
+    },
+    {
+        "index": 19,
+        "question": "What is the sequence of G protein activation steps?",
+        "answer": "This document does not contain the sequence of G protein activation steps. \n",
+        "speed": 2.35030198097229
+    },
+    {
+        "index": 38,
+        "question": "Is the sensor multiplexed in the paper - Direct interrogation of context-dependent GPCR activity with auniversal biosensor platform?",
+        "answer": "Yes, the paper describes a multiplexed biosensor platform called ONE-GO.  \n\nThe abstract states: \"Large-scale parallel interrogation of GPCR activity with ONE-GO biosensors\". \n",
+        "speed": 2.599281072616577
+    },
+    {
+        "index": 41,
+        "question": "Which signaling molecule does the sensor measure in the article - A high-throughput CRISPR interference screen for dissecting functional regulators of GPCR/cAMP signaling?",
+        "answer": "The sensor measures cyclic AMP (cAMP) signaling.  \n",
+        "speed": 2.2213199138641357
+    },
+    {
+        "index": 51,
+        "question": "How does the expression level of the biosensors impact normal G-protein signaling? ",
+        "answer": "The provided text focuses on the G protein selectivity profiles of protease-activated receptor 1 (PAR1) and the discrimination of G i/o isoforms by neuroinhibitory GPCRs. It doesn't mention how biosensor expression levels impact normal G-protein signaling.  \n",
+        "speed": 3.4469528198242188
+    },
+    {
+        "index": 52,
+        "question": "Does levels of biosensor expression interfere with downstream signaling pathways?",
+        "answer": "No, the text states that expression of the biosensor at low levels does not measurably interfere with downstream signaling.  \n",
+        "speed": 2.886922836303711
+    },
+    {
+        "index": 71,
+        "question": "List me the construct boundaries of PAK4 in the experiments.",
+        "answer": "The PAK4 constructs used in the experiments are:\n\n* **PAK4s:** Full-length PAK4 (residues 1-591)\n* **PAK4a:** PAK4 lacking residues 1-50\n* **PAK4\u2013Cat(286\u2013591):** PAK4 catalytic domain (residues 286-591)\n* **PAK4s WT:** Wild-type PAK4s\n* **PAK4s \u039450:** PAK4s lacking residues 1-50\n* **PAK4s \u039420:** PAK4s lacking residues 1-20 \n\n\n",
+        "speed": 6.837754011154175
+    },
+    {
+        "index": 91,
+        "question": "Define the different kinase conformations?",
+        "answer": "The text states that the aC helix and the DFG motif are two highly conserved structural elements in kinases that determine the kinase conformational space.  \n",
+        "speed": 2.5819270610809326
+    },
+    {
+        "index": 92,
+        "question": "What are the steps in the Foldseek method?",
+        "answer": "1. **Discretize structures into 3Di sequences:**  Represent structures as sequences using the 3Di alphabet, which describes tertiary residue-residue interactions.\n2. **Prefilter:** Use MMseqs2's k-mer and ungapped alignment prefilter to find similar 3Di sequences.\n3. **Align:** Perform local or global alignment using vectorized Smith\u2013Waterman or TM-align, incorporating 3Di and amino acid substitution scores. \n\n\n",
+        "speed": 5.320531129837036
+    },
+    {
+        "index": 125,
+        "question": "How does the composition of the hinge region affect the efficiency target cell killing in CARs.",
+        "answer": "The composition of the hinge region affects CAR efficiency by influencing flexibility, CAR expression, signaling, epitope recognition, and activation strength.  Different hinge lengths and compositions can impact how well the CAR can access and bind to the target antigen, ultimately affecting its ability to kill target cells. \n",
+        "speed": 3.636281967163086
+    },
+    {
+        "index": 133,
+        "question": "How will single-cell RNA sequencing and related technologies affect the design of new CARs?",
+        "answer": "This document does not contain information about how single-cell RNA sequencing will affect the design of new CARs.  \n",
+        "speed": 3.023021936416626
+    },
+    {
+        "index": 139,
+        "question": "What signal peptide did they use for membrane targeting in the article - Leucine zipper-based sorting system enables generation of multi-1 functional CAR T cells?",
+        "answer": "The provided text does not specify the signal peptide used for membrane targeting.  \n",
+        "speed": 2.4653337001800537
+    },
+    {
+        "index": 153,
+        "question": "What challenges do current CAR T cell therapies face regarding antigen dependence? ",
+        "answer": "CAR T cell therapies can face challenges due to **antigen escape**, where tumor cells lose or downregulate the antigen the CAR T cells are targeting, rendering the therapy ineffective.  \n",
+        "speed": 4.532801151275635
+    },
+    {
+        "index": 189,
+        "question": "What induces the unfolding of the cytoplasmic tails of integrins?",
+        "answer": "This document does not contain the answer to what induces the unfolding of the cytoplasmic tails of integrins. \n",
+        "speed": 2.118065118789673
+    },
+    {
+        "index": 206,
+        "question": "What are the main steps to computationally generating conformational ensembles of disordered proteins?",
+        "answer": "Computational generation of disordered protein ensembles involves:\n\n1. **Data Collection:** Utilizing NMR, SAXS, and databases like pE-DB.\n2. **Modeling:** Employing transferable models like CALVADOS, focusing on long-range interactions and compaction.\n3. **Simulation:** Performing molecular simulations to generate ensembles based on the model. \n\n\n",
+        "speed": 4.163108825683594
+    },
+    {
+        "index": 208,
+        "question": "How many disordered regions were identified in the human proteome?",
+        "answer": "The text states that the set of IDRs contains 35% of the residues in the UniProt proteome.  \n",
+        "speed": 2.7170000076293945
+    },
+    {
+        "index": 211,
+        "question": "How is the biological role of a disordered protein dependent on the degree to which it has a compact overall structure?",
+        "answer": "This document does not contain the answer to your question.  \n",
+        "speed": 2.7309179306030273
+    },
+    {
+        "index": 224,
+        "question": "What enzymes succinylate lysines outside of mitochondria, and where does their succinyl-CoA come from?",
+        "answer": "Carnitine palmitoyltransferase (CPT), attached to the outer mitochondrial membrane, exhibits lysine succinyltransferase activity.  \n\nSuccinyl-CoA outside mitochondria likely comes from the cytosol, potentially generated by acyl-CoA synthetase enzymes acting on succinate.  \n",
+        "speed": 4.310421943664551
+    },
+    {
+        "index": 226,
+        "question": "What evidence is there for demalonylation by SIRT5?",
+        "answer": "The demalonylated peptide was detected only in the presence of SIRT5 and NAD/H11001. This reaction was inhibited by nicotinamide, a class III HDAC inhibitor, but not by inhibitors of class I/II HDACs or Sirt1.  \n",
+        "speed": 3.8381450176239014
+    },
+    {
+        "index": 228,
+        "question": "What's a possible source of non-enzymatic lysine acetylation?",
+        "answer": "Elevated cellular concentrations of acetyl-CoA, which can react with lysine side chains or \u03b1-amino groups in proteins.  \n",
+        "speed": 3.9984309673309326
+    }
+]

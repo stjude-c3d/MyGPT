@@ -1,0 +1,26 @@
+[
+    {
+        "index": 16,
+        "question": "What is the mechanism through which the sensor works?",
+        "answer": "According to the text, the sensor works based on the selective interaction of nanobodies with active and inactive states of opioid receptors. The nanobodies are designed to bind specifically to these receptor states, allowing for the detection of changes in receptor activity.",
+        "speed": 416.17463397979736
+    },
+    {
+        "index": 19,
+        "question": "What is the sequence of G protein activation steps?",
+        "answer": "According to the provided information, the sequence of G protein activation steps is:\n\n1. Ligand binding to a G-protein-coupled receptor (GPCR)\n2. Activation of the GPCR\n3. Release of GDP from the G\u03b1 subunit\n4. Binding of GTP to the G\u03b1 subunit\n5. Conformational change in the G\u03b1 subunit, allowing it to interact with downstream effectors\n\nThis sequence is based on the article \"Cellular regulation of RGS proteins: modulators and integrators of G protein signaling\" by Hollins et al. (2009).",
+        "speed": 640.6514687538147
+    },
+    {
+        "index": 38,
+        "question": "Is the sensor multiplexed in the paper - Direct interrogation of context-dependent GPCR activity with auniversal biosensor platform?",
+        "answer": "According to Figure 5 in the paper \"Direct interrogation of context-dependent GPCR activity with a universal biosensor platform\" by Janicot et al., the ONE-GO biosensors are used for parallel profiling of atypical antipsychotics across a large set of receptors. This suggests that the sensor is indeed multiplexed, allowing for simultaneous measurement of multiple GPCRs and their responses to different ligands.",
+        "speed": 342.46578669548035
+    },
+    {
+        "index": 41,
+        "question": "Which signaling molecule does the sensor measure in the article - A high-throughput CRISPR interference screen for dissecting functional regulators of GPCR/cAMP signaling?",
+        "answer": "According to the article, the sensor measures cyclic AMP (cAMP).",
+        "speed": 497.6551160812378
+    }
+]
