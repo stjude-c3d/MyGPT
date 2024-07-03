@@ -1,0 +1,122 @@
+[
+    {
+        "index": 16,
+        "question": "What is the mechanism through which the sensor works?",
+        "answer": "The sensors work by detecting specific neuropeptide binding at nanomolar concentrations. These fluorescent sensors enable the detection of neuropeptides under both physiological and pathophysiological conditions.",
+        "speed": 8.240852355957031
+    },
+    {
+        "index": 19,
+        "question": "What is the sequence of G protein activation steps?",
+        "answer": "The provided text does not contain any information regarding the sequence of G protein activation steps, so I am unable to answer this question from the given context.",
+        "speed": 4.141037940979004
+    },
+    {
+        "index": 38,
+        "question": "Is the sensor multiplexed in the paper - Direct interrogation of context-dependent GPCR activity with auniversal biosensor platform?",
+        "answer": "The provided text does not contain any information regarding whether the sensor is multiplexed in the paper, so I am unable to answer this question from the given context.",
+        "speed": 3.447591781616211
+    },
+    {
+        "index": 41,
+        "question": "Which signaling molecule does the sensor measure in the article - A high-throughput CRISPR interference screen for dissecting functional regulators of GPCR/cAMP signaling?",
+        "answer": "The sensor measures **cyclic AMP (cAMP)**, a second messenger involved in various cellular processes such as cell survival, proliferation, and differentiation.",
+        "speed": 3.8949787616729736
+    },
+    {
+        "index": 51,
+        "question": "How does the expression level of the biosensors impact normal G-protein signaling? ",
+        "answer": "The provided text does not contain any information regarding the impact of biosensor expression levels on normal G-protein signaling, so I am unable to answer this question from the given context.",
+        "speed": 3.50620698928833
+    },
+    {
+        "index": 52,
+        "question": "Does levels of biosensor expression interfere with downstream signaling pathways?",
+        "answer": "High levels of biosensor expression can potentially interfere with downstream signaling pathways due to the occlusion of effector binding sites on their cognate G-protein targets. However, the provided text suggests that expression of KB1691-based biosensors at low levels does not measurably interfere with downstream signaling, indicating that these biosensors can be used without significant perturbation of cellular signaling processes.",
+        "speed": 6.7893688678741455
+    },
+    {
+        "index": 71,
+        "question": "List me the construct boundaries of PAK4 in the experiments.",
+        "answer": "The PAK4 constructs used in the experiments were:\n\n- PAK4a lacking residues 1-50\n- PAK4-Cat(286-591)\n- PAK4sWTkDa\n- \u039450\u039420KD PAK4s",
+        "speed": 5.939252138137817
+    },
+    {
+        "index": 91,
+        "question": "Define the different kinase conformations?",
+        "answer": "The different kinase conformations are not explicitly defined in the given text. The provided text focuses on providing a quantitative and generalized structural description of kinase conformations and their associated small-molecule substructures.",
+        "speed": 3.982064962387085
+    },
+    {
+        "index": 92,
+        "question": "What are the steps in the Foldseek method?",
+        "answer": "**Steps in the Foldseek method:**\n\n1. **Discretization:** Structures are encoded as sequences over the 20-state 3Di alphabet.\n\n\n2. **Prefilter:** Finds similar, spaced 3Di k-mer matches in the same diagonal of the dynamic programming matrix.\n\n\n3. **Alignment:** Uses vectorized Smith\u2013Waterman local alignment combining 3Di and amino acid substitution scores.\n\n\n4. **Feature extraction:** Extracts features from neighboring residues using virtual center distance.\n\n\n5. **Search:** Searches the 3Di state library and predicts features based on the encoded structures.",
+        "speed": 7.979919195175171
+    },
+    {
+        "index": 125,
+        "question": "How does the composition of the hinge region affect the efficiency target cell killing in CARs.",
+        "answer": "The composition of the hinge region can affect the efficiency of target cell killing in CARs by influencing flexibility, CAR expression, signaling, epitope recognition, and activation outputs. Differences in the length and composition of the hinge can affect antigen binding and signaling through the CAR, cytokine production, and AICD36.",
+        "speed": 4.493353843688965
+    },
+    {
+        "index": 133,
+        "question": "How will single-cell RNA sequencing and related technologies affect the design of new CARs?",
+        "answer": "Single-cell RNA sequencing and related technologies will enable the identification of T cells with high CAR expression and functional effector profiles, allowing for the engineering of more effective CARs. By profiling the transcriptome of individual T cells, researchers can gain insights into the molecular mechanisms underlying CAR T cell responses and optimize CAR design to enhance their cytotoxicity, persistence, and tumor regression capabilities.",
+        "speed": 6.106565237045288
+    },
+    {
+        "index": 139,
+        "question": "What signal peptide did they use for membrane targeting in the article - Leucine zipper-based sorting system enables generation of multi-1 functional CAR T cells?",
+        "answer": "The provided text does not contain any information regarding the signal peptide used for membrane targeting in the article, so I am unable to answer this question from the given context.",
+        "speed": 5.044190883636475
+    },
+    {
+        "index": 153,
+        "question": "What challenges do current CAR T cell therapies face regarding antigen dependence? ",
+        "answer": "Current CAR T cell therapies face challenges regarding antigen dependence, as they can encounter antigen escape due to tumor heterogeneity in antigen expression. This limits the efficacy of CAR T cells in treating certain cancers, particularly solid tumors where antigen expression can be variable across different tumor cells.",
+        "speed": 7.733209133148193
+    },
+    {
+        "index": 189,
+        "question": "What induces the unfolding of the cytoplasmic tails of integrins?",
+        "answer": "The binding of ligands to BCL-xL induces the local unfolding of two helices within the protein, which is associated with the release of p53 and the induction of apoptosis.",
+        "speed": 3.7617061138153076
+    },
+    {
+        "index": 206,
+        "question": "What are the main steps to computationally generating conformational ensembles of disordered proteins?",
+        "answer": "**Main steps to computationally generating conformational ensembles of disordered proteins:**\n\n1. Develop a transferable model like CALVADOS that can predict long-range interactions and overall compaction of IDRs.\n\n\n2. Perform molecular simulations based on the model to generate conformational ensembles of large numbers of IDRs from the human proteome.\n\n\n3. Utilize databases such as pE-DB31 for experimental structural data of IDRs.",
+        "speed": 5.321995735168457
+    },
+    {
+        "index": 208,
+        "question": "How many disordered regions were identified in the human proteome?",
+        "answer": "Approximately 35% of the residues in the human proteome were identified as disordered regions. This includes IDRs identified using both AlphaFold2 pLDDT scores and SPOT-Disorder predictions.",
+        "speed": 4.296488046646118
+    },
+    {
+        "index": 211,
+        "question": "How is the biological role of a disordered protein dependent on the degree to which it has a compact overall structure?",
+        "answer": "A disordered protein with a more compact overall structure exhibits increased capacity for interaction with other proteins and molecules. Such interactions are crucial for the biological functions of many proteins, such as regulation of cellular processes, signaling, and molecular transport. A higher degree of compactness can enhance the protein's ability to bind to specific partners and perform its assigned tasks.",
+        "speed": 6.847120046615601
+    },
+    {
+        "index": 224,
+        "question": "What enzymes succinylate lysines outside of mitochondria, and where does their succinyl-CoA come from?",
+        "answer": "Several enzymes outside mitochondria can succinate lysines. One of them is carnitine palmitoyltransferase (CPT), which is attached to the outer mitochondrial membrane facing the cytosol. CPT exhibits lysine succinyltransferase activity and utilizes succinyl-CoA generated from various metabolic pathways in the cytosol.",
+        "speed": 6.050450086593628
+    },
+    {
+        "index": 226,
+        "question": "What evidence is there for demalonylation by SIRT5?",
+        "answer": "Demalonylation by SIRT5 was evidenced by the detection of a peptide that had lost a malonyl group in the presence of NAD/H11001, but not in a mock reaction or using a Sirt5 inactive mutant. The reaction was also inhibited by nicotinamide, a class III HDAC inhibitor, but not by trichostatin A or sirtinol.",
+        "speed": 5.257890224456787
+    },
+    {
+        "index": 228,
+        "question": "What's a possible source of non-enzymatic lysine acetylation?",
+        "answer": "Non-enzymatic lysine acetylation can occur due to the accumulation of acetyl-CoA molecules in the cellular metabolic state. Acetyl-CoA molecules are highly reactive thioesters prone to react with nucleophilic groups such as \u03b5-amino groups in lysine side chains or \u03b1-amino groups in proteins.",
+        "speed": 7.544773101806641
+    }
+]
