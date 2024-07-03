@@ -56,6 +56,5 @@ def reconstruct_chunksize_data(feature):
 
 
 shorthands = ['qa-cos', 'mini-l6', 'snowflake']
-models = ['gemma', 'llama2', 'llama3', 'mistral', 'vicuna']
-reconstruct_speed_data(models)
-# reconstruct_answer_data('answer_correctness', shorthands, models, 'correctness_scores', 'answer-correctness', 50)
+models = ['gemma', 'llama2', 'llama3', 'llama3-70b', 'mistral', 'vicuna']
+reconstruct_answer_data('answer_correctness', shorthands, models, 'correctness_scores', 'correctness', 232)
