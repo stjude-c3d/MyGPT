@@ -13,7 +13,7 @@ eval_doc = pd.read_csv('evaluation/documents/eval_dataset.csv', encoding='ISO-88
 question_list = eval_doc['question'].tolist()
 
 # List of models and embeddings to evaluate
-models = ['llama2:latest']
+models = ['gemma2:latest']
 
 def query_api(url, payload):
     """Query the API with the payload and measure the time taken."""
