@@ -4,7 +4,7 @@ import json
 def reconstruct_speed_data(models):
     data = []
     for model in models:
-        df = pd.read_json(f'evaluation/answer_speeds/local/{model}-speeds.json')
+        df = pd.read_json(f'evaluation/answer_speeds/server/{model}-speeds.json')
         speeds = df['speed'].tolist()
         indices = df['index'].tolist()
         print(len(speeds))
@@ -12,7 +12,7 @@ def reconstruct_speed_data(models):
             item = {'model': model, 'speed': speeds[i], 'index': indices[i]}
             data.append(item)
     final_df = pd.DataFrame.from_records(data=data)
-    final_df.to_csv(f'evaluation/documents/local_speeds.csv')
+    final_df.to_csv(f'evaluation/documents/server_speeds.csv')
         
 
 
@@ -60,4 +60,4 @@ def reconstruct_chunksize_data(feature, prefix, folder):
 
 shorthands = ['qa-cos', 'mini-l6', 'snowflake']
 models = ['gemma', 'llama2', 'llama3', 'llama3-70b', 'mistral', 'vicuna']
-reconstruct_chunksize_data('answer_correctness', 'correctness', 'answer_correctness')
+reconstruct_speed_data(models)
