@@ -1,0 +1,122 @@
+[
+    {
+        "index": 16,
+        "question": "What is the mechanism through which the sensor works?",
+        "answer": "The fluorescent sensors developed in this study work by detecting specific neuropeptide binding at nanomolar concentrations. These sensors are based on the selective interaction of nanobodies with active and inactive opioid receptor states, as well as other G protein-coupled receptors. The sensors enable detection of release, function, and regulation of neuropeptides under both physiological and pathophysiological conditions.",
+        "speed": 23.600829124450684
+    },
+    {
+        "index": 19,
+        "question": "What is the sequence of G protein activation steps?",
+        "answer": "\n1. Binding of agonist ligand to G protein-coupled receptor (GPCR) on cell surface.\n2. Activation of receptor by agonist, leading to conformational changes in the receptor.\n3. Receptor-mediated activation of intracellular signaling pathways through interaction with G proteins.\n4. Dissociation of G\u03b1 subunit from G\u03b2\u03b3 complex.\n5. Activation of downstream effectors such as adenylate cyclase, phospholipase C, and ion channels.\n6. Inhibition of receptor-mediated signaling by G protein inhibitors (e.g., G protein-coupled receptor antagonists).",
+        "speed": 35.28138995170593
+    },
+    {
+        "index": 38,
+        "question": "Is the sensor multiplexed in the paper - Direct interrogation of context-dependent GPCR activity with auniversal biosensor platform?",
+        "answer": "The paper \"Direct interrogation of context-dependent GPCR activity with a universal biosensor platform\" describes the development and use of a universal biosensor platform called ONE-GO to investigate the activity of G protein-coupled receptors (GPCRs) in a parallel manner. The biosensor platform is designed to detect changes in the binding affinity of GPCRs upon ligand activation by measuring the change in fluorescence resonance energy transfer (FRET) between donor and acceptor fluorophores embedded in the biosensor.\n\nThe paper does not explicitly mention multiplexing of the sensor, but it is likely that the platform can be adapted for multiplexing to investigate a larger number of GPCRs simultaneously. The authors state that the platform allows for \"parallel pro\ufb01ling of atypical antipsychotics across a large set of receptors\" (Figure 5 in the paper), suggesting that the biosensor can be used to measure the activity of multiple GPCRs in parallel. However, the details of how the platform is multiplexed are not provided in the paper.",
+        "speed": 33.49682426452637
+    },
+    {
+        "index": 41,
+        "question": "Which signaling molecule does the sensor measure in the article - A high-throughput CRISPR interference screen for dissecting functional regulators of GPCR/cAMP signaling?",
+        "answer": "The sensor measures cyclic AMP (cAMP) signaling.",
+        "speed": 17.2992160320282
+    },
+    {
+        "index": 51,
+        "question": "How does the expression level of the biosensors impact normal G-protein signaling? ",
+        "answer": "The expression level of the ONE-GO biosensors can impact normal G-protein signaling by affecting the sensitivity and specificity of G protein activation measurements. Higher expression levels of the biosensor can result in higher signal-to-noise ratios, which can improve the accuracy and reliability of G protein activation measurements. However, if the expression level is too high, it may lead to non-specific binding of the biosensor to other proteins or molecules, resulting in false positive signals and interference with normal G-protein signaling. Therefore, optimizing the expression level of the biosensor is crucial for obtaining accurate and reliable measurements of G protein activation.",
+        "speed": 25.580206155776978
+    },
+    {
+        "index": 52,
+        "question": "Does levels of biosensor expression interfere with downstream signaling pathways?",
+        "answer": "\nThe potential concern of any biosensor is the potential interference with the process it measures. In the case of BERKY biosensors, which are based on KB1691 and Nluc fusion, the expression of the biosensor at high levels could alter normal G-protein signaling because the detector modules utilized occlude the effector binding sites on their cognate G-protein targets. However, our data show that expression of BERKY biosensors at low levels, but sufficient to allow robust detection of endogenous responses, does not measurably interfere with downstream signaling (Figures 7A\u20137F). This indicates that the biosensor expression level does not significantly affect the downstream signaling pathways.",
+        "speed": 38.95431971549988
+    },
+    {
+        "index": 71,
+        "question": "List me the construct boundaries of PAK4 in the experiments.",
+        "answer": "\n1. W. Wang et al. (1998) used NMR to design functional mimetics of protein-protein interactions, focusing on the building of bridges. They identified different auto-inhibition mechanisms for PAK1 and PAK4. The bound structure of the PAK1 N-terminal regulatory domain in the monomeric form was isolated from the crystal structure 1F3M. The surface representation of the PAK1 catalytic domain (blue) was in complex with its N-terminal regulatory domain (pink) in the monomeric form. The bound structure of the PAK4 AID was determined in the present study, and the surface representation of the PAK4 catalytic domain (blue) was in complex with its AID (pink).\n2. In another experiment, the authors tested the activity of PAK4a lacking residues 1\u201350 compared to full-length PAK4. They found that PAK4a lacking residues 1\u201350 was extremely active, while full-length PAK4 (PAK4s) did not undergo auto-phosphorylation because the A-loop Ser 474 was fully phosphorylated. This suggested that residues 20\u201350 contained essential elements for the functioning of the PAK4 AID, which is conserved among all group II PAKs and related to AID sequences found in other PAKs.",
+        "speed": 52.80800008773804
+    },
+    {
+        "index": 91,
+        "question": "Define the different kinase conformations?",
+        "answer": "\nKinases are enzymes that play a crucial role in cell signaling and disease networks. They exist in various conformational states, which determine their catalytic activity and chemical modulation. Two highly conserved structural elements in kinases, the activation function (AF) domain and the dimerization/dissociation (DFG) motif, contribute to the determination of the kinase conformational space. The AF domain is responsible for the enzymatic activity, while the DFG motif regulates the kinase's activity by controlling the binding of substrates and inhibitors.\n\nThe kinase conformations can be classified into two main categories: active and inactive states. In the active state, the AF domain is in its active position, allowing the enzyme to catalyze the transfer of a phosphate group from ATP to a target protein. In the inactive state, the AF domain is in an inactive position, preventing the enzymatic activity.\n\nIn addition to the active and inactive states, kinases can also exist in transiently populated conformational states, such as the DFG-in and DFG-out states. These states are characterized by different binding of the DFG motif, affecting the enzyme's activity and substrate specificity. The understanding and characterization of these distinct kinase conformations are essential to reveal the mechanisms underlying kinase regulation and function.",
+        "speed": 43.8837308883667
+    },
+    {
+        "index": 92,
+        "question": "What are the steps in the Foldseek method?",
+        "answer": "\n1. Discretization of query and target structures into 3Di sequences.\n2. Application of MMseqs2's pre-filter for fast and sensitive k-mer and ungapped alignment on the 3Di sequences.\n3. Vectorized Smith\u2013Waterman local alignment combining 3Di and amino acid substitution scores. Alternatively, a global alignment is computed with a 1.7-times accelerated TM-align version.\n4. Learning of the 3Di alphabet that describes tertiary residue\u2013residue interactions instead of backbone conformations.\n5. Implementation of MMseqs2's precomputed database indexing capabilities in Foldseek for fast searches by fully caching search data in system memory and avoiding expensive accesses to slow disk drives.",
+        "speed": 33.88274693489075
+    },
+    {
+        "index": 125,
+        "question": "How does the composition of the hinge region affect the efficiency target cell killing in CARs.",
+        "answer": "The composition of the hinge region in CARs can have an impact on their efficiency in targeting and killing cells. The length and composition of the hinge region influence the flexibility and function of the CAR, which in turn affects antigen binding, signaling, epitope recognition, strength of activation outputs, and immunological synapse formation. Differences in the hinge region can result in decreased CAR T cell function and persistence in vivo. The selection of appropriate amino acid sequences from CD8, CD28, IgG1 or IgG4 in the hinge domain is crucial to avoid potential interactions with Fc\u03b3 receptors (Fc\u03b3Rs) that can lead to CAR T cell depletion and decreased efficacy. The transmembrane domain used also influences the stability and function of the CAR, contributing to its overall efficiency in targeting and killing cells.",
+        "speed": 32.81082582473755
+    },
+    {
+        "index": 133,
+        "question": "How will single-cell RNA sequencing and related technologies affect the design of new CARs?",
+        "answer": "Single-cell RNA sequencing (scRNA-seq) and related technologies have the potential to significantly impact the design of new CARs by providing a more comprehensive understanding of the T cell repertoire and the tumor microenvironment. These advancements in molecular profiling can be used to identify novel antigens, improve T cell redirection specificity, and enhance the therapeutic efficacy of CAR-T cells.\n\n1. Identifying novel antigens: scRNA-seq allows for the comprehensive analysis of the T cell repertoire, enabling the identification of rare, high-affinity T cell clones that recognize novel antigens or unique epitopes on known antigens. This information can be used to design CARs with improved specificity and selectivity for the targeted tumor cells.\n2. Improving T cell redirection: By analyzing the transcriptional profiles of T cells in the tumor microenvironment, scRNA-seq can help identify critical signaling pathways that regulate T cell activation and differentiation. This information can be used to optimize CAR design by incorporating these pathways into the CAR structure or by developing strategies to enhance T cell activation and proliferation within the tumor microenvironment.\n3. Enhancing therapeutic efficacy: scRNA-seq can provide insights into the immunosuppressive mechanisms employed by cancer cells, allowing for the development of CARs that are resistant to these mechanisms or that enhance T cell persistence within the tumor microenvironment. This may result in improved therapeutic efficacy and longer-lasting responses to CAR-T cell therapy.\n4. Personalized medicine: scRNA-seq can be used to analyze individual patient samples, allowing for the identification of unique T cell repertoires and antigen profiles within a patient's tumor. This information can be utilized to design personalized CARs that are tailored to the specific needs of each patient, improving treatment efficacy and reducing side effects.\n\nIn summary, single-cell RNA sequencing and related technologies have the potential to revolutionize the design of new CARs by providing a more comprehensive understanding of the T cell repertoire and the tumor microenvironment. This information can be used to improve CAR specificity, enhance therapeutic efficacy, and develop personalized treatments for individual patients.",
+        "speed": 76.55466222763062
+    },
+    {
+        "index": 139,
+        "question": "What signal peptide did they use for membrane targeting in the article - Leucine zipper-based sorting system enables generation of multi-1 functional CAR T cells?",
+        "answer": "\nThe authors used a leucine zipper-based sorting system to enable the generation of multi-functional CAR T cells. This system directs single-step immunomagnetic purification of dual-vector-transduced cells, allowing for the selective purification of dual-CAR T cells by magnetically sorting on zipper-tagged safety switch, dominant negative, and switch receptor molecules. The leucine zipper strategy promotes preferential surface expression of the affinity tag zipper on dual-transduced cells.",
+        "speed": 30.596776247024536
+    },
+    {
+        "index": 153,
+        "question": "What challenges do current CAR T cell therapies face regarding antigen dependence? ",
+        "answer": "Current CAR T cell therapies face several challenges regarding antigen dependence, including:\n\n1. Antigen escape: Cancer cells can evade detection by changing the expression of surface antigens that are targeted by the CAR.\n2. Suboptimal persistence: CAR T cells may not persist long enough in the patient's body to provide a sustained therapeutic effect.\n3. Heterogeneity: Different tumors can express different antigens, making it difficult to develop a single CAR that can target multiple types of cancer.\n4. Limited availability of suitable targets: Some tumors may not express sufficient levels of the target antigen, reducing the efficacy of the therapy.\n5. Off-target effects: The CAR may bind to non-target cells or tissues, leading to potential toxicities and side effects.",
+        "speed": 53.05091619491577
+    },
+    {
+        "index": 189,
+        "question": "What induces the unfolding of the cytoplasmic tails of integrins?",
+        "answer": "The cytoplasmic tails of integrins are known to undergo conformational changes upon ligand binding, leading to their activation and subsequent function. However, the exact mechanism by which these tails unfold is not fully understood. It has been proposed that the binding of extracellular ligands to the integrin's extracellular domain induces a conformational change in the cytoplasmic tail, leading to its exposure and activation. This process may involve the recruitment of intracellular signaling molecules such as phospholipids or small GTPases, which can further promote the unfolding and activation of the integrin. However, more research is needed to fully elucidate the mechanism of integrin cytoplasmic tail unfolding.",
+        "speed": 27.579150199890137
+    },
+    {
+        "index": 206,
+        "question": "What are the main steps to computationally generating conformational ensembles of disordered proteins?",
+        "answer": "\n1. Modeling of ensembles: Nuclear magnetic resonance (NMR) and small angle X-ray scattering (SAXS) data, as well as a public database pE-DB31 (<http://pedb.vib.be>) are used for deposition of conformational ensembles.\n2. Structural ensembles: X-ray crystallography can be employed to obtain structures of intrinsically disordered regions (IDRs) in their bound states, if well ordered, or NMR can provide dynamic insights into interactions between IDPs and their targets.\n3. Characterization techniques: Single molecule fluorescence energy transfer (smFRET), computer simulations based on polymer physics, and other methods like local structuring or binding regions prediction from sequence alone are used to study disordered proteins.\n4. CALVADOS model validation: The CALVADOS model is globally optimized for studying the conformational ensemble of any IDR in the absence of experimental data. It predicts long-range interactions and overall compaction, which are crucial for protein function and self-association to form biomolecular condensates.\n5. CD-CODE: This project involves crowdsourcing a database and encyclopedia (CD-CODE) to collect and analyze data on disordered proteins and their interactions.",
+        "speed": 44.107401847839355
+    },
+    {
+        "index": 208,
+        "question": "How many disordered regions were identified in the human proteome?",
+        "answer": "The article discusses the number of binding motifs and posttranslational modification sites in the human proteome. It suggests that eukaryotic proteins have more than 300 types of enzyme-catalyzed posttranslational modifications, most of which are yet to be investigated in detail. The article also states that a large proportion of the human proteome is intrinsically disordered and that proteome-wide analyses have revealed that disordered regions are enriched in highly connected hub proteins. Furthermore, it suggests that a sizeable proportion of protein-protein interactions may be mediated by interfaces in disordered regions. The article provides a method for selecting intrinsically disordered regions (IDRs) from the human proteome and estimates that 35% of the residues in the UniProt proteome are IDRs.",
+        "speed": 30.956218004226685
+    },
+    {
+        "index": 211,
+        "question": "How is the biological role of a disordered protein dependent on the degree to which it has a compact overall structure?",
+        "answer": "The biological role of a disordered protein can be influenced by the degree to which it maintains a compact overall structure, as this can affect its stability and interactions with other molecules. Disordered proteins are typically characterized by a lack of well-defined secondary and tertiary structures, resulting in a more flexible and dynamic behavior compared to ordered proteins. However, this flexibility can also make disordered proteins prone to aggregation and misfolding, which can lead to various cellular dysfunctions and diseases.\n\nA compact overall structure of a disordered protein can contribute to its stability by reducing the probability of unwanted interactions with other molecules or the environment, thereby promoting its proper functioning. For example, a well-structured disordered protein may be less likely to form aggregates that could cause cellular damage. Additionally, a compact structure might facilitate the formation of functional domains or regions within the protein, which can enhance its specificity and responsiveness to various stimuli.\n\nOn the other hand, excessive order in a disordered protein can lead to the loss of certain functionalities that rely on the flexibility and mobility of the protein's structure. This could include interactions with other molecules or components of cellular machinery that require specific conformational changes for their proper functioning. Therefore, the degree to which a disordered protein maintains its compact overall structure can have a significant impact on its biological role and function.",
+        "speed": 57.07037425041199
+    },
+    {
+        "index": 224,
+        "question": "What enzymes succinylate lysines outside of mitochondria, and where does their succinyl-CoA come from?",
+        "answer": "The enzymes that succinylate lysines outside of mitochondria are not explicitly mentioned in the provided information. However, it is known that lysine succinylation occurs both inside and outside mitochondria. The succinyl-CoA produced outside mitochondria likely comes from the cytosolic pathway involving acyl-CoA synthetase enzymes, which can generate succinyl-CoA from succinate within the cytosol (discussed in the provided information). Additionally, carnitine palmitoyltransferase (CPT), an enzyme attached to the outer mitochondrial membrane facing the cytosol, exhibits lysine succinyltransferase activity. However, it is not clear where the succinyl-CoA produced by CPT comes from.",
+        "speed": 41.6560697555542
+    },
+    {
+        "index": 226,
+        "question": "What evidence is there for demalonylation by SIRT5?",
+        "answer": "The evidence for lysine demalonylation by SIRT5 comes from several studies. In one study, researchers found that a synthetic peptide bearing an acetylated lysine was not detected in the presence of NAD/H11001, corresponding to a peptide that has lost a malonyl group. On the other hand, the demalonylated peptide was detected in a reaction using Sirt5 and NAD/H11001, but not in a mock reaction or a reaction using a Sirt5 inactive mutant (1).\n\nAnother study used fluorometric assays to detect lysine demalonylation activities of different HDACs. They found that Sirt5 had the highest activity for lysine demalonylation among all the HDACs tested (2).\n\nFurthermore, researchers examined the lysine malonylation and lysine succinylation status in HepG2 cells with or without Sirt5 overexpression or knockdown by siRNA. They found that lysine malonylation or lysine succinylation was decreased in response to Sirt5 expression (3).\n\nFinally, using protein lysate from livers derived from wt Sirt5 mice and Sirt5 knockout mice, researchers showed that Sirt5 has significant impact on the global lysine malonylation and lysine succinylation but has little influence on lysine acetylation (4).\n\nTaken together, these studies provide strong evidence for the ability of SIRT5 to catalyze lysine demalonylation in vitro and in vivo.",
+        "speed": 50.755906105041504
+    },
+    {
+        "index": 228,
+        "question": "What's a possible source of non-enzymatic lysine acetylation?",
+        "answer": "Non-enzymatic lysine acetylation can occur as a result of chemical reactions that take place within the cell, particularly under conditions that favor this reaction. One such condition is an elevated concentration of cellular ac(et)yl-CoA, which depends on the cellular metabolic state. Ac(et)yl-CoA molecules are highly reactive thioesters prone to react with nucleophilic groups such as \u03b5-amino groups in lysine side chains or \u03b1-amino groups in proteins. The concentrations of acetyl-CoA and malonyl-CoA in E. coli fluctuate between 200\u2013600 \u00b5M and 4\u201390 \u00b5M, respectively.",
+        "speed": 44.474454164505005
+    }
+]
