@@ -13,7 +13,8 @@ eval_doc = pd.read_csv('evaluation/documents/eval_dataset.csv', encoding='ISO-88
 question_list = eval_doc['question'].tolist()
 
 # List of models and embeddings to evaluate
-models = ['gemma:latest', 'llama2:latest', 'llama3:latest', 'llama3:70b', 'mistral:latest', 'vicuna:latest']
+models = ['llama2:latest', 'llama3:latest', 'llama3:70b', 'gemma2:latest', 'gemma:latest', 'mistral:latest', 'vicuna:latest']
+# models = ['llama3:70b']
 
 def query_api(url, payload):
     """Query the API with the payload and measure the time taken."""
@@ -39,7 +40,7 @@ def collect_answer_speeds(shorthand, sample):
     for model in models:
         print(f'\nMODEL: {model};')
         model_name = model.replace(":latest", "").replace(":", "-")
-        result_file_path = f'evaluation/answer_speeds/server/{model_name}-speeds.json'
+        result_file_path = f'evaluation/answer_speeds/google_colab_a100_gpu/{model_name}-speeds.json'
         for count, i in tqdm(enumerate(sample), total=len(sample), desc=f"Answering questions with {model_name}..."):
             question = question_list[i]
             contexts = context_lists[i]
@@ -83,3 +84,29 @@ def collect_answer_speeds(shorthand, sample):
 
 sample = [16, 19, 38, 41, 51, 52, 71, 91, 92, 125, 133, 139, 153, 189, 206, 208, 211, 224, 226, 228]
 collect_answer_speeds('qa-cos', sample)
+
+#  get the average speed of the model for diferent environments
+def get_average_speeds():
+    environments = ['google_colab_a100_gpu', 'google_colab_t4_gpu', 'google_colab_l4_gpu', 'google_colab_t4_gpu', 'google_colab_cpu', 'local', 'server', 'mac-m1']
+    
+    # write it to a file
+    file = open("evaluation/answer_speeds/average_speeds.csv", "w")
+    file.write("Model, Environment, Average Speed\n")
+
+    for env in environments:
+        for model in models:
+            speeds = []
+            model_name = model.replace(":latest", "").replace(":", "-")
+            result_file_path = f'evaluation/answer_speeds/{env}/{model_name}-speeds.json'
+            if os.path.exists(result_file_path):
+                with open(result_file_path) as f:
+                    data = json.load(f)
+                    speeds.extend([i['speed'] for i in data])
+                average_speed = sum(speeds) / len(speeds)
+                # add line to csv file
+                file.write(f"{model_name}, {env}, {average_speed}\n")
+            # else:
+            #    file.write(f"{model_name}, {env}, n/a\n")
+    file.close()
+
+# get_average_speeds()

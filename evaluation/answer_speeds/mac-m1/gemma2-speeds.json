@@ -1,0 +1,122 @@
+[
+    {
+        "index": 16,
+        "question": "What is the mechanism through which the sensor works?",
+        "answer": "The passage describes sensors that detect neuropeptide binding at nanomolar concentrations using fluorescent sensors.  These sensors enable the detection of specific neuropeptide binding. \n",
+        "speed": 2.5751240253448486
+    },
+    {
+        "index": 19,
+        "question": "What is the sequence of G protein activation steps?",
+        "answer": "This document does not contain the sequence of G protein activation steps. \n\n\n",
+        "speed": 3.5372438430786133
+    },
+    {
+        "index": 38,
+        "question": "Is the sensor multiplexed in the paper - Direct interrogation of context-dependent GPCR activity with auniversal biosensor platform?",
+        "answer": "Yes, the paper states that the ONE-GO biosensors allow for \"parallel pro\ufb01ling of atypical antipsychotics across a large set of receptors\".  This indicates multiplexing. \n",
+        "speed": 3.5287489891052246
+    },
+    {
+        "index": 41,
+        "question": "Which signaling molecule does the sensor measure in the article - A high-throughput CRISPR interference screen for dissecting functional regulators of GPCR/cAMP signaling?",
+        "answer": "The sensor measures cyclic AMP (cAMP) signaling.  \n",
+        "speed": 3.8920419216156006
+    },
+    {
+        "index": 51,
+        "question": "How does the expression level of the biosensors impact normal G-protein signaling? ",
+        "answer": "The provided text focuses on the selectivity of G protein activation by different cell types and GPCRs, not the impact of biosensor expression levels on normal G-protein signaling.  \n",
+        "speed": 3.774995803833008
+    },
+    {
+        "index": 52,
+        "question": "Does levels of biosensor expression interfere with downstream signaling pathways?",
+        "answer": "No, the passage states that expression of the biosensor at low levels does not measurably interfere with downstream signaling.  \n",
+        "speed": 5.8907740116119385
+    },
+    {
+        "index": 71,
+        "question": "List me the construct boundaries of PAK4 in the experiments.",
+        "answer": "The PAK4 constructs used in the experiments are:\n\n* **PAK4s:** Full-length PAK4 (residues 1-591)\n* **PAK4a:** PAK4 lacking residues 1-50 (residues 51-591)\n* **PAK4\u2013Cat(286\u2013591):** PAK4 catalytic domain (residues 286-591)\n* **PAK4s \u039450:** PAK4 lacking residues 1-50 (residues 51-591)\n* **PAK4s \u039420:** PAK4 lacking residues 1-20 (residues 21-591) \n\n\n",
+        "speed": 11.221891164779663
+    },
+    {
+        "index": 91,
+        "question": "Define the different kinase conformations?",
+        "answer": "The text describes kinase conformations as being determined by the positions of the aC helix and the DFG motif.  It states that these elements define the \"kinase conformational space\". \n",
+        "speed": 4.378928184509277
+    },
+    {
+        "index": 92,
+        "question": "What are the steps in the Foldseek method?",
+        "answer": "1. **Discretize structures into 3Di sequences:**  Represent structures as sequences using the 3Di alphabet, which encodes tertiary residue-residue interactions.\n2. **Prefilter:** Find similar, spaced 3Di k-mer matches in the same diagonal of the dynamic programming matrix to reduce the number of sequences requiring full alignment.\n3. **Ungapped alignment:** Perform ungapped alignment using 3Di and amino acid substitution scores.\n4. **Global alignment (optional):** Compute a global alignment using a faster TM-align version. \n\n\n",
+        "speed": 9.593647003173828
+    },
+    {
+        "index": 125,
+        "question": "How does the composition of the hinge region affect the efficiency target cell killing in CARs.",
+        "answer": "The composition of the hinge region affects CAR efficiency by influencing flexibility, CAR expression, signaling, epitope recognition, and activation strength.  Differences in hinge length and composition can impact antigen binding and signaling, ultimately affecting target cell killing. \n",
+        "speed": 4.847449064254761
+    },
+    {
+        "index": 133,
+        "question": "How will single-cell RNA sequencing and related technologies affect the design of new CARs?",
+        "answer": "This document doesn't explain how single-cell RNA sequencing will affect the design of new CARs.  It focuses on the basic design and function of CARs and their potential for treating various cancers. \n\n\n",
+        "speed": 6.481015920639038
+    },
+    {
+        "index": 139,
+        "question": "What signal peptide did they use for membrane targeting in the article - Leucine zipper-based sorting system enables generation of multi-1 functional CAR T cells?",
+        "answer": "The provided text does not specify the signal peptide used for membrane targeting.  \n",
+        "speed": 5.497647762298584
+    },
+    {
+        "index": 153,
+        "question": "What challenges do current CAR T cell therapies face regarding antigen dependence? ",
+        "answer": "CAR T cell therapies face challenges with antigen escape, where tumor cells can mutate or downregulate the target antigen, rendering the therapy ineffective.  \n",
+        "speed": 8.894222736358643
+    },
+    {
+        "index": 189,
+        "question": "What induces the unfolding of the cytoplasmic tails of integrins?",
+        "answer": "This document does not contain the answer to what induces the unfolding of the cytoplasmic tails of integrins. \n",
+        "speed": 3.8496170043945312
+    },
+    {
+        "index": 206,
+        "question": "What are the main steps to computationally generating conformational ensembles of disordered proteins?",
+        "answer": "Computational generation of disordered protein ensembles involves:\n\n1. **Data Acquisition:** Utilizing NMR, SAXS, and databases like pE-DB.\n2. **Modeling:** Employing transferable models like CALVADOS to predict long-range interactions and compaction.\n3. **Simulation:** Performing molecular simulations based on the model to generate ensembles. \n\n\n",
+        "speed": 6.660725116729736
+    },
+    {
+        "index": 208,
+        "question": "How many disordered regions were identified in the human proteome?",
+        "answer": "The text states that the set of identified IDRs contains 35% of the residues in the UniProt proteome.  \n",
+        "speed": 4.944361925125122
+    },
+    {
+        "index": 211,
+        "question": "How is the biological role of a disordered protein dependent on the degree to which it has a compact overall structure?",
+        "answer": "This document does not contain the answer to your question. \n",
+        "speed": 7.096596956253052
+    },
+    {
+        "index": 224,
+        "question": "What enzymes succinylate lysines outside of mitochondria, and where does their succinyl-CoA come from?",
+        "answer": "Carnitine palmitoyltransferase (CPT), attached to the outer mitochondrial membrane, exhibits lysine succinyltransferase activity.  \n\nSuccinyl-CoA outside mitochondria likely originates from the cytosol, potentially generated by acyl-CoA synthetase enzymes acting on succinate. \n",
+        "speed": 8.129717111587524
+    },
+    {
+        "index": 226,
+        "question": "What evidence is there for demalonylation by SIRT5?",
+        "answer": "The demalonylated peptide was only detected in reactions with active SIRT5 and NAD/H11001.  Nicotinamide, a class III HDAC inhibitor, blocked the reaction, while inhibitors of class I/II HDACs and yeast Sir2/human Sirt1 did not. \n",
+        "speed": 6.679286241531372
+    },
+    {
+        "index": 228,
+        "question": "What's a possible source of non-enzymatic lysine acetylation?",
+        "answer": "Elevation of cellular acetyl-CoA concentration. \n",
+        "speed": 8.815372943878174
+    }
+]
