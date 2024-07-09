@@ -1,0 +1,122 @@
+[
+    {
+        "index": 16,
+        "question": "What is the mechanism through which the sensor works?",
+        "answer": "The text does not explicitly explain the mechanism through which the GRAB sensors work. However, it mentions that the sensors are \"G protein-coupled receptor activation-based\", suggesting that they may detect changes in G protein-coupled receptor activity or conformation upon neuropeptide binding. Additionally, the text notes that fluorescent sensors based on nanobodies have been developed to selectively interact with active and inactive opioid receptor states, implying a conformation-specific detection mechanism.",
+        "speed": 97.68158602714539
+    },
+    {
+        "index": 19,
+        "question": "What is the sequence of G protein activation steps?",
+        "answer": "The sequence of G protein activation steps is not explicitly stated in the provided text. However, based on general knowledge, the typical sequence of G protein activation steps is:\n\n1. Ligand binding to a G-protein-coupled receptor (GPCR)\n2. Conformational change in the GPCR, leading to\n3. Activation of the associated G protein by exchanging GDP for GTP\n4. Dissociation of the G protein into its alpha and beta-gamma subunits\n5. The activated G protein alpha subunit interacts with downstream effectors, such as enzymes or ion channels, to modulate cellular responses.\n\nNote that this sequence may vary depending on the specific G protein and receptor involved.",
+        "speed": 81.28549003601074
+    },
+    {
+        "index": 38,
+        "question": "Is the sensor multiplexed in the paper - Direct interrogation of context-dependent GPCR activity with auniversal biosensor platform?",
+        "answer": "According to Figure 5, the answer is yes. The figure shows a parallel profiling of atypical antipsychotics across a large set of receptors, indicating that the ONE-GO biosensors are multiplexed.",
+        "speed": 35.40112590789795
+    },
+    {
+        "index": 41,
+        "question": "Which signaling molecule does the sensor measure in the article - A high-throughput CRISPR interference screen for dissecting functional regulators of GPCR/cAMP signaling?",
+        "answer": "The sensor measures cyclic AMP (cAMP) signaling in the article.",
+        "speed": 40.89610195159912
+    },
+    {
+        "index": 51,
+        "question": "How does the expression level of the biosensors impact normal G-protein signaling? ",
+        "answer": "The text does not explicitly state how the expression level of the biosensors impacts normal G-protein signaling. It only mentions that the raw luminescence counts are indicative of biosensor expression, but it does not provide information on how this expression level affects G-protein signaling.",
+        "speed": 41.279090881347656
+    },
+    {
+        "index": 52,
+        "question": "Does levels of biosensor expression interfere with downstream signaling pathways?",
+        "answer": "According to the text, expression of the biosensor at high levels could potentially alter normal G-protein signaling. However, the authors provide evidence that expression of the biosensors at low levels, sufficient for robust detection of endogenous responses, does not measurably interfere with downstream signaling.",
+        "speed": 63.15060305595398
+    },
+    {
+        "index": 71,
+        "question": "List me the construct boundaries of PAK4 in the experiments.",
+        "answer": "Based on the provided text, the construct boundaries of PAK4 in the experiments are:\n\n* PAK4a: lacking residues 1-50\n* PAK4-Cat (286-591)\n* \u039420: deletion of residues 1-20\n* \u039450: deletion of residues 1-50\n\nNote that these boundaries refer to specific regions or deletions within the PAK4 protein sequence.",
+        "speed": 63.13170099258423
+    },
+    {
+        "index": 91,
+        "question": "Define the different kinase conformations?",
+        "answer": "According to the provided text, the different kinase conformations are not explicitly defined. However, it is mentioned that the aC helix and the DFG motif are two highly conserved structural elements in kinases that determine the kinase conformational space.\n\nIt can be inferred that the kinase conformations refer to the different shapes or structures that kinases can adopt, which are influenced by the movements associated with the DFG motif and other structural elements. The text also mentions that the goal of the resource paper is to provide a quantitative and generalized structural description for the repertoire of kinase conformations.\n\nIt seems that the authors have developed a method to annotate the conformation of known kinase structures using geometric descriptors related to the aC helix and DFG motif, but the specific definitions of these conformations are not provided in the given text.",
+        "speed": 71.33846521377563
+    },
+    {
+        "index": 92,
+        "question": "What are the steps in the Foldseek method?",
+        "answer": "According to the provided information, the steps in the Foldseek method are:\n\n1. Discretize query and target structures into 3Di sequences.\n2. Apply the k-mer and ungapped alignment prefilter to detect candidate structures.\n3. Perform vectorized Smith-Waterman local alignment combining 3Di and amino acid substitution scores.\n\nAlternatively, a global alignment can be computed with an accelerated TM-align version.",
+        "speed": 60.1467502117157
+    },
+    {
+        "index": 125,
+        "question": "How does the composition of the hinge region affect the efficiency target cell killing in CARs.",
+        "answer": "The composition of the hinge region affects the efficiency of target cell killing in CARs by influencing antigen binding and signaling through the CAR, as well as CAR T cell cytokine production and activation-induced cell death (AICD). Specifically, differences in the length and composition of the hinge can affect flexibility, CAR expression, signaling, epitope recognition, strength of activation outputs, and epitope recognition.",
+        "speed": 46.30047678947449
+    },
+    {
+        "index": 133,
+        "question": "How will single-cell RNA sequencing and related technologies affect the design of new CARs?",
+        "answer": "The text does not mention how single-cell RNA sequencing and related technologies will affect the design of new CARs. The provided information discusses the current state and future perspectives of CAR therapies, but it does not specifically address the impact of single-cell RNA sequencing on CAR design.",
+        "speed": 52.03144979476929
+    },
+    {
+        "index": 139,
+        "question": "What signal peptide did they use for membrane targeting in the article - Leucine zipper-based sorting system enables generation of multi-1 functional CAR T cells?",
+        "answer": "The article does not explicitly mention a specific signal peptide used for membrane targeting. However, it does mention the use of a leucine zipper-based sorting system, which suggests that the leucine zipper motif is used as a tag for membrane targeting and purification of the multi-CAR T cells.",
+        "speed": 50.65598702430725
+    },
+    {
+        "index": 153,
+        "question": "What challenges do current CAR T cell therapies face regarding antigen dependence? ",
+        "answer": "According to Table 1, one of the limitations of CAR-T cell therapy is \"Antigen escape\", which can be addressed by targeting multiple antigens (dual or tandem CARs). This suggests that current CAR T cell therapies face challenges related to antigen dependence, specifically the risk of tumor cells escaping recognition by CAR T cells due to loss or downregulation of the targeted antigen.",
+        "speed": 81.56920981407166
+    },
+    {
+        "index": 189,
+        "question": "What induces the unfolding of the cytoplasmic tails of integrins?",
+        "answer": "The text does not mention the unfolding of the cytoplasmic tails of integrins. It discusses the local unfolding of two helices within BCL-xL induced by ligand binding, and the transient unfolding of individual helices in the MscL channel upon full opening. It also mentions the role of transient unfolding in flagellar protein export and assembly.",
+        "speed": 39.48851490020752
+    },
+    {
+        "index": 206,
+        "question": "What are the main steps to computationally generating conformational ensembles of disordered proteins?",
+        "answer": "According to the provided information, the main steps to computationally generating conformational ensembles of disordered proteins involve:\n\n1. Using a transferable model, such as CALVADOS, which can predict conformational properties like long-range interactions and overall compaction.\n2. Globally optimizing the model to study the conformational ensemble of any IDR in the absence of experimental data.\n\nNote that other methods exist to predict local structuring or binding regions in disordered proteins from sequence alone, but CALVADOS is specifically designed for predicting conformational properties.",
+        "speed": 54.48007822036743
+    },
+    {
+        "index": 208,
+        "question": "How many disordered regions were identified in the human proteome?",
+        "answer": "The text does not provide a direct answer to this question. However, it mentions that \"Proteome-scale ANCHOR estimations suggested that higher eukaryotes have about 30% of their residues in disordered regions\" and that the selection of IDRs (Intrinsically Disordered Regions) contains 35% of the residues in the UniProt proteome. It does not provide a specific number of disordered regions identified.",
+        "speed": 49.62374782562256
+    },
+    {
+        "index": 211,
+        "question": "How is the biological role of a disordered protein dependent on the degree to which it has a compact overall structure?",
+        "answer": "The provided information does not directly answer this question. However, it can be inferred that the biological role of a disordered protein may not be heavily dependent on its compact overall structure. Disordered proteins often have regions with intrinsic disorder, which allows for flexibility and adaptability in their interactions and functions. This flexibility can be beneficial for certain biological roles, such as binding to multiple partners or facilitating signaling cascades. Therefore, the degree of compactness may not be a crucial factor in determining the biological role of a disordered protein.",
+        "speed": 69.64096164703369
+    },
+    {
+        "index": 224,
+        "question": "What enzymes succinylate lysines outside of mitochondria, and where does their succinyl-CoA come from?",
+        "answer": "According to the text, carnitine palmitoyltransferase (CPT) exhibits lysine succinyltransferase activity outside of mitochondria. The succinyl-CoA required for this reaction is likely generated in the cytosol through the action of acyl-CoA synthetase enzymes, which can convert succinate into succinyl-CoA.",
+        "speed": 60.95689797401428
+    },
+    {
+        "index": 226,
+        "question": "What evidence is there for demalonylation by SIRT5?",
+        "answer": "The evidence for demalonylation by SIRT5 includes:\n\n1. In vitro assays: LC/MS detection of demalonylated peptide in the presence of NAD/H11001 and Sirt5, but not in its absence or with an inactive mutant (Fig. 6A).\n2. Inhibition studies: Demalonylation reaction was inhibited by nicotinamide, a class III HDAC inhibitor, but not by trichostatin A (TSA) or sirtinol (Fig. 6A).\n3. Cellular assays: Overexpression of Sirt5 in HepG2 cells led to decreased lysine malonylation (supplemental Fig. S12).\n4. In vivo studies: Comparison of protein lysates from wild-type and Sirt5 knockout mouse livers showed that Sirt5 has a significant impact on global lysine malonylation (Fig. 7B).",
+        "speed": 75.56026792526245
+    },
+    {
+        "index": 228,
+        "question": "What's a possible source of non-enzymatic lysine acetylation?",
+        "answer": "A possible source of non-enzymatic lysine acetylation is the elevation of cellular acetyl-CoA concentration, which can react with nucleophilic groups such as \u03b5-amino groups in lysine side chains or \u03b1-amino groups in proteins. This can occur under certain cellular metabolic states where various acetyl-CoA molecules accumulate.",
+        "speed": 70.7675678730011
+    }
+]

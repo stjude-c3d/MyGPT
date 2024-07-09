@@ -345,3 +345,21 @@ for suffix in ['500', '1000', '1500', '500-overlap', '1000-overlap', '1500-overl
 # 	input = f'evaluation/utils/eval_parameters/chunksize-{suffix}.json'
 # 	output = f'evaluation/scores/param_context_scores/recall-{suffix}.csv'
 # 	generate_scores(input, output, [context_entity_recall])
+
+def calculate_llm_param_answer_similarity():
+
+	# List of llm params
+	llm_params = [ 
+		{'temperature': 0.2, 'top_k': 10, 'top_p': 0.5},
+		{'temperature': 0.4, 'top_k': 20, 'top_p': 0.7},
+		{'temperature': 0.8, 'top_k': 40, 'top_p': 0.9}, 
+		{'temperature': 1.0, 'top_k': 80, 'top_p': 0.95},
+	]
+
+	for params in llm_params:
+		shorthand = f"temp-{params['temperature']}-top-k-{params['top_k']}-top-p-{params['top_p']}"
+		input = f'evaluation/utils/eval_llm_temp_top-k_top-p/results-mygpt-{shorthand}.json'
+		output = f'evaluation/scores/llm_temp_top-k_top-p/similarity-{shorthand}.csv'
+		generate_scores(input, output, [answer_similarity])
+		
+# calculate_llm_param_answer_similarity()
