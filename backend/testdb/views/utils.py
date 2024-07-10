@@ -857,7 +857,7 @@ def get_conversation_json(question_text):
     return conversation_json
 
 def get_relevance_score(distances):
-    best_distance = 0.4
+    best_distance = 0.2
     worst_distance = 1.5
 
     # calculate confidence score

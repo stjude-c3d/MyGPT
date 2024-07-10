@@ -46,7 +46,7 @@ for shorthand in embed_shorthands:
                 print(f'Loading Question {str(j+1)}...')
                 # Get context for the question (assuming query_api function remains unchanged)
                 context_payload = {
-                    "text": f"Represent this sentence for searching relevant passages: {question}",
+                    "text": question,
                     "model_type": "llama3:latest",
                     "dataset": proper_dataset,
                     "new_conversation": True,
