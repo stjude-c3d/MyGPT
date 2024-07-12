@@ -1,4 +1,5 @@
-FROM python:3.11
+FROM ghcr.io/chroma-core/chroma:latest
+# please don't change the above line
 # FROM --platform=amd64 ghcr.io/chroma-core/chroma:latest
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
