@@ -28,4 +28,5 @@ urlpatterns = [
 	path('api/add_video_library/', apis.add_video_library, name='add_video_library'),
 	path('api/get_vector_embeddings/', apis.get_vector_embeddings, name='get_vector_embeddings'),
 	path('api/add_dataset_embeddings/', apis.add_dataset_embeddings, name='add_dataset_embeddings'),
+	path('api/get_distance_between_answers/', apis.get_distance_between_answers, name='get_distance_between_answers'),
 ]

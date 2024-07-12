@@ -16,8 +16,10 @@ lib_list = eval_doc['library'].tolist()
 
 # List of models and embeddings to evaluate
 # embeds = ['multi-qa-MiniLM-L6-cos-v1','multi-qa-mpnet-base-dot-v1', 'all-MiniLM-L6-v2', 'all-MiniLM-L12-v2', 'Snowflake/snowflake-arctic-embed-m']
-embed_shorthands = ['qa-cos', 'qa-dot', 'mini-l6', 'mini-l12', 'snowflake']
-datasets = ['mygpt-IDR', 'mygpt-PTM']
+# embed_shorthands = ['qa-cos', 'qa-dot', 'mini-l6', 'mini-l12', 'snowflake']
+# datasets = ['mygpt-IDR', 'mygpt-PTM']
+embed_shorthands = ['qa-cos']
+datasets = ['mygpt-GPCR','mygpt-Kinase','mygpt-CAR-T','mygpt-IDR','mygpt-PTM']
 
 # Function to query APIs with payload and measure time taken
 def query_api(url, payload):

@@ -5,8 +5,8 @@ import time
 import json
 
 # Define API endpoints
-# answer_api = 'https://svlpgpt001a.stjude.org/api/generate/'
-answer_api = 'http://localhost:11434/api/generate/'
+answer_api = 'https://svlpgpt001a.stjude.org/api/generate/'
+# answer_api = 'http://localhost:11434/api/generate/'
 
 # Load evaluation documents and questions
 eval_doc = pd.read_csv('evaluation/documents/eval_dataset.csv', encoding = 'ISO-8859-1').dropna()
@@ -19,10 +19,12 @@ with open(f'evaluation/utils/eval_context/qa-cos/mygpt-all-qa-cos.json') as f:
 embed_shorthands = ['qa-cos']
 models = ['llama3:latest']
 llm_params = [ 
-    # {'temperature': 0.2, 'top_k': 10, 'top_p': 0.5},
-    # {'temperature': 0.4, 'top_k': 20, 'top_p': 0.7},
-    # {'temperature': 0.8, 'top_k': 40, 'top_p': 0.9}, 
-    {'temperature': 1.0, 'top_k': 80, 'top_p': 0.95},
+    # {'temperature': 0.0, 'top_k': 10, 'top_p': 0.5},
+    # {'temperature': 0.2, 'top_k': 20, 'top_p': 0.6},
+    # {'temperature': 0.4, 'top_k': 40, 'top_p': 0.7},
+    # {'temperature': 0.6, 'top_k': 60, 'top_p': 0.7},
+    {'temperature': 0.8, 'top_k': 80, 'top_p': 0.8}, 
+    # {'temperature': 1.0, 'top_k': 100, 'top_p': 0.95},
 ]
 
 # Function to query APIs with payload and measure time taken
@@ -47,8 +49,6 @@ def collect_answers():
         # Process each model for QA
         for model in models:
             for j, (question, groundtruth, contexts) in enumerate(zip(question_list, groundtruth_list, context_lists)):
-                if j in range(26) and params['temperature'] == 0.8:
-                    continue
                 # Log query info
                 print('\n')
                 print(f'MODEL: {model}; PRARMS: {shorthand};')

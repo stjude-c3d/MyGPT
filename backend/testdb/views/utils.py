@@ -857,7 +857,7 @@ def get_conversation_json(question_text):
     return conversation_json
 
 def get_relevance_score(distances):
-    best_distance = 0.2
+    best_distance = 0.3
     worst_distance = 1.5
 
     # calculate confidence score
@@ -870,6 +870,44 @@ def get_relevance_score(distances):
         # trim confidence score to 2 decimal places
         relevance_score = round(relevance_score, 0)
     return relevance_score
+
+#  embedd 2 answers into vector database and get distance between them
+def get_answer_distance(answer1, answer2, sentence_transformer = 'multi-qa-MiniLM-L6-cos-v1'):
+    dataset_name = 'answers'
+    client = chromadb.PersistentClient(path='/code/chroma_storage/.')
+    # use multi-qa-MiniLM-L6-cos-v1 embedding function
+    if sentence_transformer == 'all-MiniLM-L6-v2':
+        sentence_transformer_ef = embedding_functions.DefaultEmbeddingFunction()
+    elif '/' in sentence_transformer:
+        sentence_transformer_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=sentence_transformer)
+    else:    
+        sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=sentence_transformer)
+
+    # If the collection already exists, we will delete it and create a new one.
+    client.get_or_create_collection(name=dataset_name)
+    client.delete_collection(name=dataset_name)
+    collection = client.get_or_create_collection(name=dataset_name, embedding_function=sentence_transformer_ef)
+
+    # add answers to collection
+    answers = [answer1, answer2]
+    ids = [str(i) for i in range(2)]
+    collection.add(
+        ids=ids,
+        documents=answers
+    )
+
+    # get distance between the two answers
+    results = collection.query(
+        query_texts=[answer1],
+        n_results=2
+    )
+
+    distance = results['distances'][0][1]
+    
+    # delete collection
+    collection.delete(ids=ids)
+
+    return distance
 
 def get_previous_qna_json(question_text):
     question = Question.objects.filter(question_text=question_text)[0]

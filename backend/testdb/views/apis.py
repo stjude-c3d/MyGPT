@@ -10,7 +10,7 @@ import datetime
 import os
 import json
 from ..models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, Model, FrontEndSettings
-from .utils import get_zotero_chunks, add_dataset_from_upload, add_to_chroma, nearestDataChroma, get_relevance_score, add_embeddings_to_qna, highlight_pdf, seconds_to_hhmmss, add_pca_to_qna_and_dataset, add_demo_dataset, get_youtube_transcript, add_video_to_chroma, add_embeddings_to_chunks, add_pca_to_chunks
+from .utils import get_zotero_chunks, add_dataset_from_upload, add_to_chroma, nearestDataChroma, get_relevance_score, add_embeddings_to_qna, highlight_pdf, seconds_to_hhmmss, add_pca_to_qna_and_dataset, add_demo_dataset, get_youtube_transcript, add_video_to_chroma, add_embeddings_to_chunks, add_pca_to_chunks, get_answer_distance
 
 ####################
 # APIs             #
@@ -273,6 +273,7 @@ def save_answer(request):
         if not no_context:
             _, _, _, _, _, _, distances = nearestDataChroma(answer_text, dataset_name, embedding_model)
             distances = [round(dist, 3) for dist in distances]
+            mean_distance = sum(distances) / len(distances)
             relevance_score = get_relevance_score(distances)
         else:
             relevance_score = 0
@@ -285,7 +286,7 @@ def save_answer(request):
         # add embeddings to answer
         if not no_context:
             add_embeddings_to_qna(answer_text, 'answer', embedding_model)
-        return Response({'saved':True, 'relevance_score': relevance_score}, content_type="application/json")
+        return Response({'saved':True, 'mean_distance': mean_distance, 'relevance_score': relevance_score}, content_type="application/json")
 
 @api_view(['POST'])
 def feedback_for_answers(request):
@@ -497,3 +498,13 @@ def add_dataset_embeddings(request):
         add_embeddings_to_chunks(dataset_name)
         add_pca_to_chunks()
         return Response({'added':True}, content_type="application/json")
+    
+@api_view(['POST'])
+def get_distance_between_answers(request):
+    if request.method == 'POST':
+        json_request = JSONParser().parse(request)
+        sentence1 = json_request['sentence1']
+        sentence2 = json_request['sentence2']
+        sentence_transformer = json_request['sentence_transformer']
+        distances = get_answer_distance(sentence1, sentence2, sentence_transformer)
+        return Response({'distances': distances}, content_type="application/json")
