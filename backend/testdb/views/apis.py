@@ -72,12 +72,13 @@ def get_context(request):
         new_conversation = json_request['new_conversation']
         previous_question = json_request['previous_query']
         no_context = json_request['no_context']
+        keywords = json_request['keywords']
         if no_context:    
             context, titles, pages, starts, stops, chunks_txt, distances = '', [], [], [], [], [], []
             sources = []
             relevance_score = 0
         else:
-            context, titles, pages, starts, stops, chunks_txt, distances = nearestDataChroma(question_text, dataset_name, embedding_model)
+            context, titles, pages, starts, stops, chunks_txt, distances = nearestDataChroma(question_text, dataset_name, keywords, embedding_model)
             sources = []
             distances = [round(dist, 3) for dist in distances]
             relevance_score = get_relevance_score(distances)
@@ -102,6 +103,9 @@ def get_context(request):
         quesiton_exist = Question.objects.filter(question_text=question_text).filter(model_type=model_type).exists()
         if quesiton_exist:
             question = Question.objects.get(question_text=question_text, model_type=model_type)
+            question.keywords = keywords
+            question.relevance_score = relevance_score
+            question.save()
             conversation_id = question.conversation.id
             conversation = Conversation.objects.get(id=conversation_id)
         else:
@@ -120,6 +124,7 @@ def get_context(request):
                 question_text=question_text,
                 relevance_score=relevance_score,
                 model_type=model_type,
+                keywords=keywords,
                 question_dataset=dataset,
                 conversation=conversation,
                 saved_date_time=current_date_time
@@ -251,6 +256,8 @@ def get_question_details(request):
             'question': question.question_text,
             'relevance_score': question.relevance_score,
             'ground_truth': question.ground_truth,
+            'question_type': question.question_type,
+            'keywords': question.keywords,
             'llm': question.model_type.model_name,
             'answers': answers_json,
             'sources': sources_json

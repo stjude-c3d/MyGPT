@@ -692,7 +692,7 @@ def find_cutoff_distance(distances):
             break
     return cutoff_distance
 
-def nearestDataChroma(text, dataset_name, sentence_transformer='multi-qa-MiniLM-L6-cos-v1'):
+def nearestDataChroma(text, dataset_name, keywords_str = '', sentence_transformer='multi-qa-MiniLM-L6-cos-v1'):
     # collection_name = 'pub_collection'
     # client = chromadb.Client()
     # use multi-qa-MiniLM-L6-cos-v1 embedding function
@@ -712,6 +712,29 @@ def nearestDataChroma(text, dataset_name, sentence_transformer='multi-qa-MiniLM-
     # Create ids from the current count
     count = collection.count()
     print(f'Collection contains {count} documents')
+
+    keywords = keywords_str.split(';')
+
+    #  collect the results based on the keywords
+    keyword_results = []
+    if len(keywords) > 0:
+        if ';' in keywords:
+            keywords_filter = {'$or': [{'$contains': keyword} for keyword in keywords]}
+            keyword_results = collection.query(
+                query_texts=[text],
+                n_results=2,
+                where={'type': {"$ne": "spreadsheet_full"}},
+                # where={'metadata_field': 'is_equal_to_this'}, # optional filter
+                where_document={keywords_filter}
+            )
+        else:
+            keyword_results = collection.query(
+                query_texts=[text],
+                n_results=2,
+                where={'type': {"$ne": "spreadsheet_full"}},
+                # where={'metadata_field': 'is_equal_to_this'}, # optional filter
+                where_document={'$contains': keywords[0]}
+            )
 
     results = collection.query(
         query_texts=[text],
@@ -756,6 +779,19 @@ def nearestDataChroma(text, dataset_name, sentence_transformer='multi-qa-MiniLM-
             chunks.append(results['documents'][0][i])
             distances.append(results['distances'][0][i])
             context += re.sub(r'\s+', ' ', results['documents'][0][i])
+    for i in range(len(keyword_results['ids'][0])):
+        if (keyword_results['distances'][0][i] <= 1.5):
+            # check if chunk arrauy already contains the chunk
+            if keyword_results['documents'][0][i] not in chunks:
+                titles.append(keyword_results['metadatas'][0][i]['filename'])
+                if (library_type == 'papers'): 
+                    pages.append(keyword_results['metadatas'][0][i]['page'])
+                elif (library_type == 'videos'):
+                    starts.append(keyword_results['metadatas'][0][i]['start'])
+                    stops.append(keyword_results['metadatas'][0][i]['end'])
+                chunks.append(keyword_results['documents'][0][i])
+                distances.append(keyword_results['distances'][0][i])
+                context += re.sub(r'\s+', ' ', keyword_results['documents'][0][i])
     if results['metadatas'][0][0]['type'] == 'spreadsheet_chunk':
         fulltext_results = collection.query(
             query_texts=[text],

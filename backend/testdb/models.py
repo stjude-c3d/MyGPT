@@ -18,6 +18,15 @@ rating_types = (
 	(-1, 'negative'),
 )
 
+question_types = (
+	('keyword', 'keyword'),
+	('yesno', 'yesno'),
+	('data_query', 'data_query'),
+	('summarize', 'summarize'),
+	('complex', 'complex'),
+	('other', 'other'),
+)
+
 class Dataset(models.Model):
 	dataset_name = models.CharField(max_length=200, default='-')
 	zotero_id = models.CharField(max_length=40, default='-')
@@ -92,6 +101,8 @@ class Question(models.Model):
 	question_text = models.TextField(default='-')
 	relevance_score = models.FloatField(default=0)
 	model_type =  models.ForeignKey('Model', on_delete=models.SET_DEFAULT, default=2)
+	question_type = models.CharField(max_length=40, choices=question_types, default='other')
+	keywords = models.CharField(max_length=200, default='-')
 	ground_truth = models.TextField(default='-')
 	embedding = models.TextField(default='-')
 	pca_x = models.FloatField(default=0)
