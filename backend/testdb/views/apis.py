@@ -72,7 +72,7 @@ def get_context(request):
         new_conversation = json_request['new_conversation']
         previous_question = json_request['previous_query']
         no_context = json_request['no_context']
-        keywords = json_request['keywords']
+        keywords = json_request['keywords'] if 'keywords' in json_request else ''
         if no_context:    
             context, titles, pages, starts, stops, chunks_txt, distances = '', [], [], [], [], [], []
             sources = []

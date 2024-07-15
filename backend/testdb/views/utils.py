@@ -713,7 +713,7 @@ def nearestDataChroma(text, dataset_name, keywords_str = '', sentence_transforme
     count = collection.count()
     print(f'Collection contains {count} documents')
 
-    keywords = keywords_str.split(';')
+    keywords = keywords_str.split(';') if keywords_str != '' else []
 
     #  collect the results based on the keywords
     keyword_results = []
@@ -779,19 +779,20 @@ def nearestDataChroma(text, dataset_name, keywords_str = '', sentence_transforme
             chunks.append(results['documents'][0][i])
             distances.append(results['distances'][0][i])
             context += re.sub(r'\s+', ' ', results['documents'][0][i])
-    for i in range(len(keyword_results['ids'][0])):
-        if (keyword_results['distances'][0][i] <= 1.5):
-            # check if chunk arrauy already contains the chunk
-            if keyword_results['documents'][0][i] not in chunks:
-                titles.append(keyword_results['metadatas'][0][i]['filename'])
-                if (library_type == 'papers'): 
-                    pages.append(keyword_results['metadatas'][0][i]['page'])
-                elif (library_type == 'videos'):
-                    starts.append(keyword_results['metadatas'][0][i]['start'])
-                    stops.append(keyword_results['metadatas'][0][i]['end'])
-                chunks.append(keyword_results['documents'][0][i])
-                distances.append(keyword_results['distances'][0][i])
-                context += re.sub(r'\s+', ' ', keyword_results['documents'][0][i])
+    if len(keywords) > 0:
+        for i in range(len(keyword_results['ids'][0])):
+            if (keyword_results['distances'][0][i] <= 1.5):
+                # check if chunk arrauy already contains the chunk
+                if keyword_results['documents'][0][i] not in chunks:
+                    titles.append(keyword_results['metadatas'][0][i]['filename'])
+                    if (library_type == 'papers'): 
+                        pages.append(keyword_results['metadatas'][0][i]['page'])
+                    elif (library_type == 'videos'):
+                        starts.append(keyword_results['metadatas'][0][i]['start'])
+                        stops.append(keyword_results['metadatas'][0][i]['end'])
+                    chunks.append(keyword_results['documents'][0][i])
+                    distances.append(keyword_results['distances'][0][i])
+                    context += re.sub(r'\s+', ' ', keyword_results['documents'][0][i])
     if results['metadatas'][0][0]['type'] == 'spreadsheet_chunk':
         fulltext_results = collection.query(
             query_texts=[text],

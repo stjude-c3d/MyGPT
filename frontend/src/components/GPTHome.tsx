@@ -19,7 +19,6 @@ function GPTHome(props:{
 	const [llms, setLlms] = useState<any[]>([])
 	const [searchTerm, setSearchTerm] = useState<any>('')
 	const [query, setQuery] = useState<any[]>([])
-	const [keywords, setKeywords] = useState<any[]>([])
 	const [questionRelevancescore, setQuestionRelevancescore] = useState<any[]>([])
 	const [answerRelevancescore, setAnswerRelevancescore] = useState<any[]>([])
 	const [context, setContext] = useState<any>('')
@@ -172,7 +171,6 @@ function GPTHome(props:{
 			setTimeout: 10000,
 			body: JSON.stringify({ 
 				text: query[query.length-1] && query[query.length-1].question ? query[query.length-1].question.replaceAll('"',"'") : '',
-				keywords: keywords,
 				model_type: props.currentSettings.selectedLlm,
 				dataset: props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset,
 				new_conversation: query.length === 1 ? true : false, 
@@ -182,7 +180,7 @@ function GPTHome(props:{
 				sentence_transformer: props.currentSettings.selected_sentence_transformer
 			})
 		}
-		if(query.length && query.length !== answers.length && keywords.length){
+		if(query.length && query.length !== answers.length){
 			// setSelectedPage(0)
 			// setselectedPaperIdx(0)
 			setRelatedQuery(false)
@@ -225,41 +223,7 @@ function GPTHome(props:{
 					})
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	},[query, keywords])
-
-	// get keywords from ollama for a given question
-	useEffect(()=>{
-		const question =  query[query.length-1] && query[query.length-1].question ? query[query.length-1].question.replaceAll('"',"'") : ''
-		const systemPrompt = 'Please answer in 1 to 2 words seperated by semicolon and if you are not sure, please answer with "-". Also, don\'t use anything other than the question text.:'
-		
-		const body:any = JSON.stringify({
-			'model': props.currentSettings.selectedLlm,
-			'prompt': 'Plese find most important 1 to 2 words or phrases from the question: "' + question + '"\n',
-			'stream': false,
-			'system': systemPrompt,
-			'options': {
-				'temperature': 0,
-				'top_k': 2,
-				'top_p': 0.1,
-			}
-		})
-		
-		if(query.length && query.length !== answers.length && keywords.length === 0 && question.length > 1){
-			// fetch using async await
-			const postData = async () => {
-				const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/generate`, {body, method: 'POST'})
-				if (response.status === 200){
-					if (response.body){
-						const result = await response.json()
-						setKeywords(result.response.split(';').map((k:any)=>k.trim()).filter((k:any)=>k.length && k !== '-'))
-					}
-				}
-			}
-			postData()
-		}
-	// eslint-disable-next-line react-hooks/exhaustive-deps
-	},[query,keywords])
-	console.log('keywords', keywords)
+	},[query])
 
 	// get answer from the ollama
 	useEffect(()=>{
@@ -461,7 +425,6 @@ function GPTHome(props:{
 								()=>{
 									setQuery([])
 									setAnswers([])
-									setKeywords([])
 									setQuestionRelevancescore([])
 									setAnswerRelevancescore([])
 									setSourcePapers([])
@@ -519,7 +482,6 @@ function GPTHome(props:{
 							setQuery((prevQuery:any)=>[...prevQuery, 
 									{'question':searchTerm, 'related': relatedQuery}
 								])
-								setKeywords([])
 								setSearchTerm('')
 							}
 						}
