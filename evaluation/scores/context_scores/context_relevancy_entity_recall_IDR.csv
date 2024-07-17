@@ -1,0 +1,57 @@
+question,context_entity_recall_snowflake,context_entity_recall_nomic,context_entity_recall_pubmed_bert,context_entity_recall_qa_cos,context_entity_recall_mini-l6
+What is a KID domain?,0,0.454545454,0.222222222,0.272727272,0.363636363
+"Provide a list of disordered proteins that do not fit the classic structure-function paradigm, and briefly list their relevant propeties.",0,0,0,0,0
+Does the DNA-related function of LEF-1 involve the structural transition of the protein and the DNA?,0,0.874999999,0.999999998,0.999999999,0.857142856
+How long is the peptide required to bind to eIF4E?,0.142857143,0.222222222,0.285714285,0.285714285,0.142857143
+What does the structure-function paradigm state and why does it need to be re-assessed?,0,0,0.083333333,0,0
+What is the function of the disordered regions of myoglobin?,0,0,0,0,0
+Why are highly flexible proteins incompatible with our previous view of how structure and function are related? ,0,0,0,0,0
+What is a molten globue?,0,0.249999999,0.249999999,0.249999999,0
+List the main features of a protein sequence that will determine whether the sequence will or will not fold into a stable structure.,0,0,0,0,0
+Is the NCBD domain of CBP folded or disordered?,0.2,0.2,0.249999999,0.2,0.2
+Where are the leukaemia-related breakpoints located in CBP/p300?,0.249999999,0.499999999,0.249999999,0.499999999,0.499999999
+What are the functions that are enabled by the fact that disordered proteins do not have a stable structure?,0,0.111111111,0,0,0
+What is the role of the disordered protein HMGA1?,0,0,0,0,0
+What biological roles can disordered proteins fulfill thanks to their structural properties?,0,0,0,0,0.076923077
+What is a nanny protein?,0,0,0,0,0
+"Provide a list of ways IDPs are regulated, together with the implications of these reulatory mechanisms.",0,0.0625,0.0625,0.0625,0.0625
+Is the tight regulation of dosage-sensitive genes linked to avoiding detrimental abundance of proteins?,0,0.249999999,0.249999999,0,0.249999999
+Which IDP-phosphorylating kinase is regulated in a cell cycle dependent manner?,0,0,0,0.99999999,0.99999999
+Why do IDPs have unique regulatory mechanisms compared to folded proteins?,0.333333332,0.076923077,0,0.333333332,0.333333332
+What is the effect of targeting the DEP domain of Dishevelled with peptides?,0,0,0,0,0
+The regulation of disordered proteins is characteristically different from that of ordered ones; explain the reasons for this!,0,0.2,0,0,0.1
+What is ELM?,0,0.499999998,0.499999998,0.499999998,0.499999998
+What are the main attributes of short linear motifs?,0,0.083333333,0,0.083333333,0.083333333
+Is the motif LIG_PCNA present in archaea?,0,0.2,0,0,0.2
+What is the difference in charge and hydrophobicity between disordered proteins in general and Ligand motif instances?,0,0,0,0,0
+"Why do short linear motifs typically reside in disordered protein regions, and what are the biological consequences of this?",0,0,0,0,0
+What are degradation motifs (degrons)?,0,0,0,0,0
+Why is it biologically important that motifs are commonly found in unstructred parts of proteins?,0.125,0,0,0,0
+What are PTMs?,0,0.066666667,0,0,0
+List the main factors that can initiate the transition of a protein between a folded and an unfolded state?,0,0,0,0,0
+Can interactions with a small molecule unfold a protein?,0,0,0,0,0.1
+How much surface area is buried during the dimerization of HdeA?,0,0.499999998,0.499999998,0.499999998,0.499999998
+What are the main differences between passive and active factors that can induce the unfolding of proteins?,0,0,0,0,0
+What induces the unfolding of the cytoplasmic tails of integrins?,0,0,0,0,0
+What is the basis of differentiating two kinds of factors that can change the structural states of conditionally unfolded proteins?,0,0,0,0,0
+What is an NLS?,0,0.399999999,0,0.333333333,0
+Give a summary of the main functions of short liear motifs in the human proteome!,0.181818182,0.090909091,0.090909091,0.090909091,0
+Do human phosphorylation sites predominantly reside in ordered regions of proteins?,0,0,0,0,0
+How many motifs are estimated to exist in the human proteome?,0.125,0,0,0,0
+How do different motifs play a role in the general function of various proteins?,0,0,0.166666666,0,0
+What are the motifs present in human CBP?,0.499999998,0.499999998,0.499999998,0.499999998,0
+What is the effect that the presence of a motif exerts on the fate of the full protein?,0,0,0,0,0
+What are RHIM sequences?,0,0,0,0,0
+What are the key ways in which post-translational modifications regulate disordered proteins?,0,0.333333333,0.333333333,0,0
+Does p120 catenin regulate cell adhesion?,0.249999999,0.999999998,0.749999998,0.499999999,0.249999999
+What signaling is affected by MSI-1436?,0,0.999999997,0,0.999999997,0
+What are the special biophysical and cellular features of how disordered proteins interact with their partners?,0,0,0,0,0.166666667
+How is the binding of the LAT protein regulated?,0,0,0,0,0
+"In a physical and biological sense, what makes the protein-protein interaction modes of disordered proteins special?",0,0,0.142857143,0,0
+What is CALVADOS?,0,0,0,0.666666664,0
+What are the main steps to computationally generating conformational ensembles of disordered proteins?,0,0,0,0.142857143,0
+Are compact IDRs generally longer than extended IDRs?,0,0.499999998,0.499999998,0,0
+How many disordered regions were identified in the human proteome?,0,0,0,0,0
+What are the effects of the compaction of disordered proteins on their biological functions?,0.125,0.125,0,0,0
+What is the compaction of human p53?,0,0.99999999,0.99999999,0.99999999,0.99999999
+How is the biological role of a disordered protein dependent on the degree to which it has a compact overall structure?,0,0,0,0,0

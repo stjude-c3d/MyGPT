@@ -26,7 +26,10 @@ const defaultSettings = {
 		'all-mpnet-base-v2', 
 		'multi-qa-mpnet-base-dot-v1',
 		'paraphrase-albert-small-v2',
-		'Snowflake/snowflake-arctic-embed-s'
+		'snowflake-arctic-embed',
+		'ncbi/MedCPT-Article-Encoder',
+		'NeuML/pubmedbert-base-embeddings',
+		'nomic-embed-text'
 	],
     system_prompt: 'Use following information to answer the question in less than 100 words, try not to use anything else:',
 	direct_chat_system_prompt: 'Answer the question in less than 200 words.',

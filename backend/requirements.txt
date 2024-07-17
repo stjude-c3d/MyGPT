@@ -11,7 +11,7 @@ pyzotero
 pymupdf
 nltk
 numpy
-chromadb==0.4.22
+chromadb==0.5.4
 tqdm
 python-dotenv
 pytest-django
