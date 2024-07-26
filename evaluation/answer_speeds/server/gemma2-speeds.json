@@ -1,0 +1,122 @@
+[
+    {
+        "index": 16,
+        "question": "What is the mechanism through which the sensor works?",
+        "answer": "The GRAB sensors work by utilizing the selective interaction between nanobodies and active/inactive opioid receptor states.  This interaction triggers a fluorescent signal change upon binding to specific neuropeptide ligands. \n\n\nLet me know if you have any other questions!",
+        "speed": 5.517855882644653
+    },
+    {
+        "index": 19,
+        "question": "What is the sequence of G protein activation steps?",
+        "answer": "1. A ligand binds to the extracellular side of a GPCR.\n2. This binding causes a rearrangement of residue contacts between transmembrane helices 4 and 7.\n3. The activated receptor allosterically activates G proteins on the cytoplasmic side.  \n\n\nLet me know if you'd like more detail on any of these steps!",
+        "speed": 1.3846871852874756
+    },
+    {
+        "index": 38,
+        "question": "Is the sensor multiplexed in the paper - Direct interrogation of context-dependent GPCR activity with auniversal biosensor platform?",
+        "answer": "Yes, the ONE-GO biosensors described in the paper \"Direct interrogation of context-dependent GPCR activity with a universal biosensor platform\" are multiplexed. \n\nThe text states that they can be used to \"parallel pro\ufb01ling of atypical antipsychotics across a large set of receptors\".  This implies the ability to measure the activity of many different GPCRs simultaneously. \n",
+        "speed": 1.6393909454345703
+    },
+    {
+        "index": 41,
+        "question": "Which signaling molecule does the sensor measure in the article - A high-throughput CRISPR interference screen for dissecting functional regulators of GPCR/cAMP signaling?",
+        "answer": "The sensor measures **cAMP**. \n\n\nThis is stated in the phrase \"fluorescent CREB reporter cellline for analysis ofGPCR/ cAMP signaling\".  \n",
+        "speed": 0.9545972347259521
+    },
+    {
+        "index": 51,
+        "question": "How does the expression level of the biosensors impact normal G-protein signaling? ",
+        "answer": "High levels of BERKY biosensor expression could interfere with normal G-protein signaling because the detector modules block effector binding sites on target G-proteins. However,  low-level expression, sufficient for robust detection, doesn't measurably interfere with downstream signaling. \n",
+        "speed": 1.307248830795288
+    },
+    {
+        "index": 52,
+        "question": "Does levels of biosensor expression interfere with downstream signaling pathways?",
+        "answer": "No, the passage states that low-level expression of BERKY biosensors does not measurably interfere with downstream signaling.  \n",
+        "speed": 0.6441020965576172
+    },
+    {
+        "index": 71,
+        "question": "List me the construct boundaries of PAK4 in the experiments.",
+        "answer": "The PAK4 constructs used are:\n\n* **PAK4a:** residues 1\u201350\n* **PAK4\u2013Cat:** residues 286\u2013591\n* **PAK4s:** full-length PAK4 \n* **PAK4\u039420:**  lacking residues 1\u201320\n* **PAK4\u039450:** lacking residues 1\u201350\n* **PAK4KD:** kinase dead, PAK4(K350M) \n\n\n",
+        "speed": 2.001534938812256
+    },
+    {
+        "index": 91,
+        "question": "Define the different kinase conformations?",
+        "answer": "Kinformation identified five main kinase conformations: active (CIDI), inactive,  open, closed, and an additional intermediate inactive state. \n\n\nThese conformations represent various stages of kinase activation and inhibition. \n",
+        "speed": 1.1113510131835938
+    },
+    {
+        "index": 92,
+        "question": "What are the steps in the Foldseek method?",
+        "answer": "Foldseek converts structures into 3Di sequences, then uses a k-mer and ungapped alignment prefilter to find similar structures.  It performs local or global alignments using 3Di and amino acid substitution scores for more precise comparison. \n\n\n",
+        "speed": 1.1760592460632324
+    },
+    {
+        "index": 125,
+        "question": "How does the composition of the hinge region affect the efficiency target cell killing in CARs.",
+        "answer": "The length and composition of the hinge region can affect antigen binding and signaling through the CAR, influencing  CAR T cell cytokine production and AICD (Activation-Induced Cell Death). \n\nSpacer sequences in the hinge enable access to membrane proximal antigen epitopes but may decrease CAR T cell function. \n",
+        "speed": 1.245635747909546
+    },
+    {
+        "index": 133,
+        "question": "How will single-cell RNA sequencing and related technologies affect the design of new CARs?",
+        "answer": "Single-cell RNA sequencing and related technologies will allow for a deeper understanding of cellular heterogeneity within tumors and immune responses. This knowledge can be used to identify novel tumor antigens and optimize CAR design for specific patient populations, leading to more effective and personalized cancer therapies.  \n",
+        "speed": 1.1857600212097168
+    },
+    {
+        "index": 139,
+        "question": "What signal peptide did they use for membrane targeting in the article - Leucine zipper-based sorting system enables generation of multi-1 functional CAR T cells?",
+        "answer": "The provided text does not specify which signal peptide was used for membrane targeting.  \n",
+        "speed": 0.9239311218261719
+    },
+    {
+        "index": 153,
+        "question": "What challenges do current CAR T cell therapies face regarding antigen dependence? ",
+        "answer": "Current CAR T cell therapies can face issues when the target antigen is lost by cancer cells, leading to disease relapse.  Additionally, if the target antigen is present on healthy cells, it can cause \"on-target/off-tumor\" effects, harming those healthy cells. \n",
+        "speed": 1.3944058418273926
+    },
+    {
+        "index": 189,
+        "question": "What induces the unfolding of the cytoplasmic tails of integrins?",
+        "answer": "This document does not contain the answer to what induces the unfolding of the cytoplasmic tails of integrins.  \n",
+        "speed": 0.8432321548461914
+    },
+    {
+        "index": 206,
+        "question": "What are the main steps to computationally generating conformational ensembles of disordered proteins?",
+        "answer": "Computational generation of disordered protein ensembles relies on NMR and SAXS data, along with information from databases like pE-DB.  Modeling techniques use this data to create a collection of diverse structures that collectively represent the protein's flexible nature. \n\n\n",
+        "speed": 1.167659044265747
+    },
+    {
+        "index": 208,
+        "question": "How many disordered regions were identified in the human proteome?",
+        "answer": "The text states that the set of IDRs contains 35% of the residues in the UniProt proteome.  \n\n\nIt does not, however, state the exact number of disordered regions identified. \n",
+        "speed": 1.0124900341033936
+    },
+    {
+        "index": 211,
+        "question": "How is the biological role of a disordered protein dependent on the degree to which it has a compact overall structure?",
+        "answer": "The passage states that not all biologically functional proteins fold into stable globular structures.  It highlights that some proteins function in unfolded or partly folded states, and these states are crucial for understanding certain biological processes. \n\n\nTherefore, a disordered protein's biological role is directly tied to the extent of its structural organization.  \n",
+        "speed": 1.4071590900421143
+    },
+    {
+        "index": 224,
+        "question": "What enzymes succinylate lysines outside of mitochondria, and where does their succinyl-CoA come from?",
+        "answer": "Carnitine palmitoyltransferase, an enzyme on the outer mitochondrial membrane facing the cytosol, exhibits lysine succinyltransferase activity.  \n\nSuccinyl-CoA for extramitochondrial lysine succinylation likely comes from the generation of succinyl-CoA within the cytosol itself, potentially by acyl-CoA synthetase enzymes acting on succinate. \n",
+        "speed": 1.4663801193237305
+    },
+    {
+        "index": 226,
+        "question": "What evidence is there for demalonylation by SIRT5?",
+        "answer": "The presence of a demalonylated peptide in the presence of NAD/H11001 and Sirt5, but not in mock reactions or with inactive Sirt5 mutants, indicates demalonylation by Sirt5.  This reaction is inhibited by nicotinamide (a class III HDAC inhibitor) but not by inhibitors of other sirtuins (sirtinol or TSA). \n",
+        "speed": 1.7023601531982422
+    },
+    {
+        "index": 228,
+        "question": "What's a possible source of non-enzymatic lysine acetylation?",
+        "answer": "Elevation of cellular acetyl-CoA concentration, which can occur due to changes in metabolic state and accumulation of acetyl-CoA molecules.  \n",
+        "speed": 1.0300612449645996
+    }
+]
