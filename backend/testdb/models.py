@@ -36,6 +36,8 @@ class Dataset(models.Model):
 	user_group = models.CharField(max_length=200, default='-')
 	embedding_added = models.BooleanField(default=False)
 	embedding_model = models.CharField(max_length=60, default='-')
+	chunksize = models.IntegerField(default=1000)
+	overlap = models.BooleanField(default=False)
 	direct_chat_without_docs = models.BooleanField(default=False)
 	dataset_date_time = models.DateTimeField(default=timezone.now, null=True)
 

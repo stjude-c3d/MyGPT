@@ -208,6 +208,8 @@ def add_dataset_from_upload(request):
         dataset = Dataset.objects.create(
             dataset_name=dataset_name,
             dataset_size=0,
+            chunksize=chunk_size,
+            overlap=use_overlap,
             user = user if len(user) else '-',
             user_email = user_email if len(user_email) else '-',
             user_group = user_group if len(user_group) else '-',
@@ -401,6 +403,7 @@ def add_demo_dataset(sentence_transformer = 'multi-qa-MiniLM-L6-cos-v1'):
             if collection.name == dataset_name:
                 client.delete_collection(name=dataset_name)
     collection = client.get_or_create_collection(name=dataset_name, embedding_function=sentence_transformer_ef)
+    # collection = client.get_or_create_collection(name=dataset_name, embedding_function=sentence_transformer_ef, metadata={"hnsw:space": "ip"})
 
     # Create ids from the current count
     count = collection.count()
@@ -722,12 +725,15 @@ def nearestDataChroma(text, dataset_name, keywords_str = '', sentence_transforme
     print(f'Collection contains {count} documents')
 
     keywords = keywords_str.split(';') if keywords_str != '' else []
+    # remove keywords if it's '-'
+    if '-' in keywords:
+        keywords.remove('-')
 
     #  collect the results based on the keywords
     keyword_results = []
     if len(keywords) > 0:
         if ';' in keywords:
-            keywords_filter = {'$or': [{'$contains': keyword} for keyword in keywords]}
+            keywords_filter = {'$and': [{'$contains': keyword} for keyword in keywords]}
             keyword_results = collection.query(
                 query_texts=[text],
                 n_results=2,
@@ -902,8 +908,8 @@ def get_conversation_json(question_text):
     return conversation_json
 
 def get_relevance_score(distances):
-    best_distance = 0.3
-    worst_distance = 1.5
+    best_distance = 50
+    worst_distance = 500
 
     # calculate confidence score
     # if maximum distance is more than 1.5 then confidence score is 0

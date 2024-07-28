@@ -100,7 +100,7 @@ def get_context(request):
         # save question to database
         current_date_time = make_aware(datetime.datetime.now())
         dataset = Dataset.objects.get(dataset_name=dataset_name)
-        quesiton_exist = Question.objects.filter(question_text=question_text).filter(model_type=model_type).exists()
+        quesiton_exist = Question.objects.filter(question_dataset=dataset).filter(question_text=question_text).filter(model_type=model_type).exists()
         if quesiton_exist:
             question = Question.objects.get(question_text=question_text, model_type=model_type)
             question.keywords = keywords
@@ -272,13 +272,13 @@ def save_answer(request):
         answer_text = json_request['answer_text']
         model = json_request['model_type']
         model_type = Model.objects.get(model_name=model)
-        question = Question.objects.get(question_text=question_text, model_type=model_type)
         dataset_name = json_request['dataset']
         dataset = Dataset.objects.get(dataset_name=dataset_name)
+        question = Question.objects.get(question_text=question_text, model_type=model_type, question_dataset=dataset)
         embedding_model = dataset.embedding_model
         no_context = json_request['no_context']
         if not no_context:
-            _, _, _, _, _, _, distances = nearestDataChroma(answer_text, dataset_name, embedding_model)
+            _, _, _, _, _, _, distances = nearestDataChroma(answer_text, dataset_name, '',embedding_model)
             distances = [round(dist, 3) for dist in distances]
             mean_distance = sum(distances) / len(distances)
             relevance_score = get_relevance_score(distances)
