@@ -20,6 +20,7 @@ from django.conf import settings
 
 urlpatterns = [
     path('', include('testdb.urls')),
+    path('evaluation_dataset/', include('evaluation_dataset.urls')),
     path('admin/', admin.site.urls),
 ]
 

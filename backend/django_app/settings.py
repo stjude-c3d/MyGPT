@@ -42,6 +42,7 @@ CORS_ALLOWED_ORIGINS = [
 
 INSTALLED_APPS = [
     'testdb',
+    'evaluation_dataset',
     'rest_framework',
     'corsheaders',
     'django.contrib.admin',
@@ -143,7 +144,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10
+    'PAGE_SIZE': 1000
 }
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10073741824
