@@ -4,6 +4,7 @@ from django.utils import timezone
 correction_choice = (
 	('yes', 'yes'),
 	('no', 'no'),
+	('-', '-')
 )
 
 question_types = (
@@ -42,7 +43,7 @@ class Question(models.Model):
 class Answer(models.Model):
 	answer_text = models.TextField(default='-')
 	answer_tag = models.CharField(max_length=20, choices=answer_tags, default='best_1')
-	correctness = models.CharField(max_length=20, choices=correction_choice, default='no')
+	correctness = models.CharField(max_length=20, choices=correction_choice, default='-')
 	feedback = models.TextField(default='-')
 	context = models.TextField(default='-')
 	reviewer = models.CharField(max_length=200, default='-')
