@@ -82,8 +82,3 @@ export const loginRequest = {
 export const graphConfig = {
     graphMeEndpoint
 };
-
-export const appRoles = {
-    PubParserCurator: 'PubParserCurator',
-    BSKAdmin: 'BSKAdmin'
-}

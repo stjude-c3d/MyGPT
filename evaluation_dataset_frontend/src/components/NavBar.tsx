@@ -25,6 +25,7 @@ interface NavProps {
 	loginAccounts?: any,
 	isAuthenticated?: boolean,
 	isAdmin?: boolean,
+	isReviewer?: boolean,
 }
 
 const defaultNavProps : NavProps = {

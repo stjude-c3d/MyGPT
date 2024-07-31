@@ -9,6 +9,7 @@
     "@testing-library/jest-dom": "^5.16.2",
     "@testing-library/react": "^15.0.5",
     "@testing-library/user-event": "^13.5.0",
+    "@mb-group/pie_chart_widget": "0.1.6",
     "base-64": "^1.0.0",
     "d3": "^7.4.0",
     "env-cmd": "^10.1.0",

@@ -5,6 +5,7 @@ function Feedback(props:{
 	answer: any,
 	liked: boolean,
 	disliked: boolean,
+	allowFeedback: boolean,
 	feedbackReceived: boolean,
 	feedbackCallback: any
 }){
@@ -17,17 +18,23 @@ function Feedback(props:{
 		<div className='px-4'>
 			<>
 				<div className='flex justify-start'>
-					<button onClick={()=>{
+					<button disabled={props.allowFeedback ? false : true} onClick={()=>{
 						setDisliked(!disliked)
 						setLiked(false)
 					}}>
-						<HandThumbDownIcon className={'w-8 h-8 inline-block mr-2 p-1 rounded-md' + ((props.disliked  && !disliked && !liked) || (!props.disliked && disliked) ? ' bg-red-700 text-white hover:text-white hover:bg-bsk_dark_blue border-slate-600 border' : ' text-white bg-panel3 hover:text-white hover:border-transparent hover:bg-bsk_dark_blue')}/>
+						<HandThumbDownIcon className={'w-8 h-8 inline-block mr-2 p-1 rounded-md' + ((props.disliked  && !disliked && !liked && props.allowFeedback) || (!props.disliked && disliked && props.allowFeedback)
+							? ' bg-red-700 text-white hover:text-white hover:bg-bsk_dark_blue border-slate-600 border' : (props.disliked && !disliked && !liked) || (!props.disliked && disliked) 
+							? ' bg-red-700 text-white border-slate-600 border' : props.allowFeedback 
+							? ' text-white bg-panel3 hover:text-white hover:border-transparent hover:bg-bsk_dark_blue' : ' text-white bg-panel3')}/>
 					</button>
-					<button onClick={()=>{
+					<button disabled={props.allowFeedback ? false : true} onClick={()=>{
 						setLiked(!liked)
 						setDisliked(false) 
 					}}>
-						<HandThumbUpIcon className={'w-8 h-8 inline-block mr-2 p-1 rounded-md' + ((props.liked && !disliked && !liked) || (!props.liked && liked) ? ' bg-green-600 text-white hover:text-white hover:bg-bsk_dark_blue border-slate-600 border' : ' text-white bg-panel3 hover:text-white hover:border-transparent hover:bg-bsk_dark_blue')}/>
+						<HandThumbUpIcon className={'w-8 h-8 inline-block mr-2 p-1 rounded-md' + ((props.liked && !disliked && !liked && props.allowFeedback ) || (!props.liked && liked && props.allowFeedback) 
+							? ' bg-green-600 text-white hover:text-white hover:bg-bsk_dark_blue border-slate-600 border' : (props.liked && !disliked && !liked ) || (!props.liked && liked) 
+							? ' bg-green-600 text-white border-slate-600 border' : props.allowFeedback 
+							? ' text-white bg-panel3 hover:text-white hover:border-transparent hover:bg-bsk_dark_blue' : ' text-white bg-panel3')}/>
 					</button>
 					{ liked || disliked || (props.liked && disliked) || (props.disliked && liked) ? 
 					<button onClick={()=>{
