@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BrowserRouter } from 'react-router-dom'
+// import { BrowserRouter } from 'react-router-dom'
 import { NavBar } from './NavBar'
 import useAuthenticateUser from '../hooks/useAuthenticateUser'
 
@@ -32,7 +32,7 @@ function TopNav(props:{
 
   return (
     <>
-      <BrowserRouter>
+      {/* <BrowserRouter> */}
         <NavBar 
             appName={'MyGPT Dataset'}
             appNameLink = {'/'}
@@ -52,7 +52,7 @@ function TopNav(props:{
 				    isAuthenticated={userAuthenticated}
             isAdmin={isAdmin}
           />
-      </BrowserRouter>
+      {/* </BrowserRouter> */}
     </>
   )
 }

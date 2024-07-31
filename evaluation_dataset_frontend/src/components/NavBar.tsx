@@ -52,7 +52,7 @@ export const NavBar = (props = defaultNavProps) => {
 
 	const handleLogout = () => {
 		props.loginInstance.logoutRedirect({
-			postLogoutRedirectUri: '/',
+			postLogoutRedirectUri: '/dataset',
 		});
 		localStorage.clear()
 	}

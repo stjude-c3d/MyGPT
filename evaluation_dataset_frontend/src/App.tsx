@@ -1,43 +1,15 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import '../src/App.css'
-import { useState, useEffect } from 'react'
-import GPTHome from './components/GPTHome'
+import GPTHome from './components/DatasetHome'
 import TopNav from './components/TopNav'
-// import Plots from './components/Plots'
-import { PublicClientApplication } from '@azure/msal-browser'
-import { MsalProvider } from '@azure/msal-react'
-import { msalConfig } from './utils/authConfigEnv'
-
-const msalInstance = new PublicClientApplication(msalConfig)
-
-const default_frontend_settings = {
-  'show_no_context_switch': false,
-  'azure_login': false, 
-  'restriction_without_login': false,
-}
 
 function App() {  
-  const [frontendSettings, setFrontendSettings] = useState<any>(default_frontend_settings)
-
-
-  useEffect(()=>{
-		const requestOptions = {
-			method: 'GET',
-			headers: { 
-				'Content-Type': 'application/json'
-			}
-		}
-		fetch(`${process.env.REACT_APP_BACKEND_API}api/frontend_settings/?format=json`, requestOptions)
-			.then(response => response.json())
-			.then(data => {
-				setFrontendSettings(data.settings)
-			})
-	},[])
-
 
   return (
-    <>
-    { frontendSettings.azure_login ?
-      <MsalProvider instance={msalInstance}>
+    <BrowserRouter basename='/dataset'>
+      <Routes>
+        <Route path='/' element={
+          <>
         <div className='bg-gray-200 overflow-auto'>
         <TopNav 
           setShowSettings={()=>{}} 
@@ -48,12 +20,6 @@ function App() {
         />
         <GPTHome/>
         </div>
-      </MsalProvider>
-    :
-    <div className='bg-gray-200'>
-      <GPTHome/>
-    </div>
-  }
   {/* add footer */}
   <div className='flex justify-between text-nav bg-[#2A4759] my-auto py-4 h-[6vh]'>
     <div className='text-sm text-white mx-8 my-auto'>
@@ -66,6 +32,9 @@ function App() {
     </div>
 	</div>
   </>
+  }/>
+  </Routes>
+  </BrowserRouter>
   )
 }
 
