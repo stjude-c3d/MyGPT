@@ -16,6 +16,8 @@ function DatasetHome(){
 	const [questionTypeCount, setQuestionTypeCount] = useState<any>({})
 	const [questionTypeFilter, setQuestionTypeFilter] = useState<any>(null)
 	const [selectedQuestion, setSelectedQuestion] = useState<any>(null)
+	const [submitters, setSubmitters] = useState<any>([])
+	const [submitterFilter, setSubmitterFilter] = useState<any>(null)
 	const [answers, setAnswers] = useState<any>([])
 	const [feedbackReceived, setFeedbackReceived] = useState(false)
 
@@ -87,6 +89,7 @@ function DatasetHome(){
 							question_id: d.id,
 							question_type: d.question_type,
 							ground_truth: d.ground_truth,
+							submitter: d.submitter,
 							dataset: datasets.find((ds:any)=>ds.id===d.dataset).dataset_name
 						}
 					})
@@ -112,10 +115,24 @@ function DatasetHome(){
 						}
 					})
 
+					let submitter_count:any = []
+					quesiton_data.forEach((q:any) => {
+						let temp_submitter = submitter_count.find((s:any)=>s.category === q.submitter)
+						if (temp_submitter){
+							temp_submitter.value += 1
+						} else {
+							submitter_count.push({
+								category: q.submitter,
+								value: 1
+							})
+						}
+					})
+
 					setQuestions(quesiton_data.sort((a:any,b:any)=>a.question_id-b.question_id))
 					setOriginalQuestions(quesiton_data.sort((a:any,b:any)=>a.question_id-b.question_id))
 					setDatasetCount(dataset_count)
 					setQuestionTypeCount(question_type_count)
+					setSubmitters(submitter_count)
 				})
 			}
 	},[datasets])
@@ -142,7 +159,7 @@ function DatasetHome(){
 			<div className='col-span-10'>
 				<div className='mt-24 mx-4'>
 					{ datasetCount.length && questionTypeCount.length ?
-					<div className='grid grid-cols-2 gap-4 mb-4'>
+					<div className='grid grid-cols-3 gap-4 mb-4'>
 					{/* first column */}
 					<div className='col-span-1 p-4 bg-white shadow-md rounded-md'>
 						<div className='flex flex-col justify-center items-center'>
@@ -170,6 +187,30 @@ function DatasetHome(){
 					{/* second column */}
 					<div className='col-span-1 p-4 bg-white shadow-md rounded-md'>
 						<div className='flex flex-col justify-center items-center'>
+							<div className='p-4 text-xl text-bsk_dark_blue'>Submitters</div>
+							<PieChartApp
+							chartData={submitters}
+							size='small'
+							hideCounts={true}
+							showLegend={true}
+							applyFilterOnClick={true}
+							filteredCategory={submitterFilter}
+							clickPieCallback={(data:any) => {
+								if (data && data.category){
+									let temp_questions = questions
+										.filter((q:any)=>q.submitter === data.category)
+									setQuestions(temp_questions)
+								}else{
+									setQuestions(originalQuestions)
+								}
+								setSubmitterFilter(data && data.category ? data.category : null)
+							}}
+						/>
+						</div>
+					</div>
+					{/* third column */}
+					<div className='col-span-1 p-4 bg-white shadow-md rounded-md'>
+						<div className='flex flex-col justify-center items-center'>
 							<div className='p-4 text-xl text-bsk_dark_blue'>Question types</div>
 							<PieChartApp
 							chartData={questionTypeCount}
@@ -195,13 +236,17 @@ function DatasetHome(){
 				</div>
 				<div className='flex justify-center m-4'>
 					<div className='grid'>
+						<div className='text-xl font-bold text-bsk_dark_blue'>Questions count : {
+							originalQuestions.length === questions.length ? 
+							originalQuestions.length : questions.length + '/' + originalQuestions.length
+						}</div>
 						{ datasetCount.length && questionTypeCount.length ?
 							questions.map((q:any)=>{
 								return (
 									<div key={q.question_id} className='bg-white rounded-lg p-4 m-1'>
 										<div className='flex justify-between'>
 											<div>
-												<div className='text-sm px-2 bg-panel3 mx-1 rounded-full py-1 inline-block align-middle'>{q.question_id-26}</div>
+												<div className='text-sm px-2 bg-panel3 mx-1 rounded-full py-1 inline-block align-middle'>{q.question_id}</div>
 												<div className={'text-xs text-white font-semibold mx-1 rounded-full px-2 py-1 inline-block align-middle opacity-70' + (datasets.length ? ' ' : ' bg-panel1')} style={{backgroundColor: dataset_colors(q.dataset)}}>{q.dataset}</div>
 												<div className={'text-xs text-white font-semibold mx-1 rounded-full px-2 py-1 inline-block align-middle opacity-70' + ( questions.length ? ' ' : ' bg-panel1')} style={{backgroundColor: question_type_colors(q.question_type)}}>{q.question_type.replace('_',' ')}</div>
 												<div className='inline-block mx-2 cursor-pointer text-nav' onClick={() => {
@@ -241,8 +286,9 @@ function DatasetHome(){
 												{
 													answers.map((a:any, i:number)=>{
 														return (
-															<div key={i} className='inline-block m-2 bg-sky-50 rounded-md p-2'>
+															<div key={a.id} className='inline-block m-2 bg-sky-50 rounded-md p-2'>
 																<div className='text-sm font-bold text-panel1 mx-1 rounded-full px-2 py-1 inline-block align-middle'>Setting {i+1}</div>
+																{/* <div>{a.answer_tag}</div> */}
 																<div className='inline-block mx-2 p-2 text-nav'>{a.answer_text}</div>
 																	<Feedback
 																		answer={JSON.parse(JSON.stringify(a.answer_text))}
@@ -260,7 +306,7 @@ function DatasetHome(){
 																				body: JSON.stringify({
 																					'answer_text': a.answer_text,
 																					'question': a.question,
-																					'answer_tags': a.answer_tags,
+																					'answer_tag': a.answer_tag,
 																					'correctness': feedback.rating === 1 ? 'yes' : feedback.rating === -1 ? 'no' : '-',
 																					'feedback': feedback.user_comment.length ? feedback.user_comment : '-',
 																					'context': a.context,
@@ -271,11 +317,9 @@ function DatasetHome(){
 																			fetch(`${process.env.REACT_APP_BACKEND_API}evaluation_dataset/answers/${a.id}/`, requestOptions)
 																				.then(response => response.json())
 																				.then(data => {
-																					let newAnswers = data
 																					answers.forEach((ans:any, i:number)=>{
 																						if (ans.id === a.id){
-																							newAnswers = [...answers]
-																							newAnswers[i] = data
+																							answers[i] = data
 																						}
 																					})
 																				})

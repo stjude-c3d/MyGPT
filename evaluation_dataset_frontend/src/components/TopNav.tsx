@@ -37,7 +37,7 @@ function TopNav(props:{
             appName={'MyGPT Dataset'}
             appNameLink = {'/'}
             showAppLogo = {true}
-            appLogoPath = {'./mygpt_logo.png'}
+            appLogoPath = {'./dataset/mygpt_logo.png'}
             // appLogoLink = {'/'}
             showPlotButton = {false}
             plotButtonCallback = {() => {props.setPlotButton(true)}}
