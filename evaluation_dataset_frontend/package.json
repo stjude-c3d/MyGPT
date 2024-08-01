@@ -1,6 +1,6 @@
 {
   "name": "mygpt_evaluation_dataset_frontend",
-  "homepage": "https://svlpmygptfrnd01.stjude.org/",
+  "homepage": "https://svlpmygptfrnd01.stjude.org/dataset/",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
