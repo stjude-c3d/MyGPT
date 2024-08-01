@@ -20,6 +20,7 @@ question_types = (
 answer_tags = (
 	('best_1', 'best_1'),
 	('best_2', 'best_2'),
+	('mygpt_beta', 'mygpt_beta'),
 )
 
 class Dataset(models.Model):
