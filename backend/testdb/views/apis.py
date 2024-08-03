@@ -321,6 +321,11 @@ def delete_dataset(request):
         # delete from chroma
         client = chromadb.PersistentClient(path='/code/chroma_storage/.')
         client.delete_collection(name=dataset_name)
+
+        # delete the pdf folder
+        pdf_folder = 'data/pdfs/' + dataset_name
+        if os.path.exists(pdf_folder):
+            os.rmdir(pdf_folder)
         return Response({'deleted':True}, content_type="application/json")
     
 @api_view(['POST'])

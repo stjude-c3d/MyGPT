@@ -1,5 +1,7 @@
 from django.db import models
 from django.utils import timezone
+import os
+from django.conf import settings
 
 model_types = (
 	('chatGPT', 'chatGPT'),
@@ -43,6 +45,16 @@ class Dataset(models.Model):
 
 	def __str__(self):
 		return self.dataset_name
+	
+	def delete(self, *args, **kwargs):
+		# empty the directory
+		for root, dirs, files in os.walk(os.path.join(settings.MEDIA_ROOT, 'papers', str(self.dataset_name)), topdown=False):
+			for name in files:
+				os.remove(os.path.join(root, name))
+			for name in dirs:
+				os.rmdir(os.path.join(root, name))
+		os.rmdir(os.path.join(settings.MEDIA_ROOT, 'papers', str(self.dataset_name)))
+		super().delete(*args, **kwargs)
 
 class Papers(models.Model):
 	paper_title = models.TextField(default='-')
