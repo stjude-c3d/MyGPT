@@ -907,9 +907,13 @@ def get_conversation_json(question_text):
         conversation_json.append(qna_json)
     return conversation_json
 
-def get_relevance_score(distances):
-    best_distance = 50
-    worst_distance = 500
+def get_relevance_score(distances, embedding_model):
+    if embedding_model != 'nomic-embed-text':
+        best_distance = 0.5
+        worst_distance = 1.5
+    else:
+        best_distance = 50
+        worst_distance = 500
 
     # calculate confidence score
     # if maximum distance is more than 1.5 then confidence score is 0

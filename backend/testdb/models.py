@@ -69,7 +69,7 @@ class Papers(models.Model):
 
 	def __str__(self):
 		return self.paper_title
-	
+
 class Videos(models.Model):
 	video_title = models.TextField(default='-')
 	video_link = models.TextField(default='-')
@@ -128,6 +128,7 @@ class Question(models.Model):
 
 class Answer(models.Model):
 	answer_text = models.TextField(default='-')
+	answer_no_context_text = models.TextField(default='-')
 	model_type =  models.ForeignKey('Model', on_delete=models.SET_DEFAULT, default=2)
 	temperature = models.FloatField(default=1)
 	relevance_score = models.FloatField(default=0)

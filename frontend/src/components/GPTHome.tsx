@@ -25,6 +25,8 @@ function GPTHome(props:{
 	const [relatedQuery, setRelatedQuery] = useState<any>(false)
 	const [answer, setAnswer] = useState<any>('')
 	const [answerReceived, setAnswerReceived] = useState<any>(false)
+	const [answerNoContext, setAnswerNoContext] = useState<any>('')
+	const [answerNoContextReceived, setAnswerNoContextReceived] = useState<any>(false)
 	const [answers, setAnswers] = useState<any[]>([])
 	const [papers, setPapers] = useState<any[]>([])
 	const [videos, setVideos] = useState<any[]>([])
@@ -54,7 +56,9 @@ function GPTHome(props:{
 					const data = await response.json()
 	
 					// set models
-					const llms = data.models.map((model:any) => model.name)
+					const llms = data.models
+						.filter((model:any) => model.details.quantization_level !== 'F16')
+						.map((model:any) => model.name)
 					setLlms(llms)
 	
 					// add new model to backend API
@@ -297,6 +301,78 @@ function GPTHome(props:{
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[query, context, props.currentSettings.selectedLlm])
 
+	// get answer from ollama without context 
+	useEffect(()=>{
+		const question =  query[query.length-1] && query[query.length-1].question ? query[query.length-1].question.replaceAll('"',"'") : ''
+		const systemPrompt = props.currentSettings.direct_chat_system_prompt
+		
+		const body:any = JSON.stringify({
+			'model': props.currentSettings.selectedLlm,
+			'prompt': question,
+			'stream': true,
+			'system': systemPrompt,
+			'options': {
+				'temperature': props.currentSettings.temperature,
+				'top_k': props.currentSettings.top_k,
+				'top_p': props.currentSettings.top_p,
+			}
+		})
+		
+		if(context.length > 1 && question.length > 1 && answerNoContext === ''){
+			// fetch using async await
+			let leftover:any = ''
+			const postData = async () => {
+				let content = ''
+				const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/generate`, {body, method: 'POST'})
+				const reader:any = response.body?.getReader()
+				while (true) {
+					const { done, value } = await reader.read()
+					if (done) {
+						break;
+					}
+					let rawjson = new TextDecoder().decode(value);
+					let jsons = []
+					if (leftover.length > 0){
+						rawjson = leftover + rawjson
+						leftover = ''
+					}
+					if (rawjson.includes('\n')){
+						jsons = rawjson.split('\n')
+							.filter((j:any)=>j.length)
+					}else{
+						jsons = [rawjson]
+					}
+					let last_json:any = ''
+					if (rawjson.includes('\n') && rawjson.length > 1000){
+						last_json = jsons.pop()
+						if (last_json[last_json.length-1] !== '}'){
+							leftover = last_json
+						}
+					}
+
+					for (const j of jsons){
+						const json = JSON.parse(j)
+						if (json.done === false) {
+							content += json.response
+						} else {
+							setAnswerNoContextReceived(true)
+						}
+					}
+					setAnswerNoContext(content)
+
+					if (last_json.length && last_json[last_json.length - 1] === '}'){
+						const last_json_obj = JSON.parse(last_json)
+						if (last_json_obj.done === true){
+							setAnswerNoContextReceived(true)
+						}
+					}
+				}
+			}
+			postData()
+		}
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	},[query, context, props.currentSettings.selectedLlm, answerNoContext])
+
 	useEffect(()=>{
 		if (answerReceived && answer.length !== 0){
 			setAnswers((prevAnswers:any)=>[...prevAnswers, {'response': answer, 'source': props.currentSettings.selectedLlm}])
@@ -306,7 +382,7 @@ function GPTHome(props:{
 
 	// save answer to backend database
 	useEffect(()=>{
-		if(answers.length && query.length && query.length === answers.length){
+		if(answers.length && query.length && answerNoContext.length && answerNoContextReceived && answerReceived && query.length === answers.length){
 			const requestOptions = {
 				method: 'POST',
 				headers: { 
@@ -316,6 +392,7 @@ function GPTHome(props:{
 				body: JSON.stringify({ 
 					question_text: query[query.length-1].question.replaceAll('"',"'"),
 					answer_text: answers[answers.length-1].response.replaceAll('"',"'"),
+					answer_no_context_text: answerNoContext.replaceAll('"',"'"),
 					model_type: answers[answers.length-1].source,
 					dataset: props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset,
 					sentence_transformer: props.currentSettings.selected_sentence_transformer,
@@ -329,9 +406,12 @@ function GPTHome(props:{
 					setAnswerRelevancescore((prevAnswerRelevancescore:any)=>[...prevAnswerRelevancescore, data.relevance_score])
 					setContext('')
 					setAnswer('')
+					setAnswerNoContext('')
+					setAnswerNoContextReceived(false)
 				})
 		}
-	},[answers, query, props.currentSettings.selectedDataset, props.currentSettings.defaultDataset, props.currentSettings.selected_sentence_transformer, answerWithoutContext])
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	},[answers, answerNoContext, answerNoContextReceived, query, props.currentSettings.selectedDataset, props.currentSettings.defaultDataset, props.currentSettings.selected_sentence_transformer, answerWithoutContext])
 
 	const PageNavigationPluginInstance = pageNavigationPlugin()
 

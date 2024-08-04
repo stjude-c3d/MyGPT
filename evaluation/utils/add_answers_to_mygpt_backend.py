@@ -83,5 +83,24 @@ def add_data_to_django_database():
 			request_data = {'dataset_name': library, 'question_count': dataset_question_count + 1}
 			response = requests.put(f'http://localhost:8000/evaluation_dataset/libraries/{dataset_id}/', data=request_data, auth=(django_username, django_password))
 
-add_data_to_django_database()
+# add_data_to_django_database()
 
+def add_mygpt_beta_answers_to_db():
+
+	django_username = 'admin'
+	django_password = 'admin123'
+
+	with open('evaluation/utils/best_settings/mygpt_beta_answers.json', 'r') as f:
+		mygpt_answers = json.load(f)
+
+	for answer in mygpt_answers:
+
+		request_data = {'answer_text': answer['MyGPT_beta'], 'answer_tag': 'mygpt_beta', 'context': '[]', 'question': str(answer['id'])}
+		response = requests.post('http://localhost:8000/evaluation_dataset/answers/', data=request_data, auth=(django_username, django_password))
+		if response.status_code == 201:
+			print(f"Answer added successfully.")
+		else:
+			print(f"Error: {response.status_code}")
+			print(response.reason)
+
+add_mygpt_beta_answers_to_db()	

@@ -11,8 +11,6 @@ backend/data/pdfs/*
 !backend/data/pdfs/GPCR
 backend/data/pdfs/GPCR/*_highlighted.pdf
 backend/.env
-llm_api/static/*
-llm_api/.env
 google_colab_demo/static/*
 static/*
 data/*

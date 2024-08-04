@@ -81,7 +81,7 @@ def get_context(request):
             context, titles, pages, starts, stops, chunks_txt, distances = nearestDataChroma(question_text, dataset_name, keywords, embedding_model)
             sources = []
             distances = [round(dist, 3) for dist in distances]
-            relevance_score = get_relevance_score(distances)
+            relevance_score = get_relevance_score(distances, embedding_model)
         library_type = 'papers' if len(pages) else 'videos'
 
         # if no_context is true, create or get dataset
@@ -270,6 +270,7 @@ def save_answer(request):
         json_request = JSONParser().parse(request)
         question_text = json_request['question_text']
         answer_text = json_request['answer_text']
+        answer_no_context_text = json_request['answer_no_context_text']
         model = json_request['model_type']
         model_type = Model.objects.get(model_name=model)
         dataset_name = json_request['dataset']
@@ -278,14 +279,15 @@ def save_answer(request):
         embedding_model = dataset.embedding_model
         no_context = json_request['no_context']
         if not no_context:
-            _, _, _, _, _, _, distances = nearestDataChroma(answer_text, dataset_name, '',embedding_model)
+            _, _, _, _, _, _, distances = nearestDataChroma(answer_no_context_text, dataset_name, '',embedding_model)
             distances = [round(dist, 3) for dist in distances]
             mean_distance = sum(distances) / len(distances)
-            relevance_score = get_relevance_score(distances)
+            relevance_score = get_relevance_score(distances, embedding_model)
         else:
             relevance_score = 0
         Answer.objects.create(
             answer_text=answer_text,
+            answer_no_context_text=answer_no_context_text,
             relevance_score=relevance_score, 
             model_type=model_type, 
             question=question
@@ -325,6 +327,11 @@ def delete_dataset(request):
         # delete the pdf folder
         pdf_folder = 'data/pdfs/' + dataset_name
         if os.path.exists(pdf_folder):
+            # remove all files with output_file name in thier name
+            files = [f for f in os.listdir(pdf_folder) if dataset_name in f]
+            # remove all files with output_file name in thier name
+            for f in files:
+                os.remove(pdf_folder + '/' + f)
             os.rmdir(pdf_folder)
         return Response({'deleted':True}, content_type="application/json")
     
