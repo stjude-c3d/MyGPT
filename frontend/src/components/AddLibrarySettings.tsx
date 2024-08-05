@@ -323,7 +323,7 @@ const AddLibrarySettings = (props: {
 						<DropdownOptions
 							width={'270px'}
 							optionsList={['Yes', 'No']}
-							defaultOption={'No'}
+							defaultOption={'Yes'}
 							dropDownCallback={(option:string)=>{
 								setUseOverlap(option)
 							}}
@@ -333,8 +333,8 @@ const AddLibrarySettings = (props: {
 						<div className='text-nav p-1 w-48'>Chunk Size</div>
 						<DropdownOptions
 							width={'270px'}
-							optionsList={['500', '750', '1000', '1500']}
-							defaultOption={'1000'}
+							optionsList={['500', '750', '1000', '1200']}
+							defaultOption={'750'}
 							dropDownCallback={(option:string)=>{
 								setChunkSize(option)
 							}}

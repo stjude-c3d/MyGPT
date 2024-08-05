@@ -522,6 +522,7 @@ function GPTHome(props:{
 					<select 
 						className='text-md text-nav bg-panel2 py-1 px-2 mx-2 rounded-md w-32'
 						value={props.currentSettings.selectedLlm}
+						defaultValue={props.currentSettings.defaultLlm}
 						onChange={(e) => props.settingsCallback({...props.currentSettings, selectedLlm: e.target.value})}
 					>
 						{llms.map((model:any) => {
