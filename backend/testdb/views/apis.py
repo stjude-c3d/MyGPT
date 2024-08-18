@@ -1,10 +1,14 @@
 from django.core.files.base import File
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
+from rest_framework.views import APIView
 from rest_framework.parsers import JSONParser
 from django.utils.timezone import make_aware
 from django.core import serializers
 import chromadb
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
 from pytube import YouTube, Playlist
 import datetime
 import os
@@ -388,6 +392,7 @@ def get_frontend_settings(request):
             FrontEndSettings.objects.create(
                 show_no_context_switch=False,
                 azure_login=False,
+                django_login=False,
                 restriction_without_login=False,
                 saved_date_time=make_aware(datetime.datetime.now())
             )
@@ -397,7 +402,8 @@ def get_frontend_settings(request):
         frontend_settings_obj = {
             'show_no_context_switch': frontend_settings.show_no_context_switch,
             'restriction_without_login': frontend_settings.restriction_without_login,
-            'azure_login': frontend_settings.azure_login
+            'azure_login': frontend_settings.azure_login,
+            'django_login': frontend_settings.django_login
         }
         return Response({'settings':frontend_settings_obj})
     
@@ -527,3 +533,15 @@ def get_distance_between_answers(request):
         sentence_transformer = json_request['sentence_transformer']
         distances = get_answer_distance(sentence1, sentence2, sentence_transformer)
         return Response({'distances': distances}, content_type="application/json")
+    
+class LogoutView(APIView):
+    def get(self, request, format=None):
+        permission_classes = [IsAuthenticated]
+        def post(self, request, format=None):
+            try:
+                refresh_token = request.data['refresh_token']
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+                return Response(status=status.HTTP_205_RESET_CONTENT)
+            except Exception as e:
+                return Response(status=status.HTTP_400_BAD_REQUEST)

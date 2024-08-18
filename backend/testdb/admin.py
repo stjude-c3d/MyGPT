@@ -29,7 +29,7 @@ class SourceAdmin(admin.ModelAdmin):
     list_display = ['source_doc', 'source_pointer', 'context', 'distance', 'question']
 
 class FrontEndSettingsAdmin(admin.ModelAdmin):
-    list_display = ['show_no_context_switch', 'azure_login', 'restriction_without_login', 'saved_date_time']
+    list_display = ['show_no_context_switch', 'azure_login', 'django_login', 'restriction_without_login', 'saved_date_time']
 
 admin.site.register(Model, ModelAdmin)
 admin.site.register(Dataset, DatasetAdmin)

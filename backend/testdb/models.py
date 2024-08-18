@@ -162,6 +162,7 @@ class Model(models.Model):
 class FrontEndSettings(models.Model):
 	show_no_context_switch = models.BooleanField(default=False)
 	azure_login = models.BooleanField(default=False)
+	django_login = models.BooleanField(default=False)
 	saved_date_time = models.DateTimeField(default=timezone.now, null=True)
 	restriction_without_login = models.BooleanField(default=False)
 

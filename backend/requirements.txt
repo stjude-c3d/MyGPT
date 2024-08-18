@@ -3,6 +3,7 @@ psycopg2-binary>=2.8
 requests>=2.0
 djangorestframework
 django-cors-headers
+djangorestframework-simplejwt
 sacremoses
 sentence-transformers
 pypdf
