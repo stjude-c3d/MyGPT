@@ -538,9 +538,9 @@ function GPTHome(props:{
 						id='submitter' 
 						rows={4}
 						className='text-gray-900 text-sm rounded-2xl focus:ring-blue-500 focus:border-blue-500 block w-5/6 p-2.5 shadow-md' 
-						placeholder={props.frontendSettings.disable_chat_without_login && !props.currentSettings.loggedin ? 'Login to chat' : 'Type your question here'}
+						placeholder={props.frontendSettings && props.frontendSettings.disable_chat_without_login && !props.currentSettings.loggedin ? 'Login to chat' : 'Type your question here'}
 						value={searchTerm}
-						readOnly={props.frontendSettings.disable_chat_without_login && !props.currentSettings.loggedin}
+						readOnly={props.frontendSettings && props.frontendSettings.disable_chat_without_login && !props.currentSettings.loggedin}
 						onChange={(e:any)=>{
 							if (!e.target.value.length){
 								// setAnswers([])

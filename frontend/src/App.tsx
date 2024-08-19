@@ -15,7 +15,9 @@ const msalInstance = new PublicClientApplication(msalConfig)
 const default_frontend_settings = {
   'show_no_context_switch': false,
   'azure_login': false, 
+  'django_login': false,
   'restriction_without_login': false,
+  'disable_chat_without_login': false,
 }
 
 function App() {  
