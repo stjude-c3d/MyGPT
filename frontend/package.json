@@ -34,6 +34,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "build:prod": "env-cmd -f .env.production react-scripts build",
+    "build:azure": "env-cmd -f .env.azure react-scripts build",
     "test": "react-scripts test",
     "test:watch": "react-scripts test --env=jsdom --watchAll",
     "test:ci": "react-scripts test --env=jsdom --watchAll=false",
