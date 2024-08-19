@@ -5,6 +5,7 @@ import GPTHome from './components/GPTHome'
 import Settings from './components/Settings'
 import defaultSettings from './utils/DefaultState'
 import ChatHistory from './components/ChatHistory'
+import Disclaimer from './components/Disclaimer'
 // import Plots from './components/Plots'
 import { PublicClientApplication } from '@azure/msal-browser'
 import { MsalProvider } from '@azure/msal-react'
@@ -23,6 +24,8 @@ const default_frontend_settings = {
 function App() {  
   const [currentSettings, setCurrentSettings] = useState(defaultSettings)
   const [showSettings, setShowSettings] = useState(currentSettings.showSettings || defaultSettings.showSettings)
+
+  const [showDisclaimer, setShowDisclaimer] = useState(false)
 
   const [showChatHistory, setShowChatHistory] = useState(false)
   const [showPlotButton, setShowPlotButton] = useState(false)
@@ -53,6 +56,8 @@ function App() {
 			.then(response => response.json())
 			.then(data => {
 				setFrontendSettings(data.settings)
+        if (data.settings.django_login)
+          setShowDisclaimer(true)
 			})
 	},[])
 
@@ -173,6 +178,13 @@ function App() {
         // />
         <></> : <></>
       }
+      {showDisclaimer ?
+        <Disclaimer
+          disclaimerText={defaultSettings.disclaimer_text} 
+          closeDisclaimer={() => setShowDisclaimer(false)}
+        /> :
+        <></>
+      }
       <GPTHome currentSettings={currentSettings} settingsCallback={settingsCallback} frontendSettings={frontendSettings}/>
     </div>
     :
@@ -208,9 +220,16 @@ function App() {
       <img src={process.env.PUBLIC_URL + '/stjude-logo-child.png'} alt='St. Jude logo' className='h-[3vh] inline-block'/>
       <p className='inline-block mx-2'>St. Jude Children's Research Hospital</p>
     </div>
-    <div className='text-sm text-white mx-8 my-auto'>
-      <a href='https://form.asana.com/?k=rHXv4eSjiOICn2Ln1p1H_Q&d=12574667816162' target='_blank' rel='noreferrer'>feedback</a>
-    </div>
+    { frontendSettings.django_login ?
+      <div className='text-sm text-white mx-8 my-auto cursor-pointer'>
+        <div onClick={()=>setShowDisclaimer(!showDisclaimer)}>Disclaimer</div>
+        </div> : <></>}
+    {
+      !frontendSettings.django_login ?
+      <div className='text-sm text-white mx-8 my-auto'>
+        <a href='https://form.asana.com/?k=rHXv4eSjiOICn2Ln1p1H_Q&d=12574667816162' target='_blank' rel='noreferrer'>feedback</a>
+      </div> : <></>
+    }
 	</div>
   </>
   )

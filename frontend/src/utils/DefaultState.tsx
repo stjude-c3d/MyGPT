@@ -117,6 +117,30 @@ const defaultSettings = {
 			"paper_date_time": "2024-03-03T07:10:39.164Z"
 		}
 	],
+	disclaimer_text: `
+	<p>
+		This website is intended solely for authorized reviewers of “Accelerating Scientific Insights with MyGPT” submitted to [Journal Name]. The purpose of this website is to provide a demonstration of the MyGPT software described in the article, allowing reviewers to evaluate its features and capabilities.
+		</br>
+		</br>
+		By accessing this website, you acknowledge that:
+		</br>
+		</br>
+		<ol style="list-style-type: decimal; padding-left: 30px;">
+			<li>You are an authorized reviewer of “Accelerating Scientific Insights with MyGPT” and have been provided login credentials by the authors.</li>
+			<li>Your access to this website is strictly limited to review purposes only, and you will not use or disclose any information obtained from this website for any other purpose.</li>
+			<li>You will maintain the confidentiality of all information and materials accessed through this website, including any proprietary or confidential information related to MyGPT.</li>
+		</ol>
+		
+		</br>		
+		Upon completion of the review process, all uploaded documents, questions provided by reviewers, and answers generated during the review process will be removed from the Website. The Website will be reset to its original state, and no information or materials will be retained or used for any purpose other than facilitating the review process.
+		</br>
+		</br>
+		By logging in and accessing this website, you agree to be bound by these terms and conditions. If you are not an authorized reviewer or do not agree with these terms, please do not access this website.
+		</br>
+		</br>
+		<b>Important:</b> This website is intended for review and should not be used for other purposes. The MyGPT application described in the article is subject to the GNU General Public License v3.0 . Any unauthorized use of the software or its features is strictly prohibited.
+		
+		</p>`
   }
 
 export default defaultSettings
