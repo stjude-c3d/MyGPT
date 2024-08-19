@@ -1,5 +1,5 @@
-from ..models import Papers, Question, Answer, Model
-from ..serializers import ModelSerializer, PapersSerializer, QuestionSerializer, AnswerSerializer
+from ..models import Papers, Question, Answer, Model, DisclaimerAgreement
+from ..serializers import ModelSerializer, PapersSerializer, QuestionSerializer, AnswerSerializer, DisclaimerAgreementSerializer
 from rest_framework import viewsets
 
 ####################
@@ -33,3 +33,10 @@ class PapersViewSet(viewsets.ModelViewSet):
     """
     queryset = Papers.objects.all()
     serializer_class = PapersSerializer
+
+class DisclaimerAgreementViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that shows all disclaimer agreements.
+    """
+    queryset = DisclaimerAgreement.objects.all()
+    serializer_class = DisclaimerAgreementSerializer

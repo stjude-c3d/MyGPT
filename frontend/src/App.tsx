@@ -26,6 +26,7 @@ function App() {
   const [showSettings, setShowSettings] = useState(currentSettings.showSettings || defaultSettings.showSettings)
 
   const [showDisclaimer, setShowDisclaimer] = useState(false)
+  const [forceopenDisclaimer, setForceOpenDisclaimer] = useState(false)
 
   const [showChatHistory, setShowChatHistory] = useState(false)
   const [showPlotButton, setShowPlotButton] = useState(false)
@@ -180,8 +181,10 @@ function App() {
       }
       {showDisclaimer ?
         <Disclaimer
-          disclaimerText={defaultSettings.disclaimer_text} 
+          disclaimerText={defaultSettings.disclaimer_text}
+          showAgreementButton={currentSettings.loggedin} 
           closeDisclaimer={() => setShowDisclaimer(false)}
+          forceOpenDisclaimer={forceopenDisclaimer}
         /> :
         <></>
       }
@@ -222,7 +225,10 @@ function App() {
     </div>
     { frontendSettings.django_login ?
       <div className='text-sm text-white mx-8 my-auto cursor-pointer'>
-        <div onClick={()=>setShowDisclaimer(!showDisclaimer)}>Disclaimer</div>
+        <div onClick={()=>{
+          setForceOpenDisclaimer(true)
+          setShowDisclaimer(!showDisclaimer)
+        }}>Disclaimer</div>
         </div> : <></>}
     {
       !frontendSettings.django_login ?

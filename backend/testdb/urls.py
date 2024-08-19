@@ -7,6 +7,7 @@ router.register(r'llms', mygpt_viewsets.ModelViewSet)
 router.register(r'papers', mygpt_viewsets.PapersViewSet)
 router.register(r'questions', mygpt_viewsets.QuestionsViewSet)
 router.register(r'answers', mygpt_viewsets.AnswersViewSet)
+router.register(r'disclaimer_agreements', mygpt_viewsets.DisclaimerAgreementViewSet)
 
 urlpatterns = [
     path('', homepage.home, name='home'),
@@ -30,5 +31,6 @@ urlpatterns = [
 	path('api/add_dataset_embeddings/', apis.add_dataset_embeddings, name='add_dataset_embeddings'),
 	path('api/get_distance_between_answers/', apis.get_distance_between_answers, name='get_distance_between_answers'),
 	path('api/get_username/', apis.get_username, name='get_username'),
+	path('api/submit_disclaimer_agreement/', apis.disclaimer_agreement, name='disclaimer_agreement'),
 	path('logout/', LogoutView.as_view(), name='logout'),
 ]

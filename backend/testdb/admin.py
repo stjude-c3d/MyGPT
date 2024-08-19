@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Model, Dataset, Papers, Videos, chunks, Conversation, Question, Answer, Source, FrontEndSettings
+from .models import Model, Dataset, Papers, Videos, chunks, Conversation, Question, Answer, Source, FrontEndSettings, DisclaimerAgreement
 
 class ModelAdmin(admin.ModelAdmin):
     list_display = ['model_name', 'model_size']
@@ -31,6 +31,9 @@ class SourceAdmin(admin.ModelAdmin):
 class FrontEndSettingsAdmin(admin.ModelAdmin):
     list_display = ['show_no_context_switch', 'azure_login', 'django_login', 'restriction_without_login', 'saved_date_time']
 
+class DisclaimerAgreementAdmin(admin.ModelAdmin):
+    list_display = ['user', 'agreement_date_time']
+
 admin.site.register(Model, ModelAdmin)
 admin.site.register(Dataset, DatasetAdmin)
 admin.site.register(Papers, PapersAdmin)
@@ -41,3 +44,4 @@ admin.site.register(Question, QuestionAdmin)
 admin.site.register(Answer, AnswerAdmin)
 admin.site.register(Source, SourceAdmin)
 admin.site.register(FrontEndSettings, FrontEndSettingsAdmin)
+admin.site.register(DisclaimerAgreement, DisclaimerAgreementAdmin)

@@ -1,4 +1,4 @@
-from .models import Model, Dataset, Papers, chunks, Conversation, Question, Answer, Source, FrontEndSettings
+from .models import Model, Dataset, Papers, chunks, Conversation, Question, Answer, Source, FrontEndSettings, DisclaimerAgreement
 from rest_framework import serializers
 
 class ModelSerializer(serializers.HyperlinkedModelSerializer):
@@ -45,3 +45,8 @@ class FrontEndSettingsSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = FrontEndSettings
         fields = ['show_no_context_switch', 'azure_login', 'django_login', 'restriction_without_login', 'disable_chat_without_login', 'saved_date_time']
+
+class DisclaimerAgreementSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = DisclaimerAgreement
+        fields = ['user', 'agreement_date_time']

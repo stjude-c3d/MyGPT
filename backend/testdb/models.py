@@ -170,3 +170,7 @@ class FrontEndSettings(models.Model):
 	class Meta:
 		verbose_name_plural = 'FrontEndSettings'
 		verbose_name = 'FrontEndSettings'
+
+class DisclaimerAgreement(models.Model):
+	user = models.CharField(max_length=200, default='-')
+	agreement_date_time = models.DateTimeField(default=timezone.now, null=True)
