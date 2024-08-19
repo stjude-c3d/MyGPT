@@ -44,4 +44,4 @@ class SourceSerializer(serializers.HyperlinkedModelSerializer):
 class FrontEndSettingsSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = FrontEndSettings
-        fields = ['show_no_context_switch', 'azure_login', 'django_login', 'restriction_without_login', 'saved_date_time']
+        fields = ['show_no_context_switch', 'azure_login', 'django_login', 'restriction_without_login', 'disable_chat_without_login', 'saved_date_time']

@@ -522,7 +522,7 @@ function GPTHome(props:{
 					<select 
 						className='text-md text-nav bg-panel2 py-1 px-2 mx-2 rounded-md w-32'
 						value={props.currentSettings.selectedLlm}
-						defaultValue={props.currentSettings.defaultLlm}
+						// defaultValue={props.currentSettings.defaultLlm}
 						onChange={(e) => props.settingsCallback({...props.currentSettings, selectedLlm: e.target.value})}
 					>
 						{llms.map((model:any) => {
@@ -538,8 +538,9 @@ function GPTHome(props:{
 						id='submitter' 
 						rows={4}
 						className='text-gray-900 text-sm rounded-2xl focus:ring-blue-500 focus:border-blue-500 block w-5/6 p-2.5 shadow-md' 
-						placeholder=''
+						placeholder={props.frontendSettings.disable_chat_without_login && !props.currentSettings.loggedin ? 'Login to chat' : 'Type your question here'}
 						value={searchTerm}
+						readOnly={props.frontendSettings.disable_chat_without_login && !props.currentSettings.loggedin}
 						onChange={(e:any)=>{
 							if (!e.target.value.length){
 								// setAnswers([])

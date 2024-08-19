@@ -165,6 +165,7 @@ class FrontEndSettings(models.Model):
 	django_login = models.BooleanField(default=False)
 	saved_date_time = models.DateTimeField(default=timezone.now, null=True)
 	restriction_without_login = models.BooleanField(default=False)
+	disable_chat_without_login = models.BooleanField(default=False)
 
 	class Meta:
 		verbose_name_plural = 'FrontEndSettings'

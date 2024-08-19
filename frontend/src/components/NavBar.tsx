@@ -22,9 +22,11 @@ interface NavProps {
 	burgerButtonLink?:any,
 	backgroundColor?:string,
 	showLoginButton?: boolean,
+	showPopupLogin?: boolean,
 	loginInstance?: any,
 	loginAccounts?: any,
 	isAuthenticated?: boolean,
+	djangoUser?: any,
 	isAdmin?: boolean,
 }
 
@@ -45,12 +47,46 @@ export const NavBar = (props = defaultNavProps) => {
 	}
 
 	const handleLogin = () => {
+
+		if (props.showPopupLogin) {
+			showDjangoLoginMenu()
+			return
+		}
 		props.loginInstance.loginRedirect(loginRequest).catch((e:any) => {
 			console.log(e);
 		});
     }
 
 	const handleLogout = () => {
+
+		if (props.djangoUser && props.showPopupLogin) {
+
+			const requestOptions = {
+				method: 'POST',
+				headers: { 
+					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${localStorage.getItem('access')}`
+				 },
+				body: JSON.stringify({ 'refresh_token': localStorage.getItem('refresh') })
+			}
+			fetch(`${process.env.REACT_APP_BACKEND_API}logout/`, requestOptions)
+			.then(response => {
+				if (response.status === 204) {
+					console.log('Logged out successfully')
+				}
+			})
+
+			setDjangoLoggedIn(false)
+			setUsername('')
+			setPassword('')
+			// remove access tokens
+			localStorage.removeItem('access')
+			localStorage.removeItem('refresh')
+			setShowLogout(false)
+			window.location.reload()
+			return
+		}
+
 		props.loginInstance.logoutRedirect({
 			postLogoutRedirectUri: '/',
 		});
@@ -60,6 +96,42 @@ export const NavBar = (props = defaultNavProps) => {
 	const showLogoutMenu = () => {
 		if(!showLogout) setShowLogout(true)
 		else setShowLogout(false)
+	}
+
+	const [showDjangoLogin, setShowDjangoLogin] = useState(false)
+	const [djangoLoggedIn, setDjangoLoggedIn] = useState(false)
+	const [username, setUsername] = useState('')
+	const [password, setPassword] = useState('')
+
+	const showDjangoLoginMenu = () => {
+		if(!showDjangoLogin) setShowDjangoLogin(true)
+		else setShowDjangoLogin(false)
+	}
+
+	const AttemptDhagoLogin = () => {
+		const data = {
+			'username': username,
+			'password': password
+		}
+
+		fetch(`${process.env.REACT_APP_BACKEND_API}token/`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(data)
+		})
+		.then(response => response.json())
+		.then(data => {
+			localStorage.setItem('access', data.access)
+			localStorage.setItem('refresh', data.refresh)
+			setShowDjangoLogin(false)
+			setDjangoLoggedIn(true)
+			window.location.reload()
+		})
+		.catch((error) => {
+			console.error('Error:', error)
+		})
 	}
 
   	return(
@@ -119,11 +191,21 @@ export const NavBar = (props = defaultNavProps) => {
 						) : (<></>)
 					}
 					{	
-						props.showLoginButton && props.isAuthenticated ?
+						props.showLoginButton && props.isAuthenticated && !props.showPopupLogin ?
 						(<Link to='/'>
 							<button className='object-cover text-white bg-panel1 rounded-full p-8 py-2 inline-block hover:drop-shadow-sm hover:bg-panel2 hover:text-nav' 
 								onClick={() => showLogoutMenu()}>
 									{props.loginAccounts.length && props.loginAccounts[0].name?.split(',')[1]}
+							</button>
+						</Link>) 
+						: (djangoLoggedIn && username) || (props.isAuthenticated && props.djangoUser) ?
+						(<Link to='/'>
+							<button className='object-cover text-white bg-panel1 rounded-full p-8 py-2 inline-block hover:drop-shadow-sm hover:bg-panel2 hover:text-nav' 
+								onClick={() => showLogoutMenu()}>
+									{
+										djangoLoggedIn && username ? username : (props.isAuthenticated && props.djangoUser) ? 
+										props.djangoUser.user : '' 
+									}
 							</button>
 						</Link>) : 
 						props.showLoginButton && !props.isAuthenticated ?
@@ -137,6 +219,24 @@ export const NavBar = (props = defaultNavProps) => {
 				</div>
 			</div>
 		</nav>
+		{
+			showDjangoLogin && props.showPopupLogin  ? (
+				<div className='mt-24 py-2 fixed bg-bsk_blue right-0 z-20'>
+					<div className='flex flex-col'>
+						<input type='text' className='object-cover text-bsk_dark_blue rounded-md h-[50px] w-[200px] px-2 mx-4 my-2 hover:bolder'
+							onChange={(e) => setUsername(e.target.value)}
+							placeholder='Username'/>
+						<input type='password' className='object-cover text-bsk_dark_blue rounded-md h-[50px] w-[200px] px-2 mx-4 my-2 hover:bolder'
+							onChange={(e) => setPassword(e.target.value)}
+							placeholder='Password'/>
+						<button className='object-cover bg-panel1 text-panel3 rounded-full h-[50px] w-[100px] mx-auto hover:bolder'
+							onClick={() => AttemptDhagoLogin()}>
+							Login
+						</button>
+					</div>
+				</div>
+			) : null
+		}
 		{
 			showLogout ? (
 				<div className='mt-24 py-2 fixed bg-bsk_blue right-0 z-20'>

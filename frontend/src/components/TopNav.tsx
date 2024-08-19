@@ -8,12 +8,50 @@ function TopNav(props:{
   setShowChatHistory:any,
   setPlotButton:any,
   showLoginButton?:boolean,
+  showPopupLogin?:boolean,
   loginCallback?:any,
 }) {
 
   const { activeAccounts, appRoles, instance }:any = useAuthenticateUser()
 	const userAuthenticated = activeAccounts && activeAccounts.length && activeAccounts[0].name ? true : false
 	const [isAdmin, setIsAdmin] = useState(false)
+  const [djangoAuthenticated, setDjangoAuthenticated] = useState(false)
+  const [djangoUser, setDjangoUser]:any = useState({})
+
+  useEffect(()=>{
+    // if access_token is present, get user info
+    if (localStorage.getItem('access')) {
+      const requestOptions = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_AUTH_TOKEN_PROD : process.env.REACT_APP_AUTH_TOKEN_DEV}`
+        },
+        body: JSON.stringify({
+          'access_token': localStorage.getItem('access')
+        })
+      }
+
+
+      fetch(`${process.env.REACT_APP_BACKEND_API}api/get_username/?format=json`, requestOptions)
+        .then(response => {
+          if (response.status === 401) {
+            localStorage.removeItem('access')
+            return { 'user': null }
+          }
+          else
+          return response.json()
+        })
+        .then(data => {
+          if (data.username && data.username.length > 0) {
+            const user = { 'user': data.username }
+            setDjangoAuthenticated(true)
+            setDjangoUser(user)
+          }
+        })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[])
 
   useEffect(()=>{
 		if (activeAccounts && activeAccounts.length && appRoles && appRoles.length) {
@@ -26,9 +64,11 @@ function TopNav(props:{
       if (userAuthenticated) {
         const user = { 'user': activeAccounts[0].name, 'user_email':  activeAccounts[0].username ,'isAdmin': isAdmin}
         props.loginCallback(user)
+      } else if (djangoAuthenticated && djangoUser.user) {
+        props.loginCallback(djangoUser)
       }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [userAuthenticated])
+    }, [userAuthenticated, djangoAuthenticated])
 
   return (
     <>
@@ -47,9 +87,11 @@ function TopNav(props:{
             settingButtonCallback = {() => {props.setShowSettings(true)}}
             backgroundColor={'#2A4759'}
             showLoginButton={props.showLoginButton}
+            showPopupLogin={props.showPopupLogin}
             loginInstance={instance}
 				    loginAccounts={activeAccounts}
-				    isAuthenticated={userAuthenticated}
+				    isAuthenticated={userAuthenticated || djangoAuthenticated}
+            djangoUser={djangoUser}
             isAdmin={isAdmin}
           />
       </BrowserRouter>

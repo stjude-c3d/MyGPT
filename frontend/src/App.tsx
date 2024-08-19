@@ -54,9 +54,16 @@ function App() {
 			})
 	},[])
 
+  //  set currentsettings login to true
+  useEffect(()=>{
+    if (user && user.user.length > 0 && currentSettings.loggedin === false) {
+      setCurrentSettings({...currentSettings, loggedin:true})
+    }
+  }, [user, currentSettings])
+
   // get datasets when user login
   useEffect(()=>{
-    if (user && user.user_email.length > 0 && currentSettings.fetchDatasets === true) {
+    if (user && user.user_email && user.user_email.length > 0 && currentSettings.fetchDatasets === true) {
         const requestOptions = {
           method: 'POST',
           headers: { 
@@ -131,6 +138,41 @@ function App() {
         <GPTHome currentSettings={currentSettings} settingsCallback={settingsCallback} frontendSettings={frontendSettings}/>
         </div>
       </MsalProvider>
+    : 
+    frontendSettings.django_login ?
+    <div className='bg-gray-200'>
+      <TopNav 
+        setShowSettings={setShowSettings} 
+        setShowChatHistory={setShowChatHistory} 
+        setPlotButton={setShowPlotButton}
+        showPopupLogin={frontendSettings.django_login}
+        showLoginButton={frontendSettings.django_login}
+        loginCallback={loginCallback}
+      />
+      {showSettings ?
+        <Settings 
+          closeSettings={() => setShowSettings(false)} 
+          defaultSettings={defaultSettings} 
+          currentSettings={currentSettings}
+          settingsCallback={settingsCallback}
+        /> 
+        : <></>}
+      {showChatHistory ? 
+        <ChatHistory
+          closeChatHistory={() => setShowChatHistory(false)}
+          dataset = {currentSettings.selectedDataset}
+          datasets = {currentSettings.datasets} 
+        /> : <></>
+      }
+      {showPlotButton ?
+        // <Plots
+        //   closePlots={() => setShowPlotButton(false)}
+        //   datasets = {currentSettings.datasets}   
+        // />
+        <></> : <></>
+      }
+      <GPTHome currentSettings={currentSettings} settingsCallback={settingsCallback} frontendSettings={frontendSettings}/>
+    </div>
     :
     <div className='bg-gray-200'>
       <TopNav 
@@ -138,6 +180,7 @@ function App() {
         setPlotButton={setShowPlotButton} 
         setShowChatHistory={setShowChatHistory} 
         showLoginButton={frontendSettings.azure_login}
+        loginCallback={()=>{}}
       />
       {showSettings ?
         <Settings 

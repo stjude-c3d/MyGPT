@@ -1,6 +1,6 @@
 from django.urls import include, path
 from rest_framework import routers
-from .views import apis, homepage, mygpt_viewsets
+from .views import apis, homepage, mygpt_viewsets, LogoutView
 
 router = routers.DefaultRouter()
 router.register(r'llms', mygpt_viewsets.ModelViewSet)
@@ -29,4 +29,6 @@ urlpatterns = [
 	path('api/get_vector_embeddings/', apis.get_vector_embeddings, name='get_vector_embeddings'),
 	path('api/add_dataset_embeddings/', apis.add_dataset_embeddings, name='add_dataset_embeddings'),
 	path('api/get_distance_between_answers/', apis.get_distance_between_answers, name='get_distance_between_answers'),
+	path('api/get_username/', apis.get_username, name='get_username'),
+	path('logout/', LogoutView.as_view(), name='logout'),
 ]

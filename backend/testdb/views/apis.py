@@ -6,13 +6,14 @@ from rest_framework.parsers import JSONParser
 from django.utils.timezone import make_aware
 from django.core import serializers
 import chromadb
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from pytube import YouTube, Playlist
 import datetime
 import os
 import json
+from django.contrib.auth.models import User
 from ..models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, Model, FrontEndSettings
 from .utils import get_zotero_chunks, add_dataset_from_upload, add_to_chroma, nearestDataChroma, get_relevance_score, add_embeddings_to_qna, highlight_pdf, seconds_to_hhmmss, add_pca_to_qna_and_dataset, add_demo_dataset, get_youtube_transcript, add_video_to_chroma, add_embeddings_to_chunks, add_pca_to_chunks, get_answer_distance
 
@@ -394,6 +395,7 @@ def get_frontend_settings(request):
                 azure_login=False,
                 django_login=False,
                 restriction_without_login=False,
+                disable_chat_without_login=False,
                 saved_date_time=make_aware(datetime.datetime.now())
             )
         
@@ -403,7 +405,8 @@ def get_frontend_settings(request):
             'show_no_context_switch': frontend_settings.show_no_context_switch,
             'restriction_without_login': frontend_settings.restriction_without_login,
             'azure_login': frontend_settings.azure_login,
-            'django_login': frontend_settings.django_login
+            'django_login': frontend_settings.django_login,
+            'disable_chat_without_login': frontend_settings.disable_chat_without_login
         }
         return Response({'settings':frontend_settings_obj})
     
@@ -534,14 +537,27 @@ def get_distance_between_answers(request):
         distances = get_answer_distance(sentence1, sentence2, sentence_transformer)
         return Response({'distances': distances}, content_type="application/json")
     
+# get username if access token is valid
+@api_view(['POST'])
+def get_username(request):
+    if request.method == 'POST':
+        access_token = request.data['access_token']
+
+        try:
+            token = AccessToken(access_token)
+            user_id = token.payload['user_id']
+            user = User.objects.get(id=user_id).username
+            return Response({'username': user}, content_type="application/json")
+        except:
+            return Response({'username': ''}, content_type="application/json")
+
 class LogoutView(APIView):
-    def get(self, request, format=None):
-        permission_classes = [IsAuthenticated]
-        def post(self, request, format=None):
-            try:
-                refresh_token = request.data['refresh_token']
-                token = RefreshToken(refresh_token)
-                token.blacklist()
-                return Response(status=status.HTTP_205_RESET_CONTENT)
-            except Exception as e:
-                return Response(status=status.HTTP_400_BAD_REQUEST)
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        try:
+            refresh_token = request.data['refresh_token']
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response(status=status.HTTP_205_RESET_CONTENT)
+        except Exception as e:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
