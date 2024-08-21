@@ -33,7 +33,7 @@ const AddLibrarySettings = (props: {
   const [videoPlaylistURL, setVideoPlaylistURL] = useState('')
   const [videoDocURLs, setVideoDocURLs] = useState([''])
 
-  const [useOverlap, setUseOverlap] = useState('No')
+  const [useOverlap, setUseOverlap] = useState('Yes')
   const [chunkSize, setChunkSize] = useState('1000')
 
 //   console.log(UploadLibraryName, uploadDocs)
@@ -334,7 +334,7 @@ const AddLibrarySettings = (props: {
 						<DropdownOptions
 							width={'270px'}
 							optionsList={['500', '750', '1000', '1200']}
-							defaultOption={'750'}
+							defaultOption={'1000'}
 							dropDownCallback={(option:string)=>{
 								setChunkSize(option)
 							}}
