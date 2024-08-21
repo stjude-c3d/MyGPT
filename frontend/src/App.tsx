@@ -163,6 +163,7 @@ function App() {
           defaultSettings={defaultSettings} 
           currentSettings={currentSettings}
           settingsCallback={settingsCallback}
+          user={user}
         /> 
         : <></>}
       {showChatHistory ? 

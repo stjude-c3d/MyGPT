@@ -547,7 +547,8 @@ def get_username(request):
             token = AccessToken(access_token)
             user_id = token.payload['user_id']
             user = User.objects.get(id=user_id).username
-            return Response({'username': user}, content_type="application/json")
+            user_email = User.objects.get(id=user_id).email
+            return Response({'username': user, 'user_email': user_email}, content_type="application/json")
         except:
             return Response({'username': ''}, content_type="application/json")
         

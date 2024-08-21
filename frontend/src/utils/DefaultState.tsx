@@ -31,7 +31,8 @@ const defaultSettings = {
 		// 'snowflake-arctic-embed',
 		// 'ncbi/MedCPT-Article-Encoder',
 		'NeuML/pubmedbert-base-embeddings',
-		'nomic-embed-text'
+		'nomic-embed-text',
+		'bge-m3'
 	],
     system_prompt: 'Use following information to answer the question in less than 200 words, try not to use anything else:',
 	direct_chat_system_prompt: 'Answer the question in less than 200 words.',

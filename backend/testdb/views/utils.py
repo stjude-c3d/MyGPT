@@ -324,7 +324,7 @@ def add_to_chroma(dataset_name, sentence_transformer = 'all-MiniLM-L6-v2'):
     # use multi-qa-MiniLM-L6-cos-v1 embedding function
     if sentence_transformer == 'all-MiniLM-L6-v2':
         sentence_transformer_ef = embedding_functions.DefaultEmbeddingFunction()
-    elif sentence_transformer == 'snowflake-arctic-embed' or sentence_transformer == 'nomic-embed-text':
+    elif sentence_transformer == 'snowflake-arctic-embed' or sentence_transformer == 'nomic-embed-text' or sentence_transformer == 'bge-m3':
         sentence_transformer_ef = embedding_functions.OllamaEmbeddingFunction(url="http://host.docker.internal:11434/api/embeddings", model_name=sentence_transformer)
     elif '/' in sentence_transformer:
         sentence_transformer_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=sentence_transformer)
@@ -390,7 +390,7 @@ def add_demo_dataset(sentence_transformer = 'multi-qa-MiniLM-L6-cos-v1'):
     # use multi-qa-MiniLM-L6-cos-v1 embedding function
     if sentence_transformer == 'all-MiniLM-L6-v2':
         sentence_transformer_ef = embedding_functions.DefaultEmbeddingFunction()
-    elif sentence_transformer == 'snowflake-arctic-embed' or sentence_transformer == 'nomic-embed-text':
+    elif sentence_transformer == 'snowflake-arctic-embed' or sentence_transformer == 'nomic-embed-text' or sentence_transformer == 'bge-m3':
         sentence_transformer_ef = embedding_functions.OllamaEmbeddingFunction(url="http://host.docker.internal:11434/api/embeddings", model_name=sentence_transformer)
     elif '/' in sentence_transformer:
         sentence_transformer_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=sentence_transformer)
@@ -527,7 +527,7 @@ def add_embeddings_to_qna(text, text_type = 'question', sentence_transformer = '
     # use multi-qa-MiniLM-L6-cos-v1 embedding function
     if sentence_transformer == 'all-MiniLM-L6-v2':
         sentence_transformer_ef = embedding_functions.DefaultEmbeddingFunction()
-    elif sentence_transformer == 'snowflake-arctic-embed' or sentence_transformer == 'nomic-embed-text':
+    elif sentence_transformer == 'snowflake-arctic-embed' or sentence_transformer == 'nomic-embed-text' or sentence_transformer == 'bge-m3':
         sentence_transformer_ef = embedding_functions.OllamaEmbeddingFunction(url="http://host.docker.internal:11434/api/embeddings", model_name=sentence_transformer)
     elif '/' in sentence_transformer:
         sentence_transformer_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=sentence_transformer)
@@ -707,7 +707,7 @@ def nearestDataChroma(text, dataset_name, keywords_str = '', sentence_transforme
     # use multi-qa-MiniLM-L6-cos-v1 embedding function
     if sentence_transformer == 'all-MiniLM-L6-v2':
         sentence_transformer_ef = embedding_functions.DefaultEmbeddingFunction()
-    elif sentence_transformer == 'snowflake-arctic-embed' or sentence_transformer == 'nomic-embed-text':
+    elif sentence_transformer == 'snowflake-arctic-embed' or sentence_transformer == 'nomic-embed-text' or sentence_transformer == 'bge-m3':
         sentence_transformer_ef = embedding_functions.OllamaEmbeddingFunction(url="http://host.docker.internal:11434/api/embeddings", model_name=sentence_transformer)
     elif '/' in sentence_transformer:
         sentence_transformer_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=sentence_transformer)
@@ -908,12 +908,16 @@ def get_conversation_json(question_text):
     return conversation_json
 
 def get_relevance_score(distances, embedding_model):
-    if embedding_model != 'nomic-embed-text':
-        best_distance = 0.5
-        worst_distance = 1.5
-    else:
+    if embedding_model == 'nomic-embed-text':
         best_distance = 50
         worst_distance = 500
+    elif embedding_model == 'bge-m3':
+        best_distance = 100
+        worst_distance = 800
+    else:
+        best_distance = 0.5
+        worst_distance = 1.5
+        
 
     # calculate confidence score
     # if maximum distance is more than 1.5 then confidence score is 0
@@ -933,7 +937,7 @@ def get_answer_distance(answer1, answer2, sentence_transformer = 'multi-qa-MiniL
     # use multi-qa-MiniLM-L6-cos-v1 embedding function
     if sentence_transformer == 'all-MiniLM-L6-v2':
         sentence_transformer_ef = embedding_functions.DefaultEmbeddingFunction()
-    elif sentence_transformer == 'snowflake-arctic-embed' or sentence_transformer == 'nomic-embed-text':
+    elif sentence_transformer == 'snowflake-arctic-embed' or sentence_transformer == 'nomic-embed-text' or sentence_transformer == 'bge-m3':
         sentence_transformer_ef = embedding_functions.OllamaEmbeddingFunction(url="http://host.docker.internal:11434/api/embeddings", model_name=sentence_transformer)
     elif '/' in sentence_transformer:
         sentence_transformer_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=sentence_transformer)
@@ -1016,7 +1020,7 @@ def add_video_to_chroma(dataset_name, sentence_transformer = 'multi-qa-MiniLM-L6
     # use multi-qa-MiniLM-L6-cos-v1 embedding function
     if sentence_transformer == 'all-MiniLM-L6-v2':
         sentence_transformer_ef = embedding_functions.DefaultEmbeddingFunction()
-    elif sentence_transformer == 'snowflake-arctic-embed' or sentence_transformer == 'nomic-embed-text':
+    elif sentence_transformer == 'snowflake-arctic-embed' or sentence_transformer == 'nomic-embed-text' or sentence_transformer == 'bge-m3':
         sentence_transformer_ef = embedding_functions.OllamaEmbeddingFunction(url="http://host.docker.internal:11434/api/embeddings", model_name=sentence_transformer)
     elif '/' in sentence_transformer:
         sentence_transformer_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=sentence_transformer)
