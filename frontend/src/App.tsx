@@ -71,7 +71,8 @@ function App() {
 
   // get datasets when user login
   useEffect(()=>{
-    if (user && user.user_email && user.user_email.length > 0 && currentSettings.fetchDatasets === true) {
+    if (user && ((user.user_email && user.user_email.length > 0) || (user.group && user.group.length > 0)) && currentSettings.fetchDatasets === true) {
+        console.log(user)
         const requestOptions = {
           method: 'POST',
           headers: { 
@@ -79,7 +80,8 @@ function App() {
             'Authorization': `${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_AUTH_TOKEN_PROD : process.env.REACT_APP_AUTH_TOKEN_DEV}`
           },
           body: JSON.stringify({
-            'user_email': user.user_email
+            'user_email': user.user_email,
+            'user_group': user.user_group
           })
         }
         fetch(`${process.env.REACT_APP_BACKEND_API}api/get_datasets/?format=json`, requestOptions)
@@ -96,7 +98,8 @@ function App() {
               'Authorization': `${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_AUTH_TOKEN_PROD : process.env.REACT_APP_AUTH_TOKEN_DEV}`
             },
             body: JSON.stringify({
-              'user_email': ''
+              'user_email': '',
+              'user_group': ''
             })
           }
             fetch(`${process.env.REACT_APP_BACKEND_API}api/get_datasets/?format=json`, requestOptions)

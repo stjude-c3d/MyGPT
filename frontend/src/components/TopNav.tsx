@@ -44,7 +44,7 @@ function TopNav(props:{
         })
         .then(data => {
           if (data.username && data.username.length > 0) {
-            const user = { 'user': data.username, 'user_email': data.user_email }
+            const user = { 'user': data.username, 'user_email': data.user_email, 'user_group': data.user_group }
             setDjangoAuthenticated(true)
             setDjangoUser(user)
           }

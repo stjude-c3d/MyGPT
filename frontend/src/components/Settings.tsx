@@ -33,7 +33,7 @@ const Settings = (props:{
 			headers: { 
 				'Content-Type': 'application/json'
 			},
-			body: JSON.stringify(props.user ? props.user : {'user_email': ''})
+			body: JSON.stringify(props.user ? props.user : {'user_email': '', 'user_group': ''})
 		}
 		if(!datasets.length || props.currentSettings.fetchDatasets)
 			fetch(`${process.env.REACT_APP_BACKEND_API}api/get_datasets/`, requestOptions)
@@ -112,7 +112,9 @@ const Settings = (props:{
 				const data = await response.json()
 
 				// set models
-				const llms = data.models.map((model:any) => model.name)
+				const llms = data.models
+					.filter((model:any) => model.details.quantization_level !== 'F16')
+					.map((model:any) => model.name)
 				const llm = llms[0]
 				setLlms(llms)
 				setLlm(llm)

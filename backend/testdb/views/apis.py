@@ -26,8 +26,14 @@ def get_datasets(request):
     if request.method == 'POST':
         json_request = JSONParser().parse(request)
         user_email = json_request['user_email']
+        user_group = json_request['user_group']
         if user_email == '':
             datasets = Dataset.objects.filter(user_email='-')
+        elif user_group != '' and user_group != 'user' and user_email != '':
+            group_datasets = Dataset.objects.filter(user_group=user_group)
+            email_datasets = Dataset.objects.filter(user_email=user_email)
+            # combine datasets
+            datasets = group_datasets | email_datasets
         else:
             datasets = Dataset.objects.filter(user_email=user_email)
         datasets_ = serializers.serialize('json', datasets)
@@ -548,7 +554,8 @@ def get_username(request):
             user_id = token.payload['user_id']
             user = User.objects.get(id=user_id).username
             user_email = User.objects.get(id=user_id).email
-            return Response({'username': user, 'user_email': user_email}, content_type="application/json")
+            user_group = User.objects.get(id=user_id).groups.all()[0].name if User.objects.get(id=user_id).groups.count() else ''
+            return Response({'username': user, 'user_email': user_email, 'user_group': user_group}, content_type="application/json")
         except:
             return Response({'username': ''}, content_type="application/json")
         
