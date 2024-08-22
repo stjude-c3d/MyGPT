@@ -195,7 +195,7 @@ const EmbeddingSettings = (props: {
 								return(
 									<li key={index} className='ml-4'>
 										<div className='flex justify-between m-1 text-nav'>
-											<div className='w-32'>
+											<div className='w-56'>
 												{llm}
 											</div>
 											<div>
