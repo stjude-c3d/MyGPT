@@ -93,11 +93,11 @@ describe('Settings', () => {
     expect(divEl.textContent).toBe(activeTabTextContent)
   })
 
-  it('renders "Sentence Transformers" panel', () => {
+  it('renders "Embedding Models" panel', () => {
     const settingsCallback = jest.fn()
     const setShowSettings = jest.fn()
-    const activeTab = 'sentence_transformers'
-    const activeTabTextContent = 'Sentence Transformers'
+    const activeTab = 'embedding_models'
+    const activeTabTextContent = 'Embedding Models'
 
     const { container } = render(<Settings 
         closeSettings={() => setShowSettings(false)} 

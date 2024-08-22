@@ -1,8 +1,9 @@
 import {useState, useEffect} from 'react'
 import Workflow from './Workflow'
-import { DropdownOptions } from './DropDownMenu'
+// import { DropdownOptions } from './DropDownMenu'
 import AddLibrarySettings from './AddLibrarySettings'
 import LLMSettings from './LLMSettings'
+import EmbeddingSettings from './EmbeddingSettings'
 import { MagnifyingGlassMinusIcon, MagnifyingGlassPlusIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
 
 const Settings = (props:{
@@ -357,44 +358,52 @@ const Settings = (props:{
 							</div> : <></>
 						}
 						{
-							activeTab === 'sentence_transformers' ?
-							<div className='px-8 py-2 flex flex-col divide-y'>
-								<div className='m-2'>
-									<div className='text-nav inline-block px-2 mx-4 my-2 text-lg font-semibold'>Current Sentence Transformer</div>
-									<div className='mx-4 px-2'>
-										<DropdownOptions
-											width={'180px'}
-											optionsList={props.defaultSettings.sentence_transformers}
-											defaultOption={currentSettings.sentence_transformer}
-											dropDownCallback={(option:string)=>{
-												props.settingsCallback({...currentSettings, selected_sentence_transformer: option})
-											}}
-										/>
-									</div>
-								</div>
-								<div className='m-2'>
-									<div className='text-nav inline-block px-2 mx-4 my-2 text-lg font-semibold'>Available Sentence Transformer</div>
-									<div className='mx-4'>
-										<ul className='list-disc ml-4'>
-											{props.defaultSettings.sentence_transformers.map((st:string, index:number) => {
-												return(
-													<li key={index} className='ml-4 text-nav text-sm'>
-															{st + (st === props.defaultSettings.default_sentence_transformer ? ' (default)' : '')}
-													</li>
-												)
-											})}
-										</ul>
-									</div>
-								</div>
-								<div className='m-2'>
-									<div className='text-nav inline-block px-2 mx-4 my-2 text-lg font-semibold'>
-										<div className='text-nav p-1 my-1'>Add other Sentence Transformers</div>
-										<p className='text-sm ml-4'> You can choose any Sentence Transformer from this list: <a className='underline' href='https://www.sbert.net/docs/pretrained_models.html'>SBERT.net</a></p>
-										<input type='text' placeholder='Sentence Transformer' className='rounded-md w-60 p-1 ml-4'/>
-										<button className='bg-panel1 text-white px-4 py-1 rounded-md m-2'>Add</button>
-									</div>
-								</div>
-							</div> : <></>
+							activeTab === 'embedding_models' ?
+							<EmbeddingSettings
+								embeddingModels={props.defaultSettings.embedding_models}
+								embeddingModel={currentSettings.embeddingModel}
+								selectedEmbeddingModel={props.currentSettings.selectedEmbeddingModel}
+								currentSettings={currentSettings}
+								settingsCallback={props.settingsCallback}
+							/> : <></>
+							// <div className='px-8 py-2 flex flex-col divide-y'>
+							// 	<div className='m-2'>
+							// 		<div className='text-nav inline-block px-2 mx-4 my-2 text-lg font-semibold'>Current Sentence Transformer</div>
+							// 		<div className='mx-4 px-2'>
+							// 			<DropdownOptions
+							// 				width={'180px'}
+							// 				optionsList={props.defaultSettings.embedding_models}
+							// 				defaultOption={currentSettings.sentence_transformer}
+							// 				dropDownCallback={(option:string)=>{
+							// 					props.settingsCallback({...currentSettings, selected_sentence_transformer: option})
+							// 				}}
+							// 			/>
+							// 		</div>
+							// 	</div>
+							// 	<div className='m-2'>
+							// 		<div className='text-nav inline-block px-2 mx-4 my-2 text-lg font-semibold'>Available Sentence Transformer</div>
+							// 		<div className='mx-4'>
+							// 			<ul className='list-disc ml-4'>
+							// 				{props.defaultSettings.embedding_models.map((st:string, index:number) => {
+							// 					return(
+							// 						<li key={index} className='ml-4 text-nav text-sm'>
+							// 								{st + (st === props.defaultSettings.default_sentence_transformer ? ' (default)' : '')}
+							// 						</li>
+							// 					)
+							// 				})}
+							// 			</ul>
+							// 		</div>
+							// 	</div>
+							// 	<div className='m-2'>
+							// 		<div className='text-nav inline-block px-2 mx-4 my-2 text-lg font-semibold'>
+							// 			<div className='text-nav p-1 my-1'>Add other Sentence Transformers</div>
+							// 			<p className='text-sm ml-4'> You can choose any Sentence Transformer from this list: <a className='underline' href='https://www.sbert.net/docs/pretrained_models.html'>SBERT.net</a></p>
+							// 			<input type='text' placeholder='Sentence Transformer' className='rounded-md w-60 p-1 ml-4'/>
+							// 			<button className='bg-panel1 text-white px-4 py-1 rounded-md m-2'>Add</button>
+							// 		</div>
+							// 	</div>
+							// </div> 
+							// : <></>
 						}
 						{
 							activeTab === 'relevance_score' ?

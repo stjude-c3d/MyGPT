@@ -78,7 +78,6 @@ const AddLibrarySettings = (props: {
 			
 			formData.append('dataset_name', UploadLibraryName)
 			formData.append('sentence_transformer', currentSettings.selected_sentence_transformer)
-			console.log(currentSettings.selected_sentence_transformer)
 			formData.append('user', props.user ? props.user.user: '')
 			formData.append('user_email', props.user ? props.user.user_email : '')
 			formData.append('user_group', props.user && props.user.isAdmin ? 'admin' : 'user')
@@ -261,7 +260,7 @@ const AddLibrarySettings = (props: {
 						<div className='text-nav w-48 p-1'>Sentence Transformer*</div>
 						<DropdownOptions
 							width={'280px'}
-							optionsList={props.currentSettings.sentence_transformers}
+							optionsList={props.currentSettings.embedding_models}
 							defaultOption={currentSettings.sentence_transformer}
 							dropDownCallback={(option:string)=>{
 								props.settingsCallback({...currentSettings, selected_sentence_transformer: option})
@@ -316,11 +315,11 @@ const AddLibrarySettings = (props: {
 						}}/>
 					</div>
 					<div className='flex justify-start m-2'>
-						<div className='text-nav p-1 w-48'>Sentence Transformer</div>
+						<div className='text-nav p-1 w-48'>Embedding model</div>
 						<DropdownOptions
 							width={'270px'}
-							optionsList={props.currentSettings.sentence_transformers}
-							defaultOption={currentSettings.sentence_transformer}
+							optionsList={props.currentSettings.embedding_models}
+							defaultOption={currentSettings.selectedEmbeddingModel}
 							dropDownCallback={(option:string)=>{
 								props.settingsCallback({...currentSettings, selected_sentence_transformer: option})
 							}}
@@ -409,7 +408,7 @@ const AddLibrarySettings = (props: {
 						<div className='text-nav w-48 p-1 my-2'>Sentence Transformer</div>
 						<DropdownOptions
 							width={'280px'}
-							optionsList={props.currentSettings.sentence_transformers}
+							optionsList={props.currentSettings.embedding_models}
 							defaultOption={currentSettings.sentence_transformer}
 							dropDownCallback={(option:string)=>{
 								props.settingsCallback({...currentSettings, selected_sentence_transformer: option})
