@@ -1,8 +1,11 @@
 from django.contrib import admin
-from .models import Model, Dataset, Papers, Videos, chunks, Conversation, Question, Answer, Source, FrontEndSettings, DisclaimerAgreement
+from .models import Model, EmbeddingModel, Dataset, Papers, Videos, chunks, Conversation, Question, Answer, Source, FrontEndSettings, DisclaimerAgreement
 
 class ModelAdmin(admin.ModelAdmin):
     list_display = ['model_name', 'model_size']
+
+class EmbeddingModelAdmin(admin.ModelAdmin):
+    list_display = ['model_name', 'model_size', 'model_source', 'best_distance', 'worst_distance']
 
 class DatasetAdmin(admin.ModelAdmin):
     list_display = ['dataset_name', 'zotero_id', 'dataset_size', 'chunksize', 'overlap', 'user', 'user_email', 'user_group', 'embedding_model', 'embedding_added', 'direct_chat_without_docs', 'dataset_date_time']
@@ -35,6 +38,7 @@ class DisclaimerAgreementAdmin(admin.ModelAdmin):
     list_display = ['user', 'agreement_date_time']
 
 admin.site.register(Model, ModelAdmin)
+admin.site.register(EmbeddingModel, EmbeddingModelAdmin)
 admin.site.register(Dataset, DatasetAdmin)
 admin.site.register(Papers, PapersAdmin)
 admin.site.register(Videos, VideosAdmin)

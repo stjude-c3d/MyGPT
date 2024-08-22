@@ -32,6 +32,7 @@ const defaultSettings = {
 		// 'ncbi/MedCPT-Article-Encoder',
 		'NeuML/pubmedbert-base-embeddings',
 		'nomic-embed-text',
+		'nomic-ai/nomic-embed-text-v1',
 		'bge-m3'
 	],
     system_prompt: 'Use following information to answer the question in less than 200 words, try not to use anything else:',

@@ -12,9 +12,10 @@ from rest_framework import status
 from pytube import YouTube, Playlist
 import datetime
 import os
+import shutil
 import json
 from django.contrib.auth.models import User
-from ..models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, Model, FrontEndSettings, DisclaimerAgreement
+from ..models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, Model, EmbeddingModel, FrontEndSettings, DisclaimerAgreement
 from .utils import get_zotero_chunks, add_dataset_from_upload, add_to_chroma, nearestDataChroma, get_relevance_score, add_embeddings_to_qna, highlight_pdf, seconds_to_hhmmss, add_pca_to_qna_and_dataset, add_demo_dataset, get_youtube_transcript, add_video_to_chroma, add_embeddings_to_chunks, add_pca_to_chunks, get_answer_distance
 
 ####################
@@ -339,11 +340,12 @@ def delete_dataset(request):
         pdf_folder = 'data/pdfs/' + dataset_name
         if os.path.exists(pdf_folder):
             # remove all files with output_file name in thier name
-            files = [f for f in os.listdir(pdf_folder) if dataset_name in f]
+            # files = [f for f in os.listdir(pdf_folder) if dataset_name in f]
             # remove all files with output_file name in thier name
-            for f in files:
-                os.remove(pdf_folder + '/' + f)
-            os.rmdir(pdf_folder)
+            try:
+                shutil.rmtree(pdf_folder)
+            except:
+                return Response({'error':True, 'error_message': 'Could not delete pdf folder'}, content_type="application/json")
         return Response({'deleted':True}, content_type="application/json")
     
 @api_view(['POST'])
@@ -362,7 +364,10 @@ def add_zotero_dataset(request):
         dataset_name = get_zotero_chunks(library_id, library_id_type, collection_id, api_key, user, user_email, user_group)
         # if dataset_name.error:
         #     return Response({'error':True, 'error_message': dataset_name.error}, content_type="application/json")
-        add_to_chroma(dataset_name, sentence_transformer)
+        message = add_to_chroma(dataset_name, sentence_transformer)
+
+        if message == False:
+            return Response({'error':True}, content_type="application/json")
         datasets = Dataset.objects.all()
         dataset_names = []
         for dataset in datasets:
@@ -374,7 +379,10 @@ def upload_documents(request):
     if request.method == 'POST':
         dataset_name = add_dataset_from_upload(request)
         sentence_transformer = request.POST.get('sentence_transformer')
-        add_to_chroma(dataset_name, sentence_transformer)
+        message = add_to_chroma(dataset_name, sentence_transformer)
+
+        if message == False:
+            return Response({'error':True}, content_type="application/json")
         return Response({'uploaded':True}, content_type="application/json")
 
 @api_view(['POST'])
@@ -387,6 +395,20 @@ def add_ollama_models(request):
                 Model.objects.create(
                     model_name=ollama_model['name'],
                     model_size=ollama_model['size']
+                )
+        return Response({'added':True}, content_type="application/json")
+    
+@api_view(['POST'])
+def add_embedding_models(request):
+    if request.method == 'POST':
+        json_request = JSONParser().parse(request)
+        embedding_models = json_request['embedding_models']
+        for embedding_model in embedding_models:
+            if EmbeddingModel.objects.filter(model_name=embedding_model['name']).count() == 0:
+                EmbeddingModel.objects.create(
+                    model_name=embedding_model['name'],
+                    model_size=embedding_model['size'],
+                    model_source=embedding_model['source'],
                 )
         return Response({'added':True}, content_type="application/json")
     

@@ -16,6 +16,7 @@ const AddLibrarySettings = (props: {
   const [showCollectionIDHelp, setShowCollectionIDHelp] = useState(false)
   const [addLibrary, setAddLibrary] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
+  const [showError, setShowError] = useState(false)
 
   const [uploadPanel, setUploadPanel] = useState(true)
   const [zoteroPanel, setZoteroPanel] = useState(false)
@@ -108,6 +109,8 @@ const AddLibrarySettings = (props: {
 				setUploadDocs(emptyUploadDocs)
 				if (data.uploaded){
 					setShowSuccess(true)
+				}else{
+					setShowError(true)
 				}
 			})
 		}
@@ -289,6 +292,11 @@ const AddLibrarySettings = (props: {
 							<div className='text-nav p-1 text-lg bg-orange-200 rounded-md'>Uploading documents...</div>
 						</div> :
 						<></>
+					}
+					{ showError ?
+						<div className='flex justify-start'>
+							<div className='text-nav p-1 text-lg bg-red-200 rounded-md'>Error uploading documents</div>
+						</div> : <></>	
 					}
 					<div className='flex justify-start m-2'>
 						<div className='text-nav p-1 w-48'>Library Name</div>

@@ -1,5 +1,5 @@
-from ..models import Papers, Question, Answer, Model, DisclaimerAgreement
-from ..serializers import ModelSerializer, PapersSerializer, QuestionSerializer, AnswerSerializer, DisclaimerAgreementSerializer
+from ..models import Papers, Question, Answer, Model, EmbeddingModel, DisclaimerAgreement
+from ..serializers import ModelSerializer, EmbeddingModelSerializer, PapersSerializer, QuestionSerializer, AnswerSerializer, DisclaimerAgreementSerializer
 from rest_framework import viewsets
 
 ####################
@@ -12,6 +12,13 @@ class ModelViewSet(viewsets.ModelViewSet):
     """
     queryset = Model.objects.all()
     serializer_class = ModelSerializer
+
+class EmbeddingModelViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that shows list of embedding models.
+    """
+    queryset = EmbeddingModel.objects.all()
+    serializer_class = EmbeddingModelSerializer
 
 class QuestionsViewSet(viewsets.ModelViewSet):
     """

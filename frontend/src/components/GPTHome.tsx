@@ -85,7 +85,34 @@ function GPTHome(props:{
 					const response2 = await fetch(`${process.env.REACT_APP_BACKEND_API}api/add_ollama_models/`, requestOptions)
 					const data2 = await response2.json()
 					console.log(data2)
-	
+
+					// add embedding models to backend API
+					const embedding_models = data.models.filter((model:any) => 
+						model.details.quantization_level === 'F16' && model.details.family.includes('bert'))
+					
+					let embedding_models_object:any = []
+					embedding_models.forEach((model:any) => {
+						let model_name = model.name
+						let model_size = model.size* 1e-9
+						let model_size_gb = model_size.toFixed(2)
+						embedding_models_object.push({name: model_name, size: model_size_gb, source: 'ollama'})
+					})
+
+					const requestOptions2 = {
+						method: 'POST',
+						headers: { 
+							'Content-Type': 'application/json',
+							'Authorization': `${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_AUTH_TOKEN_PROD : process.env.REACT_APP_AUTH_TOKEN_DEV}`
+						},
+						setConnection: 'keep-alive',
+						keepalive: true,
+						setTimeout: 10000,
+						body: JSON.stringify({'embedding_models': embedding_models_object})
+					}
+					const response3 = await fetch(`${process.env.REACT_APP_BACKEND_API}api/add_embedding_models/`, requestOptions2)
+					const data3 = await response3.json()
+					console.log(data3)
+
 			}
 			postData()
 		},[])

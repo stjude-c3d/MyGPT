@@ -72,7 +72,6 @@ function App() {
   // get datasets when user login
   useEffect(()=>{
     if (user && ((user.user_email && user.user_email.length > 0) || (user.group && user.group.length > 0)) && currentSettings.fetchDatasets === true) {
-        console.log(user)
         const requestOptions = {
           method: 'POST',
           headers: { 
@@ -87,6 +86,7 @@ function App() {
         fetch(`${process.env.REACT_APP_BACKEND_API}api/get_datasets/?format=json`, requestOptions)
           .then(response => response.json())
           .then(data => {
+            currentSettings.datasets = currentSettings.datasets.filter((d:any)=>d !== 'None')
             setCurrentSettings({...currentSettings, datasets:data.map((d:any)=>d.dataset_name), selectedDataset:data[0].dataset_name, fetchDatasets:false})
           })
         } 
@@ -105,6 +105,7 @@ function App() {
             fetch(`${process.env.REACT_APP_BACKEND_API}api/get_datasets/?format=json`, requestOptions)
               .then(response => response.json())
               .then(data => {
+                currentSettings.datasets = currentSettings.datasets.filter((d:any)=>d !== 'None')
                 if(data.length > 0)
                   setCurrentSettings({...currentSettings, datasets:data.map((d:any)=>d.dataset_name), selectedDataset:data[0].dataset_name, fetchDatasets:false, datasetsUpdated:false})
             })

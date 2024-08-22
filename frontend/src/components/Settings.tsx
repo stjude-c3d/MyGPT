@@ -42,7 +42,12 @@ const Settings = (props:{
 					const dataset_names = data.map((d:any)=>d.dataset_name)
 					const dataset_details:any = []
 					dataset_names.forEach((dataset:string) => {
-						const dataset_detail = {'dataset': dataset, 'embedding_added': data.filter((d:any)=>d.dataset_name === dataset)[0].embedding_added, 'direct_chat_without_docs': data.filter((d:any)=>d.dataset_name === dataset)[0].direct_chat_without_docs}
+						const dataset_detail = {
+							'dataset': dataset, 
+							'embedding_added': data.filter((d:any)=>d.dataset_name === dataset)[0].embedding_added, 
+							'direct_chat_without_docs': data.filter((d:any)=>d.dataset_name === dataset)[0].direct_chat_without_docs,
+							'user_group': data.filter((d:any)=>d.dataset_name === dataset)[0].user_group
+						}
 						dataset_details.push(dataset_detail)
 					})
 					props.settingsCallback({...currentSettings, datasets: dataset_names, fetchDatasets: false})
@@ -75,7 +80,7 @@ const Settings = (props:{
 					console.log(data)
 					setDeleteDataset('')
 					const dataset_names = currentSettings.datasets.filter((d:string)=>d !== deleteDataset)
-					props.settingsCallback({...currentSettings, datasets: dataset_names, selectedDataset: dataset_names[0]})
+					props.settingsCallback({...currentSettings, datasets: dataset_names, selectedDataset: dataset_names[0], fetchDatasets: true})
 				
 				})
 		}
@@ -151,14 +156,14 @@ const Settings = (props:{
 	return (
 		// create floating panel with opque background
 		<div className='fixed inset-0 z-50 bg-black bg-opacity-70 flex items-center justify-center'>
-			<div className={'bg-panel1 w-3/4 max-h-[1100px] max-w-[1200px] rounded-lg ' + (window.screen.availHeight < 1000 ? 'h-[95vh]' : 'h-[75vh]')}>
+			<div className={'bg-panel1 w-3/4 max-h-[1100px] max-w-[1200px] rounded-lg ' + (window.screen.availHeight < 1000 ? 'h-[95vh]' : 'h-[85vh]')}>
 				<div className='flex justify-between'>
 					<div className='text-2xl font-bold text-white mt-8 mx-8'>Settings</div>
 					<div className='text-2xl font-bold text-white mt-8 mr-8 cursor-pointer' onClick={props.closeSettings}>x</div>
 				</div>
-				<div className={'flex justify-between my-6 '+ (window.screen.availHeight < 1000 ? 'h-[78vh]' : 'h-[62vh]')}>
+				<div className={'flex justify-between my-6 '+ (window.screen.availHeight < 1000 ? 'h-[78vh]' : 'h-[55vh]')}>
 					{/* create left side vericle tabs */}
-					<div className={'w-1/4 border-slate-400 border-y-2 ' + (window.screen.availHeight < 1000 ? 'h-[80vh]' : 'h-[62vh]')}>
+					<div className={'w-1/4 border-slate-400 border-y-2 ' + (window.screen.availHeight < 1000 ? 'h-[80vh]' : 'h-[56vh]')}>
 						<div className='grid grid-cols-1 divide-y'>
 							{ props.defaultSettings.settingsPanels.map((panel:any, index:number) => {
 								return(
@@ -176,7 +181,7 @@ const Settings = (props:{
 						</div>
 					</div>
 					{/* create right side list of settings */}
-					<div className={'w-3/4 bg-panel2 overflow-y-auto ' + (window.screen.availHeight < 1000 ? 'h-[80vh]' : 'h-[62vh]')}>
+					<div className={'w-3/4 bg-panel2 overflow-y-auto ' + (window.screen.availHeight < 1000 ? 'h-[80vh]' : 'h-[56vh]')}>
 						<div className={'mx-4 my-4 px-4 bg-gray-300 rounded-md ' + (workflowZoomedIn ? 'h-[45vh]' : workflowCollapsed ? 'h-8' : 'h-[29vh]')}>
 							<div className='flex justify-between m-1'>
 								<div className='text-panel1 text-lg font-bold'>MyGPT Workflow</div>
@@ -234,7 +239,7 @@ const Settings = (props:{
 																	{ dataset['embedding_added'] ? 'added in vector space' : 'add to vector space'}
 																</button> */}
 																{ 
-																	(props.currentSettings.restriction_without_login && props.user) || !props.currentSettings.restriction_without_login ?
+																	(props.currentSettings.restriction_without_login && props.user && dataset.user_group === 'user') || !props.currentSettings.restriction_without_login ?
 																	<button className='ml-2 bg-red-900 text-white px-2 rounded-md'
 																		onClick={()=>{setDeleteDataset(dataset.dataset)}}
 																	>Delete</button>

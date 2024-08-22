@@ -325,7 +325,7 @@ def add_to_chroma(dataset_name, sentence_transformer = 'all-MiniLM-L6-v2'):
     if sentence_transformer == 'all-MiniLM-L6-v2':
         sentence_transformer_ef = embedding_functions.DefaultEmbeddingFunction()
     elif sentence_transformer == 'snowflake-arctic-embed' or sentence_transformer == 'nomic-embed-text' or sentence_transformer == 'bge-m3':
-        sentence_transformer_ef = embedding_functions.OllamaEmbeddingFunction(url="http://host.docker.internal:11434/api/embeddings", model_name=sentence_transformer)
+        sentence_transformer_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "/api/embeddings", model_name=sentence_transformer)
     elif '/' in sentence_transformer:
         sentence_transformer_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=sentence_transformer)
     else:    
@@ -360,22 +360,29 @@ def add_to_chroma(dataset_name, sentence_transformer = 'all-MiniLM-L6-v2'):
         for i in tqdm(
             range(0, len(documents), 100), desc='Adding documents', unit_scale=100
         ):
-            collection.add(
-                ids=ids[i : i + 100],
-                documents=documents[i : i + 100],
-                metadatas=metadatas[i : i + 100],  # type: ignore
-            )
+            try:
+                collection.add(
+                    ids=ids[i : i + 100],
+                    documents=documents[i : i + 100],
+                    metadatas=metadatas[i : i + 100],  # type: ignore
+                )
 
-        new_count = collection.count()
-        dataset = Dataset.objects.get(dataset_name=dataset_name)
-        dataset.dataset_size = new_count
-        dataset.embedding_model = sentence_transformer
-        dataset.save()
+                new_count = collection.count()
+                dataset = Dataset.objects.get(dataset_name=dataset_name)
+                dataset.dataset_size = new_count
+                dataset.embedding_model = sentence_transformer
+                dataset.save()
+
+                print(f'Added {new_count - count} documents')
+                return True
+            except:
+                Dataset.objects.get(dataset_name=dataset_name).delete()
+
+                print('error adding documents')
+                return False
 
         # add embeddings to database
         # add_embeddings_to_chunks(documents, metadatas, dataset)
-
-        print(f'Added {new_count - count} documents')
 
 def add_demo_dataset(sentence_transformer = 'multi-qa-MiniLM-L6-cos-v1'):
     documents_directory = '/code/data'

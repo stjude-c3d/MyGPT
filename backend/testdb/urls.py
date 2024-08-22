@@ -4,6 +4,7 @@ from .views import apis, homepage, mygpt_viewsets, LogoutView
 
 router = routers.DefaultRouter()
 router.register(r'llms', mygpt_viewsets.ModelViewSet)
+router.register(r'embedding_models', mygpt_viewsets.EmbeddingModelViewSet)
 router.register(r'papers', mygpt_viewsets.PapersViewSet)
 router.register(r'questions', mygpt_viewsets.QuestionsViewSet)
 router.register(r'answers', mygpt_viewsets.AnswersViewSet)
@@ -24,6 +25,7 @@ urlpatterns = [
 	path('api/add_zotero_collection/', apis.add_zotero_dataset, name='add_zotero_collection'),
 	path('api/upload_documents/', apis.upload_documents, name='upload_documents'),
 	path('api/add_ollama_models/', apis.add_ollama_models, name='add_ollama_models'),
+	path('api/add_embedding_models/', apis.add_embedding_models, name='add_embedding_models'),
 	path('api/frontend_settings/', apis.get_frontend_settings, name='frontend_settings'),
 	path('api/add_demo_library/', apis.add_demo_dataset_api, name='add_demo_dataset'),
 	path('api/add_video_library/', apis.add_video_library, name='add_video_library'),

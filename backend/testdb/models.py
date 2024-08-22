@@ -29,6 +29,11 @@ question_types = (
 	('other', 'other'),
 )
 
+embedding_model_source = (
+	('ollama', 'ollama'),
+	('sentence-transformer', 'sentence-transformer'),
+)
+
 class Dataset(models.Model):
 	dataset_name = models.CharField(max_length=200, default='-')
 	zotero_id = models.CharField(max_length=40, default='-')
@@ -155,6 +160,16 @@ class Source(models.Model):
 class Model(models.Model):
 	model_name = models.CharField(max_length=200, default='-')
 	model_size =  models.CharField(max_length=40, default='-')
+
+	def __str__(self):
+		return self.model_name
+	
+class EmbeddingModel(models.Model):
+	model_name = models.CharField(max_length=200, default='-')
+	model_size =  models.CharField(max_length=40, default='-')
+	model_source = models.CharField(max_length=40, choices=embedding_model_source, default='ollama')
+	best_distance = models.FloatField(default=0)
+	worst_distance = models.FloatField(default=0)
 
 	def __str__(self):
 		return self.model_name

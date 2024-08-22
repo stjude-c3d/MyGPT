@@ -1,10 +1,15 @@
-from .models import Model, Dataset, Papers, chunks, Conversation, Question, Answer, Source, FrontEndSettings, DisclaimerAgreement
+from .models import Model, EmbeddingModel, Dataset, Papers, chunks, Conversation, Question, Answer, Source, FrontEndSettings, DisclaimerAgreement
 from rest_framework import serializers
 
 class ModelSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Model
         fields = ['model_name', 'model_size']
+
+class EmbeddingModelSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = EmbeddingModel
+        fields = ['model_name', 'model_size', 'model_source', 'best_distance', 'worst_distance']
 
 class DatasetSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
