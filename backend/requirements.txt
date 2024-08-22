@@ -9,8 +9,7 @@ transformers==4.36.0
 pypdf
 pandas
 pyzotero
-pymupdf
-nltk
+pymupdf@1.22.5
 numpy
 chromadb==0.5.4
 tqdm
