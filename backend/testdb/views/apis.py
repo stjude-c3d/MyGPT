@@ -513,12 +513,30 @@ def add_video_library(request):
 @api_view(['GET'])
 def get_vector_embeddings(request):
     if request.method == 'GET':
-        datasets = request.GET.get('datasets').split(',')
-        question_id = request.GET.get('question_id')
-        if question_id:
-            question = Question.objects.get(id=question_id)
+        datasets_param = request.GET.get('datasets')
+        question_id_param = request.GET.get('question_id')
+
+        # Validate datasets input
+        if not datasets_param or not re.match(r'^[a-zA-Z0-9_,\-]+$', datasets_param):
+            return Response({'error': True, 'error_message': 'Invalid datasets parameter'}, status=400)
+
+        datasets = datasets_param.split(',')
+
+        # Validate question_id input
+        if question_id_param:
+            if not question_id_param.isdigit():
+                return Response({'error': True, 'error_message': 'Invalid question_id parameter'}, status=400)
+
+            question_id = int(question_id_param)
+            try:
+                question = Question.objects.get(id=question_id)
+            except Question.DoesNotExist:
+                return Response({'error': True, 'error_message': 'Question not found'}, status=404)
+
             if question.pca_x == 0 and question.pca_y == 0 and question.pca_z == 0:
                 add_pca_to_qna_and_dataset(question_id)
+
+            return Response({'success': True}, status=200)
 
         pca_embeddings = []
         for dataset_name in datasets:
