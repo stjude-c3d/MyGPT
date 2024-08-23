@@ -19,7 +19,7 @@ import json
 import pdfkit
 import base64
 from langchain_community.llms import Ollama
-from ..models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation
+from ..models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, EmbeddingModel
 
 app_config = apps.get_app_config('testdb')
 con = duckdb.connect()
@@ -194,7 +194,7 @@ def add_dataset_from_upload(request):
     use_overlap = True if use_overlap == 'Yes' else False
     chunk_size = int(chunk_size)
 
-    print(f'Sentence Transformer: {request.POST.get("sentence_transformer")}')
+    print(f'Sentence Transformer: {request.POST.get("embedding_model")}')
     print(f'Chunk Size: {chunk_size}')
     print(f'Use Overlap: {use_overlap}')
     overlap_size = int(0.2 * chunk_size) if use_overlap else 0
@@ -309,7 +309,7 @@ def add_dataset_from_upload(request):
     return dataset_name
 
 
-def add_to_chroma(dataset_name, sentence_transformer = 'all-MiniLM-L6-v2'):
+def add_to_chroma(dataset_name, embedding_model_request = 'all-MiniLM-L6-v2'):
     documents_directory = '/code/data/data_chunks'
     # collection_name = 'pub_collection'
     # Read all files in the data directory
@@ -321,20 +321,35 @@ def add_to_chroma(dataset_name, sentence_transformer = 'all-MiniLM-L6-v2'):
     # Learn more at docs.trychroma.com
     client = chromadb.PersistentClient(path='/code/chroma_storage/.')
 
+    # query embedding model from database
+    embedding_model_count = EmbeddingModel.objects.filter(model_name=embedding_model_request).count()
+    if embedding_model_count == 0:
+        EmbeddingModel.objects.create(
+            model_name=embedding_model_request,
+            model_source='sentence-transformer',
+            best_distance=0.5,
+            worst_distance=1.5
+        )
+        embedding_model = embedding_model_request
+        embedding_model_source = 'sentence-transformer'
+    else:
+        embedding_model = EmbeddingModel.objects.filter(model_name=embedding_model_request)[0].model_name
+        embedding_model_source = EmbeddingModel.objects.filter(model_name=embedding_model_request)[0].model_source
+        
     # use multi-qa-MiniLM-L6-cos-v1 embedding function
-    if sentence_transformer == 'all-MiniLM-L6-v2':
-        sentence_transformer_ef = embedding_functions.DefaultEmbeddingFunction()
-    elif sentence_transformer == 'snowflake-arctic-embed' or sentence_transformer == 'nomic-embed-text' or sentence_transformer == 'bge-m3':
-        sentence_transformer_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "/api/embeddings", model_name=sentence_transformer)
-    elif '/' in sentence_transformer:
-        sentence_transformer_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=sentence_transformer)
-    else:    
-        sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=sentence_transformer)
+    if embedding_model == 'all-MiniLM-L6-v2':
+        embedding_model_ef = embedding_functions.DefaultEmbeddingFunction()
+    elif embedding_model_source == 'ollama':
+        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "/api/embeddings", model_name=embedding_model)
+    # elif '/' in embedding_model:
+    #     embedding_model_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=embedding_model)
+    elif embedding_model_source == 'sentence-transformer':    
+        embedding_model_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=embedding_model)
         
     # If the collection already exists, we will delete it and create a new one.
     client.get_or_create_collection(name=dataset_name)
     client.delete_collection(name=dataset_name)
-    collection = client.get_or_create_collection(name=dataset_name, embedding_function=sentence_transformer_ef)
+    collection = client.get_or_create_collection(name=dataset_name, embedding_function=embedding_model_ef)
 
     # Create ids from the current count
     count = collection.count()
@@ -370,7 +385,7 @@ def add_to_chroma(dataset_name, sentence_transformer = 'all-MiniLM-L6-v2'):
                 new_count = collection.count()
                 dataset = Dataset.objects.get(dataset_name=dataset_name)
                 dataset.dataset_size = new_count
-                dataset.embedding_model = sentence_transformer
+                dataset.embedding_model = embedding_model
                 dataset.save()
 
                 print(f'Added {new_count - count} documents')
@@ -384,7 +399,7 @@ def add_to_chroma(dataset_name, sentence_transformer = 'all-MiniLM-L6-v2'):
         # add embeddings to database
         # add_embeddings_to_chunks(documents, metadatas, dataset)
 
-def add_demo_dataset(sentence_transformer = 'multi-qa-MiniLM-L6-cos-v1'):
+def add_demo_dataset(embedding_model_request = 'multi-qa-MiniLM-L6-cos-v1'):
     documents_directory = '/code/data'
     # collection_name = 'pub_collection'
     # Read all files in the data directory
@@ -394,23 +409,38 @@ def add_demo_dataset(sentence_transformer = 'multi-qa-MiniLM-L6-cos-v1'):
     titles = []
     client = chromadb.PersistentClient(path='/code/chroma_storage/.')
 
+    # query embedding model from database
+    embedding_model_count = EmbeddingModel.objects.filter(model_name=embedding_model_request).count()
+    if embedding_model_count == 0:
+        EmbeddingModel.objects.create(
+            model_name=embedding_model_request,
+            model_source='sentence-transformer',
+            best_distance=0.5,
+            worst_distance=1.5
+        )
+        embedding_model = embedding_model_request
+        embedding_model_source = 'sentence-transformer'
+    else:
+        embedding_model = EmbeddingModel.objects.filter(model_name=embedding_model_request)[0].model_name
+        embedding_model_source = EmbeddingModel.objects.filter(model_name=embedding_model_request)[0].model_source
+        
     # use multi-qa-MiniLM-L6-cos-v1 embedding function
-    if sentence_transformer == 'all-MiniLM-L6-v2':
-        sentence_transformer_ef = embedding_functions.DefaultEmbeddingFunction()
-    elif sentence_transformer == 'snowflake-arctic-embed' or sentence_transformer == 'nomic-embed-text' or sentence_transformer == 'bge-m3':
-        sentence_transformer_ef = embedding_functions.OllamaEmbeddingFunction(url="http://host.docker.internal:11434/api/embeddings", model_name=sentence_transformer)
-    elif '/' in sentence_transformer:
-        sentence_transformer_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=sentence_transformer)
-    else:    
-        sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=sentence_transformer)
+    if embedding_model == 'all-MiniLM-L6-v2':
+        embedding_model_ef = embedding_functions.DefaultEmbeddingFunction()
+    elif embedding_model_source == 'ollama':
+        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "/api/embeddings", model_name=embedding_model)
+    # elif '/' in embedding_model:
+    #     embedding_model_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=embedding_model)
+    elif embedding_model_source == 'sentence-transformer':    
+        embedding_model_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=embedding_model)
 
     # If the collection already exists, we will delete it and create a new one.
     if len(client.list_collections()):
         for collection in client.list_collections():
             if collection.name == dataset_name:
                 client.delete_collection(name=dataset_name)
-    collection = client.get_or_create_collection(name=dataset_name, embedding_function=sentence_transformer_ef)
-    # collection = client.get_or_create_collection(name=dataset_name, embedding_function=sentence_transformer_ef, metadata={"hnsw:space": "ip"})
+    collection = client.get_or_create_collection(name=dataset_name, embedding_function=embedding_model_ef)
+    # collection = client.get_or_create_collection(name=dataset_name, embedding_function=embedding_model_ef, metadata={"hnsw:space": "ip"})
 
     # Create ids from the current count
     count = collection.count()
@@ -530,19 +560,34 @@ def add_embeddings_to_chunks(dataset):
 
     return
 
-def add_embeddings_to_qna(text, text_type = 'question', sentence_transformer = 'multi-qa-MiniLM-L6-cos-v1'):
+def add_embeddings_to_qna(text, text_type = 'question', embedding_model_request = 'multi-qa-MiniLM-L6-cos-v1'):
+    # query embedding model from database
+    embedding_model_count = EmbeddingModel.objects.filter(model_name=embedding_model_request).count()
+    if embedding_model_count == 0:
+        EmbeddingModel.objects.create(
+            model_name=embedding_model_request,
+            model_source='sentence-transformer',
+            best_distance=0.5,
+            worst_distance=1.5
+        )
+        embedding_model = embedding_model_request
+        embedding_model_source = 'sentence-transformer'
+    else:
+        embedding_model = EmbeddingModel.objects.filter(model_name=embedding_model_request)[0].model_name
+        embedding_model_source = EmbeddingModel.objects.filter(model_name=embedding_model_request)[0].model_source
+        
     # use multi-qa-MiniLM-L6-cos-v1 embedding function
-    if sentence_transformer == 'all-MiniLM-L6-v2':
-        sentence_transformer_ef = embedding_functions.DefaultEmbeddingFunction()
-    elif sentence_transformer == 'snowflake-arctic-embed' or sentence_transformer == 'nomic-embed-text' or sentence_transformer == 'bge-m3':
-        sentence_transformer_ef = embedding_functions.OllamaEmbeddingFunction(url="http://host.docker.internal:11434/api/embeddings", model_name=sentence_transformer)
-    elif '/' in sentence_transformer:
-        sentence_transformer_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=sentence_transformer)
-    else:    
-        sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=sentence_transformer)
+    if embedding_model == 'all-MiniLM-L6-v2':
+        embedding_model_ef = embedding_functions.DefaultEmbeddingFunction()
+    elif embedding_model_source == 'ollama':
+        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "/api/embeddings", model_name=embedding_model)
+    # elif '/' in embedding_model:
+    #     embedding_model_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=embedding_model)
+    elif embedding_model_source == 'sentence-transformer':    
+        embedding_model_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=embedding_model)
 
     # get embeddings
-    embedding = sentence_transformer_ef([text])
+    embedding = embedding_model_ef([text])
 
     if text_type == 'question':
         question_obj = Question.objects.filter(question_text=text)
@@ -708,23 +753,38 @@ def find_cutoff_distance(distances):
             break
     return cutoff_distance
 
-def nearestDataChroma(text, dataset_name, keywords_str = '', sentence_transformer='multi-qa-MiniLM-L6-cos-v1'):
+def nearestDataChroma(text, dataset_name, keywords_str = '', embedding_model_request='multi-qa-MiniLM-L6-cos-v1'):
     # collection_name = 'pub_collection'
     # client = chromadb.Client()
+        # query embedding model from database
+    embedding_model_count = EmbeddingModel.objects.filter(model_name=embedding_model_request).count()
+    if embedding_model_count == 0:
+        EmbeddingModel.objects.create(
+            model_name=embedding_model_request,
+            model_source='sentence-transformer',
+            best_distance=0.5,
+            worst_distance=1.5
+        )
+        embedding_model = embedding_model_request
+        embedding_model_source = 'sentence-transformer'
+    else:
+        embedding_model = EmbeddingModel.objects.filter(model_name=embedding_model_request)[0].model_name
+        embedding_model_source = EmbeddingModel.objects.filter(model_name=embedding_model_request)[0].model_source
+        
     # use multi-qa-MiniLM-L6-cos-v1 embedding function
-    if sentence_transformer == 'all-MiniLM-L6-v2':
-        sentence_transformer_ef = embedding_functions.DefaultEmbeddingFunction()
-    elif sentence_transformer == 'snowflake-arctic-embed' or sentence_transformer == 'nomic-embed-text' or sentence_transformer == 'bge-m3':
-        sentence_transformer_ef = embedding_functions.OllamaEmbeddingFunction(url="http://host.docker.internal:11434/api/embeddings", model_name=sentence_transformer)
-    elif '/' in sentence_transformer:
-        sentence_transformer_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=sentence_transformer)
-    else:    
-        sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=sentence_transformer)
+    if embedding_model == 'all-MiniLM-L6-v2':
+        embedding_model_ef = embedding_functions.DefaultEmbeddingFunction()
+    elif embedding_model_source == 'ollama':
+        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "/api/embeddings", model_name=embedding_model)
+    # elif '/' in embedding_model:
+    #     embedding_model_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=embedding_model)
+    elif embedding_model_source == 'sentence-transformer':    
+        embedding_model_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=embedding_model)
 
     # If the collection already exists, we just return it. This allows us to add more
     # data to an existing collection.
     client = chromadb.PersistentClient(path='/code/chroma_storage/.')
-    collection = client.get_collection(name=dataset_name, embedding_function=sentence_transformer_ef)
+    collection = client.get_collection(name=dataset_name, embedding_function=embedding_model_ef)
     # collection = app_config.collection
 
     # Create ids from the current count
@@ -853,11 +913,11 @@ def nearestDataChroma(text, dataset_name, keywords_str = '', sentence_transforme
     ret = (context, titles, pages, starts, stops, chunks, distances)
     return ret
 
-# def get_chunks_by_keyword(question_text, dataset_name, sentence_transformer='multi-qa-MiniLM-L6-cos-v1'):
-#     if sentence_transformer != 'all-MiniLM-L6-v2':
-#         sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=sentence_transformer)
+# def get_chunks_by_keyword(question_text, dataset_name, embedding_model='multi-qa-MiniLM-L6-cos-v1'):
+#     if embedding_model != 'all-MiniLM-L6-v2':
+#         embedding_model_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=embedding_model)
 #     else:
-#         sentence_transformer_ef = embedding_functions.DefaultEmbeddingFunction()
+#         embedding_model_ef = embedding_functions.DefaultEmbeddingFunction()
 #     prompt = f'''
 #     INSTRUCTIONS: Please extract keywords from the provided query and put them into a list.
 
@@ -871,7 +931,7 @@ def nearestDataChroma(text, dataset_name, keywords_str = '', sentence_transforme
 #     keyword_list = ast.literal_eval(response['response'])
 
 #     client = chromadb.PersistentClient(path='/code/chroma_storage/.')
-#     collection = client.get_collection(name=dataset_name, embedding_function=sentence_transformer_ef)
+#     collection = client.get_collection(name=dataset_name, embedding_function=embedding_model_ef)
 #     docs = collection.get()
 
 #     titles, pages, starts, stops, chunks = [], [], [], [], []
@@ -938,23 +998,39 @@ def get_relevance_score(distances, embedding_model):
     return relevance_score
 
 #  embedd 2 answers into vector database and get distance between them
-def get_answer_distance(answer1, answer2, sentence_transformer = 'multi-qa-MiniLM-L6-cos-v1'):
+def get_answer_distance(answer1, answer2, embedding_model_request = 'multi-qa-MiniLM-L6-cos-v1'):
     dataset_name = 'answers'
     client = chromadb.PersistentClient(path='/code/chroma_storage/.')
+        
+    # query embedding model from database
+    embedding_model_count = EmbeddingModel.objects.filter(model_name=embedding_model_request).count()
+    if embedding_model_count == 0:
+        EmbeddingModel.objects.create(
+            model_name=embedding_model_request,
+            model_source='sentence-transformer',
+            best_distance=0.5,
+            worst_distance=1.5
+        )
+        embedding_model = embedding_model_request
+        embedding_model_source = 'sentence-transformer'
+    else:
+        embedding_model = EmbeddingModel.objects.filter(model_name=embedding_model_request)[0].model_name
+        embedding_model_source = EmbeddingModel.objects.filter(model_name=embedding_model_request)[0].model_source
+        
     # use multi-qa-MiniLM-L6-cos-v1 embedding function
-    if sentence_transformer == 'all-MiniLM-L6-v2':
-        sentence_transformer_ef = embedding_functions.DefaultEmbeddingFunction()
-    elif sentence_transformer == 'snowflake-arctic-embed' or sentence_transformer == 'nomic-embed-text' or sentence_transformer == 'bge-m3':
-        sentence_transformer_ef = embedding_functions.OllamaEmbeddingFunction(url="http://host.docker.internal:11434/api/embeddings", model_name=sentence_transformer)
-    elif '/' in sentence_transformer:
-        sentence_transformer_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=sentence_transformer)
-    else:    
-        sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=sentence_transformer)
+    if embedding_model == 'all-MiniLM-L6-v2':
+        embedding_model_ef = embedding_functions.DefaultEmbeddingFunction()
+    elif embedding_model_source == 'ollama':
+        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "/api/embeddings", model_name=embedding_model)
+    # elif '/' in embedding_model:
+    #     embedding_model_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=embedding_model)
+    elif embedding_model_source == 'sentence-transformer':    
+        embedding_model_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=embedding_model)
 
     # If the collection already exists, we will delete it and create a new one.
     client.get_or_create_collection(name=dataset_name)
     client.delete_collection(name=dataset_name)
-    collection = client.get_or_create_collection(name=dataset_name, embedding_function=sentence_transformer_ef)
+    collection = client.get_or_create_collection(name=dataset_name, embedding_function=embedding_model_ef)
 
     # add answers to collection
     answers = [answer1, answer2]
@@ -1012,7 +1088,7 @@ def highlight_pdf(input_file, output_file, source_grp):
 
     input_pdf.save(output_file, garbage=4, deflate=True, clean=True)
 
-def add_video_to_chroma(dataset_name, sentence_transformer = 'multi-qa-MiniLM-L6-cos-v1'):
+def add_video_to_chroma(dataset_name, embedding_model_request = 'multi-qa-MiniLM-L6-cos-v1'):
     documents_directory = '/code/data/data_chunks'
     # collection_name = 'pub_collection'
     # Read all files in the data directory
@@ -1024,20 +1100,35 @@ def add_video_to_chroma(dataset_name, sentence_transformer = 'multi-qa-MiniLM-L6
     # Learn more at docs.trychroma.com
     client = chromadb.PersistentClient(path='/code/chroma_storage/.')
 
+    # query embedding model from database
+    embedding_model_count = EmbeddingModel.objects.filter(model_name=embedding_model_request).count()
+    if embedding_model_count == 0:
+        EmbeddingModel.objects.create(
+            model_name=embedding_model_request,
+            model_source='sentence-transformer',
+            best_distance=0.5,
+            worst_distance=1.5
+        )
+        embedding_model = embedding_model_request
+        embedding_model_source = 'sentence-transformer'
+    else:
+        embedding_model = EmbeddingModel.objects.filter(model_name=embedding_model_request)[0].model_name
+        embedding_model_source = EmbeddingModel.objects.filter(model_name=embedding_model_request)[0].model_source
+        
     # use multi-qa-MiniLM-L6-cos-v1 embedding function
-    if sentence_transformer == 'all-MiniLM-L6-v2':
-        sentence_transformer_ef = embedding_functions.DefaultEmbeddingFunction()
-    elif sentence_transformer == 'snowflake-arctic-embed' or sentence_transformer == 'nomic-embed-text' or sentence_transformer == 'bge-m3':
-        sentence_transformer_ef = embedding_functions.OllamaEmbeddingFunction(url="http://host.docker.internal:11434/api/embeddings", model_name=sentence_transformer)
-    elif '/' in sentence_transformer:
-        sentence_transformer_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=sentence_transformer)
-    else:    
-        sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=sentence_transformer)
+    if embedding_model == 'all-MiniLM-L6-v2':
+        embedding_model_ef = embedding_functions.DefaultEmbeddingFunction()
+    elif embedding_model_source == 'ollama':
+        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "/api/embeddings", model_name=embedding_model)
+    # elif '/' in embedding_model:
+    #     embedding_model_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=embedding_model)
+    elif embedding_model_source == 'sentence-transformer':    
+        embedding_model_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=embedding_model)
 
     # If the collection already exists, we will delete it and create a new one.
     client.get_or_create_collection(name=dataset_name)
     client.delete_collection(name=dataset_name)
-    collection = client.get_or_create_collection(name=dataset_name, embedding_function=sentence_transformer_ef)
+    collection = client.get_or_create_collection(name=dataset_name, embedding_function=embedding_model_ef)
 
     # Create ids from the current count
     count = collection.count()
@@ -1072,7 +1163,7 @@ def add_video_to_chroma(dataset_name, sentence_transformer = 'multi-qa-MiniLM-L6
         new_count = collection.count()
         dataset = Dataset.objects.get(dataset_name=dataset_name)
         dataset.dataset_size = new_count
-        dataset.embedding_model = sentence_transformer
+        dataset.embedding_model = embedding_model
         dataset.save()
 
         # add embeddings to database

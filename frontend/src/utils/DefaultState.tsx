@@ -28,9 +28,6 @@ const defaultSettings = {
 		'multi-qa-mpnet-base-dot-v1',
 		'paraphrase-albert-small-v2',
 		'snowflake-arctic-embed:latest',
-		// 'snowflake-arctic-embed',
-		// 'ncbi/MedCPT-Article-Encoder',
-		'NeuML/pubmedbert-base-embeddings',
 		'nomic-embed-text:latest',
 		'bge-m3:latest',
 		'mxbai-embed-large:latest'

@@ -77,7 +77,7 @@ const AddLibrarySettings = (props: {
 			const formData = new FormData()
 			
 			formData.append('dataset_name', UploadLibraryName)
-			formData.append('sentence_transformer', currentSettings.selected_sentence_transformer)
+			formData.append('embedding_model', currentSettings.selectedEmbeddingModel)
 			formData.append('user', props.user ? props.user.user: '')
 			formData.append('user_email', props.user ? props.user.user_email : '')
 			formData.append('user_group', props.user && props.user.isAdmin ? 'admin' : 'user')
@@ -121,7 +121,7 @@ const AddLibrarySettings = (props: {
 			const formData = new FormData()
 			
 			formData.append('dataset_name', videoLibraryName)
-			formData.append('sentence_transformer', currentSettings.selected_sentence_transformer)
+			formData.append('embedding_model', currentSettings.selectedEmbeddingModel)
 			formData.append('user', props.user ? props.user.user: '')
 			formData.append('user_email', props.user ? props.user.user_email : '')
 			formData.append('user_group', props.user && props.user.isAdmin ? 'admin' : 'user')
@@ -257,13 +257,13 @@ const AddLibrarySettings = (props: {
 					
 					</div>
 					<div className='flex'>
-						<div className='text-nav w-48 p-1'>Sentence Transformer*</div>
+						<div className='text-nav w-48 p-1'>Embedding Model*</div>
 						<DropdownOptions
 							width={'280px'}
 							optionsList={props.currentSettings.embedding_models}
-							defaultOption={currentSettings.sentence_transformer}
+							defaultOption={currentSettings.selectedEmbeddingModel}
 							dropDownCallback={(option:string)=>{
-								props.settingsCallback({...currentSettings, selected_sentence_transformer: option})
+								props.settingsCallback({...currentSettings, selectedEmbeddingModel: option})
 							}}
 						/>
 					</div>
@@ -321,7 +321,7 @@ const AddLibrarySettings = (props: {
 							optionsList={props.currentSettings.embedding_models}
 							defaultOption={currentSettings.selectedEmbeddingModel}
 							dropDownCallback={(option:string)=>{
-								props.settingsCallback({...currentSettings, selected_sentence_transformer: option})
+								props.settingsCallback({...currentSettings, selectedEmbeddingModel: option})
 							}}
 						/>
 					</div>
@@ -405,13 +405,13 @@ const AddLibrarySettings = (props: {
 					</div>
 					<div className='flex justify-start text-nav font-bold p-1 my-2 mx-auto w-72'> AND </div>
 					<div className='flex justify-start p-2 flex-col'>
-						<div className='text-nav w-48 p-1 my-2'>Sentence Transformer</div>
+						<div className='text-nav w-48 p-1 my-2'>Embedding Model</div>
 						<DropdownOptions
 							width={'280px'}
 							optionsList={props.currentSettings.embedding_models}
 							defaultOption={currentSettings.sentence_transformer}
 							dropDownCallback={(option:string)=>{
-								props.settingsCallback({...currentSettings, selected_sentence_transformer: option})
+								props.settingsCallback({...currentSettings, selectedEmbeddingModel: option})
 							}}
 						/>
 					</div>

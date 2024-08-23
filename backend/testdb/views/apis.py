@@ -356,7 +356,7 @@ def add_zotero_dataset(request):
         library_id = json_request['library_id']
         library_id_type = json_request['library_id_type']
         collection_id = json_request['collection_id']
-        sentence_transformer = request.POST.get('sentence_transformer')
+        embedding_model = request.POST.get('embedding_model')
         user = request.POST.get('user')
         user_email = request.POST.get('user_email')
         user_group = request.POST.get('user_group')
@@ -364,7 +364,7 @@ def add_zotero_dataset(request):
         dataset_name = get_zotero_chunks(library_id, library_id_type, collection_id, api_key, user, user_email, user_group)
         # if dataset_name.error:
         #     return Response({'error':True, 'error_message': dataset_name.error}, content_type="application/json")
-        message = add_to_chroma(dataset_name, sentence_transformer)
+        message = add_to_chroma(dataset_name, embedding_model)
 
         if message == False:
             return Response({'error':True}, content_type="application/json")
@@ -378,8 +378,8 @@ def add_zotero_dataset(request):
 def upload_documents(request):
     if request.method == 'POST':
         dataset_name = add_dataset_from_upload(request)
-        sentence_transformer = request.POST.get('sentence_transformer')
-        message = add_to_chroma(dataset_name, sentence_transformer)
+        embedding_model = request.POST.get('embedding_model')
+        message = add_to_chroma(dataset_name, embedding_model)
 
         if message == False:
             return Response({'error':True}, content_type="application/json")
@@ -442,17 +442,17 @@ def get_frontend_settings(request):
 def add_demo_dataset_api(request):
     if request.method == 'GET':
         datasets = Dataset.objects.all()
-        sentence_transformer = request.GET.get('sentence_transformer')
+        embedding_model = request.GET.get('embedding_model')
         if datasets.count() > 0 and datasets.filter(dataset_name='GPCR').count() > 0:
             datasets.get(dataset_name='GPCR').delete()
-        add_demo_dataset(sentence_transformer)
+        add_demo_dataset(embedding_model)
         return Response({'added':True}, content_type="application/json")
     
 @api_view(['POST'])
 def add_video_library(request):
     if request.method == 'POST':
         dataset_name = request.POST.get('dataset_name').replace(' ', '_')
-        sentence_transformer = request.POST.get('sentence_transformer')
+        embedding_model = request.POST.get('embedding_model')
         video_urls = request.POST.get('video_urls').split(',')
         playlist_url = request.POST.get('playlist_url')
         user = request.POST.get('user')
@@ -495,7 +495,7 @@ def add_video_library(request):
             )
         
         get_youtube_transcript(dataset_name, video_ids, video_titles)    
-        add_video_to_chroma(dataset_name, sentence_transformer)
+        add_video_to_chroma(dataset_name, embedding_model)
 
         return Response({'added':True}, content_type="application/json")
     
@@ -561,8 +561,8 @@ def get_distance_between_answers(request):
         json_request = JSONParser().parse(request)
         sentence1 = json_request['sentence1']
         sentence2 = json_request['sentence2']
-        sentence_transformer = json_request['sentence_transformer']
-        distances = get_answer_distance(sentence1, sentence2, sentence_transformer)
+        embedding_model = json_request['embedding_model']
+        distances = get_answer_distance(sentence1, sentence2, embedding_model)
         return Response({'distances': distances}, content_type="application/json")
     
 # get username if access token is valid
