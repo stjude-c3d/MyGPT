@@ -309,7 +309,7 @@ def add_dataset_from_upload(request):
     return dataset_name
 
 
-def populate_chroma(dataset_name, embedding_model_request = 'all-MiniLM-L6-v2'):
+def add_to_chroma(dataset_name, embedding_model_request = 'all-MiniLM-L6-v2'):
     documents_directory = '/code/data/data_chunks'
     # collection_name = 'pub_collection'
     # Read all files in the data directory
