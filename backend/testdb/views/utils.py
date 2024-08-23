@@ -1209,3 +1209,14 @@ def seconds_to_hhmmss(seconds):
     m, s = divmod(seconds, 60)
     h, m = divmod(m, 60)
     return "%d:%02d:%02d" % (h, m, s)
+
+def validate_post_request(request, fields):
+    for field in fields:
+        if field not in request.data:
+            return False
+        
+    # check if all fields are not empty
+    for field in fields:
+        if request.data[field] == '':
+            return False
+    return True
