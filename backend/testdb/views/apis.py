@@ -16,7 +16,7 @@ import shutil
 import json
 from django.contrib.auth.models import User
 from ..models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, Model, EmbeddingModel, FrontEndSettings, DisclaimerAgreement
-from .utils import get_zotero_chunks, add_dataset_from_upload, add_to_chroma, nearestDataChroma, get_relevance_score, add_embeddings_to_qna, highlight_pdf, seconds_to_hhmmss, add_pca_to_qna_and_dataset, add_demo_dataset, get_youtube_transcript, add_video_to_chroma, add_embeddings_to_chunks, add_pca_to_chunks, get_answer_distance
+from .utils import get_zotero_chunks, add_dataset_from_upload, populate_chroma, nearestDataChroma, get_relevance_score, add_embeddings_to_qna, highlight_pdf, seconds_to_hhmmss, add_pca_to_qna_and_dataset, add_demo_dataset, get_youtube_transcript, add_video_to_chroma, add_embeddings_to_chunks, add_pca_to_chunks, get_answer_distance
 
 ####################
 # APIs             #
@@ -364,7 +364,7 @@ def add_zotero_dataset(request):
         dataset_name = get_zotero_chunks(library_id, library_id_type, collection_id, api_key, user, user_email, user_group)
         # if dataset_name.error:
         #     return Response({'error':True, 'error_message': dataset_name.error}, content_type="application/json")
-        message = add_to_chroma(dataset_name, embedding_model)
+        message = populate_chroma(dataset_name, embedding_model)
 
         if message == False:
             return Response({'error':True}, content_type="application/json")
@@ -379,7 +379,7 @@ def upload_documents(request):
     if request.method == 'POST':
         dataset_name = add_dataset_from_upload(request)
         embedding_model = request.POST.get('embedding_model')
-        message = add_to_chroma(dataset_name, embedding_model)
+        message = populate_chroma(dataset_name, embedding_model)
 
         if message == False:
             return Response({'error':True}, content_type="application/json")
