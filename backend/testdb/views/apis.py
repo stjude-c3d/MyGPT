@@ -580,10 +580,15 @@ def get_vector_embeddings(request):
 @api_view(['GET'])
 def add_dataset_embeddings(request):
     if request.method == 'GET':
-        dataset_name = request.GET.get('dataset')
-        add_embeddings_to_chunks(dataset_name)
-        add_pca_to_chunks()
-        return Response({'added':True}, content_type="application/json")
+        dataset_name_request = request.GET.get('dataset')
+        # add validation for dataset name
+        if not dataset_name_request or not re.match(r'^[a-zA-Z0-9_\-]+$', dataset_name_request):
+            return Response({'error': True, 'error_message': 'Invalid dataset name'}, status=400)
+        else:
+            dataset_name = dataset_name_request
+            add_embeddings_to_qna(dataset_name)
+            add_pca_to_qna_and_dataset(dataset_name)
+            return Response({'added':True}, content_type="application/json")
     
 @api_view(['POST'])
 def get_distance_between_answers(request):
