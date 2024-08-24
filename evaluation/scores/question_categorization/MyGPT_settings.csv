@@ -1,8 +1,0 @@
-﻿Question type,Embedding Model,LLM,Chunk-size,Overlap,Creativity/precision,distance function,,
-All,Nomic/qa-cos,llama3:8b,750,yes,balanced creative,l2-nomic/ip-qa-cos,,
-yes_no,nomic,llama3:8b,500,no,balanced creative,l2-nomic,,
-data_query,qa-cos,mistral,750,yes,balanced precise,ip-nomic,,
-complex_question,nomic,llama3:8b,750,no,precise,l2-nomic,,
-summarization,qa_cos,llama3:70b,750,yes,balanced creative,ip-qa-cos,,
-keyword,qa_cos,llama3:8b,1000,yes,creative,l2-qa-cos,,
-irrelevant,nomic,llama3:8b,750,no,precise,cosine-nomic,,
