@@ -5,7 +5,7 @@ djangorestframework
 django-cors-headers
 djangorestframework-simplejwt
 sacremoses
-sentence_transformers
+sentence_transformers>=3.0.0
 pypdf
 pandas
 pyzotero
