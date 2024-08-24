@@ -181,15 +181,23 @@ def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key,
     return dataset_name
 
 def add_dataset_from_upload(request):
-    dataset_name = request.POST.get('dataset_name').replace(' ', '_')
-    paper_titles = request.POST.getlist('paper_title')
+    dataset_name_r = request.POST.get('dataset_name').replace(' ', '_')
+    paper_titles_r = request.POST.getlist('paper_title')
     paper_attachments = request.FILES.getlist('paper_attachment')
-    user = request.POST.get('user')
-    user_email = request.POST.get('user_email')
-    user_group = request.POST.get('user_group')
-    use_overlap = request.POST.get('use_overlap')
-    chunk_size = request.POST.get('chunk_size')
+    user_r = request.POST.get('user')
+    user_email_r = request.POST.get('user_email')
+    user_group_r = request.POST.get('user_group')
+    use_overlap_r = request.POST.get('use_overlap')
+    chunk_size_r = request.POST.get('chunk_size')
 
+    # validate all fields for code injection
+    dataset_name = re.sub(r'[^\w\s]', '', dataset_name_r)
+    paper_titles = [re.sub(r'[^\w\s]', '', x) for x in paper_titles_r]
+    user = re.sub(r'[^\w\s]', '', user_r)
+    user_email = re.sub(r'[^\w\s]', '', user_email_r)
+    user_group = re.sub(r'[^\w\s]', '', user_group_r)
+    use_overlap = re.sub(r'[^\w\s]', '', use_overlap_r)
+    chunk_size = re.sub(r'[^\w\s]', '', chunk_size_r)    
 
     use_overlap = True if use_overlap == 'Yes' else False
     chunk_size = int(chunk_size)
@@ -1209,14 +1217,3 @@ def seconds_to_hhmmss(seconds):
     m, s = divmod(seconds, 60)
     h, m = divmod(m, 60)
     return "%d:%02d:%02d" % (h, m, s)
-
-def validate_post_request(request, fields):
-    for field in fields:
-        if field not in request.data:
-            return False
-        
-    # check if all fields are not empty
-    for field in fields:
-        if request.data[field] == '':
-            return False
-    return True

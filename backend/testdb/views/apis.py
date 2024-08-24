@@ -17,7 +17,7 @@ import json
 import re
 from django.contrib.auth.models import User
 from ..models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, Model, EmbeddingModel, FrontEndSettings, DisclaimerAgreement
-from .utils import get_zotero_chunks, add_dataset_from_upload, add_to_chroma, nearestDataChroma, get_relevance_score, add_embeddings_to_qna, highlight_pdf, seconds_to_hhmmss, add_pca_to_qna_and_dataset, add_demo_dataset, get_youtube_transcript, add_video_to_chroma, add_embeddings_to_chunks, add_pca_to_chunks, get_answer_distance, validate_post_request
+from .utils import get_zotero_chunks, add_dataset_from_upload, add_to_chroma, nearestDataChroma, get_relevance_score, add_embeddings_to_qna, highlight_pdf, seconds_to_hhmmss, add_pca_to_qna_and_dataset, add_demo_dataset, get_youtube_transcript, add_video_to_chroma, add_embeddings_to_chunks, add_pca_to_chunks, get_answer_distance
 
 ####################
 # APIs             #
@@ -354,16 +354,61 @@ def delete_dataset(request):
 def add_zotero_dataset(request):
     if request.method == 'POST':
         json_request = JSONParser().parse(request)
-        api_key = json_request['api_key']
-        library_id = json_request['library_id']
-        library_id_type = json_request['library_id_type']
-        collection_id = json_request['collection_id']
-        embedding_model = request.POST.get('embedding_model')
-        user = request.POST.get('user')
-        user_email = request.POST.get('user_email')
-        user_group = request.POST.get('user_group')
+        api_key_r = json_request['api_key']
+        library_id_r = json_request['library_id']
+        library_id_type_r = json_request['library_id_type']
+        collection_id_r = json_request['collection_id']
+        embedding_model_request = request.POST.get('embedding_model')
+        user_r = request.POST.get('user')
+        user_email_r = request.POST.get('user_email')
+        user_group_r = request.POST.get('user_group')
+
+        # Validate all inputs for code injection
+        if not api_key_r or not re.match(r'^[a-zA-Z0-9]+$', api_key_r):
+            return Response({'error': True, 'error_message': 'Invalid API key'}, content_type="application/json")
+        else:
+            api_key = api_key_r
+
+        if not library_id_r or not re.match(r'^[0-9]+$', library_id_r):
+            return Response({'error': True, 'error_message': 'Invalid library ID'}, content_type="application/json")
+        else:
+            library_id = library_id_r
+
+        if not library_id_type_r or not re.match(r'^[a-zA-Z]+$', library_id_type_r):
+            return Response({'error': True, 'error_message': 'Invalid library ID type'}, content_type="application/json")
+        else:
+            library_id_type = library_id_type_r
+
+        if not collection_id_r or not re.match(r'^[a-zA-Z0-9]+$', collection_id_r):
+            return Response({'error': True, 'error_message': 'Invalid collection ID'}, content_type="application/json")
+        else:
+            collection_id = collection_id_r
+
+        if not embedding_model_request or not re.match(r'^[a-zA-Z0-9_\-:]+$', embedding_model_request):
+            return Response({'error': True, 'error_message': 'Invalid embedding model name'}, content_type="application/json")
+        else:
+            embedding_model = embedding_model_request
+
+        # Validate user input
+        if not user_r or not re.match(r'^[a-zA-Z0-9_\-]+$', user_r):
+            return Response({'error': True, 'error_message': 'Invalid user name'}, content_type="application/json")
+        else:
+            user = user_r
+
+        # Validate user_email input
+        if not user_email_r or not re.match(r'^[a-zA-Z0-9_\-@.]+$', user_email_r):
+            return Response({'error': True, 'error_message': 'Invalid user email'}, content_type="application/json")
+        else:
+            user_email = user_email_r
+
+        # Validate user_group input
+        if not user_group_r or not re.match(r'^[a-zA-Z0-9_\-]+$', user_group_r):
+            return Response({'error': True, 'error_message': 'Invalid user group'}, content_type="application/json")
+        else:
+            user_group = user_group
 
         dataset_name = get_zotero_chunks(library_id, library_id_type, collection_id, api_key, user, user_email, user_group)
+
         # if dataset_name.error:
         #     return Response({'error':True, 'error_message': dataset_name.error}, content_type="application/json")
         message = add_to_chroma(dataset_name, embedding_model)
@@ -389,8 +434,9 @@ def upload_documents(request):
             embedding_model_request = request.POST.get('embedding_model')
             if not embedding_model_request or not re.match(r'^[a-zA-Z0-9_\-:]+$', embedding_model_request):
                 return Response({'error': True, 'error_message': 'Invalid embedding model name'}, content_type="application/json")
-            
-            embedding_model = str(embedding_model_request)
+            else:
+                embedding_model = embedding_model_request
+
             message = add_to_chroma(dataset_name, embedding_model)
 
             if message == False:
