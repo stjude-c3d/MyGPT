@@ -115,7 +115,8 @@ def get_context(request):
         dataset = Dataset.objects.get(dataset_name=dataset_name)
         quesiton_exist = Question.objects.filter(question_dataset=dataset).filter(question_text=question_text).filter(model_type=model_type).exists()
         if quesiton_exist:
-            question = Question.objects.get(question_text=question_text, model_type=model_type)
+            questions = Question.objects.filter(question_text=question_text, model_type=model_type, question_dataset=dataset)
+            question = questions[0]
             question.keywords = keywords
             question.relevance_score = relevance_score
             question.save()
@@ -185,7 +186,7 @@ def get_context(request):
         # hightlight pdf with source paper and page
         if library_type == 'papers' and not skip_highlight:
             for source_grp in sources_grouped:
-                paper_obj = Papers.objects.filter(paper_title=source_grp[0]['document'])[0].paper_attachment
+                paper_obj = Papers.objects.filter(paper_dataset=dataset).filter(paper_title=source_grp[0]['document'])[0].paper_attachment
                 if (len(paper_obj.path.split('/')[-1].split('_')) > 1): 
                     paper_name =   paper_obj.path.split('/')[-1].split('_')[0] + '.pdf'
                 else:
@@ -207,7 +208,7 @@ def get_context(request):
                     )
 
                     # create highlighted paper object
-                    paper = Papers.objects.filter(paper_title=source_grp[0]['document'])[0]
+                    paper = Papers.objects.filter(paper_dataset=dataset).filter(paper_title=source_grp[0]['document'])[0]
                     with open(highlighted_pdf_path, 'rb') as f:
                         paper.highlighted_attachment.save(dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf', File(f), save=True)
             
@@ -378,15 +379,15 @@ def add_zotero_dataset(request):
 @api_view(['POST'])
 def upload_documents(request):
     if request.method == 'POST':
-        validation = validate_post_request(request)
-        if not validation:
-            return Response({'error': True, 'error_message': validation}, content_type="application/json")
-        else:
+        # validation = validate_post_request(request, ['dataset_name', 'embedding_model'])
+        # if not validation:
+        #     return Response({'error': True, 'error_message': validation}, content_type="application/json")
+        # else:
             dataset_name = add_dataset_from_upload(request)
             
             # Validate embedding_model input
             embedding_model_request = request.POST.get('embedding_model')
-            if not embedding_model_request or not re.match(r'^[a-zA-Z0-9_\-]+$', embedding_model_request):
+            if not embedding_model_request or not re.match(r'^[a-zA-Z0-9_\-:]+$', embedding_model_request):
                 return Response({'error': True, 'error_message': 'Invalid embedding model name'}, content_type="application/json")
             
             embedding_model = str(embedding_model_request)

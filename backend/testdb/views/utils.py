@@ -340,7 +340,7 @@ def add_to_chroma(dataset_name, embedding_model_request = 'all-MiniLM-L6-v2'):
     if embedding_model == 'all-MiniLM-L6-v2':
         embedding_model_ef = embedding_functions.DefaultEmbeddingFunction()
     elif embedding_model_source == 'ollama':
-        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "/api/embeddings", model_name=embedding_model)
+        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "api/embeddings", model_name=embedding_model)
     # elif '/' in embedding_model:
     #     embedding_model_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=embedding_model)
     elif embedding_model_source == 'sentence-transformer':    
@@ -381,20 +381,20 @@ def add_to_chroma(dataset_name, embedding_model_request = 'all-MiniLM-L6-v2'):
                     documents=documents[i : i + 100],
                     metadatas=metadatas[i : i + 100],  # type: ignore
                 )
-
-                new_count = collection.count()
-                dataset = Dataset.objects.get(dataset_name=dataset_name)
-                dataset.dataset_size = new_count
-                dataset.embedding_model = embedding_model
-                dataset.save()
-
-                print(f'Added {new_count - count} documents')
-                return True
             except:
                 Dataset.objects.get(dataset_name=dataset_name).delete()
-
                 print('error adding documents')
                 return False
+
+        new_count = collection.count()
+        dataset = Dataset.objects.get(dataset_name=dataset_name)
+        dataset.dataset_size = new_count
+        dataset.embedding_model = embedding_model
+        dataset.save()
+
+        print(f'Added {new_count - count} documents')
+        return True
+            
 
         # add embeddings to database
         # add_embeddings_to_chunks(documents, metadatas, dataset)
@@ -428,7 +428,7 @@ def add_demo_dataset(embedding_model_request = 'multi-qa-MiniLM-L6-cos-v1'):
     if embedding_model == 'all-MiniLM-L6-v2':
         embedding_model_ef = embedding_functions.DefaultEmbeddingFunction()
     elif embedding_model_source == 'ollama':
-        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "/api/embeddings", model_name=embedding_model)
+        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "api/embeddings", model_name=embedding_model)
     # elif '/' in embedding_model:
     #     embedding_model_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=embedding_model)
     elif embedding_model_source == 'sentence-transformer':    
@@ -580,7 +580,7 @@ def add_embeddings_to_qna(text, text_type = 'question', embedding_model_request 
     if embedding_model == 'all-MiniLM-L6-v2':
         embedding_model_ef = embedding_functions.DefaultEmbeddingFunction()
     elif embedding_model_source == 'ollama':
-        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "/api/embeddings", model_name=embedding_model)
+        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "api/embeddings", model_name=embedding_model)
     # elif '/' in embedding_model:
     #     embedding_model_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=embedding_model)
     elif embedding_model_source == 'sentence-transformer':    
@@ -775,7 +775,7 @@ def nearestDataChroma(text, dataset_name, keywords_str = '', embedding_model_req
     if embedding_model == 'all-MiniLM-L6-v2':
         embedding_model_ef = embedding_functions.DefaultEmbeddingFunction()
     elif embedding_model_source == 'ollama':
-        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "/api/embeddings", model_name=embedding_model)
+        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "api/embeddings", model_name=embedding_model)
     # elif '/' in embedding_model:
     #     embedding_model_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=embedding_model)
     elif embedding_model_source == 'sentence-transformer':    
@@ -1021,7 +1021,7 @@ def get_answer_distance(answer1, answer2, embedding_model_request = 'multi-qa-Mi
     if embedding_model == 'all-MiniLM-L6-v2':
         embedding_model_ef = embedding_functions.DefaultEmbeddingFunction()
     elif embedding_model_source == 'ollama':
-        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "/api/embeddings", model_name=embedding_model)
+        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "api/embeddings", model_name=embedding_model)
     # elif '/' in embedding_model:
     #     embedding_model_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=embedding_model)
     elif embedding_model_source == 'sentence-transformer':    
@@ -1119,7 +1119,7 @@ def add_video_to_chroma(dataset_name, embedding_model_request = 'multi-qa-MiniLM
     if embedding_model == 'all-MiniLM-L6-v2':
         embedding_model_ef = embedding_functions.DefaultEmbeddingFunction()
     elif embedding_model_source == 'ollama':
-        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "/api/embeddings", model_name=embedding_model)
+        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "api/embeddings", model_name=embedding_model)
     # elif '/' in embedding_model:
     #     embedding_model_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=embedding_model)
     elif embedding_model_source == 'sentence-transformer':    
