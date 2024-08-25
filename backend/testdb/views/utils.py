@@ -130,6 +130,7 @@ def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key,
     
     # Loop through PDF attachments, extract content, and store it in 'data' list
     for idx, title, attachment, abstract in zip( range(1, len(titles)+1), titles, pdf_attachments, abstracts):
+        dataset_name = sanitize_filename(dataset_name)
         with open('data/pdfs/'+ dataset_name +'/paper' + str(idx) + '.pdf', 'wb') as f:
             f.write(zot.file(attachment['data']['key']))
         pages = getPDFContent('data/pdfs/'+ dataset_name +'/paper' + str(idx) + '.pdf')
@@ -173,6 +174,7 @@ def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key,
                 data.append(chunk)
     print('zotero chunks loaded')        
 
+    dataset_name = sanitize_filename(dataset_name)
     with open('data/data_chunks/'+ dataset_name +'.txt', 'w') as f:
         for chunk in data:
             # convert chunk to string and write to file
@@ -181,15 +183,43 @@ def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key,
     return dataset_name
 
 def add_dataset_from_upload(request):
-    dataset_name = request.POST.get('dataset_name').replace(' ', '_')
-    paper_titles = request.POST.getlist('paper_title')
+    dataset_name_r = request.POST.get('dataset_name').replace(' ', '_')
+    paper_titles_r = request.POST.getlist('paper_title')
     paper_attachments = request.FILES.getlist('paper_attachment')
-    user = request.POST.get('user')
-    user_email = request.POST.get('user_email')
-    user_group = request.POST.get('user_group')
+    user_r = request.POST.get('user')
+    user_email_r = request.POST.get('user_email')
+    user_group_r = request.POST.get('user_group')
     use_overlap = request.POST.get('use_overlap')
     chunk_size = request.POST.get('chunk_size')
 
+    # Validate all inputs for code injection
+    if not dataset_name_r or not re.match(r'^[a-zA-Z0-9_\-\s\w]+$', dataset_name_r):
+        return False
+    else:
+        dataset_name = dataset_name_r
+
+    if not paper_titles_r or not all([re.match(r'^[a-zA-Z0-9_\-\w\s]+$', title) for title in paper_titles_r]):
+        return False
+    else:
+        paper_titles = paper_titles_r
+
+    # Validate user input
+    if not user_r or not re.match(r'^[a-zA-Z0-9_\-]+$', user_r):
+        return False
+    else:
+        user = user_r
+
+    # Validate user_email input
+    if not user_email_r or not re.match(r'^[a-zA-Z0-9_\-@.]+$', user_email_r):
+        return False
+    else:
+        user_email = user_email_r
+
+    # Validate user_group input
+    if not user_group_r or not re.match(r'^[a-zA-Z0-9_\-]+$', user_group_r):
+        return False
+    else:
+        user_group = user_group_r 
 
     use_overlap = True if use_overlap == 'Yes' else False
     chunk_size = int(chunk_size)
@@ -231,10 +261,25 @@ def add_dataset_from_upload(request):
             paper_date_time=make_aware(datetime.datetime.now())
         )
         attachment = paper_attachments[idx]
+        # check for path traversal
+        if '/' in attachment.name:
+            return False
+
+        if not os.path.exists('data/pdfs/'+ dataset_name):
+            return False
         doctype = '.' + attachment.name.split('.')[-1]
         base_name = 'data/pdfs/'+ dataset_name + '/paper' + str(idx+1)
 
+        # Ensure the file extension is valid
+        allowed_extensions = ['.pdf', '.doc', '.docx', '.txt', '.xlsx', '.xls', '.csv']  # Add other allowed extensions as needed
+        if doctype not in allowed_extensions:
+            raise ValueError("Invalid file extension")
+
         if doctype in ['.xlsx', '.xls', '.csv']:
+            # sanitize base_name and doctype
+            base_name = sanitize_filename(base_name)
+            doctype = sanitize_filename(doctype)
+
             with open(base_name + doctype, 'wb') as f:
                 f.write(attachment.read())
 
@@ -273,6 +318,10 @@ def add_dataset_from_upload(request):
                 data.append(chunk)
             
         else:
+            # sanitize base_name and doctype
+            base_name = sanitize_filename(base_name)
+            doctype = sanitize_filename(doctype)
+
             pdf_name = base_name + '.pdf'
             with open(base_name + doctype, 'wb') as f:
                 f.write(attachment.read())
@@ -340,7 +389,7 @@ def add_to_chroma(dataset_name, embedding_model_request = 'all-MiniLM-L6-v2'):
     if embedding_model == 'all-MiniLM-L6-v2':
         embedding_model_ef = embedding_functions.DefaultEmbeddingFunction()
     elif embedding_model_source == 'ollama':
-        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "/api/embeddings", model_name=embedding_model)
+        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "api/embeddings", model_name=embedding_model)
     # elif '/' in embedding_model:
     #     embedding_model_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=embedding_model)
     elif embedding_model_source == 'sentence-transformer':    
@@ -381,20 +430,20 @@ def add_to_chroma(dataset_name, embedding_model_request = 'all-MiniLM-L6-v2'):
                     documents=documents[i : i + 100],
                     metadatas=metadatas[i : i + 100],  # type: ignore
                 )
-
-                new_count = collection.count()
-                dataset = Dataset.objects.get(dataset_name=dataset_name)
-                dataset.dataset_size = new_count
-                dataset.embedding_model = embedding_model
-                dataset.save()
-
-                print(f'Added {new_count - count} documents')
-                return True
             except:
                 Dataset.objects.get(dataset_name=dataset_name).delete()
-
                 print('error adding documents')
                 return False
+
+        new_count = collection.count()
+        dataset = Dataset.objects.get(dataset_name=dataset_name)
+        dataset.dataset_size = new_count
+        dataset.embedding_model = embedding_model
+        dataset.save()
+
+        print(f'Added {new_count - count} documents')
+        return True
+            
 
         # add embeddings to database
         # add_embeddings_to_chunks(documents, metadatas, dataset)
@@ -428,7 +477,7 @@ def add_demo_dataset(embedding_model_request = 'multi-qa-MiniLM-L6-cos-v1'):
     if embedding_model == 'all-MiniLM-L6-v2':
         embedding_model_ef = embedding_functions.DefaultEmbeddingFunction()
     elif embedding_model_source == 'ollama':
-        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "/api/embeddings", model_name=embedding_model)
+        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "api/embeddings", model_name=embedding_model)
     # elif '/' in embedding_model:
     #     embedding_model_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=embedding_model)
     elif embedding_model_source == 'sentence-transformer':    
@@ -580,7 +629,7 @@ def add_embeddings_to_qna(text, text_type = 'question', embedding_model_request 
     if embedding_model == 'all-MiniLM-L6-v2':
         embedding_model_ef = embedding_functions.DefaultEmbeddingFunction()
     elif embedding_model_source == 'ollama':
-        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "/api/embeddings", model_name=embedding_model)
+        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "api/embeddings", model_name=embedding_model)
     # elif '/' in embedding_model:
     #     embedding_model_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=embedding_model)
     elif embedding_model_source == 'sentence-transformer':    
@@ -775,7 +824,7 @@ def nearestDataChroma(text, dataset_name, keywords_str = '', embedding_model_req
     if embedding_model == 'all-MiniLM-L6-v2':
         embedding_model_ef = embedding_functions.DefaultEmbeddingFunction()
     elif embedding_model_source == 'ollama':
-        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "/api/embeddings", model_name=embedding_model)
+        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "api/embeddings", model_name=embedding_model)
     # elif '/' in embedding_model:
     #     embedding_model_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=embedding_model)
     elif embedding_model_source == 'sentence-transformer':    
@@ -1021,7 +1070,7 @@ def get_answer_distance(answer1, answer2, embedding_model_request = 'multi-qa-Mi
     if embedding_model == 'all-MiniLM-L6-v2':
         embedding_model_ef = embedding_functions.DefaultEmbeddingFunction()
     elif embedding_model_source == 'ollama':
-        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "/api/embeddings", model_name=embedding_model)
+        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "api/embeddings", model_name=embedding_model)
     # elif '/' in embedding_model:
     #     embedding_model_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=embedding_model)
     elif embedding_model_source == 'sentence-transformer':    
@@ -1119,7 +1168,7 @@ def add_video_to_chroma(dataset_name, embedding_model_request = 'multi-qa-MiniLM
     if embedding_model == 'all-MiniLM-L6-v2':
         embedding_model_ef = embedding_functions.DefaultEmbeddingFunction()
     elif embedding_model_source == 'ollama':
-        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "/api/embeddings", model_name=embedding_model)
+        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "api/embeddings", model_name=embedding_model)
     # elif '/' in embedding_model:
     #     embedding_model_ef = embedding_functions.HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=embedding_model)
     elif embedding_model_source == 'sentence-transformer':    
@@ -1210,13 +1259,6 @@ def seconds_to_hhmmss(seconds):
     h, m = divmod(m, 60)
     return "%d:%02d:%02d" % (h, m, s)
 
-def validate_post_request(request, fields):
-    for field in fields:
-        if field not in request.data:
-            return False
-        
-    # check if all fields are not empty
-    for field in fields:
-        if request.data[field] == '':
-            return False
-    return True
+def sanitize_filename(filename):
+    # Allow only alphanumeric characters, underscores, hyphens, and dots
+    return re.sub(r'[^a-zA-Z0-9_\-\.\\\/]', '_', filename)

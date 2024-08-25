@@ -80,7 +80,7 @@ function App() {
           },
           body: JSON.stringify({
             'user_email': user.user_email,
-            'user_group': user.user_group
+            'user_group': user.user_group ? user.user_group : ''
           })
         }
         fetch(`${process.env.REACT_APP_BACKEND_API}api/get_datasets/?format=json`, requestOptions)

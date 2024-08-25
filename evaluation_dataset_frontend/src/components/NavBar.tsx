@@ -93,7 +93,7 @@ export const NavBar = (props = defaultNavProps) => {
 						(<Link to='/'>
 							<button className='object-cover text-white bg-panel1 rounded-full p-8 py-2 inline-block hover:drop-shadow-sm hover:bg-panel2 hover:text-nav' 
 								onClick={() => showLogoutMenu()}>
-									{props.loginAccounts.length && props.loginAccounts[0].name?.split(',')[1]}
+									{props.loginAccounts && props.loginAccounts.length && props.loginAccounts[0].name?.split(',')[1]}
 							</button>
 						</Link>) : 
 						props.showLoginButton && !props.isAuthenticated ?
