@@ -1,7 +1,0 @@
-ragas
-langchain
-requests==2.27.1
-transformers==4.38.0
-sentence-transformers
-datasets
-langchain_community
