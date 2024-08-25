@@ -35,8 +35,8 @@ const useAuthenticateUser = () => {
 		const original_url_r:any = window.location.href.split('#')[0]
 		if (window.location.hash.includes('access_token'))
 			if (isValidRedirectUrl(original_url_r)) {
-				const original_url:any = sanitizeUrl(original_url_r)
-				window.location.assign(original_url)
+				const original_url:any = original_url_r ? original_url_r : ''
+				window.location.href = original_url
 			}
 			else
 				console.error('Invalid redirect URL')

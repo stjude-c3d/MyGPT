@@ -32,10 +32,12 @@ const useAuthenticateUser = () => {
 			const roles:any = accounts && accounts.length ? accounts[0].idTokenClaims?.roles : []
 			setAppRoles(roles)
 		}
-		const original_url = window.location.href.split('#')[0]
+		const original_url_r = window.location.href.split('#')[0]
 		if (window.location.hash.includes('access_token'))
-			if (isValidRedirectUrl(original_url) && sanitizeUrl(original_url))
-				window.location.assign(original_url)
+			if (isValidRedirectUrl(original_url_r)) {
+				const original_url:any = original_url_r ? original_url_r : ''
+				window.location.href = original_url
+			}
 			else
 				console.error('Invalid redirect URL')
 	},[isAuthenticated, accounts])
