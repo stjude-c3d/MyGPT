@@ -239,28 +239,24 @@ def add_dataset_from_upload(request):
             paper_date_time=make_aware(datetime.datetime.now())
         )
         attachment = paper_attachments[idx]
-        doctype_f = '.' + attachment.name.split('.')[-1]
-        base_name_f = 'data/pdfs/'+ dataset_name + '/paper' + str(idx+1)
+        # check for path traversal
+        if '/' in attachment.name:
+            return False
 
-        if doctype_f in ['.xlsx', '.xls', '.csv']:
-            # check for path traversal
-            if '/' in attachment.name:
-                return False
-            else:
-                doctype = doctype_f
+        if not os.path.exists('data/pdfs/'+ dataset_name):
+            return False
+        doctype = '.' + attachment.name.split('.')[-1]
+        base_name = 'data/pdfs/'+ dataset_name + '/paper' + str(idx+1)
 
-            if not os.path.exists('data/pdfs/'+ dataset_name):
-                return False
-            else:
-                base_name = base_name_f
+
+        if doctype in ['.xlsx', '.xls', '.csv']:
             
-            # safe_path = os.path.realpath('data/pdfs/'+ dataset_name)
-            # if not os.path.realpath(base_name).startswith(safe_path):
-            #     return False
-            # if os.path.commonprefix([os.path.realpath(base_name), safe_path]) != safe_path:
-            #     return False
             with open(base_name + doctype, 'wb') as f:
-                f.write(attachment.read())
+                # check for path traversal
+                if os.path.commonpath([base_name + doctype, 'data/pdfs/'+ dataset_name]):
+                    return False
+                else:
+                    f.write(attachment.read())
 
             if doctype in ['.xlsx', '.xls']:
                 df = pd.read_excel(base_name + doctype)
@@ -279,7 +275,11 @@ def add_dataset_from_upload(request):
             pdfkit.from_file(base_name + '.html', base_name + '.pdf', options = options)
 
             with open(base_name + '.pdf', 'rb') as f:
-                paper.paper_attachment.save(dataset_name + '/paper' + str(idx+1) + '.pdf', File(f), save=True)
+                # check for path traversal
+                if os.path.commonpath([base_name + doctype, 'data/pdfs/'+ dataset_name]):
+                    return False
+                else:
+                    paper.paper_attachment.save(dataset_name + '/paper' + str(idx+1) + '.pdf', File(f), save=True)
 
             fulltext = str(df.to_json(orient='records'))
             fulltext_chunk = {'title': paper_titles[idx], 'page': 1, 'content': fulltext, 'type': 'spreadsheet_full'}
@@ -297,21 +297,6 @@ def add_dataset_from_upload(request):
                 data.append(chunk)
             
         else:
-            # check for path traversal
-            if '/' in attachment.name:
-                return False
-            else:
-                doctype = doctype_f
-
-            if not os.path.exists('data/pdfs/'+ dataset_name):
-                return False
-            else:
-                base_name = base_name_f
-            
-            safe_path = os.path.realpath(base_name)
-            if not safe_path.startswith(os.path.realpath('data/pdfs/'+ dataset_name)):
-                return False
-            
             pdf_name = base_name + '.pdf'
             with open(base_name + doctype, 'wb') as f:
                 f.write(attachment.read())
@@ -1248,3 +1233,7 @@ def seconds_to_hhmmss(seconds):
     m, s = divmod(seconds, 60)
     h, m = divmod(m, 60)
     return "%d:%02d:%02d" % (h, m, s)
+
+def is_safe_path(basedir, path):
+    # resolves symbolic links
+    return os.path.realpath(path).startswith(os.path.realpath(basedir))
