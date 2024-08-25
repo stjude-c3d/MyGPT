@@ -405,7 +405,7 @@ def add_zotero_dataset(request):
         if not user_group_r or not re.match(r'^[a-zA-Z0-9_\-]+$', user_group_r):
             return Response({'error': True, 'error_message': 'Invalid user group'}, content_type="application/json")
         else:
-            user_group = user_group
+            user_group = user_group_r
 
         dataset_name = get_zotero_chunks(library_id, library_id_type, collection_id, api_key, user, user_email, user_group)
 
