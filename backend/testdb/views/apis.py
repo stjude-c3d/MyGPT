@@ -17,7 +17,7 @@ import json
 import re
 from django.contrib.auth.models import User
 from ..models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, Model, EmbeddingModel, FrontEndSettings, DisclaimerAgreement
-from .utils import get_zotero_chunks, add_dataset_from_upload, add_to_chroma, nearestDataChroma, get_relevance_score, add_embeddings_to_qna, highlight_pdf, seconds_to_hhmmss, add_pca_to_qna_and_dataset, add_demo_dataset, get_youtube_transcript, add_video_to_chroma, add_embeddings_to_chunks, add_pca_to_chunks, get_answer_distance
+from .utils import get_zotero_chunks, add_dataset_from_upload, add_to_chroma, nearestDataChroma, get_relevance_score, add_embeddings_to_qna, highlight_pdf, seconds_to_hhmmss, add_pca_to_qna_and_dataset, add_demo_dataset, get_youtube_transcript, add_video_to_chroma, add_embeddings_to_chunks, add_pca_to_chunks, get_answer_distance, sanitize_filename
 
 ####################
 # APIs             #
@@ -340,10 +340,13 @@ def delete_dataset(request):
 
         # delete the pdf folder
         pdf_folder = 'data/pdfs/' + dataset_name
+        if len(dataset_name) == 0:
+            return Response({'error':True, 'error_message': 'Dataset name can\'t be empty'}, content_type="application/json")
         if os.path.exists(pdf_folder):
             # remove all files with output_file name in thier name
             # files = [f for f in os.listdir(pdf_folder) if dataset_name in f]
             # remove all files with output_file name in thier name
+            pdf_folder = sanitize_filename(pdf_folder)
             try:
                 shutil.rmtree(pdf_folder)
             except:
