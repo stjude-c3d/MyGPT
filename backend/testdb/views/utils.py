@@ -248,15 +248,18 @@ def add_dataset_from_upload(request):
         doctype = '.' + attachment.name.split('.')[-1]
         base_name = 'data/pdfs/'+ dataset_name + '/paper' + str(idx+1)
 
+        # Ensure the file extension is valid
+        allowed_extensions = ['.pdf', '.doc', '.docx', '.txt', '.xlsx', '.xls', '.csv']  # Add other allowed extensions as needed
+        if doctype not in allowed_extensions:
+            raise ValueError("Invalid file extension")
 
         if doctype in ['.xlsx', '.xls', '.csv']:
+            # sanitize base_name and doctype
+            base_name = sanitize_filename(base_name)
+            doctype = sanitize_filename(doctype)
 
-            # check for path traversal
-            if os.path.commonpath([base_name + doctype, 'data/pdfs/'+ dataset_name]):
-                return False
-            else:
-                with open(base_name + doctype, 'wb') as f:
-                    f.write(attachment.read())
+            with open(base_name + doctype, 'wb') as f:
+                f.write(attachment.read())
 
             if doctype in ['.xlsx', '.xls']:
                 df = pd.read_excel(base_name + doctype)
@@ -293,6 +296,10 @@ def add_dataset_from_upload(request):
                 data.append(chunk)
             
         else:
+            # sanitize base_name and doctype
+            base_name = sanitize_filename(base_name)
+            doctype = sanitize_filename(doctype)
+
             pdf_name = base_name + '.pdf'
             with open(base_name + doctype, 'wb') as f:
                 f.write(attachment.read())
@@ -1230,6 +1237,6 @@ def seconds_to_hhmmss(seconds):
     h, m = divmod(m, 60)
     return "%d:%02d:%02d" % (h, m, s)
 
-def is_safe_path(basedir, path):
-    # resolves symbolic links
-    return os.path.realpath(path).startswith(os.path.realpath(basedir))
+def sanitize_filename(filename):
+    # Allow only alphanumeric characters, underscores, hyphens, and dots
+    return re.sub(r'[^a-zA-Z0-9_\-\.]', '_', filename)
