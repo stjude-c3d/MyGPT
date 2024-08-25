@@ -509,8 +509,8 @@ def add_demo_dataset_api(request):
 @api_view(['POST'])
 def add_video_library(request):
     if request.method == 'POST':
-        dataset_name = request.POST.get('dataset_name').replace(' ', '_')
-        embedding_model = request.POST.get('embedding_model')
+        dataset_name_f = request.POST.get('dataset_name').replace(' ', '_')
+        embedding_model_f = request.POST.get('embedding_model')
         video_urls = request.POST.get('video_urls').split(',')
         playlist_url = request.POST.get('playlist_url')
         user = request.POST.get('user')
@@ -523,6 +523,18 @@ def add_video_library(request):
         for video_url in video_urls:
             yt = YouTube(video_url)
             video_titles.append(yt.title)
+
+        # Validate dataset_name input
+        if not dataset_name_f or not re.match(r'^[a-zA-Z0-9_\-]+$', dataset_name_f):
+            return Response({'error': True, 'error_message': 'Invalid dataset name'}, status=400)
+        else:
+            dataset_name = dataset_name_f
+
+        # Validate embedding_model input
+        if not embedding_model_f or not re.match(r'^[a-zA-Z0-9_\-:]+$', embedding_model_f):
+            return Response({'error': True, 'error_message': 'Invalid embedding model name'}, status=400)
+        else:
+            embedding_model = embedding_model_f
     
         # create dataset
         dataset = Dataset.objects.filter(dataset_name=dataset_name)
