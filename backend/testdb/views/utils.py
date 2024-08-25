@@ -246,6 +246,12 @@ def add_dataset_from_upload(request):
             # check for path traversal
             if '/' in attachment.name:
                 return False
+            
+            safe_path = os.path.realpath('data/pdfs/'+ dataset_name)
+            if not os.path.realpath(base_name).startswith(safe_path):
+                return False
+            if os.path.commonprefix([os.path.realpath(base_name), safe_path]) != safe_path:
+                return False
             with open(base_name + doctype, 'wb') as f:
                 f.write(attachment.read())
 
@@ -287,6 +293,13 @@ def add_dataset_from_upload(request):
             # check for path traversal
             if '/' in attachment.name:
                 return False
+            if not os.path.exists(base_name):
+                return False
+            
+            safe_path = os.path.realpath(base_name)
+            if not safe_path.startswith(os.path.realpath('data/pdfs/'+ dataset_name)):
+                return False
+            
             pdf_name = base_name + '.pdf'
             with open(base_name + doctype, 'wb') as f:
                 f.write(attachment.read())
