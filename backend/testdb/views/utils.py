@@ -239,19 +239,26 @@ def add_dataset_from_upload(request):
             paper_date_time=make_aware(datetime.datetime.now())
         )
         attachment = paper_attachments[idx]
-        doctype = '.' + attachment.name.split('.')[-1]
-        base_name = 'data/pdfs/'+ dataset_name + '/paper' + str(idx+1)
+        doctype_f = '.' + attachment.name.split('.')[-1]
+        base_name_f = 'data/pdfs/'+ dataset_name + '/paper' + str(idx+1)
 
-        if doctype in ['.xlsx', '.xls', '.csv']:
+        if doctype_f in ['.xlsx', '.xls', '.csv']:
             # check for path traversal
             if '/' in attachment.name:
                 return False
+            else:
+                doctype = doctype_f
+
+            if not os.path.exists('data/pdfs/'+ dataset_name):
+                return False
+            else:
+                base_name = base_name_f
             
-            safe_path = os.path.realpath('data/pdfs/'+ dataset_name)
-            if not os.path.realpath(base_name).startswith(safe_path):
-                return False
-            if os.path.commonprefix([os.path.realpath(base_name), safe_path]) != safe_path:
-                return False
+            # safe_path = os.path.realpath('data/pdfs/'+ dataset_name)
+            # if not os.path.realpath(base_name).startswith(safe_path):
+            #     return False
+            # if os.path.commonprefix([os.path.realpath(base_name), safe_path]) != safe_path:
+            #     return False
             with open(base_name + doctype, 'wb') as f:
                 f.write(attachment.read())
 
@@ -293,8 +300,13 @@ def add_dataset_from_upload(request):
             # check for path traversal
             if '/' in attachment.name:
                 return False
-            if not os.path.exists(base_name):
+            else:
+                doctype = doctype_f
+
+            if not os.path.exists('data/pdfs/'+ dataset_name):
                 return False
+            else:
+                base_name = base_name_f
             
             safe_path = os.path.realpath(base_name)
             if not safe_path.startswith(os.path.realpath('data/pdfs/'+ dataset_name)):
