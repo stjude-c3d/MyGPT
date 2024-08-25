@@ -199,7 +199,9 @@ def get_context(request):
                 files = [f for f in os.listdir('data/pdfs') if (paper_name.split('.')[0] + '_highlighted.pdf') in f]
                 # remove all files with output_file name in thier name
                 for f in files:
-                    os.remove('data/pdfs/' + f)
+                    # check for the path traversal attack
+                    if f.endswith('.pdf') and os.path.exists('data/pdfs/' + f):
+                        os.remove('data/pdfs/' + f)
                 if original_pdf_path.endswith('.pdf'):
                     highlight_pdf(
                         original_pdf_path, 
@@ -411,6 +413,10 @@ def add_zotero_dataset(request):
             user_group = user_group_r
 
         dataset_name = get_zotero_chunks(library_id, library_id_type, collection_id, api_key, user, user_email, user_group)
+        if dataset_name == False:
+            return Response({'error':True}, content_type="application/json")
+        else:
+            dataset_name = sanitize_filename(dataset_name)
 
         # if dataset_name.error:
         #     return Response({'error':True, 'error_message': dataset_name.error}, content_type="application/json")

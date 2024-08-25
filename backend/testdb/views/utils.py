@@ -130,6 +130,7 @@ def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key,
     
     # Loop through PDF attachments, extract content, and store it in 'data' list
     for idx, title, attachment, abstract in zip( range(1, len(titles)+1), titles, pdf_attachments, abstracts):
+        dataset_name = sanitize_filename(dataset_name)
         with open('data/pdfs/'+ dataset_name +'/paper' + str(idx) + '.pdf', 'wb') as f:
             f.write(zot.file(attachment['data']['key']))
         pages = getPDFContent('data/pdfs/'+ dataset_name +'/paper' + str(idx) + '.pdf')
@@ -173,6 +174,7 @@ def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key,
                 data.append(chunk)
     print('zotero chunks loaded')        
 
+    dataset_name = sanitize_filename(dataset_name)
     with open('data/data_chunks/'+ dataset_name +'.txt', 'w') as f:
         for chunk in data:
             # convert chunk to string and write to file
@@ -187,17 +189,37 @@ def add_dataset_from_upload(request):
     user_r = request.POST.get('user')
     user_email_r = request.POST.get('user_email')
     user_group_r = request.POST.get('user_group')
-    use_overlap_r = request.POST.get('use_overlap')
-    chunk_size_r = request.POST.get('chunk_size')
+    use_overlap = request.POST.get('use_overlap')
+    chunk_size = request.POST.get('chunk_size')
 
-    # validate all fields for code injection
-    dataset_name = re.sub(r'[^\w\s]', '', dataset_name_r)
-    paper_titles = [re.sub(r'[^\w\s]', '', x) for x in paper_titles_r]
-    user = re.sub(r'[^\w\s]', '', user_r)
-    user_email = re.sub(r'[^\w\s]', '', user_email_r)
-    user_group = re.sub(r'[^\w\s]', '', user_group_r)
-    use_overlap = re.sub(r'[^\w\s]', '', use_overlap_r)
-    chunk_size = re.sub(r'[^\w\s]', '', chunk_size_r)    
+    # Validate all inputs for code injection
+    if not dataset_name_r or not re.match(r'^[a-zA-Z0-9_\-\s\w]+$', dataset_name_r):
+        return False
+    else:
+        dataset_name = dataset_name_r
+
+    if not paper_titles_r or not all([re.match(r'^[a-zA-Z0-9_\-\w\s]+$', title) for title in paper_titles_r]):
+        return False
+    else:
+        paper_titles = paper_titles_r
+
+    # Validate user input
+    if not user_r or not re.match(r'^[a-zA-Z0-9_\-]+$', user_r):
+        return False
+    else:
+        user = user_r
+
+    # Validate user_email input
+    if not user_email_r or not re.match(r'^[a-zA-Z0-9_\-@.]+$', user_email_r):
+        return False
+    else:
+        user_email = user_email_r
+
+    # Validate user_group input
+    if not user_group_r or not re.match(r'^[a-zA-Z0-9_\-]+$', user_group_r):
+        return False
+    else:
+        user_group = user_group_r 
 
     use_overlap = True if use_overlap == 'Yes' else False
     chunk_size = int(chunk_size)
@@ -1239,4 +1261,4 @@ def seconds_to_hhmmss(seconds):
 
 def sanitize_filename(filename):
     # Allow only alphanumeric characters, underscores, hyphens, and dots
-    return re.sub(r'[^a-zA-Z0-9_\-\.]', '_', filename)
+    return re.sub(r'[^a-zA-Z0-9_\-\.\\\/]', '_', filename)
