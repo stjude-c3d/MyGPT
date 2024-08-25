@@ -34,7 +34,10 @@ const useAuthenticateUser = () => {
 		}
 		const original_url = window.location.href.split('#')[0]
 		if (window.location.hash.includes('access_token'))
-			window.location.assign(original_url)
+			if (isValidRedirectUrl(original_url) && sanitizeUrl(original_url))
+				window.location.assign(original_url)
+			else
+				console.error('Invalid redirect URL')
 	},[isAuthenticated, accounts])
 
 	// store access token from redirect URL from BSK home page
@@ -55,7 +58,7 @@ const useAuthenticateUser = () => {
 				localStorage.setItem('bskAccessTokenExpiration', expiration.toString())
 			}
 			const original_url = window.location.href.split('#')[0]
-			if (isValidRedirectUrl(original_url))
+			if (isValidRedirectUrl(original_url) && sanitizeUrl(original_url))
 				window.location.assign(original_url)
 			else
 				console.error('Invalid redirect URL')
@@ -86,6 +89,15 @@ function isValidRedirectUrl(url:string) {
     } catch (e) {
         return false;
     }
+}
+
+function sanitizeUrl(url:string) {
+	try {
+		const parsedUrl = new URL(url);
+		return parsedUrl;
+	} catch (e) {
+		return null;
+	}
 }
 
 export default useAuthenticateUser;
