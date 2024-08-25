@@ -250,12 +250,12 @@ def add_dataset_from_upload(request):
 
 
         if doctype in ['.xlsx', '.xls', '.csv']:
-            
-            with open(base_name + doctype, 'wb') as f:
-                # check for path traversal
-                if os.path.commonpath([base_name + doctype, 'data/pdfs/'+ dataset_name]):
-                    return False
-                else:
+
+            # check for path traversal
+            if os.path.commonpath([base_name + doctype, 'data/pdfs/'+ dataset_name]):
+                return False
+            else:
+                with open(base_name + doctype, 'wb') as f:
                     f.write(attachment.read())
 
             if doctype in ['.xlsx', '.xls']:
@@ -275,11 +275,7 @@ def add_dataset_from_upload(request):
             pdfkit.from_file(base_name + '.html', base_name + '.pdf', options = options)
 
             with open(base_name + '.pdf', 'rb') as f:
-                # check for path traversal
-                if os.path.commonpath([base_name + doctype, 'data/pdfs/'+ dataset_name]):
-                    return False
-                else:
-                    paper.paper_attachment.save(dataset_name + '/paper' + str(idx+1) + '.pdf', File(f), save=True)
+                paper.paper_attachment.save(dataset_name + '/paper' + str(idx+1) + '.pdf', File(f), save=True)
 
             fulltext = str(df.to_json(orient='records'))
             fulltext_chunk = {'title': paper_titles[idx], 'page': 1, 'content': fulltext, 'type': 'spreadsheet_full'}
