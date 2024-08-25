@@ -243,6 +243,9 @@ def add_dataset_from_upload(request):
         base_name = 'data/pdfs/'+ dataset_name + '/paper' + str(idx+1)
 
         if doctype in ['.xlsx', '.xls', '.csv']:
+            # check for path traversal
+            if '/' in attachment.name:
+                return False
             with open(base_name + doctype, 'wb') as f:
                 f.write(attachment.read())
 
@@ -281,6 +284,9 @@ def add_dataset_from_upload(request):
                 data.append(chunk)
             
         else:
+            # check for path traversal
+            if '/' in attachment.name:
+                return False
             pdf_name = base_name + '.pdf'
             with open(base_name + doctype, 'wb') as f:
                 f.write(attachment.read())
