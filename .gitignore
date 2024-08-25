@@ -35,8 +35,5 @@ installation/linux/prebuilt_images/libraries/papers/*
 backend/final_table.txt
 backend/generated_sql_query.txt
 backend/chroma_context.txt
-evaluation/utils/eval_trial_1/results/*
-evaluation/utils/eval_trial_1/scores/*
-evaluation/utils/eval_datasets/*
 evaluation_dataset_frontend/node_modules/
 frontend/.env.azure

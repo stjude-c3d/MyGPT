@@ -55,7 +55,10 @@ const useAuthenticateUser = () => {
 				localStorage.setItem('bskAccessTokenExpiration', expiration.toString())
 			}
 			const original_url = window.location.href.split('#')[0]
-			window.location.assign(original_url)
+			if (isValidRedirectUrl(original_url))
+				window.location.assign(original_url)
+			else
+				console.error('Invalid redirect URL')
 		}
 	}, [accessToken])
 
@@ -73,5 +76,16 @@ const useAuthenticateUser = () => {
 
 	return { activeAccounts, appRoles, instance }
 };
+
+const allowedDomains = [process.env.REACT_APP_REDIRECT_URI];
+
+function isValidRedirectUrl(url:string) {
+    try {
+        const parsedUrl = new URL(url);
+        return allowedDomains.some((domain:any) => parsedUrl.hostname.endsWith(domain));
+    } catch (e) {
+        return false;
+    }
+}
 
 export default useAuthenticateUser;
