@@ -17,7 +17,7 @@ import json
 import re
 from django.contrib.auth.models import User
 from ..models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, Model, EmbeddingModel, FrontEndSettings, DisclaimerAgreement
-from .utils import get_zotero_chunks, add_dataset_from_upload, add_to_chroma, nearestDataChroma, get_relevance_score, add_embeddings_to_qna, highlight_pdf, seconds_to_hhmmss, add_pca_to_qna_and_dataset, add_demo_dataset, get_youtube_transcript, add_video_to_chroma, add_embeddings_to_chunks, add_pca_to_chunks, get_answer_distance, validate_post_request
+from .utils import get_zotero_chunks, add_dataset_from_upload, add_to_chroma, nearestDataChroma, get_relevance_score, add_embeddings_to_qna, highlight_pdf, seconds_to_hhmmss, add_pca_to_qna_and_dataset, add_demo_dataset, get_youtube_transcript, add_video_to_chroma, add_embeddings_to_chunks, add_pca_to_chunks, get_answer_distance, sanitize_filename
 
 ####################
 # APIs             #
@@ -115,7 +115,8 @@ def get_context(request):
         dataset = Dataset.objects.get(dataset_name=dataset_name)
         quesiton_exist = Question.objects.filter(question_dataset=dataset).filter(question_text=question_text).filter(model_type=model_type).exists()
         if quesiton_exist:
-            question = Question.objects.get(question_text=question_text, model_type=model_type)
+            questions = Question.objects.filter(question_text=question_text, model_type=model_type, question_dataset=dataset)
+            question = questions[0]
             question.keywords = keywords
             question.relevance_score = relevance_score
             question.save()
@@ -185,7 +186,7 @@ def get_context(request):
         # hightlight pdf with source paper and page
         if library_type == 'papers' and not skip_highlight:
             for source_grp in sources_grouped:
-                paper_obj = Papers.objects.filter(paper_title=source_grp[0]['document'])[0].paper_attachment
+                paper_obj = Papers.objects.filter(paper_dataset=dataset).filter(paper_title=source_grp[0]['document'])[0].paper_attachment
                 if (len(paper_obj.path.split('/')[-1].split('_')) > 1): 
                     paper_name =   paper_obj.path.split('/')[-1].split('_')[0] + '.pdf'
                 else:
@@ -198,7 +199,9 @@ def get_context(request):
                 files = [f for f in os.listdir('data/pdfs') if (paper_name.split('.')[0] + '_highlighted.pdf') in f]
                 # remove all files with output_file name in thier name
                 for f in files:
-                    os.remove('data/pdfs/' + f)
+                    # check for the path traversal attack
+                    if f.endswith('.pdf') and os.path.exists('data/pdfs/' + f):
+                        os.remove('data/pdfs/' + f)
                 if original_pdf_path.endswith('.pdf'):
                     highlight_pdf(
                         original_pdf_path, 
@@ -207,7 +210,7 @@ def get_context(request):
                     )
 
                     # create highlighted paper object
-                    paper = Papers.objects.filter(paper_title=source_grp[0]['document'])[0]
+                    paper = Papers.objects.filter(paper_dataset=dataset).filter(paper_title=source_grp[0]['document'])[0]
                     with open(highlighted_pdf_path, 'rb') as f:
                         paper.highlighted_attachment.save(dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf', File(f), save=True)
             
@@ -339,10 +342,13 @@ def delete_dataset(request):
 
         # delete the pdf folder
         pdf_folder = 'data/pdfs/' + dataset_name
+        if len(dataset_name) == 0:
+            return Response({'error':True, 'error_message': 'Dataset name can\'t be empty'}, content_type="application/json")
         if os.path.exists(pdf_folder):
             # remove all files with output_file name in thier name
             # files = [f for f in os.listdir(pdf_folder) if dataset_name in f]
             # remove all files with output_file name in thier name
+            pdf_folder = sanitize_filename(pdf_folder)
             try:
                 shutil.rmtree(pdf_folder)
             except:
@@ -353,16 +359,65 @@ def delete_dataset(request):
 def add_zotero_dataset(request):
     if request.method == 'POST':
         json_request = JSONParser().parse(request)
-        api_key = json_request['api_key']
-        library_id = json_request['library_id']
-        library_id_type = json_request['library_id_type']
-        collection_id = json_request['collection_id']
-        embedding_model = request.POST.get('embedding_model')
-        user = request.POST.get('user')
-        user_email = request.POST.get('user_email')
-        user_group = request.POST.get('user_group')
+        api_key_r = json_request['api_key']
+        library_id_r = json_request['library_id']
+        library_id_type_r = json_request['library_id_type']
+        collection_id_r = json_request['collection_id']
+        embedding_model_request = request.POST.get('embedding_model')
+        user_r = request.POST.get('user')
+        user_email_r = request.POST.get('user_email')
+        user_group_r = request.POST.get('user_group')
+
+        # Validate all inputs for code injection
+        if not api_key_r or not re.match(r'^[a-zA-Z0-9]+$', api_key_r):
+            return Response({'error': True, 'error_message': 'Invalid API key'}, content_type="application/json")
+        else:
+            api_key = api_key_r
+
+        if not library_id_r or not re.match(r'^[0-9]+$', library_id_r):
+            return Response({'error': True, 'error_message': 'Invalid library ID'}, content_type="application/json")
+        else:
+            library_id = library_id_r
+
+        if not library_id_type_r or not re.match(r'^[a-zA-Z]+$', library_id_type_r):
+            return Response({'error': True, 'error_message': 'Invalid library ID type'}, content_type="application/json")
+        else:
+            library_id_type = library_id_type_r
+
+        if not collection_id_r or not re.match(r'^[a-zA-Z0-9]+$', collection_id_r):
+            return Response({'error': True, 'error_message': 'Invalid collection ID'}, content_type="application/json")
+        else:
+            collection_id = collection_id_r
+
+        if not embedding_model_request or not re.match(r'^[a-zA-Z0-9_\-:]+$', embedding_model_request):
+            return Response({'error': True, 'error_message': 'Invalid embedding model name'}, content_type="application/json")
+        else:
+            embedding_model = embedding_model_request
+
+        # Validate user input
+        if not user_r or not re.match(r'^[a-zA-Z0-9_\-]+$', user_r):
+            return Response({'error': True, 'error_message': 'Invalid user name'}, content_type="application/json")
+        else:
+            user = user_r
+
+        # Validate user_email input
+        if not user_email_r or not re.match(r'^[a-zA-Z0-9_\-@.]+$', user_email_r):
+            return Response({'error': True, 'error_message': 'Invalid user email'}, content_type="application/json")
+        else:
+            user_email = user_email_r
+
+        # Validate user_group input
+        if not user_group_r or not re.match(r'^[a-zA-Z0-9_\-]+$', user_group_r):
+            return Response({'error': True, 'error_message': 'Invalid user group'}, content_type="application/json")
+        else:
+            user_group = user_group_r
 
         dataset_name = get_zotero_chunks(library_id, library_id_type, collection_id, api_key, user, user_email, user_group)
+        if dataset_name == False:
+            return Response({'error':True}, content_type="application/json")
+        else:
+            dataset_name = sanitize_filename(dataset_name)
+
         # if dataset_name.error:
         #     return Response({'error':True, 'error_message': dataset_name.error}, content_type="application/json")
         message = add_to_chroma(dataset_name, embedding_model)
@@ -378,18 +433,19 @@ def add_zotero_dataset(request):
 @api_view(['POST'])
 def upload_documents(request):
     if request.method == 'POST':
-        validation = validate_post_request(request)
-        if not validation:
-            return Response({'error': True, 'error_message': validation}, content_type="application/json")
-        else:
+        # validation = validate_post_request(request, ['dataset_name', 'embedding_model'])
+        # if not validation:
+        #     return Response({'error': True, 'error_message': validation}, content_type="application/json")
+        # else:
             dataset_name = add_dataset_from_upload(request)
             
             # Validate embedding_model input
             embedding_model_request = request.POST.get('embedding_model')
-            if not embedding_model_request or not re.match(r'^[a-zA-Z0-9_\-]+$', embedding_model_request):
+            if not embedding_model_request or not re.match(r'^[a-zA-Z0-9_\-:]+$', embedding_model_request):
                 return Response({'error': True, 'error_message': 'Invalid embedding model name'}, content_type="application/json")
-            
-            embedding_model = str(embedding_model_request)
+            else:
+                embedding_model = embedding_model_request
+
             message = add_to_chroma(dataset_name, embedding_model)
 
             if message == False:
@@ -462,8 +518,8 @@ def add_demo_dataset_api(request):
 @api_view(['POST'])
 def add_video_library(request):
     if request.method == 'POST':
-        dataset_name = request.POST.get('dataset_name').replace(' ', '_')
-        embedding_model = request.POST.get('embedding_model')
+        dataset_name_f = request.POST.get('dataset_name').replace(' ', '_')
+        embedding_model_f = request.POST.get('embedding_model')
         video_urls = request.POST.get('video_urls').split(',')
         playlist_url = request.POST.get('playlist_url')
         user = request.POST.get('user')
@@ -476,6 +532,18 @@ def add_video_library(request):
         for video_url in video_urls:
             yt = YouTube(video_url)
             video_titles.append(yt.title)
+
+        # Validate dataset_name input
+        if not dataset_name_f or not re.match(r'^[a-zA-Z0-9_\-]+$', dataset_name_f):
+            return Response({'error': True, 'error_message': 'Invalid dataset name'}, status=400)
+        else:
+            dataset_name = dataset_name_f
+
+        # Validate embedding_model input
+        if not embedding_model_f or not re.match(r'^[a-zA-Z0-9_\-:]+$', embedding_model_f):
+            return Response({'error': True, 'error_message': 'Invalid embedding model name'}, status=400)
+        else:
+            embedding_model = embedding_model_f
     
         # create dataset
         dataset = Dataset.objects.filter(dataset_name=dataset_name)
@@ -579,10 +647,15 @@ def get_vector_embeddings(request):
 @api_view(['GET'])
 def add_dataset_embeddings(request):
     if request.method == 'GET':
-        dataset_name = request.GET.get('dataset')
-        add_embeddings_to_chunks(dataset_name)
-        add_pca_to_chunks()
-        return Response({'added':True}, content_type="application/json")
+        dataset_name_request = request.GET.get('dataset')
+        # add validation for dataset name
+        if not dataset_name_request or not re.match(r'^[a-zA-Z0-9_\-]+$', dataset_name_request):
+            return Response({'error': True, 'error_message': 'Invalid dataset name'}, status=400)
+        else:
+            dataset_name = dataset_name_request
+            add_embeddings_to_qna(dataset_name)
+            add_pca_to_qna_and_dataset(dataset_name)
+            return Response({'added':True}, content_type="application/json")
     
 @api_view(['POST'])
 def get_distance_between_answers(request):
