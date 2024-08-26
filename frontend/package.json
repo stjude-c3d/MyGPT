@@ -27,7 +27,7 @@
     "react-router-dom": "^6.26.0",
     "react-scripts": "5.0.1",
     "nth-check": "2.1.1",
-    "three": "^0.164.1",
+    "three": "^0.167.1",
     "typescript": "^4.6.2",
     "web-vitals": "^2.1.4"
   },
