@@ -17,7 +17,7 @@
     "@testing-library/user-event": "^13.5.0",
     "@types/d3": "^7.1.0",
     "@types/node": "^16.18.104",
-    "@types/three": "^0.164.0",
+    "@types/three": "^0.167.1",
     "d3": "7.9.0",
     "env-cmd": "^10.1.0",
     "pdfjs-dist": "^3.11.174",
