@@ -389,7 +389,7 @@ def add_zotero_dataset(request):
         else:
             collection_id = collection_id_r
 
-        if not embedding_model_request or not re.match(r'^[a-zA-Z0-9_\-:]+$', embedding_model_request):
+        if not embedding_model_request or not re.match(r'^[a-zA-Z0-9_\/-:]+$', embedding_model_request):
             return Response({'error': True, 'error_message': 'Invalid embedding model name'}, content_type="application/json")
         else:
             embedding_model = embedding_model_request
@@ -441,7 +441,7 @@ def upload_documents(request):
             
             # Validate embedding_model input
             embedding_model_request = request.POST.get('embedding_model')
-            if not embedding_model_request or not re.match(r'^[a-zA-Z0-9_\-:]+$', embedding_model_request):
+            if not embedding_model_request or not re.match(r'^[a-zA-Z0-9_\-:\/]+$', embedding_model_request):
                 return Response({'error': True, 'error_message': 'Invalid embedding model name'}, content_type="application/json")
             else:
                 embedding_model = embedding_model_request
