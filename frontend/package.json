@@ -20,7 +20,6 @@
     "@types/three": "^0.167.1",
     "d3": "7.9.0",
     "env-cmd": "^10.1.0",
-    "pdfjs-dist": "^3.11.174",
     "react": "^18.3.1",
     "react-dom": "^18.3.0",
     "react-markdown": "^8.0.7",
