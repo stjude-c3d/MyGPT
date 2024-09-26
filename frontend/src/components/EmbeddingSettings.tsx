@@ -5,7 +5,9 @@ const EmbeddingSettings = (props: {
 	embeddingModel:string,
 	selectedEmbeddingModel:string,
 	currentSettings:any,
-	settingsCallback:any
+	settingsCallback:any,
+	djangoLogin?: any,
+	user?: any
 }) => {
 	
 	let currentSettings = props.currentSettings
@@ -21,7 +23,12 @@ const EmbeddingSettings = (props: {
 			method: 'GET',
 			headers: { 
 				'Content-Type': 'application/json',
-				'Authorization': `${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_AUTH_TOKEN_PROD : process.env.REACT_APP_AUTH_TOKEN_DEV}`
+				'Authorization': `${
+						props.user && props.djangoLogin ?
+						'Bearer ' + localStorage.getItem('access') :
+						process.env.NODE_ENV === 'production' ? 
+						process.env.REACT_APP_AUTH_TOKEN_PROD 
+						: process.env.REACT_APP_AUTH_TOKEN_DEV}`
 			}
 		}
 		fetch(`${process.env.REACT_APP_BACKEND_API}api/embedding_models/?format=json`, requestOptions)
@@ -85,7 +92,7 @@ const EmbeddingSettings = (props: {
 			}
 
 			// check if the api is available
-			fetch('http://localhost:11434/api/tags', {method: 'GET'})
+			fetch(`${process.env.REACT_APP_OLLAMA_API}api/tags`, {method: 'GET'})
 			.then(response => {
 				if(response.ok){
 					console.log('API is available')

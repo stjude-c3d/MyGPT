@@ -108,7 +108,7 @@ export const NavBar = (props = defaultNavProps) => {
 		else setShowDjangoLogin(false)
 	}
 
-	const AttemptDhagoLogin = () => {
+	const AttemptDjagoLogin = () => {
 		const data = {
 			'username': username,
 			'password': password
@@ -230,7 +230,7 @@ export const NavBar = (props = defaultNavProps) => {
 							onChange={(e) => setPassword(e.target.value)}
 							placeholder='Password'/>
 						<button className='object-cover bg-panel1 text-panel3 rounded-full h-[50px] w-[100px] mx-auto hover:bolder'
-							onClick={() => AttemptDhagoLogin()}>
+							onClick={() => AttemptDjagoLogin()}>
 							Login
 						</button>
 					</div>

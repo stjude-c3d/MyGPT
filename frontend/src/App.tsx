@@ -183,6 +183,7 @@ function App() {
           defaultSettings={defaultSettings} 
           currentSettings={currentSettings}
           settingsCallback={settingsCallback}
+          djangoLogin={!frontendSettings.django_login}
           user={user}
         /> 
         : <></>}

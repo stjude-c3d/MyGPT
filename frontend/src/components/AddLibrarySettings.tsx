@@ -5,7 +5,8 @@ import { DropdownOptions } from './DropDownMenu'
 const AddLibrarySettings = (props: {
 	currentSettings: any,
 	settingsCallback: any, 
-	user?: any
+	user?: any,
+	djangoLogin?: any
 }) => {
   const [apiKey, setApiKey] = useState('')
   const [showAPIHelp, setShowAPIHelp] = useState(false)
@@ -36,6 +37,7 @@ const AddLibrarySettings = (props: {
 
   const [useOverlap, setUseOverlap] = useState('Yes')
   const [chunkSize, setChunkSize] = useState('1000')
+  const [distanceFn, setDistanceFn] = useState('l2')
 
 //   console.log(UploadLibraryName, uploadDocs)
 
@@ -78,11 +80,12 @@ const AddLibrarySettings = (props: {
 			
 			formData.append('dataset_name', UploadLibraryName)
 			formData.append('embedding_model', currentSettings.selectedEmbeddingModel)
-			formData.append('user', props.user ? props.user.user: '')
+			formData.append('user', props.user ? props.user.user.replace(', ','_'): '')
 			formData.append('user_email', props.user ? props.user.user_email : '')
 			formData.append('user_group', props.user && props.user.isAdmin ? 'admin' : 'user')
 			formData.append('use_overlap', useOverlap)
 			formData.append('chunk_size', chunkSize)
+			formData.append('distance_function', distanceFn)
 
 			uploadDocs.filter((d)=> d.file !== null && d.title !== '').forEach((doc:any) => {
 				if (doc.title && doc.file){
@@ -92,9 +95,15 @@ const AddLibrarySettings = (props: {
 			})
 			const requestOptions = {
 				method: 'POST',
-				Headers: {
-					'Content-Type': 'multipart/form-data'
-				},
+				headers: {
+					// 'Content-Type': 'multipart/form-data',
+					'Authorization': `${
+					props.user && props.djangoLogin ?
+					'Bearer ' + localStorage.getItem('access') :
+						process.env.NODE_ENV === 'production' ? 
+						process.env.REACT_APP_AUTH_TOKEN_PROD 
+						: process.env.REACT_APP_AUTH_TOKEN_DEV}`
+					},
 				body: formData
 			}
 			fetch(`${process.env.REACT_APP_BACKEND_API}api/upload_documents/`, requestOptions)
@@ -131,9 +140,14 @@ const AddLibrarySettings = (props: {
 
 			const requestOptions = {
 				method: 'POST',
-				Headers: {
-					'Content-Type': 'multipart/form-data'
-				},
+				headers: {
+					'Authorization': `${
+					props.user && props.djangoLogin ?
+					'Bearer ' + localStorage.getItem('access') :
+						process.env.NODE_ENV === 'production' ? 
+						process.env.REACT_APP_AUTH_TOKEN_PROD 
+						: process.env.REACT_APP_AUTH_TOKEN_DEV}`
+					},
 				body: formData
 			}
 			fetch(`${process.env.REACT_APP_BACKEND_API}api/add_video_library/`, requestOptions)
@@ -256,7 +270,7 @@ const AddLibrarySettings = (props: {
 						</>: <></>}
 					
 					</div>
-					<div className='flex'>
+					<div className='flex justify-start mx-2 my-1'>
 						<div className='text-nav w-48 p-1'>Embedding Model*</div>
 						<DropdownOptions
 							width={'280px'}
@@ -264,6 +278,42 @@ const AddLibrarySettings = (props: {
 							defaultOption={currentSettings.selectedEmbeddingModel}
 							dropDownCallback={(option:string)=>{
 								props.settingsCallback({...currentSettings, selectedEmbeddingModel: option})
+							}}
+						/>
+					</div>
+					<div className='flex justify-start mx-2 my-1'>
+						<div className='text-nav p-1 w-48'>Use Overlap</div>
+						<DropdownOptions
+							width={'280px'}
+							optionsList={['Yes', 'No']}
+							defaultOption={'Yes'}
+							dropDownCallback={(option:string)=>{
+								setUseOverlap(option)
+							}}
+						/>
+					</div>
+					<div className='flex justify-start mx-2 my-1'>
+						<div className='text-nav p-1 w-48'>Chunk Size</div>
+						<DropdownOptions
+							width={'280px'}
+							optionsList={['500', '750', '1000', '1200']}
+							defaultOption={'1000'}
+							dropDownCallback={(option:string)=>{
+								setChunkSize(option)
+							}}
+						/>
+					</div>
+					<div className='flex justify-start mx-2 my-1'>
+						<div className='text-nav p-1 w-48'>Distance Function</div>
+						<DropdownOptions
+							width={'280px'}
+							optionsList={['Squared L2', 'Cosine similarity', 'Inner product']}
+							defaultOption={'Squared L2'}
+							dropDownCallback={(option:string)=>{
+								let request_option = option === 'Cosine similarity' ? 'cosine' : 
+									option === 'Inner product' ? 'inner' : 
+									'l2'
+								setDistanceFn(request_option)
 							}}
 						/>
 					</div>
@@ -297,6 +347,7 @@ const AddLibrarySettings = (props: {
 							<div className='text-nav p-1 text-lg bg-red-200 rounded-md'>Error uploading documents</div>
 						</div> : <></>	
 					}
+					<div className='text-nav p-1 my-2'> Note: Because of limited resources on the hosting server, upload up to 7-10 PDFs per library. It may take 3-4 minutes to see a success message.</div>
 					<div className='flex justify-start m-2'>
 						<div className='text-nav p-1 w-48'>Library Name</div>
 						<input type='text' placeholder=' Library Name' disabled={currentSettings.restriction_without_login && !props.user} className='rounded-md w-[270px] px-2 py-1 text-nav' value={UploadLibraryName}
@@ -347,6 +398,21 @@ const AddLibrarySettings = (props: {
 							}}
 						/>
 					</div>
+					<div className='flex justify-start m-2'>
+						<div className='text-nav p-1 w-48'>Distance Function</div>
+						<DropdownOptions
+							width={'270px'}
+							optionsList={['Squared L2', 'Cosine similarity', 'Inner product']}
+							defaultOption={'Squared L2'}
+							dropDownCallback={(option:string)=>{
+								let request_option = option === 'Cosine similarity' ? 'cosine' : 
+									option === 'Inner product' ? 'inner' : 
+									'l2'
+								setDistanceFn(request_option)
+							}}
+						/>
+					</div>
+
 					<div className='flex justify-center'>
 						<button className='bg-panel1 text-white px-4 py-2 rounded-md m-2'
 							onClick={() => setUploadLibrary(true)}
@@ -371,15 +437,23 @@ const AddLibrarySettings = (props: {
 					}
 					<div className='flex justify-start p-2'>
 						<div className='text-nav w-40 p-1 my-2'>Library Name</div>
-						<input disabled={currentSettings.restriction_without_login && !props.user} type='text' placeholder=' Library Name' className='rounded-md w-60 px-2 py-1 m-2 text-nav' value={videoLibraryName}
+						<input 
+							disabled={currentSettings.restriction_without_login && !props.user ? true : false} 
+							// disabled={true}
+							type='text' placeholder=' Library Name' className='rounded-md w-60 px-2 py-1 m-2 text-nav' value={videoLibraryName}
 							onChange={(e) => setVideoLibraryName(e.target.value)}
 						/>
 					</div>
-					<div className='text-nav p-1 my-2'> Note: MyGPT currently supports YouTube videos with closed captions only.</div>
+					<div className='text-nav p-1 my-2'> Note: MyGPT currently supports YouTube videos with closed captions only. <br/> Because of restrictions on hosting server, YouTube upload has been disabled.
+						To test the feature, we recommand installing it on your local machine.
+					</div>
 					<div className='flex justify-start p-2 flex-col'>
 						<div>
 							<div className='text-nav w-40 p-1 my-2'>YouTube Playlist link</div>
-							<input disabled={currentSettings.restriction_without_login && !props.user} type='text' placeholder=' YouTube playlist link' className='rounded-md w-72 px-2 py-1 m-2 text-nav' value={videoPlaylistURL}
+							<input 
+								disabled={currentSettings.restriction_without_login && !props.user ? true : false} 
+								// disabled={true}
+								type='text' placeholder=' YouTube playlist link' className='rounded-md w-72 px-2 py-1 m-2 text-nav' value={videoPlaylistURL}
 								onChange={(e) => setVideoPlaylistURL(e.target.value)}
 							/>
 						</div>
@@ -390,7 +464,10 @@ const AddLibrarySettings = (props: {
 								{/* for loop for uploaddoccount */}
 								{[...Array(uploadDocCount)].map((_x:any, i:any) => (
 									<div key={i} className='m-2'>
-										<input disabled={currentSettings.restriction_without_login && !props.user} type='text' placeholder=' Youtube video link' className='rounded-md w-72 px-2 py-1 text-nav'
+										<input 
+										disabled={currentSettings.restriction_without_login && !props.user ? true : false} 
+										// disabled={true}
+										type='text' placeholder=' Youtube video link' className='rounded-md w-72 px-2 py-1 text-nav'
 											value={videoDocURLs[i]} onChange={(e) =>{
 												const temp = [...videoDocURLs]
 												temp[i] = e.target.value
@@ -400,12 +477,12 @@ const AddLibrarySettings = (props: {
 									</div>
 								))}
 							</div>
-							{uploadDocCount < 41 ? <button className='text-panel1 bg-white px-4 py-2 rounded-md mx-2' disabled={currentSettings.restriction_without_login && !props.user} onClick={()=>setUploadDocCount(uploadDocCount+5)}>+5</button> : <></>}
+							{uploadDocCount < 41 ? <button className='text-panel1 bg-white px-4 py-2 rounded-md mx-2' disabled={true} onClick={()=>setUploadDocCount(uploadDocCount+5)}>+5</button> : <></>}
 						</div>
 					</div>
 					<div className='flex justify-start text-nav font-bold p-1 my-2 mx-auto w-72'> AND </div>
-					<div className='flex justify-start p-2 flex-col'>
-						<div className='text-nav w-48 p-1 my-2'>Embedding Model</div>
+					<div className='flex justify-start mx-2 my-1'>
+						<div className='text-nav p-1 w-48'>Embedding Model</div>
 						<DropdownOptions
 							width={'280px'}
 							optionsList={props.currentSettings.embedding_models}
@@ -415,8 +492,44 @@ const AddLibrarySettings = (props: {
 							}}
 						/>
 					</div>
+					<div className='flex justify-start mx-2 my-1'>
+						<div className='text-nav p-1 w-48'>Use Overlap</div>
+						<DropdownOptions
+							width={'280px'}
+							optionsList={['Yes', 'No']}
+							defaultOption={'Yes'}
+							dropDownCallback={(option:string)=>{
+								setUseOverlap(option)
+							}}
+						/>
+					</div>
+					<div className='flex justify-start mx-2 my-1'>
+						<div className='text-nav p-1 w-48'>Chunk Size</div>
+						<DropdownOptions
+							width={'280px'}
+							optionsList={['500', '750', '1000', '1200']}
+							defaultOption={'1000'}
+							dropDownCallback={(option:string)=>{
+								setChunkSize(option)
+							}}
+						/>
+					</div>
+					<div className='flex justify-start mx-2 my-1'>
+						<div className='text-nav p-1 w-48'>Distance Function</div>
+						<DropdownOptions
+							width={'280px'}
+							optionsList={['Squared L2', 'Cosine similarity', 'Inner product']}
+							defaultOption={'Squared L2'}
+							dropDownCallback={(option:string)=>{
+								let request_option = option === 'Cosine similarity' ? 'cosine' : 
+									option === 'Inner product' ? 'inner' : 
+									'l2'
+								setDistanceFn(request_option)
+							}}
+						/>
+					</div>
 					<div className='flex justify-start'>
-						<button className='bg-panel1 text-white px-4 py-2 rounded-md m-2'
+						<button className='bg-panel1 text-white px-4 py-2 rounded-md m-2' disabled={currentSettings.restriction_without_login && !props.user ? true : false}
 							onClick={() => setVideoLibrary(true)}
 						>Add videos</button>
 					</div>

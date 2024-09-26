@@ -4,6 +4,7 @@ import Workflow from './Workflow'
 import AddLibrarySettings from './AddLibrarySettings'
 import LLMSettings from './LLMSettings'
 import EmbeddingSettings from './EmbeddingSettings'
+import RelevanceScoreSettings from './RelevanceScoresSettings'
 import { MagnifyingGlassMinusIcon, MagnifyingGlassPlusIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
 
 const Settings = (props:{
@@ -11,7 +12,8 @@ const Settings = (props:{
 	defaultSettings:any,
 	currentSettings:any,
 	settingsCallback:any,
-	user?:any
+	user?:any,
+	djangoLogin?:any
 }) => {
 	const [activeTab, setActiveTab] = useState(props.currentSettings.selectedPanel || props.defaultSettings.selectedPanel)
 	const [workflowZoomedIn, setWorkflowZoomedIn] = useState(false)
@@ -32,9 +34,15 @@ const Settings = (props:{
 		const requestOptions = {
 			method: 'POST',
 			headers: { 
-				'Content-Type': 'application/json'
+				'Content-Type': 'application/json',
+				'Authorization': `${
+					props.user && props.djangoLogin ?
+					'Bearer ' + localStorage.getItem('access') :
+					process.env.NODE_ENV === 'production' ? 
+					process.env.REACT_APP_AUTH_TOKEN_PROD 
+					: process.env.REACT_APP_AUTH_TOKEN_DEV}`
 			},
-			body: JSON.stringify(props.user ? props.user : {'user_email': '', 'user_group': ''})
+			body: JSON.stringify(props.djangoLogin ? props.user : {'user_email': props.user.user_email, 'user_group': ''})
 		}
 		if(!datasets.length || props.currentSettings.fetchDatasets)
 			fetch(`${process.env.REACT_APP_BACKEND_API}api/get_datasets/`, requestOptions)
@@ -72,8 +80,14 @@ const Settings = (props:{
 			const requestOptions = {
 				method: 'GET',
 				headers: { 
-					'Content-Type': 'application/json'
-				}
+					'Content-Type': 'application/json',
+					'Authorization': `${
+						props.user && props.djangoLogin ?
+						'Bearer ' + localStorage.getItem('access') :
+						process.env.NODE_ENV === 'production' ? 
+						process.env.REACT_APP_AUTH_TOKEN_PROD 
+						: process.env.REACT_APP_AUTH_TOKEN_DEV}`
+					}
 			}
 			fetch(`${process.env.REACT_APP_BACKEND_API}api/delete_dataset/?dataset=${deleteDataset}`, requestOptions)
 				.then(response => response.json())
@@ -139,7 +153,12 @@ const Settings = (props:{
 					method: 'POST',
 					headers: { 
 						'Content-Type': 'application/json',
-						'Authorization': `${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_AUTH_TOKEN_PROD : process.env.REACT_APP_AUTH_TOKEN_DEV}`
+						'Authorization': `${
+					props.user && props.djangoLogin ?
+					'Bearer ' + localStorage.getItem('access') :
+						process.env.NODE_ENV === 'production' ? 
+						process.env.REACT_APP_AUTH_TOKEN_PROD 
+						: process.env.REACT_APP_AUTH_TOKEN_DEV}`
 					},
 				setConnection: 'keep-alive',
 				keepalive: true,
@@ -152,7 +171,7 @@ const Settings = (props:{
 
 		}
 		postData()
-	},[])
+	},[props.user, props.djangoLogin])
 
 	return (
 		// create floating panel with opque background
@@ -210,6 +229,7 @@ const Settings = (props:{
 									currentSettings={currentSettings}
 									settingsCallback={props.settingsCallback}
 									user={props.user}
+									djangoLogin={props.djangoLogin}
 								/>
 								{/* list of available libraries */}
 								<div className='flex flex-col justify-start mb-8'>
@@ -226,7 +246,14 @@ const Settings = (props:{
 																	+ (dataset.dataset === currentSettings.selectedDataset ? ' bg-gray-300' : ' bg-panel1')}
 																	onClick={()=>{
 																		setSelectedDataset(dataset.dataset)
-																		props.settingsCallback({...currentSettings, selectedDataset: dataset.dataset, answerWithoutContext: dataset.direct_chat_without_docs,  fetchPapers: !dataset.direct_chat_without_docs})
+																		props.settingsCallback({...currentSettings, 
+																			selectedDataset: dataset.dataset, 
+																			answerWithoutContext: dataset.direct_chat_without_docs,  
+																			fetchPapers: !dataset.direct_chat_without_docs,
+																			use_default_qrs: true,
+																			use_default_ars: true,
+																			use_default_hi: true,
+																		})
 																	}}
 																	disabled={dataset.dataset === currentSettings.selectedDataset ? true : false}
 																>{ dataset.dataset === currentSettings.selectedDataset ? 'Selected' : 'Select'}</button>
@@ -365,6 +392,8 @@ const Settings = (props:{
 								selectedEmbeddingModel={props.currentSettings.selectedEmbeddingModel}
 								currentSettings={currentSettings}
 								settingsCallback={props.settingsCallback}
+								djangoLogin={props.djangoLogin}
+								user={props.user}
 							/> : <></>
 							// <div className='px-8 py-2 flex flex-col divide-y'>
 							// 	<div className='m-2'>
@@ -407,26 +436,13 @@ const Settings = (props:{
 						}
 						{
 							activeTab === 'relevance_score' ?
-							<div className='px-8 py-2 flex flex-col divide-y'>
-								<div className='m-2'>
-									<div className='text-nav inline-block px-2 mx-4 my-2 text-lg font-semibold'>Relevance Score Cutoff</div>
-									<div className='mx-4 px-2 w-[200px]'>
-										<div className='flex justify-between font-light text-nav m-2 mb-4'>
-											(work in progress)
-										</div>
-										<div className='flex justify-between'>
-											<div className='text-nav p-1 my-1'>Best</div>
-											<input type='number' placeholder='Best' disabled={true} className='rounded-md w-20 p-1 m-1' value={currentSettings.relevance_score_cutoff.best} onChange={(e)=>props.settingsCallback({...currentSettings, relevance_score_cutoff: {...currentSettings.relevance_score_cutoff, best: e.target.value}})}/>
-										</div>
-										<div className='flex justify-between'>
-											<div className='text-nav p-1 my-1'>Worst</div>
-											<input type='number' placeholder='Worst' disabled={true} className='rounded-md w-20 p-1 m-1' value={currentSettings.relevance_score_cutoff.worst} onChange={(e)=>props.settingsCallback({...currentSettings, relevance_score_cutoff: {...currentSettings.relevance_score_cutoff, worst: e.target.value}})}/>
-										</div>
-									</div>
-									<button className='bg-panel1 text-white px-4 py-1 rounded-md mx-4 my-2' onClick={()=>props.settingsCallback(currentSettings)}>Save</button>
-									<button className='bg-panel1 text-white px-4 py-1 rounded-md mx-4 my-2' onClick={()=>props.settingsCallback(props.defaultSettings)}>Reset</button>
-								</div>
-							</div> : <></>
+							<RelevanceScoreSettings
+								selectedDataset={selectedDataset}
+								currentSettings={currentSettings}
+								settingsCallback={props.settingsCallback}
+								djangoLogin={props.djangoLogin}
+								user={props.user}
+							/> : <></>
 						}
 					</div>
 				</div>

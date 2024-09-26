@@ -24,7 +24,13 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 
 	useEffect(() => {
 		// fetch chat history from API
-		fetch(`${process.env.REACT_APP_BACKEND_API}api/get_conversation_history/?dataset=${selectedDataset}`)
+		fetch(`${process.env.REACT_APP_BACKEND_API}api/get_conversation_history/?dataset=${selectedDataset}`, {
+			method: 'GET',
+			headers: { 
+				'Content-Type': 'application/json',
+				'Authorization': `${localStorage.getItem('access') ?'Bearer ' + localStorage.getItem('access'):''}`
+			}
+		})
 			.then(response => response.json())
 			.then(data => {
 				const questions_array:any = []
@@ -43,7 +49,13 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 	// fetch answers and sources for selected question
 	useEffect(() => {
 		if (activeQuestionID === 0) return
-		fetch(`${process.env.REACT_APP_BACKEND_API}api/get_question_details/?question_id=${activeQuestionID}`)
+		fetch(`${process.env.REACT_APP_BACKEND_API}api/get_question_details/?question_id=${activeQuestionID}`,{
+			method: 'GET',
+			headers: { 
+				'Content-Type': 'application/json',
+				'Authorization': `${localStorage.getItem('access') ?'Bearer ' + localStorage.getItem('access'):''}`
+			}
+		})
 			.then(response => response.json())
 			.then(data => {
 				setQuestionDetails(data)
@@ -123,12 +135,19 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 								<>
 									<div className='flex flex-row justify-between font-bold'>
 											<div className='text-white text-sm py-2'>{questionDetails.llm}</div>
-											<div className='text-white text-xs py-2'>
+											<div className='text-white text-xs flex flex-col items-end py-2'>
 												<div className='text-white rounded-full text-xs py-1'>
 													Relevance 
 													<span style={{ backgroundColor: ConfidenceScoreColor(questionDetails.answers[0].relevance_score)}} 
 														className= {'py-1 px-2 m-1 rounded-full' + (questionDetails.answers[0].relevance_score > 80 || questionDetails.answers[0].relevance_score < 20 ? ' text-white' : ' text-nav')}>
 														{questionDetails.answers[0].relevance_score + '%'}
+													</span>
+												</div>
+												<div className='text-white rounded-full text-xs py-1 mt-1'>
+													Hallucination
+													<span style={{ backgroundColor: ConfidenceScoreColor(100 - questionDetails.answers[0].hallucination_index)}} 
+														className= {'py-1 px-2 m-1 rounded-full' + (questionDetails.answers[0].hallucination_index > 80 || questionDetails.answers[0].hallucination_index < 20 ? ' text-white' : ' text-nav')}>
+														{questionDetails.answers[0].hallucination_index + '%'}
 													</span>
 												</div>
 											</div>

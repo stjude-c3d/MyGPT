@@ -81,9 +81,9 @@ function TopNav(props:{
             // appLogoLink = {'/'}
             showPlotButton = {false}
             plotButtonCallback = {() => {props.setPlotButton(true)}}
-            showHistoryButton = {true}
+            showHistoryButton = {djangoAuthenticated || userAuthenticated ? true : false}
             historyButtonCallback = {() => {props.setShowChatHistory(true)}}
-            showSettingsButton = {true}
+            showSettingsButton = {djangoAuthenticated || userAuthenticated ? true : false}
             settingButtonCallback = {() => {props.setShowSettings(true)}}
             backgroundColor={'#2A4759'}
             showLoginButton={props.showLoginButton}
