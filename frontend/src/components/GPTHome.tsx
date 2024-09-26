@@ -78,7 +78,7 @@ function GPTHome(props:{
 						headers: { 
 							'Content-Type': 'application/json',
 							'Authorization': `${
-								props.frontendSettings.django_login ?
+								props.frontendSettings && props.frontendSettings.django_login ?
 								'Bearer ' + localStorage.getItem('access') :
 								process.env.NODE_ENV === 'production' ? 
 								process.env.REACT_APP_AUTH_TOKEN_PROD 
@@ -89,7 +89,7 @@ function GPTHome(props:{
 					setTimeout: 10000,
 					body: JSON.stringify({'llms': llms_object})
 					}
-					if (props.frontendSettings.django_login && localStorage.getItem('access')?.length){
+					if (props.frontendSettings && props.frontendSettings.django_login && localStorage.getItem('access')?.length){
 						const response2 = await fetch(`${process.env.REACT_APP_BACKEND_API}api/add_ollama_models/`, requestOptions)
 						if (response2.ok){
 							const data2 = await response2.json()
@@ -114,7 +114,7 @@ function GPTHome(props:{
 						headers: { 
 							'Content-Type': 'application/json',
 							'Authorization': `${
-								props.frontendSettings.django_login ?
+								props.frontendSettings && props.frontendSettings.django_login ?
 								'Bearer ' + localStorage.getItem('access') :
 								process.env.NODE_ENV === 'production' ? 
 								process.env.REACT_APP_AUTH_TOKEN_PROD 
@@ -125,7 +125,7 @@ function GPTHome(props:{
 						setTimeout: 10000,
 						body: JSON.stringify({'embedding_models': embedding_models_object})
 					}
-					if (props.frontendSettings.django_login && localStorage.getItem('access')?.length){
+					if (props.frontendSettings && props.frontendSettings.django_login && localStorage.getItem('access')?.length){
 						const response3 = await fetch(`${process.env.REACT_APP_BACKEND_API}api/add_embedding_models/`, requestOptions2)
 						if (response3.ok){
 							const data3 = await response3.json()
@@ -135,7 +135,7 @@ function GPTHome(props:{
 
 			}
 			postData()
-		},[props.frontendSettings.django_login])
+		},[props.frontendSettings, props.frontendSettings.django_login])
 
 	useEffect(()=>{
 		const requestOptions = {
@@ -143,7 +143,7 @@ function GPTHome(props:{
 			headers: { 
 				'Content-Type': 'application/json',
 				'Authorization': `${
-					props.frontendSettings.django_login ?
+					props.frontendSettings && props.frontendSettings.django_login ?
 					'Bearer ' + localStorage.getItem('access') :
 					process.env.NODE_ENV === 'production' ? 
 					process.env.REACT_APP_AUTH_TOKEN_PROD 
@@ -198,7 +198,7 @@ function GPTHome(props:{
 				headers: { 
 					'Content-Type': 'application/json',
 					'Authorization': `${
-						props.frontendSettings.django_login ?
+						props.frontendSettings && props.frontendSettings.django_login ?
 						'Bearer ' + localStorage.getItem('access') :
 						process.env.NODE_ENV === 'production' ? 
 						process.env.REACT_APP_AUTH_TOKEN_PROD 
@@ -228,7 +228,7 @@ function GPTHome(props:{
 			headers: { 
 				'Content-Type': 'application/json',
 				'Authorization': `${
-					props.frontendSettings.django_login ?
+					props.frontendSettings && props.frontendSettings.django_login ?
 					'Bearer ' + localStorage.getItem('access') :
 					process.env.NODE_ENV === 'production' ? 
 					process.env.REACT_APP_AUTH_TOKEN_PROD 
@@ -455,7 +455,7 @@ function GPTHome(props:{
 				headers: { 
 					'Content-Type': 'application/json',
 					'Authorization': `${
-						props.frontendSettings.django_login ?
+						props.frontendSettings && props.frontendSettings.django_login ?
 						'Bearer ' + localStorage.getItem('access') :
 						process.env.NODE_ENV === 'production' ? 
 						process.env.REACT_APP_AUTH_TOKEN_PROD 

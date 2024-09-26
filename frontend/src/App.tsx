@@ -138,6 +138,7 @@ function App() {
           setShowChatHistory={setShowChatHistory} 
           setPlotButton={setShowPlotButton}
           showLoginButton={frontendSettings.azure_login}
+          restrictions={frontendSettings.restriction_without_login}
           loginCallback={loginCallback}
         />
         {showSettings ?
