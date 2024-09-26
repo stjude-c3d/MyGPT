@@ -5,7 +5,7 @@ class ModelAdmin(admin.ModelAdmin):
     list_display = ['model_name', 'model_size']
 
 class EmbeddingModelAdmin(admin.ModelAdmin):
-    list_display = ['model_name', 'model_size', 'model_source', 'best_distance', 'worst_distance']
+    list_display = ['model_name', 'model_size', 'model_source', 'best_distance_q', 'worst_distance_q']
 
 class DatasetAdmin(admin.ModelAdmin):
     list_display = ['dataset_name', 'zotero_id', 'dataset_size', 'chunksize', 'overlap', 'user', 'user_email', 'user_group', 'embedding_model', 'embedding_added', 'direct_chat_without_docs', 'dataset_date_time']
@@ -26,7 +26,7 @@ class QuestionAdmin(admin.ModelAdmin):
     list_display = ['question_text', 'question_dataset', 'relevance_score' ,'conversation', 'saved_date_time']
 
 class AnswerAdmin(admin.ModelAdmin):
-    list_display = ['answer_text', 'model_type', 'relevance_score', 'question', 'saved_date_time']
+    list_display = ['answer_text', 'model_type', 'relevance_score', 'hallucination_index', 'question', 'saved_date_time']
 
 class SourceAdmin(admin.ModelAdmin):
     list_display = ['source_doc', 'source_pointer', 'context', 'distance', 'question']

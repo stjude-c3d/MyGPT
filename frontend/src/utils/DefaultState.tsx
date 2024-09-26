@@ -39,9 +39,17 @@ const defaultSettings = {
 	top_k: 20,
 	top_p: 0.7,
 	relevance_score_cutoff: {
-		best: 0.4,
-		worst: 1.5
+		question_best: 0.2,
+		question_worst: 1.7,
+		answer_best: 0.12,
+		answer_worst: 1.42,
+		HIa: 1,
+		HIb: 0.33,
+		HIc: 0.67,
 	},
+	use_default_qrs: true,
+	use_default_ars: true,
+	use_default_hi: true,
 	restriction_without_login: false,
 	answerWithoutContext: false,
 	papers: [

@@ -76,7 +76,12 @@ function App() {
           method: 'POST',
           headers: { 
             'Content-Type': 'application',
-            'Authorization': `${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_AUTH_TOKEN_PROD : process.env.REACT_APP_AUTH_TOKEN_DEV}`
+            'Authorization': `${
+              frontendSettings.django_login ?
+              'Bearer ' + localStorage.getItem('access') :
+              process.env.NODE_ENV === 'production' ? 
+              process.env.REACT_APP_AUTH_TOKEN_PROD 
+              : process.env.REACT_APP_AUTH_TOKEN_DEV}`
           },
           body: JSON.stringify({
             'user_email': user.user_email,
@@ -94,23 +99,34 @@ function App() {
           const requestOptions = {
             method: 'POST',
             headers: { 
-              'Content-Type': 'application',
-              'Authorization': `${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_AUTH_TOKEN_PROD : process.env.REACT_APP_AUTH_TOKEN_DEV}`
+              'Content-Type': 'application/json',
+              'Authorization': `${
+                frontendSettings.django_login ?
+                'Bearer ' + localStorage.getItem('access') :
+                process.env.NODE_ENV === 'production' ? 
+                process.env.REACT_APP_AUTH_TOKEN_PROD 
+                : process.env.REACT_APP_AUTH_TOKEN_DEV}`
             },
             body: JSON.stringify({
               'user_email': '',
               'user_group': ''
             })
           }
+          if (frontendSettings.django_login && localStorage.getItem('access')?.length){
             fetch(`${process.env.REACT_APP_BACKEND_API}api/get_datasets/?format=json`, requestOptions)
-              .then(response => response.json())
+            .then(response => {
+              if(response.ok){
+                return response.json()
+              }
+            })
               .then(data => {
                 currentSettings.datasets = currentSettings.datasets.filter((d:any)=>d !== 'None')
-                if(data.length > 0)
+                if(data && data.length > 0)
                   setCurrentSettings({...currentSettings, datasets:data.map((d:any)=>d.dataset_name), selectedDataset:data[0].dataset_name, fetchDatasets:false, datasetsUpdated:false})
             })
+          }
         }
-    }, [user, currentSettings])
+    }, [user, currentSettings, frontendSettings.django_login])
 
   return (
     <>

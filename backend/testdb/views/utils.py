@@ -3,6 +3,7 @@ from django.apps import apps
 from django.utils.timezone import make_aware
 from pypdf import PdfReader
 from pyzotero import zotero
+from typing import cast, Union
 import fitz
 from tqdm import tqdm
 import chromadb
@@ -196,6 +197,7 @@ def add_dataset_from_upload(request):
     user_group_r = request.POST.get('user_group')
     use_overlap = request.POST.get('use_overlap')
     chunk_size = request.POST.get('chunk_size')
+    distance_function_r = request.POST.get('distance_function')
 
     # Validate all inputs for code injection
     if not dataset_name_r or not re.match(r'^[a-zA-Z0-9_\-\s\w]+$', dataset_name_r):
@@ -203,10 +205,10 @@ def add_dataset_from_upload(request):
     else:
         dataset_name = dataset_name_r
 
-    if not paper_titles_r or not all([re.match(r'^[a-zA-Z0-9_\-\w\s]+$', title) for title in paper_titles_r]):
-        return False
-    else:
-        paper_titles = paper_titles_r
+    # if not paper_titles_r or not all([re.match(r'^[a-zA-Z0-9_\-\w\s]+$', title) for title in paper_titles_r]):
+    #     return False
+    # else:
+    paper_titles = paper_titles_r
 
     # Validate user input
     if not user_r or not re.match(r'^[a-zA-Z0-9_\-]+$', user_r):
@@ -225,6 +227,12 @@ def add_dataset_from_upload(request):
         return False
     else:
         user_group = user_group_r 
+
+    # Validate distance_function input
+    if not distance_function_r or not re.match(r'^[a-zA-Z0-9_\-]+$', distance_function_r):
+        return False
+    else:
+        distance_function = distance_function_r
 
     use_overlap = True if use_overlap == 'Yes' else False
     chunk_size = int(chunk_size)
@@ -245,6 +253,7 @@ def add_dataset_from_upload(request):
             dataset_size=0,
             chunksize=chunk_size,
             overlap=use_overlap,
+            distance_function=distance_function,
             user = user if len(user) else '-',
             user_email = user_email if len(user_email) else '-',
             user_group = user_group if len(user_group) else '-',
@@ -363,7 +372,7 @@ def add_dataset_from_upload(request):
     return dataset_name
 
 
-def add_to_chroma(dataset_name, embedding_model_request = 'all-MiniLM-L6-v2'):
+def add_to_chroma(dataset_name, embedding_model_request = 'all-MiniLM-L6-v2', distance_function = 'l2'):
     documents_directory = '/code/data/data_chunks'
     # collection_name = 'pub_collection'
     # Read all files in the data directory
@@ -375,35 +384,18 @@ def add_to_chroma(dataset_name, embedding_model_request = 'all-MiniLM-L6-v2'):
     # Learn more at docs.trychroma.com
     client = chromadb.PersistentClient(path='/code/chroma_storage/.')
 
-    # query embedding model from database
-    embedding_model_count = EmbeddingModel.objects.filter(model_name=embedding_model_request).count()
-    if embedding_model_count == 0:
-        EmbeddingModel.objects.create(
-            model_name=embedding_model_request,
-            model_source='sentence-transformer',
-            best_distance=0.5,
-            worst_distance=1.5
-        )
-        embedding_model = embedding_model_request
-        embedding_model_source = 'sentence-transformer'
-    else:
-        embedding_model = EmbeddingModel.objects.filter(model_name=embedding_model_request)[0].model_name
-        embedding_model_source = EmbeddingModel.objects.filter(model_name=embedding_model_request)[0].model_source
-        
-    # use multi-qa-MiniLM-L6-cos-v1 embedding function
-    if embedding_model == 'all-MiniLM-L6-v2':
-        embedding_model_ef = embedding_functions.DefaultEmbeddingFunction()
-    elif embedding_model_source == 'ollama':
-        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "api/embeddings", model_name=embedding_model)
-    elif '/' in embedding_model:
-        embedding_model_ef = HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=embedding_model)
-    elif embedding_model_source == 'sentence-transformer':    
-        embedding_model_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=embedding_model)
+    embedding_model_ef = get_embedding_model_ef(embedding_model_request)
+    embedding_model = EmbeddingModel.objects.filter(model_name=embedding_model_request)[0].model_name
         
     # If the collection already exists, we will delete it and create a new one.
     client.get_or_create_collection(name=dataset_name)
     client.delete_collection(name=dataset_name)
-    collection = client.get_or_create_collection(name=dataset_name, embedding_function=embedding_model_ef)
+    if (distance_function == 'cosine'):
+        collection = client.get_or_create_collection(name=dataset_name, embedding_function=embedding_model_ef, metadata={"hnsw:space": "cosine"})
+    elif (distance_function == 'ip'):
+        collection = client.get_or_create_collection(name=dataset_name, embedding_function=embedding_model_ef, metadata={"hnsw:space": "ip"})
+    else:
+        collection = client.get_or_create_collection(name=dataset_name, embedding_function=embedding_model_ef)
 
     # Create ids from the current count
     count = collection.count()
@@ -463,30 +455,7 @@ def add_demo_dataset(embedding_model_request = 'multi-qa-MiniLM-L6-cos-v1'):
     titles = []
     client = chromadb.PersistentClient(path='/code/chroma_storage/.')
 
-    # query embedding model from database
-    embedding_model_count = EmbeddingModel.objects.filter(model_name=embedding_model_request).count()
-    if embedding_model_count == 0:
-        EmbeddingModel.objects.create(
-            model_name=embedding_model_request,
-            model_source='sentence-transformer',
-            best_distance=0.5,
-            worst_distance=1.5
-        )
-        embedding_model = embedding_model_request
-        embedding_model_source = 'sentence-transformer'
-    else:
-        embedding_model = EmbeddingModel.objects.filter(model_name=embedding_model_request)[0].model_name
-        embedding_model_source = EmbeddingModel.objects.filter(model_name=embedding_model_request)[0].model_source
-        
-    # use multi-qa-MiniLM-L6-cos-v1 embedding function
-    if embedding_model == 'all-MiniLM-L6-v2':
-        embedding_model_ef = embedding_functions.DefaultEmbeddingFunction()
-    elif embedding_model_source == 'ollama':
-        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "api/embeddings", model_name=embedding_model)
-    elif '/' in embedding_model:
-        embedding_model_ef = HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=embedding_model)
-    elif embedding_model_source == 'sentence-transformer':    
-        embedding_model_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=embedding_model)
+    embedding_model_ef = get_embedding_model_ef(embedding_model_request)
 
     # If the collection already exists, we will delete it and create a new one.
     if len(client.list_collections()):
@@ -615,30 +584,7 @@ def add_embeddings_to_chunks(dataset):
     return
 
 def add_embeddings_to_qna(text, text_type = 'question', embedding_model_request = 'multi-qa-MiniLM-L6-cos-v1'):
-    # query embedding model from database
-    embedding_model_count = EmbeddingModel.objects.filter(model_name=embedding_model_request).count()
-    if embedding_model_count == 0:
-        EmbeddingModel.objects.create(
-            model_name=embedding_model_request,
-            model_source='sentence-transformer',
-            best_distance=0.5,
-            worst_distance=1.5
-        )
-        embedding_model = embedding_model_request
-        embedding_model_source = 'sentence-transformer'
-    else:
-        embedding_model = EmbeddingModel.objects.filter(model_name=embedding_model_request)[0].model_name
-        embedding_model_source = EmbeddingModel.objects.filter(model_name=embedding_model_request)[0].model_source
-        
-    # use multi-qa-MiniLM-L6-cos-v1 embedding function
-    if embedding_model == 'all-MiniLM-L6-v2':
-        embedding_model_ef = embedding_functions.DefaultEmbeddingFunction()
-    elif embedding_model_source == 'ollama':
-        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "api/embeddings", model_name=embedding_model)
-    elif '/' in embedding_model:
-        embedding_model_ef = HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=embedding_model)
-    elif embedding_model_source == 'sentence-transformer':    
-        embedding_model_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=embedding_model)
+    embedding_model_ef = get_embedding_model_ef(embedding_model_request)
 
     # get embeddings
     embedding = embedding_model_ef([text])
@@ -811,29 +757,7 @@ def nearestDataChroma(text, dataset_name, keywords_str = '', embedding_model_req
     # collection_name = 'pub_collection'
     # client = chromadb.Client()
         # query embedding model from database
-    embedding_model_count = EmbeddingModel.objects.filter(model_name=embedding_model_request).count()
-    if embedding_model_count == 0:
-        EmbeddingModel.objects.create(
-            model_name=embedding_model_request,
-            model_source='sentence-transformer',
-            best_distance=0.5,
-            worst_distance=1.5
-        )
-        embedding_model = embedding_model_request
-        embedding_model_source = 'sentence-transformer'
-    else:
-        embedding_model = EmbeddingModel.objects.filter(model_name=embedding_model_request)[0].model_name
-        embedding_model_source = EmbeddingModel.objects.filter(model_name=embedding_model_request)[0].model_source
-        
-    # use multi-qa-MiniLM-L6-cos-v1 embedding function
-    if embedding_model == 'all-MiniLM-L6-v2':
-        embedding_model_ef = embedding_functions.DefaultEmbeddingFunction()
-    elif embedding_model_source == 'ollama':
-        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "api/embeddings", model_name=embedding_model)
-    elif '/' in embedding_model:
-        embedding_model_ef = HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=embedding_model)
-    elif embedding_model_source == 'sentence-transformer':    
-        embedding_model_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=embedding_model)
+    embedding_model_ef = get_embedding_model_ef(embedding_model_request)
 
     # If the collection already exists, we just return it. This allows us to add more
     # data to an existing collection.
@@ -1028,17 +952,31 @@ def get_conversation_json(question_text):
         conversation_json.append(qna_json)
     return conversation_json
 
-def get_relevance_score(distances, embedding_model):
-    if embedding_model == 'nomic-embed-text':
-        best_distance = 50
-        worst_distance = 500
-    elif embedding_model == 'bge-m3' or embedding_model == 'NeuML/pubmedbert-base-embeddings':
-        best_distance = 100
-        worst_distance = 800
+def get_relevance_score(distances, embedding_model, question=True, use_default=True, qrs_lower=0, qrs_upper=1):
+    # if embedding_model == 'nomic-embed-text':
+    #     best_distance = 50
+    #     worst_distance = 500
+    # elif embedding_model == 'bge-m3:latest' or embedding_model == 'NeuML/pubmedbert-base-embeddings' or embedding_model == 'nomic-embed-text:latest':
+    #     best_distance = 100
+    #     worst_distance = 800
+    # else:
+    #     best_distance = 0.5
+    #     worst_distance = 1.5
+    if use_default:
+        embedding_model_obj = EmbeddingModel.objects.filter(model_name=embedding_model)[0]
+        if question:
+            best_distance = embedding_model_obj.best_distance_q
+            worst_distance = embedding_model_obj.worst_distance_q
+        else:
+            best_distance = embedding_model_obj.best_distance_ac
+            worst_distance = embedding_model_obj.worst_distance_ac
+
+        buffer_distance = (worst_distance - best_distance) * 0.1
+        best_distance = best_distance - buffer_distance
+        worst_distance = worst_distance + (buffer_distance*3)
     else:
-        best_distance = 0.5
-        worst_distance = 1.5
-        
+        best_distance = qrs_lower
+        worst_distance = qrs_upper
 
     # calculate confidence score
     # if maximum distance is more than 1.5 then confidence score is 0
@@ -1056,30 +994,7 @@ def get_answer_distance(answer1, answer2, embedding_model_request = 'multi-qa-Mi
     dataset_name = 'answers'
     client = chromadb.PersistentClient(path='/code/chroma_storage/.')
         
-    # query embedding model from database
-    embedding_model_count = EmbeddingModel.objects.filter(model_name=embedding_model_request).count()
-    if embedding_model_count == 0:
-        EmbeddingModel.objects.create(
-            model_name=embedding_model_request,
-            model_source='sentence-transformer',
-            best_distance=0.5,
-            worst_distance=1.5
-        )
-        embedding_model = embedding_model_request
-        embedding_model_source = 'sentence-transformer'
-    else:
-        embedding_model = EmbeddingModel.objects.filter(model_name=embedding_model_request)[0].model_name
-        embedding_model_source = EmbeddingModel.objects.filter(model_name=embedding_model_request)[0].model_source
-        
-    # use multi-qa-MiniLM-L6-cos-v1 embedding function
-    if embedding_model == 'all-MiniLM-L6-v2':
-        embedding_model_ef = embedding_functions.DefaultEmbeddingFunction()
-    elif embedding_model_source == 'ollama':
-        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "api/embeddings", model_name=embedding_model)
-    elif '/' in embedding_model:
-        embedding_model_ef = HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=embedding_model)
-    elif embedding_model_source == 'sentence-transformer':    
-        embedding_model_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=embedding_model)
+    embedding_model_ef = get_embedding_model_ef(embedding_model_request)
 
     # If the collection already exists, we will delete it and create a new one.
     client.get_or_create_collection(name=dataset_name)
@@ -1154,30 +1069,8 @@ def add_video_to_chroma(dataset_name, embedding_model_request = 'multi-qa-MiniLM
     # Learn more at docs.trychroma.com
     client = chromadb.PersistentClient(path='/code/chroma_storage/.')
 
-    # query embedding model from database
-    embedding_model_count = EmbeddingModel.objects.filter(model_name=embedding_model_request).count()
-    if embedding_model_count == 0:
-        EmbeddingModel.objects.create(
-            model_name=embedding_model_request,
-            model_source='sentence-transformer',
-            best_distance=0.5,
-            worst_distance=1.5
-        )
-        embedding_model = embedding_model_request
-        embedding_model_source = 'sentence-transformer'
-    else:
-        embedding_model = EmbeddingModel.objects.filter(model_name=embedding_model_request)[0].model_name
-        embedding_model_source = EmbeddingModel.objects.filter(model_name=embedding_model_request)[0].model_source
-        
-    # use multi-qa-MiniLM-L6-cos-v1 embedding function
-    if embedding_model == 'all-MiniLM-L6-v2':
-        embedding_model_ef = embedding_functions.DefaultEmbeddingFunction()
-    elif embedding_model_source == 'ollama':
-        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "api/embeddings", model_name=embedding_model)
-    elif '/' in embedding_model:
-        embedding_model_ef = HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=embedding_model)
-    elif embedding_model_source == 'sentence-transformer':    
-        embedding_model_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=embedding_model)
+    embedding_model = EmbeddingModel.objects.filter(model_name=embedding_model_request)[0].model_name
+    embedding_model_ef = get_embedding_model_ef(embedding_model_request)
 
     # If the collection already exists, we will delete it and create a new one.
     client.get_or_create_collection(name=dataset_name)
@@ -1268,6 +1161,123 @@ def sanitize_filename(filename):
     # Allow only alphanumeric characters, underscores, hyphens, and dots
     return re.sub(r'[^a-zA-Z0-9_\-\.\\\/]', '_', filename)
 
+def get_embedding_model_ef(embedding_model_request, add_distances = False):
+    # query embedding model from database
+    embedding_model_count = EmbeddingModel.objects.filter(model_name=embedding_model_request).count()
+    add_embedding_model_distances = False
+    if embedding_model_count == 0:
+        EmbeddingModel.objects.create(
+            model_name=embedding_model_request,
+            model_source='sentence-transformer'
+        )
+        embedding_model = embedding_model_request
+        embedding_model_source = 'sentence-transformer'
+        add_embedding_model_distances = True
+    else:
+        embedding_model = EmbeddingModel.objects.filter(model_name=embedding_model_request)[0].model_name
+        embedding_model_source = EmbeddingModel.objects.filter(model_name=embedding_model_request)[0].model_source
+        
+    # use multi-qa-MiniLM-L6-cos-v1 embedding function
+    if embedding_model == 'all-MiniLM-L6-v2':
+        embedding_model_ef = embedding_functions.DefaultEmbeddingFunction()
+    elif embedding_model_source == 'ollama':
+        embedding_model_ef = OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "/api/embeddings", model_name=embedding_model)
+    elif '/' in embedding_model:
+        embedding_model_ef = HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=embedding_model)
+    elif embedding_model_source == 'sentence-transformer':    
+        embedding_model_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=embedding_model)
+
+    if add_embedding_model_distances or add_distances:
+        # read csv file from ./data/cutoff_examples/cutoff_data.csv
+        df = pd.read_csv('/code/data/cutoff_examples/cutoff_data.csv')
+        embedding_model = EmbeddingModel.objects.filter(model_name=embedding_model_request)[0]
+        for i in range(len(df)):
+            if df['distance_tag'][i] == 'best_q':
+                question = df['question'][i]
+                answer = df['answer'][i]
+                answer_no_context = df['answer_without_context'][i]
+                chunks = df['context_chunks'][i].split(';')
+                distances_q, distances_a, distance_na  = get_embedding_cutoff_distance(embedding_model_ef, chunks, question, answer, answer_no_context)
+                embedding_model.best_distance_q = np.round(distances_q, 3)
+                # best_distances_ans = best_distances_na - best_distances_a
+                embedding_model.best_distance_ac = np.round(distances_a, 3)
+                embedding_model.worst_distance_nac = np.round(distance_na, 3)
+            elif df['distance_tag'][i] == 'worst_q':
+                question = df['question'][i]
+                answer = df['answer'][i]
+                answer_no_context = df['answer_without_context'][i]
+                chunks = df['context_chunks'][i].split(';')
+                distances_q, distances_a, _ = get_embedding_cutoff_distance(embedding_model_ef, chunks, question, answer, answer_no_context)
+                embedding_model.worst_distance_q = np.round(distances_a, 3)
+                # worst_distances_ans = worst_distances_na - worst_distances_a
+                # embedding_model.worst_distance_a = np.round(worst_distances_na, 3)
+            elif df['distance_tag'][i] == 'worst_a':
+                question = df['question'][i]
+                answer = df['answer'][i]
+                answer_no_context = df['answer_without_context'][i]
+                chunks = df['context_chunks'][i].split(';')
+                _, distances_a, distance_na = get_embedding_cutoff_distance(embedding_model_ef, chunks, question, answer, answer_no_context)
+                # worst_distances_ans = distance_na - distances_a
+                embedding_model.worst_distance_ac = np.round(distances_a, 3)
+                embedding_model.best_distance_nac = np.round(distance_na, 3)
+        embedding_model.save()
+                        
+    return embedding_model_ef
+
+def get_embedding_cutoff_distance(embedding_model_ef, chunks, question, answer, answer_no_context):
+    # create a collection
+    client = chromadb.PersistentClient(path='/code/chroma_storage/.')
+    dataset_name = 'mygpt_distance_dataset'
+    if len(client.list_collections()):
+        for collection in client.list_collections():
+            if collection.name == dataset_name:
+                client.delete_collection(name=dataset_name)
+    collection = client.get_or_create_collection(name=dataset_name, embedding_function=embedding_model_ef)
+
+    # add chunks to collection
+    ids = [str(i) for i in range(len(chunks))]
+    collection.add(
+        ids=ids,
+        documents=chunks
+    )
+
+    # get distances between question and chunks
+    results = collection.query(
+        query_texts=[question],
+        n_results=len(chunks)
+    )
+
+    #  get mean distance
+    distances_q = results['distances'][0]
+    # distances_q = sum(distances) / len(distances)
+    distance_q = distances_q[0]
+
+    # get distances between answer and chunks
+    results = collection.query(
+        query_texts=[answer],
+        n_results=len(chunks)
+    )
+
+     #  get mean distance
+    distances_a = results['distances'][0]
+    # distances_a = sum(distances) / len(distances)
+    distance_a = distances_a[0]
+
+    # get distances between answer_no_context and chunks
+    results = collection.query(
+        query_texts=[answer_no_context],
+        n_results=len(chunks)
+    )
+
+    #  get mean distance
+    distances_na = results['distances'][0]
+    distance_na = sum(distances_na) / len(distances_na)
+    # distance_na = distances_na[len(chunks)-1]
+
+    # emtpy collection
+    collection.delete(ids=ids)
+
+    return distance_q, distance_a, distance_na
 
 class HuggingFaceEmbeddingFunction(EmbeddingFunction[Documents]):
     """
@@ -1311,4 +1321,53 @@ class HuggingFaceEmbeddingFunction(EmbeddingFunction[Documents]):
                 self._api_url,
                 json={"inputs": input, "options": {"wait_for_model": True}},
             ).json(),
+        )
+    
+class OllamaEmbeddingFunction(EmbeddingFunction[Documents]):
+    """
+    This class is used to generate embeddings for a list of texts using the Ollama Embedding API (https://github.com/ollama/ollama/blob/main/docs/api.md#generate-embeddings).
+    """
+
+    def __init__(self, url: str, model_name: str) -> None:
+        """
+        Initialize the Ollama Embedding Function.
+
+        Args:
+            url (str): The URL of the Ollama Server.
+            model_name (str): The name of the model to use for text embeddings. E.g. "nomic-embed-text" (see https://ollama.com/library for available models).
+        """
+        self._api_url = f"{url}"
+        self._model_name = model_name
+        self._session = httpx.Client(timeout=None)
+
+    def __call__(self, input: Union[Documents, str]) -> Embeddings:
+        """
+        Get the embeddings for a list of texts.
+
+        Args:
+            input (Documents): A list of texts to get embeddings for.
+
+        Returns:
+            Embeddings: The embeddings for the texts.
+
+        Example:
+            >>> ollama_ef = OllamaEmbeddingFunction(url="http://localhost:11434/api/embeddings", model_name="nomic-embed-text")
+            >>> texts = ["Hello, world!", "How are you?"]
+            >>> embeddings = ollama_ef(texts)
+        """
+        # Call Ollama Server API for each document
+        texts = input if isinstance(input, list) else [input]
+        embeddings = [
+            self._session.post(
+                self._api_url, json={"model": self._model_name, "prompt": text}
+            ).json()
+            for text in texts
+        ]
+        return cast(
+            Embeddings,
+            [
+                embedding["embedding"]
+                for embedding in embeddings
+                if "embedding" in embedding
+            ],
         )
