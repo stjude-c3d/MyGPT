@@ -112,7 +112,7 @@ function App() {
               'user_group': ''
             })
           }
-          if (frontendSettings.django_login && localStorage.getItem('access')?.length){
+          if ((frontendSettings.django_login && localStorage.getItem('access')?.length) || !frontendSettings.django_login) {
             fetch(`${process.env.REACT_APP_BACKEND_API}api/get_datasets/?format=json`, requestOptions)
             .then(response => {
               if(response.ok){
