@@ -14,7 +14,6 @@ class DatasetViewSet(viewsets.ModelViewSet):
 	"""
 	queryset = Dataset.objects.all()
 	serializer_class = DatasetSerializer
-	permission_classes = [permissions.IsAuthenticated]
 
 
 class QuestionViewSet(viewsets.ModelViewSet):
@@ -23,7 +22,6 @@ class QuestionViewSet(viewsets.ModelViewSet):
 	"""
 	queryset = Question.objects.all()
 	serializer_class = QuestionSerializer
-	permission_classes = [permissions.IsAuthenticated]
 
 class AnswerViewSet(viewsets.ModelViewSet):
 	"""
@@ -31,7 +29,6 @@ class AnswerViewSet(viewsets.ModelViewSet):
 	"""
 	queryset = Answer.objects.all()
 	serializer_class = AnswerSerializer
-	permission_classes = [permissions.IsAuthenticated]
 
 @api_view(['GET'])
 def get_question_by_id(request):
