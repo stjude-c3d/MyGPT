@@ -347,7 +347,7 @@ const AddLibrarySettings = (props: {
 							<div className='text-nav p-1 text-lg bg-red-200 rounded-md'>Error uploading documents</div>
 						</div> : <></>	
 					}
-					<div className='text-nav p-1 my-2'> Note: Because of limited resources on the hosting server, upload up to 7-10 PDFs per library. It may take 3-4 minutes to see a success message.</div>
+					{/* <div className='text-nav p-1 my-2'> Note: Because of limited resources on the hosting server, upload up to 7-10 PDFs per library. It may take 3-4 minutes to see a success message.</div> */}
 					<div className='flex justify-start m-2'>
 						<div className='text-nav p-1 w-48'>Library Name</div>
 						<input type='text' placeholder=' Library Name' disabled={currentSettings.restriction_without_login && !props.user} className='rounded-md w-[270px] px-2 py-1 text-nav' value={UploadLibraryName}
@@ -444,9 +444,9 @@ const AddLibrarySettings = (props: {
 							onChange={(e) => setVideoLibraryName(e.target.value)}
 						/>
 					</div>
-					<div className='text-nav p-1 my-2'> Note: MyGPT currently supports YouTube videos with closed captions only. <br/> Because of restrictions on hosting server, YouTube upload has been disabled.
+					{/* <div className='text-nav p-1 my-2'> Note: MyGPT currently supports YouTube videos with closed captions only. <br/> Because of restrictions on hosting server, YouTube upload has been disabled.
 						To test the feature, we recommand installing it on your local machine.
-					</div>
+					</div> */}
 					<div className='flex justify-start p-2 flex-col'>
 						<div>
 							<div className='text-nav w-40 p-1 my-2'>YouTube Playlist link</div>
@@ -477,7 +477,9 @@ const AddLibrarySettings = (props: {
 									</div>
 								))}
 							</div>
-							{uploadDocCount < 41 ? <button className='text-panel1 bg-white px-4 py-2 rounded-md mx-2' disabled={true} onClick={()=>setUploadDocCount(uploadDocCount+5)}>+5</button> : <></>}
+							{uploadDocCount < 41 ? <button className='text-panel1 bg-white px-4 py-2 rounded-md mx-2' 
+							// disabled={true} 
+							onClick={()=>setUploadDocCount(uploadDocCount+5)}>+5</button> : <></>}
 						</div>
 					</div>
 					<div className='flex justify-start text-nav font-bold p-1 my-2 mx-auto w-72'> AND </div>

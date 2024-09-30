@@ -164,7 +164,11 @@ function App() {
             // />
             <></> : <></>
           }
-        <GPTHome currentSettings={currentSettings} settingsCallback={settingsCallback} frontendSettings={frontendSettings}/>
+        <GPTHome 
+          currentSettings={currentSettings} 
+          settingsCallback={settingsCallback} 
+          frontendSettings={frontendSettings}
+        />
         </div>
       </MsalProvider>
     : 
@@ -236,7 +240,11 @@ function App() {
           dataset = {currentSettings.selectedDataset}
           datasets = {currentSettings.datasets} 
         /> : <></>}
-      <GPTHome currentSettings={currentSettings} settingsCallback={settingsCallback} frontendSettings={frontendSettings}/>
+      <GPTHome 
+        currentSettings={currentSettings} 
+        settingsCallback={settingsCallback} 
+        frontendSettings={frontendSettings}
+      />
     </div>
   }
   {/* add footer */}

@@ -178,12 +178,12 @@ const Settings = (props:{
 		<div className='fixed inset-0 z-50 bg-black bg-opacity-70 flex items-center justify-center'>
 			<div className={'bg-panel1 w-3/4 max-h-[1100px] max-w-[1200px] rounded-lg ' + (window.screen.availHeight < 1000 ? 'h-[95vh]' : 'h-[85vh]')}>
 				<div className='flex justify-between'>
-					<div className='text-2xl font-bold text-white mt-8 mx-8'>Settings</div>
+					<div className='text-2xl font-bold text-white mt-8 mx-8'>Customizations</div>
 					<div className='text-2xl font-bold text-white mt-8 mr-8 cursor-pointer' onClick={props.closeSettings}>x</div>
 				</div>
 				<div className={'flex justify-between my-6 '+ (window.screen.availHeight < 1000 ? 'h-[78vh]' : 'h-[55vh]')}>
 					{/* create left side vericle tabs */}
-					<div className={'w-1/4 border-slate-400 border-y-2 ' + (window.screen.availHeight < 1000 ? 'h-[80vh]' : 'h-[60vh]')}>
+					<div className={'w-1/4 border-slate-400 border-y-2 ' + (window.screen.availHeight < 1000 ? 'h-[80vh]' : 'h-[55vh]')}>
 						<div className='grid grid-cols-1 divide-y'>
 							{ props.defaultSettings.settingsPanels.map((panel:any, index:number) => {
 								return(
@@ -201,7 +201,7 @@ const Settings = (props:{
 						</div>
 					</div>
 					{/* create right side list of settings */}
-					<div className={'w-3/4 bg-panel2 overflow-y-auto ' + (window.screen.availHeight < 1000 ? 'h-[80vh]' : 'h-[60vh]')}>
+					<div className={'w-3/4 bg-panel2 overflow-y-auto ' + (window.screen.availHeight < 1000 ? 'h-[80vh]' : 'h-[55vh]')}>
 						<div className={'mx-4 my-4 px-4 bg-gray-300 rounded-md ' + (workflowZoomedIn ? 'h-[45vh]' : workflowCollapsed ? 'h-8' : 'h-[29vh]')}>
 							<div className='flex justify-between m-1'>
 								<div className='text-panel1 text-lg font-bold'>MyGPT Workflow</div>

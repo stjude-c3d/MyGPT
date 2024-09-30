@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Cog6ToothIcon, InboxIcon, ChartBarSquareIcon } from '@heroicons/react/24/outline'
+import { 
+	// Cog6ToothIcon, InboxIcon, 
+	ChartBarSquareIcon } from '@heroicons/react/24/outline'
 
 // -----------------------------//
 // Top Navigation with app name //
@@ -173,20 +175,21 @@ export const NavBar = (props = defaultNavProps) => {
 					{	
 						props.showHistoryButton ?
 						(
-							<button className='object-cover text-white bg-bsk_opp_darker rounded-full p-2 inline-block ml-2 hover:drop-shadow-sm transition ease-in-out hover:bg-panel1'
+							<button className='flex flex-row object-cover text-white bg-bsk_opp_darker rounded-full p-2 mx-1 hover:drop-shadow-sm transition ease-in-out hover:bg-panel1'
 								onClick={props.historyButtonCallback}
-							>
-								<InboxIcon className='h-6 w-6'/>
+							> <span className='px-2 text-sm'>History</span>
+								{/* <InboxIcon className='h-6 w-6'/> */}
 							</button>
 						) : (<></>)
 					}
 					{
 						props.showSettingsButton ?
 						(
-							<button className='object-cover text-white bg-bsk_opp_darker rounded-full p-2 inline-block mx-2 hover:drop-shadow-sm transition ease-in-out hover:bg-panel1'
+							<button className='flex flex-row object-cover text-white bg-bsk_opp_darker rounded-full p-2 mx-1 hover:drop-shadow-sm transition ease-in-out hover:bg-panel1'
 								onClick={props.settingButtonCallback}
 							>
-								<Cog6ToothIcon className='h-6 w-6'/>
+								<span className='px-2 text-sm'>Customize</span>
+								{/* <Cog6ToothIcon className='h-6 w-6'/> */}
 							</button>
 						) : (<></>)
 					}

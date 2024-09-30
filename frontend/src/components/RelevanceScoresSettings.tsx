@@ -125,7 +125,7 @@ export const RelevanceScoreSettings = (props: any) => {
 				<div className='my-4 py-2'>
 					<div className='text-nav inline-block px-2 my-2 text-lg font-semibold'>Hallucination Index coefficients</div>
 					<div>
-						<div className='w-24 p-1 m-1 inline-block text-nav text-xl'><MathJax>{"\\(HI = a - b  (QRS) - c (ARS)\\)"}</MathJax></div>
+						<div className='w-24 p-1 m-1 inline-block text-nav text-lg'><MathJax>{"\\(HI = a - b  (QRS) - c (ARS)\\)"}</MathJax></div>
 					</div>
 					<div className='mx-4 px-2 w-[200px]'>
 						<div className='flex justify-between'>

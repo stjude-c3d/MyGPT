@@ -82,7 +82,8 @@ function TopNav(props:{
             // appLogoLink = {'/'}
             showPlotButton = {false}
             plotButtonCallback = {() => {props.setPlotButton(true)}}
-            showHistoryButton = {props.restrictions && (djangoAuthenticated || userAuthenticated) ? true : !props.restrictions ? true : false}
+            // showHistoryButton = {props.restrictions && (djangoAuthenticated || userAuthenticated) ? true : !props.restrictions ? true : false}
+            showHistoryButton = {true}
             historyButtonCallback = {() => {props.setShowChatHistory(true)}}
             showSettingsButton = {props.restrictions && (djangoAuthenticated || userAuthenticated) ? true : !props.restrictions ? true : false}
             settingButtonCallback = {() => {props.setShowSettings(true)}}

@@ -60,7 +60,9 @@ class Dataset(models.Model):
 				os.remove(os.path.join(root, name))
 			for name in dirs:
 				os.rmdir(os.path.join(root, name))
-		os.rmdir(os.path.join(settings.MEDIA_ROOT, 'papers', str(self.dataset_name)))
+		# check if the director exists and delete it
+		if os.path.exists(os.path.join(settings.MEDIA_ROOT, 'papers', str(self.dataset_name))):
+			os.rmdir(os.path.join(settings.MEDIA_ROOT, 'papers', str(self.dataset_name)))
 		super().delete(*args, **kwargs)
 
 class Papers(models.Model):

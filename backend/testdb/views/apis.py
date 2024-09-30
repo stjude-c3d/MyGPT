@@ -425,15 +425,19 @@ def save_answer(request):
         #     maxHI = 0.8
         #     minHI = 0.2
 
-        hallucination_index_raw = a_HI - (b_HI * question_relevance_score/100) - (c_HI * relevance_score/100)
-        hallucination_index = round((hallucination_index_raw - minHI)/(maxHI - minHI) * 100, 0)
+        if(question_relevance_score == 0):
+            hallucination_index_raw = a_HI
+            hallucination_index = round((hallucination_index_raw - minHI)/(maxHI - minHI) * 100, 0)
+        else:
+            hallucination_index_raw = a_HI - (b_HI * question_relevance_score/100) - (c_HI * relevance_score/100)
+            hallucination_index = round((hallucination_index_raw - minHI)/(maxHI - minHI) * 100, 0)
 
 
         Answer.objects.create(
             answer_text=answer_text,
             answer_no_context_text=answer_no_context_text,
-            relevance_score=relevance_score, 
-            hallucination_index=hallucination_index,
+            relevance_score=relevance_score if question_relevance_score != 0 else 0, 
+            hallucination_index=hallucination_index if hallucination_index < 100 else 100,
             ars_lower_range=best_distance_a,
             ars_upper_range=worst_distance_a,
             a_hi=a_HI,
@@ -453,10 +457,10 @@ def save_answer(request):
                 # 'mean_distance_a': mean_distance_a,
                 # 'mean_distance_n': mean_distance_n,
                 'mean_distance': mean_distance, 
-                'relevance_score': relevance_score,
+                'relevance_score': relevance_score if question_relevance_score != 0 else 0,
                 # 'relevance_score_a': relevance_score_a,
                 # 'relevance_score_n': relevance_score_n,
-                'hallucination_index': hallucination_index,
+                'hallucination_index': hallucination_index if hallucination_index < 100 else 100,
                 # 'best_distance_a': best_distance_a,
                 # 'worst_distance_a': worst_distance_a
             }, content_type="application/json")

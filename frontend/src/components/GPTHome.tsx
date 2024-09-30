@@ -977,12 +977,13 @@ function GPTHome(props:{
 							)
 						})}
 					</select>
+					{ (props.frontendSettings && !props.frontendSettings.restriction_without_login) || (props.frontendSettings.restriction_without_login && props.currentSettings.loggedin) ?
 					<div className='mx-1 inline-block px-2 py-1 bg-white rounded-md cursor-pointer hover:bg-slate-200' 
 						onClick={()=>{
 							props.settingsCallback({...props.currentSettings, selectedPanel: 'datasets', showSettings: true})
 						}}>
 						<Cog6ToothIcon className='w-4 h-4 inline-block'/>
-					</div>
+					</div> : <></>}
 				</div>
 				<div className='mb-4 divide-y'>
 					{/* list all the papers */}
