@@ -16,7 +16,7 @@ describe('Settings', () => {
         user={{user_email: 'abc@xyz.com'}}
       />)
 
-    const element = screen.getByText(/Settings/i)
+    const element = screen.getByText(/Customizations/i)
     expect(element).toBeInTheDocument()
   })
 
