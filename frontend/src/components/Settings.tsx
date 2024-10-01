@@ -42,7 +42,7 @@ const Settings = (props:{
 					process.env.REACT_APP_AUTH_TOKEN_PROD 
 					: process.env.REACT_APP_AUTH_TOKEN_DEV}`
 			},
-			body: JSON.stringify(props.djangoLogin ? props.user : {'user_email': props.user.user_email, 'user_group': ''})
+			body: JSON.stringify(props.djangoLogin ? props.user : props.user ? {'user_email': props.user.user_email, 'user_group': ''} : {'user_email': '', 'user_group': ''})
 		}
 		if(!datasets.length || props.currentSettings.fetchDatasets)
 			fetch(`${process.env.REACT_APP_BACKEND_API}api/get_datasets/`, requestOptions)

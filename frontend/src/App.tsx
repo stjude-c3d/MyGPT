@@ -68,6 +68,7 @@ function App() {
       setCurrentSettings({...currentSettings, loggedin:true})
     }
   }, [user, currentSettings])
+  console.log(user)
 
   // get datasets when user login
   useEffect(()=>{
