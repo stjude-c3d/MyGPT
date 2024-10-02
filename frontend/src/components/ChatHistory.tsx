@@ -20,6 +20,7 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 	const [activeQuestionID, setActiveQuestionID] = useState(0)
 	const [questionDetails, setQuestionDetails]:[any,any] = useState({})
 	const [selectedSource, setSelectedSource] = useState(0)
+	const [showNullAnswer, setShowNullAnswer] = useState(false)
 	const [selectedDataset, setSelectedDataset] = useState(props.dataset)
 
 	useEffect(() => {
@@ -104,6 +105,7 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 											onClick={() => {
 												setActiveQuestion(index)
 												setActiveQuestionID(message.question_id)
+												setShowNullAnswer(false)
 											}}
 										>
 											{message.question}
@@ -134,27 +136,43 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 							{ questionDetails.answers && questionDetails.answers.length >= 0 ?
 								<>
 									<div className='flex flex-row justify-between font-bold'>
-											<div className='text-white text-sm py-2'>{questionDetails.llm}</div>
-											<div className='text-white text-xs flex flex-col items-end py-2'>
-												<div className='text-white rounded-full text-xs py-1'>
-													Relevance 
-													<span style={{ backgroundColor: ConfidenceScoreColor(questionDetails.answers[0].relevance_score)}} 
-														className= {'py-1 px-2 m-1 rounded-full' + (questionDetails.answers[0].relevance_score > 80 || questionDetails.answers[0].relevance_score < 20 ? ' text-white' : ' text-nav')}>
-														{questionDetails.answers[0].relevance_score + '%'}
-													</span>
-												</div>
-												<div className='text-white rounded-full text-xs py-1 mt-1'>
-													Hallucination
-													<span style={{ backgroundColor: ConfidenceScoreColor(100 - questionDetails.answers[0].hallucination_index)}} 
-														className= {'py-1 px-2 m-1 rounded-full' + (questionDetails.answers[0].hallucination_index > 80 || questionDetails.answers[0].hallucination_index < 20 ? ' text-white' : ' text-nav')}>
-														{questionDetails.answers[0].hallucination_index + '%'}
-													</span>
-												</div>
+											{/* <div className='text-white text-sm py-2'>{questionDetails.llm}</div> */}
+										<div>
+											<select
+												className='text-sm text-nav bg-panel3 p-1 rounded-md inline-block'
+												value={showNullAnswer ? 'without_context': 'with_context'}
+												onChange={(e)=>{
+													if (e.target.value === 'without_context'){
+														setShowNullAnswer(true)
+													}else{
+														setShowNullAnswer(false)
+													}
+												}}
+											>
+												<option value={'with_context'}>{questionDetails.llm + ' + MyGPT'}</option>
+												<option value={'without_context'}>{questionDetails.llm}</option>
+											</select>
+										</div>
+										<div className='text-white text-xs flex flex-col items-end py-2'>
+											<div className='text-white rounded-full text-xs py-1'>
+												Relevance 
+												<span style={{ backgroundColor: ConfidenceScoreColor(questionDetails.answers[0].relevance_score)}} 
+													className= {'py-1 px-2 m-1 rounded-full' + (questionDetails.answers[0].relevance_score > 80 || questionDetails.answers[0].relevance_score < 20 ? ' text-white' : ' text-nav')}>
+													{questionDetails.answers[0].relevance_score + '%'}
+												</span>
+											</div>
+											<div className='text-white rounded-full text-xs py-1 mt-1'>
+												Hallucination
+												<span style={{ backgroundColor: ConfidenceScoreColor(100 - questionDetails.answers[0].hallucination_index)}} 
+													className= {'py-1 px-2 m-1 rounded-full' + (questionDetails.answers[0].hallucination_index > 80 || questionDetails.answers[0].hallucination_index < 20 ? ' text-white' : ' text-nav')}>
+													{questionDetails.answers[0].hallucination_index + '%'}
+												</span>
 											</div>
 										</div>
+									</div>
 									<div className='text-white whitespace-pre-wrap answer-div'>
 										<Markdown>
-											{questionDetails.answers[0].answer}
+											{showNullAnswer ? questionDetails.answers[0].answer_no_context : questionDetails.answers[0].answer}
 										</Markdown>
 									</div>
 									<div className='text-white text-sm font-bold pt-4'>

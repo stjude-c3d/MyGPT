@@ -288,6 +288,7 @@ def get_question_details(request):
                 'answer': answer.answer_text,
                 'relevance_score': answer.relevance_score,
                 'hallucination_index': answer.hallucination_index,
+                'answer_no_context': answer.answer_no_context_text,
             })
         question_json = {
             'question': question.question_text,

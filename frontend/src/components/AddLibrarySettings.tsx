@@ -80,8 +80,8 @@ const AddLibrarySettings = (props: {
 			
 			formData.append('dataset_name', UploadLibraryName)
 			formData.append('embedding_model', currentSettings.selectedEmbeddingModel)
-			formData.append('user', props.user ? props.user.user.replace(', ','_'): '')
-			formData.append('user_email', props.user ? props.user.user_email : '')
+			formData.append('user', props.user ? props.user.user.replace(', ','_'): '-')
+			formData.append('user_email', props.user ? props.user.user_email : '-')
 			formData.append('user_group', props.user && props.user.isAdmin ? 'admin' : 'user')
 			formData.append('use_overlap', useOverlap)
 			formData.append('chunk_size', chunkSize)

@@ -27,9 +27,11 @@ function GPTHome(props:{
 	const [relatedQuery, setRelatedQuery] = useState<any>(false)
 	const [answer, setAnswer] = useState<any>('')
 	const [answerReceived, setAnswerReceived] = useState<any>(false)
-	const [answerNoContext, setAnswerNoContext] = useState<any>('')
-	const [answerNoContextReceived, setAnswerNoContextReceived] = useState<any>(false)
+	const [nullAnswer, setnullAnswer] = useState<any>('')
+	const [nullAnswerReceived, setnullAnswerReceived] = useState<any>(false)
 	const [answers, setAnswers] = useState<any[]>([])
+	const [nullAnswers, setNullAnswers] = useState<any[]>([])
+	const [showNullAnswerIndexes, setShowNullAnswerIndexes] = useState<any>([])
 	const [papers, setPapers] = useState<any[]>([])
 	const [videos, setVideos] = useState<any[]>([])
 	const [sourcePapers, setSourcePapers] = useState<any[]>([])
@@ -173,6 +175,8 @@ function GPTHome(props:{
 			if (props.currentSettings.fetchPapers === true){
 				setQuery([])
 				setAnswers([])
+				setNullAnswers([])
+				setShowNullAnswerIndexes([])
 				setselectedPaperIdx(0)
 				setSelectedPage(0)
 				setFileAttachmentType('paper_attachment')
@@ -385,7 +389,7 @@ function GPTHome(props:{
 			}
 		})
 		
-		if(context.length > 1 && question.length > 1 && answerNoContext === ''){
+		if(context.length > 1 && question.length > 1 && nullAnswer === ''){
 			// fetch using async await
 			let leftover:any = ''
 			const postData = async () => {
@@ -422,15 +426,15 @@ function GPTHome(props:{
 						if (json.done === false) {
 							content += json.response
 						} else {
-							setAnswerNoContextReceived(true)
+							setnullAnswerReceived(true)
 						}
 					}
-					setAnswerNoContext(content)
+					setnullAnswer(content)
 
 					if (last_json.length && last_json[last_json.length - 1] === '}'){
 						const last_json_obj = JSON.parse(last_json)
 						if (last_json_obj.done === true){
-							setAnswerNoContextReceived(true)
+							setnullAnswerReceived(true)
 						}
 					}
 				}
@@ -438,7 +442,7 @@ function GPTHome(props:{
 			postData()
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	},[query, context, props.currentSettings.selectedLlm, answerNoContext])
+	},[query, context, props.currentSettings.selectedLlm, nullAnswer])
 
 	useEffect(()=>{
 		if (answerReceived && answer.length !== 0){
@@ -447,9 +451,17 @@ function GPTHome(props:{
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[answer, props.currentSettings.selectedLlm, answerReceived])
 
+	useEffect(()=>{
+		if (nullAnswerReceived && nullAnswer.length !== 0){
+			setNullAnswers((prevNullAnswers:any)=>[...prevNullAnswers, nullAnswer])
+			setShowNullAnswerIndexes((prevShowNullAnswerIndexes:any)=>[...prevShowNullAnswerIndexes, false])
+		}
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	},[nullAnswer, nullAnswerReceived])
+
 	// save answer to backend database
 	useEffect(()=>{
-		if(answers.length && query.length && answerNoContext.length && answerNoContextReceived && answerReceived && query.length === answers.length){
+		if(answers.length && query.length && nullAnswer.length && nullAnswerReceived && answerReceived && query.length === answers.length){
 			const requestOptions = {
 				method: 'POST',
 				headers: { 
@@ -464,7 +476,7 @@ function GPTHome(props:{
 				body: JSON.stringify({ 
 					question_text: query[query.length-1].question.replaceAll('"',"'"),
 					answer_text: answers[answers.length-1].response.replaceAll('"',"'"),
-					answer_no_context_text: answerNoContext.replaceAll('"',"'"),
+					answer_no_context_text: nullAnswer.replaceAll('"',"'"),
 					model_type: answers[answers.length-1].source,
 					dataset: props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset,
 					sentence_transformer: props.currentSettings.selected_sentence_transformer,
@@ -489,12 +501,12 @@ function GPTHome(props:{
 					setHallucinationIndex((prevHallucinationIndex:any)=>[...prevHallucinationIndex, data.hallucination_index])
 					setContext('')
 					setAnswer('')
-					setAnswerNoContext('')
-					setAnswerNoContextReceived(false)
+					setnullAnswer('')
+					setnullAnswerReceived(false)
 				})
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	},[answers, answerNoContext, answerNoContextReceived, query, props.currentSettings.selectedDataset, props.currentSettings.defaultDataset, props.currentSettings.selected_sentence_transformer, answerWithoutContext])
+	},[answers, nullAnswer, nullAnswerReceived, query, props.currentSettings.selectedDataset, props.currentSettings.defaultDataset, props.currentSettings.selected_sentence_transformer, answerWithoutContext])
 
 	const PageNavigationPluginInstance = pageNavigationPlugin()
 
@@ -588,6 +600,8 @@ function GPTHome(props:{
 								()=>{
 									setQuery([])
 									setAnswers([])
+									setNullAnswers([])
+									setShowNullAnswerIndexes([])
 									setQuestionRelevancescore([])
 									setAnswerRelevancescore([])
 									setHallucinationIndex([])
@@ -741,7 +755,25 @@ function GPTHome(props:{
 								// when full answers is ready to display
 								<div className='py-4 px-6 m-4 bg-panel1 rounded-lg shadow-md box2 llm-chat'>
 								<div className='flex flex-row justify-between font-bold'>
-									<div className='text-white text-sm py-2'>{answers[query.length-i-1].source.split(':')[0]}</div>
+									{/* <div className='text-white text-sm py-2'>
+										{answers[query.length-i-1].source.split(':')[0] + ' + MyGPT'}
+									</div> */}
+									<div>
+									<select 
+										className='text-sm text-nav bg-panel3 p-1 rounded-md inline-block'
+										value={showNullAnswerIndexes[query.length-i-1] === true ? 'without_context' : 'with_context'}
+										onChange={(e)=>{
+											if (e.target.value === 'without_context'){
+												setShowNullAnswerIndexes((prevShowNullAnswerIndexes:any)=>[...prevShowNullAnswerIndexes.slice(0, query.length-i-1), true, ...prevShowNullAnswerIndexes.slice(query.length-i)])
+											}else{
+												setShowNullAnswerIndexes((prevShowNullAnswerIndexes:any)=>[...prevShowNullAnswerIndexes.slice(0, query.length-i-1), false, ...prevShowNullAnswerIndexes.slice(query.length-i)])
+											}
+										}}
+									>
+										<option value={'with_context'}>{answers[query.length-i-1].source.split(':')[0] + ' + MyGPT'}</option>
+										<option value={'without_context'}>{answers[query.length-i-1].source.split(':')[0]}</option>
+									</select>
+									</div>
 									<div className='flex flex-col items-end py-2'>
 										<div className='text-white text-xs pb-1'>
 										{
@@ -775,7 +807,7 @@ function GPTHome(props:{
 								</div>
 								<div className='text-white whitespace-pre-wrap answer-div'>
 									<Markdown>
-										{answers[query.length-i-1].response}
+										{showNullAnswerIndexes[query.length-i-1] === true? nullAnswers[query.length-i-1] : answers[query.length-i-1].response}
 									</Markdown>
 								</div>
 								{/* <Feedback
@@ -875,7 +907,7 @@ function GPTHome(props:{
 								// when answer is being generated
 								<div className='py-4 px-6 m-4 bg-panel1 rounded-lg shadow-md box2 llm-chat'>
 									<div className='flex flex-row justify-between font-bold mt-2 mb-4'>
-										<div className='text-white text-sm py-1'>{props.currentSettings.selectedLlm}</div>
+										<div className='text-white text-sm py-1'>{props.currentSettings.selectedLlm + ' + MyGPT'}</div>
 									</div>
 									<div className='text-white whitespace-pre-wrap answer-div'>
 										<Markdown>
