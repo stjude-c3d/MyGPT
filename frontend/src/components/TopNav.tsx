@@ -11,6 +11,8 @@ function TopNav(props:{
   showLoginButton?:boolean,
   showPopupLogin?:boolean,
   loginCallback?:any,
+  darkMode?:boolean,
+  darkModeCallback?:any
 }) {
 
   const { activeAccounts, appRoles, instance }:any = useAuthenticateUser()
@@ -78,7 +80,7 @@ function TopNav(props:{
             appName={'MyGPT'}
             appNameLink = {'/'}
             showAppLogo = {true}
-            appLogoPath = {'./mygpt_logo.png'}
+            appLogoPath = {'./mygpt_logo_color_dark.png'}
             // appLogoLink = {'/'}
             showPlotButton = {false}
             plotButtonCallback = {() => {props.setPlotButton(true)}}
@@ -95,10 +97,12 @@ function TopNav(props:{
 				    isAuthenticated={userAuthenticated || djangoAuthenticated}
             djangoUser={djangoUser}
             isAdmin={isAdmin}
+            darkMode={props.darkMode}
+            darkModeCallback={props.darkModeCallback}
           />
       </BrowserRouter>
     </>
   )
 }
 
-export default TopNav
+export default TopNav 

@@ -70,79 +70,79 @@ export const RelevanceScoreSettings = (props: any) => {
 		<div className='px-8 py-2 flex flex-col divide-y'>
 			<MathJaxContext>
 			<div className='m-2'>
-			<div className='text-nav p-1 my-2'><span className='font-bold'>Notes</span> 
+			<div className='text-nav dark:text-nav-dark p-1 my-2'><span className='font-bold'>Notes</span> 
 				<ul className='list-disc'>
 					<li>This is an advanced setting. Please refer to the documentation to adjust QRS, ARS, and HI calculations.</li>
 					<li>Editing QRS, ARS, and HI calculation will only take effect for subsequent Q&A with the current library. It will not change scores for previous Q&A and will reset when you change the library.</li>
 				</ul>
 			</div>
 				<div className='my-4 border-slate-200 py-2 border-y-2'>
-					<div className='text-nav inline-block px-2 my-2 text-lg font-semibold'>Question relevance score (QRS) range</div>
+					<div className='text-nav dark:text-nav-dark inline-block px-2 my-2 text-lg font-semibold'>Question relevance score (QRS) range</div>
 					<div className='mx-4 px-2 w-[200px]'>
 						<div>
-							<div className='w-24 p-1 m-1 inline-block text-nav text-2xl'><MathJax>{"\\(QRS = 1 - \\frac{QC_{mean} - QC_{best}}{QC_{worst} - QC_{best}} \\)"}</MathJax></div>
+							<div className='w-24 p-1 m-1 inline-block text-nav dark:text-nav-dark text-2xl'><MathJax>{"\\(QRS = 1 - \\frac{QC_{mean} - QC_{best}}{QC_{worst} - QC_{best}} \\)"}</MathJax></div>
 						</div>
 
 						<div className='flex justify-between'>
-							<div className='text-nav p-1 my-1 text-xl'><MathJax>{"\\(QC_{best} \\)"}</MathJax></div>
-							<input type='number' placeholder='Best' className='rounded-md w-24 p-1 m-1' value={QRSbest} onChange={(e)=>setQRSbest(e.target.value)}/>
+							<div className='text-nav dark:text-nav-dark p-1 my-1 text-xl'><MathJax>{"\\(QC_{best} \\)"}</MathJax></div>
+							<input type='number' placeholder='Best' className='rounded-md w-24 p-1 m-1 dark:text-white dark:bg-gray-500 dark:placeholder:text-nav-dark' value={QRSbest} onChange={(e)=>setQRSbest(e.target.value)}/>
 						</div>
 						<div className='flex justify-between'>
-							<div className='text-nav p-1 my-1 text-xl'><MathJax>{"\\(QC_{worst} \\)"}</MathJax></div>
-							<input type='number' placeholder='Worst' className='rounded-md w-24 p-1 m-1' value={QRSworst} onChange={(e)=>setQRSworst(e.target.value)}/>
+							<div className='text-nav dark:text-nav-dark p-1 my-1 text-xl'><MathJax>{"\\(QC_{worst} \\)"}</MathJax></div>
+							<input type='number' placeholder='Worst' className='rounded-md w-24 p-1 m-1 dark:text-white dark:bg-gray-500 dark:placeholder:text-nav-dark' value={QRSworst} onChange={(e)=>setQRSworst(e.target.value)}/>
 						</div>
 					</div>
-					<button className='bg-panel1 text-white px-4 py-1 rounded-md mx-4 my-2' onClick={()=>props.settingsCallback({...currentSettings, use_default_qrs: false, relevance_score_cutoff: {...currentSettings.relevance_score_cutoff, question_best: parseFloat(QRSbest), question_worst: parseFloat(QRSworst)}})}>Save</button>
-					<button className='bg-panel1 text-white px-4 py-1 rounded-md mx-4 my-2' onClick={()=>props.settingsCallback(()=>{
+					<button className='bg-panel1 dark:bg-panel3-dark text-white px-4 py-1 rounded-md mx-4 my-2' onClick={()=>props.settingsCallback({...currentSettings, use_default_qrs: false, relevance_score_cutoff: {...currentSettings.relevance_score_cutoff, question_best: parseFloat(QRSbest), question_worst: parseFloat(QRSworst)}})}>Save</button>
+					<button className='bg-panel1 dark:bg-panel3-dark text-white px-4 py-1 rounded-md mx-4 my-2' onClick={()=>props.settingsCallback(()=>{
 							setQRSbest(defaultQRSbest)
 							setQRSworst(defaultQRSworst)
 							return {...currentSettings, use_default_qrs: true, relevance_score_cutoff: {...currentSettings.relevance_score_cutoff, question_best: parseFloat(defaultQRSbest), question_worst: parseFloat(defaultQRSworst)}}
 						})}>Reset</button>
 				</div>
 				<div className='my-4 border-slate-200 py-2 border-b-2'>
-					<div className='text-nav inline-block px-2 my-2 text-lg font-semibold'>Answer relevance score (ARS) range</div>
+					<div className='text-nav dark:text-nav-dark inline-block px-2 my-2 text-lg font-semibold'>Answer relevance score (ARS) range</div>
 					<div className='mx-4 px-2 w-[200px]'>
 						<div>
-							<div className='w-24 p-1 m-1 block text-nav text-xl'><MathJax>{"\\(A = NAC_{mean} - AC_{mean} \\)"}</MathJax></div>
-							<div className='w-24 p-1 m-1 block text-nav text-2xl'><MathJax>{"\\(ARS = 1 - \\frac{A_{mean} - A_{best}}{A_{worst} - A_{best}} \\)"}</MathJax></div>
+							<div className='w-24 p-1 m-1 block text-nav dark:text-nav-dark text-xl'><MathJax>{"\\(A = NAC_{mean} - AC_{mean} \\)"}</MathJax></div>
+							<div className='w-24 p-1 m-1 block text-nav dark:text-nav-dark text-2xl '><MathJax>{"\\(ARS = 1 - \\frac{A_{mean} - A_{best}}{A_{worst} - A_{best}} \\)"}</MathJax></div>
 						</div>
 						<div className='flex justify-between'>
-							<div className='text-nav p-1 my-1 text-xl'><MathJax>{"\\(A_{best} \\)"}</MathJax></div>
-							<input type='number' placeholder='Best' className='rounded-md w-24 p-1 m-1' value={ARSbest} onChange={(e)=>setARSbest(e.target.value)}/>
+							<div className='text-nav dark:text-nav-dark p-1 my-1 text-xl'><MathJax>{"\\(A_{best} \\)"}</MathJax></div>
+							<input type='number' placeholder='Best' className='rounded-md w-24 p-1 m-1 dark:text-white dark:bg-gray-500 dark:placeholder:text-nav-dark' value={ARSbest} onChange={(e)=>setARSbest(e.target.value)}/>
 						</div>
 						<div className='flex justify-between'>
-							<div className='text-nav p-1 my-1 text-xl'><MathJax>{"\\(A_{worst} \\)"}</MathJax></div>
-							<input type='number' placeholder='Worst' className='rounded-md w-24 p-1 m-1' value={ARSworst} onChange={(e)=>setARSworst(e.target.value)}/>
+							<div className='text-nav dark:text-nav-dark p-1 my-1 text-xl'><MathJax>{"\\(A_{worst} \\)"}</MathJax></div>
+							<input type='number' placeholder='Worst' className='rounded-md w-24 p-1 m-1 dark:text-white dark:bg-gray-500 dark:placeholder:text-nav-dark' value={ARSworst} onChange={(e)=>setARSworst(e.target.value)}/>
 						</div>
 					</div>
-					<button className='bg-panel1 text-white px-4 py-1 rounded-md mx-4 my-2' onClick={()=>props.settingsCallback({...currentSettings, use_default_ars: false, relevance_score_cutoff: {...currentSettings.relevance_score_cutoff, answer_best: parseFloat(ARSbest), answer_worst: parseFloat(ARSworst)}})}>Save</button>
-					<button className='bg-panel1 text-white px-4 py-1 rounded-md mx-4 my-2' onClick={()=>props.settingsCallback(()=>{
+					<button className='bg-panel1 dark:bg-panel3-dark text-white px-4 py-1 rounded-md mx-4 my-2' onClick={()=>props.settingsCallback({...currentSettings, use_default_ars: false, relevance_score_cutoff: {...currentSettings.relevance_score_cutoff, answer_best: parseFloat(ARSbest), answer_worst: parseFloat(ARSworst)}})}>Save</button>
+					<button className='bg-panel1 dark:bg-panel3-dark text-white px-4 py-1 rounded-md mx-4 my-2' onClick={()=>props.settingsCallback(()=>{
 							setARSbest(defaultARSbest)
 							setARSworst(defaultARSworst)
 							return {...currentSettings, use_default_ars: true, relevance_score_cutoff: {...currentSettings.relevance_score_cutoff, answer_best: parseFloat(defaultARSbest), answer_worst: parseFloat(defaultARSworst)}}
 						})}>Reset</button>
 				</div>
 				<div className='my-4 py-2'>
-					<div className='text-nav inline-block px-2 my-2 text-lg font-semibold'>Hallucination Index coefficients</div>
+					<div className='text-nav dark:text-nav-dark inline-block px-2 my-2 text-lg font-semibold'>Hallucination Index coefficients</div>
 					<div>
-						<div className='w-24 p-1 m-1 inline-block text-nav text-lg'><MathJax>{"\\(HI = a - b  (QRS) - c (ARS)\\)"}</MathJax></div>
+						<div className='w-24 p-1 m-1 inline-block text-nav dark:text-nav-dark text-lg'><MathJax>{"\\(HI = a - b  (QRS) - c (ARS)\\)"}</MathJax></div>
 					</div>
 					<div className='mx-4 px-2 w-[200px]'>
 						<div className='flex justify-between'>
-							<div className='text-nav p-1 my-1 text-xl'><MathJax>{"\\(a \\)"}</MathJax></div>
-							<input type='number' placeholder='a' className='rounded-md w-24 p-1 m-1' value={HIa} onChange={(e)=>setHIa(e.target.value)}/>
+							<div className='text-nav dark:text-nav-dark p-1 my-1 text-xl'><MathJax>{"\\(a \\)"}</MathJax></div>
+							<input type='number' placeholder='a' className='rounded-md w-24 p-1 m-1 dark:text-white dark:bg-gray-500 dark:placeholder:text-nav-dark' value={HIa} onChange={(e)=>setHIa(e.target.value)}/>
 						</div>
 						<div className='flex justify-between'>
-							<div className='text-nav p-1 my-1 text-xl'><MathJax>{"\\(b \\)"}</MathJax></div>
-							<input type='number' placeholder='b' className='rounded-md w-24 p-1 m-1' value={HIb} onChange={(e)=>setHIb(e.target.value)}/>
+							<div className='text-nav dark:text-nav-dark p-1 my-1 text-xl'><MathJax>{"\\(b \\)"}</MathJax></div>
+							<input type='number' placeholder='b' className='rounded-md w-24 p-1 m-1 dark:text-white dark:bg-gray-500 dark:placeholder:text-nav-dark' value={HIb} onChange={(e)=>setHIb(e.target.value)}/>
 						</div>
 						<div className='flex justify-between'>
-							<div className='text-nav p-1 my-1 text-xl'><MathJax>{"\\(c \\)"}</MathJax></div>
-							<input type='number' placeholder='c' className='rounded-md w-24 p-1 m-1' value={HIc} onChange={(e)=>setHIc(e.target.value)}/>
+							<div className='text-nav dark:text-nav-dark p-1 my-1 text-xl'><MathJax>{"\\(c \\)"}</MathJax></div>
+							<input type='number' placeholder='c' className='rounded-md w-24 p-1 m-1 dark:text-white dark:bg-gray-500 dark:placeholder:text-nav-dark' value={HIc} onChange={(e)=>setHIc(e.target.value)}/>
 						</div>
 					</div>
-					<button className='bg-panel1 text-white px-4 py-1 rounded-md mx-4 my-2' onClick={()=>props.settingsCallback({...currentSettings, use_default_hi: false, relevance_score_cutoff: {...currentSettings.relevance_score_cutoff, HIa: parseFloat(HIa), HIb: parseFloat(HIb), HIc: parseFloat(HIc)}})}>Save</button>
-						<button className='bg-panel1 text-white px-4 py-1 rounded-md mx-4 my-2' onClick={()=>props.settingsCallback(()=>{
+					<button className='bg-panel1 dark:bg-panel3-dark text-white px-4 py-1 rounded-md mx-4 my-2' onClick={()=>props.settingsCallback({...currentSettings, use_default_hi: false, relevance_score_cutoff: {...currentSettings.relevance_score_cutoff, HIa: parseFloat(HIa), HIb: parseFloat(HIb), HIc: parseFloat(HIc)}})}>Save</button>
+						<button className='bg-panel1 dark:bg-panel3-dark text-white px-4 py-1 rounded-md mx-4 my-2' onClick={()=>props.settingsCallback(()=>{
 							setHIa(1)
 							setHIb(0.33)
 							setHIc(0.67)

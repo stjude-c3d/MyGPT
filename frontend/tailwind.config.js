@@ -13,6 +13,11 @@ module.exports = {
         'panel1': '#687E8C',
         'panel2': '#BFBCBA',
         'panel3': '#B4CED9',
+        'nav-dark': '#c3c8cf',
+        'panel1-dark': '#030304',
+        'panel2-dark': '#535457',
+        'panel3-dark': '#033f52',
+        'panel4-dark': '#01212b',
         'stjude': '#911938',
         'white': '#fff',
         'bsk_opp': '#CCA791',
@@ -22,5 +27,6 @@ module.exports = {
       },
     },
   },
+  darkMode: 'class',
   plugins: [],
 }

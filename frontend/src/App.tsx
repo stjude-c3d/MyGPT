@@ -32,6 +32,7 @@ function App() {
   const [showPlotButton, setShowPlotButton] = useState(false)
   const [frontendSettings, setFrontendSettings] = useState<any>(default_frontend_settings)
   const [user, setUser] = useState<any>(null)
+  const [darkMode, setDarkMode] = useState(false)
 
   const settingsCallback = (newSettings:any) => {
     newSettings.restriction_without_login = frontendSettings.restriction_without_login
@@ -44,6 +45,11 @@ function App() {
   const loginCallback = (user:any) => {
     setUser(user)
     currentSettings.fetchDatasets = true
+  }
+
+  const DarkModeCallback = () => {
+    setDarkMode(!darkMode)
+    setCurrentSettings({...currentSettings, darkMode:!darkMode})
   }
 
   useEffect(()=>{
@@ -129,10 +135,10 @@ function App() {
     }, [user, currentSettings, frontendSettings.django_login])
 
   return (
-    <>
+    <div className={darkMode ? 'dark': ''}>
     { frontendSettings.azure_login ?
       <MsalProvider instance={msalInstance}>
-        <div className='bg-gray-200'>
+        <div className='bg-gray-200 dark:bg-zinc-800'>
         <TopNav 
           setShowSettings={setShowSettings} 
           setShowChatHistory={setShowChatHistory} 
@@ -140,6 +146,8 @@ function App() {
           showLoginButton={frontendSettings.azure_login}
           restrictions={frontendSettings.restriction_without_login}
           loginCallback={loginCallback}
+          darkMode={darkMode}
+          darkModeCallback={DarkModeCallback}
         />
         {showSettings ?
           <Settings 
@@ -154,7 +162,8 @@ function App() {
           <ChatHistory
             closeChatHistory={() => setShowChatHistory(false)}
             dataset = {currentSettings.selectedDataset}
-            datasets = {currentSettings.datasets} 
+            datasets = {currentSettings.datasets}
+            darkMode={darkMode} 
           /> : <></>
         }
         {showPlotButton ?
@@ -196,7 +205,8 @@ function App() {
         <ChatHistory
           closeChatHistory={() => setShowChatHistory(false)}
           dataset = {currentSettings.selectedDataset}
-          datasets = {currentSettings.datasets} 
+          datasets = {currentSettings.datasets}
+          darkMode={darkMode} 
         /> : <></>
       }
       {showPlotButton ?
@@ -238,7 +248,8 @@ function App() {
         <ChatHistory
           closeChatHistory={() => setShowChatHistory(false)}
           dataset = {currentSettings.selectedDataset}
-          datasets = {currentSettings.datasets} 
+          datasets = {currentSettings.datasets}
+          darkMode={darkMode} 
         /> : <></>}
       <GPTHome 
         currentSettings={currentSettings} 
@@ -268,7 +279,7 @@ function App() {
       </div> : <></>
     }
 	</div>
-  </>
+  </div>
   )
 }
 

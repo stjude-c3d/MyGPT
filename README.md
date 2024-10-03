@@ -2,7 +2,7 @@
 
 <!-- make div and show logo in middle -->
 <div align="center" style='padding:20px;'>
-	<img src='./frontend/public/android-chrome-512x512.png' width='200px' alt='MyGPT logo'>
+	<img src='./images/mygpt_logo_color.png' width='200px' alt='MyGPT logo'>
 </div>
 
 # MyGPT

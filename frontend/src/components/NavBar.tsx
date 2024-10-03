@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { 
-	// Cog6ToothIcon, InboxIcon, 
+	// Cog6ToothIcon, InboxIcon,
+	SunIcon, MoonIcon,  
 	ChartBarSquareIcon } from '@heroicons/react/24/outline'
 
 // -----------------------------//
@@ -30,6 +31,8 @@ interface NavProps {
 	isAuthenticated?: boolean,
 	djangoUser?: any,
 	isAdmin?: boolean,
+	darkMode?: boolean,
+	darkModeCallback?: any,
 }
 
 const defaultNavProps : NavProps = {
@@ -162,6 +165,14 @@ export const NavBar = (props = defaultNavProps) => {
 					</div>
 				</div>
 				<div className='flex flex-row mx-6'>
+					<div>
+						<button className='object-cover text-white dark:text-nav-dark bg-bsk_opp_darker rounded-full p-2 inline-block hover:drop-shadow-sm transition ease-in-out hover:bg-panel1'
+							onClick={props.darkModeCallback}
+						>
+							{!props.darkMode ? <SunIcon className='h-5 w-5'/> : <MoonIcon className='h-5 w-5'/>}
+						</button>
+					
+					</div>
 					{
 						props.showPlotButton ?
 						(

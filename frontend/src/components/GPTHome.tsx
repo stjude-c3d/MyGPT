@@ -587,14 +587,14 @@ function GPTHome(props:{
 	})
 
 	return (
-		<div className='grid grid-cols-10 p-4 bg-gray-200 max-w-[2000px] mx-auto h-[94vh]'>
-			<div className={'mt-24 p-6 bg-panel3 rounded-lg max-h-[92vh] overflow-y-auto duration-300 ease-in-out peer-checked:bg-panel1 after:w-4 after:h-4 after:bg-white after:rounded-full after:shadow-md after:duration-300' + 
+		<div className='grid grid-cols-10 p-4 bg-gray-200 dark:bg-neutral-800 max-w-[2000px] mx-auto h-[94vh]'>
+			<div className={'mt-24 p-6 bg-panel3 dark:bg-panel2-dark rounded-lg max-h-[92vh] overflow-y-auto duration-300 ease-in-out peer-checked:bg-panel1 after:w-4 after:h-4 after:bg-white after:rounded-full after:shadow-md after:duration-300' + 
 				(answerWithoutContext ? ' col-span-12 max-w-full' : ' col-span-3 max-w-4xl mr-6') }>
-				<div className='text-2xl font-bold text-nav'>Ask a Question</div>
-				<div className='text-sm text-nav my-2'>Ask a question about a paper or a topic from your publication library. We will try to answer it using the GPT models.</div>
+				<div className='text-2xl font-bold text-nav dark:text-nav-dark'>Ask a Question</div>
+				<div className='text-sm text-nav my-2 dark:text-nav-dark'>Ask a question about a paper or a topic from your publication library. We will try to answer it using the GPT models.</div>
 				{ answers.length && answers[answers.length-1].response ?
 					<div className='p-1 mx-4 flex justify-center'>
-						<button className={'px-2 py-1 mx-4 my-auto bg-white text-sm hover:bg-bsk_dark_blue text-bsk_dark_blue font-semibold hover:text-white hover:border-transparent rounded-full shadow-md hover:shadow-lg outline-none focus:outline-none' + (answers.length && answers[answers.length-1].response ? '':' opacity-50 cursor-not-allowed')} 
+						<button className={'px-2 py-1 mx-4 my-auto bg-white dark:bg-panel3-dark dark:text-nav-dark text-sm hover:bg-bsk_dark_blue text-bsk_dark_blue font-semibold hover:text-white hover:border-transparent rounded-full shadow-md hover:shadow-lg outline-none focus:outline-none' + (answers.length && answers[answers.length-1].response ? '':' opacity-50 cursor-not-allowed')} 
 							disabled={answers.length && answers[answers.length-1].response ? false : true}
 							onClick={
 								()=>{
@@ -616,9 +616,9 @@ function GPTHome(props:{
 					</div> : <></>
 				}
 				<div className='mt-4 p-1 mx-4 flex'>
-					<div className='text-sm text-nav my-auto mx-1'>GPT model</div>
+					<div className='text-sm text-nav dark:text-nav-dark my-auto mx-1'>GPT model</div>
 					<select 
-						className='text-md text-nav bg-panel2 py-1 px-2 mx-2 rounded-md w-32'
+						className='text-md text-nav bg-panel2 dark:bg-stjude dark:text-white py-1 px-2 mx-2 rounded-md w-32'
 						value={props.currentSettings.selectedLlm}
 						// defaultValue={props.currentSettings.defaultLlm}
 						onChange={(e) => props.settingsCallback({...props.currentSettings, selectedLlm: e.target.value})}
@@ -634,11 +634,11 @@ function GPTHome(props:{
 				<div className='pt-4 mb-2 mx-4 flex'>
 					{
 						props.frontendSettings && props.frontendSettings.disable_chat_without_login && !props.currentSettings.loggedin ?
-						<div className='text-sm text-nav my-auto mx-1 bg-white rounded-lg w-full h-20 p-2.5 shadow-md'>Login to chat</div> :
+						<div className='text-sm text-nav my-auto mx-1 bg-white dark:bg-gray-500 dark:text-white rounded-lg w-full h-20 p-2.5 shadow-md'>Login to chat</div> :
 						<textarea
 							id='submitter' 
 							rows={4}
-							className='text-gray-900 text-sm rounded-2xl focus:ring-blue-500 focus:border-blue-500 block w-5/6 p-2.5 shadow-md' 
+							className='text-gray-900 dark:text-white dark:bg-gray-500 dark:placeholder:text-white text-sm rounded-2xl  block w-5/6 p-2.5 shadow-md' 
 							placeholder={props.frontendSettings && props.frontendSettings.disable_chat_without_login && !props.currentSettings.loggedin ? 'Login to chat' : 'Type your question here'}
 							value={searchTerm}
 							readOnly={props.frontendSettings && props.frontendSettings.disable_chat_without_login && !props.currentSettings.loggedin}
@@ -661,7 +661,7 @@ function GPTHome(props:{
 						</textarea>
 					}
 					<button 
-						className='p-4 mx-2 my-auto bg-white hover:bg-bsk_dark_blue text-bsk_dark_blue font-semibold hover:text-white py-2 px-3 hover:border-transparent rounded-full shadow-md hover:shadow-lg outline-none focus:outline-none h-12'
+						className='p-4 mx-2 my-auto bg-white hover:bg-bsk_dark_blue dark:bg-stjude dark:text-white text-bsk_dark_blue font-semibold hover:text-white py-2 px-3 hover:border-transparent rounded-full shadow-md hover:shadow-lg outline-none focus:outline-none h-12'
 						disabled={props.frontendSettings && props.frontendSettings.disable_chat_without_login && !props.currentSettings.loggedin}
 						onClick={() => {
 							setQuery((prevQuery:any)=>[...prevQuery, 
@@ -693,7 +693,7 @@ function GPTHome(props:{
 					 : null } */}
 				{ props.frontendSettings && props.frontendSettings.show_no_context_switch ? 
 					<div className='p-1 mx-2 flex'>
-						<label className='relative flex justify-between items-center group p-2 text-md text-nav'>
+						<label className='relative flex justify-between items-center group p-2 text-md text-nav dark:text-nav-dark'>
 						<input 
 							type='checkbox' 
 							className='absolute left-1/2 -translate-x-1/2 w-full h-full peer appearance-none rounded-md'
@@ -710,7 +710,7 @@ function GPTHome(props:{
 								}
 							}
 						/>
-						<span className='w-10 h-4 flex items-center flex-shrink-0 mx-2 p-0 bg-gray-300 rounded-full duration-300 ease-in-out peer-checked:bg-panel1 after:w-4 after:h-4 after:bg-white after:rounded-full after:shadow-md after:duration-300 peer-checked:after:translate-x-6 group-hover:after:translate-x-1'></span>
+						<span className='w-10 h-4 flex items-center flex-shrink-0 mx-2 p-0 bg-gray-300 rounded-full duration-300 ease-in-out peer-checked:bg-panel1 dark:peer-checked:bg-stjude after:w-4 after:h-4 after:bg-white after:rounded-full after:shadow-md after:duration-300 peer-checked:after:translate-x-6 group-hover:after:translate-x-1'></span>
 							Chat to LLM without documents
 						</label>
 						{/* <input type='checkbox' 
@@ -732,13 +732,13 @@ function GPTHome(props:{
 					query.length ? 
 					<>{ query.map((_q:any, i:any)=>(
 						<div key={i}>
-							<div className='py-4 px-6 m-4 bg-panel2 rounded-lg shadow-md box2 user-chat'>
+							<div className={'py-4 px-6 m-4 bg-panel2 dark:bg-panel3-dark rounded-lg shadow-md box2' + (props.currentSettings.darkMode ? ' user-chat-dark' : ' user-chat') }>
 								<div className='flex flex-row justify-between font-bold'>
-									<div className='text-nav text-sm py-2'>You</div>
+									<div className='text-nav dark:text-nav-dark text-sm py-2'>You</div>
 									{
 										questionRelevancescore[query.length-i-1] !== undefined  && !answerWithoutContext ? 
 										(
-											<div className='text-nav rounded-full text-xs py-2'>
+											<div className='text-nav dark:text-nav-dark rounded-full text-xs py-2'>
 												Relevance 
 												<span style={{ backgroundColor: ConfidenceScoreColor(questionRelevancescore[query.length-i-1])}} 
 													className= {'py-1 px-2 m-1 rounded-full' + (questionRelevancescore[query.length-i-1] > 80 || questionRelevancescore[query.length-i-1] < 20 ? ' text-white' : ' text-nav')}>
@@ -749,18 +749,18 @@ function GPTHome(props:{
 									}
 									{/* <div className='text-nav text-xs py-2'>{query[query.length-i-1].related ? <LinkIcon className='w-4 h-4 inline-block'/> : null}</div> */}
 								</div>
-								<div className='text-nav'>{query[query.length-i-1].question}</div>
+								<div className='text-nav dark:text-nav-dark'>{query[query.length-i-1].question}</div>
 							</div>
 							{	answers[query.length-i-1] && answers[query.length-i-1].response ?
 								// when full answers is ready to display
-								<div className='py-4 px-6 m-4 bg-panel1 rounded-lg shadow-md box2 llm-chat'>
+								<div className={'py-4 px-6 m-4 bg-panel1 dark:bg-panel4-dark rounded-lg shadow-md box2' +  (props.currentSettings.darkMode ? ' llm-chat-dark' : ' llm-chat')}>
 								<div className='flex flex-row justify-between font-bold'>
 									{/* <div className='text-white text-sm py-2'>
 										{answers[query.length-i-1].source.split(':')[0] + ' + MyGPT'}
 									</div> */}
 									<div>
 									<select 
-										className='text-sm text-nav bg-panel3 p-1 rounded-md inline-block'
+										className='text-sm text-nav bg-panel3 dark:bg-panel2-dark dark:text-nav-dark p-1 rounded-md inline-block'
 										value={showNullAnswerIndexes[query.length-i-1] === true ? 'without_context' : 'with_context'}
 										onChange={(e)=>{
 											if (e.target.value === 'without_context'){
@@ -844,7 +844,7 @@ function GPTHome(props:{
 											<div 
 												className={ 
 													selectedPaperIdx === (papers.findIndex((p:any)=>p.paper_title===paper)) && selectedPage === sourcePages[query.length-i-1][index] ? 
-													'bg-slate-500':''} 
+													'bg-slate-600 dark:bg-slate-700':''} 
 												key={index} onClick={
 												()=>{
 													// setSourceIdx(index)
@@ -856,7 +856,7 @@ function GPTHome(props:{
 											<div className='border border-gray-400'></div>
 												<div className='text-white text-sm p-2 font-normal italic'>{'Page ' + (sourcePages[query.length-i-1][index]) + ' of "' + paper + '"'}</div>
 												{selectedPaperIdx === (papers.findIndex((p:any)=>p.paper_title===paper)) && selectedPage === sourcePages[query.length-i-1][index] ? 
-													<div className='text-white text-sm p-2 bg-slate-500'>
+													<div className='text-white text-sm p-2 bg-slate-600 dark:bg-slate-700'>
 														<div className='text-white font-bold'>Context</div>
 														{sourceContexts[query.length-i-1][index]}
 													</div> : <></>
@@ -892,7 +892,7 @@ function GPTHome(props:{
 											<div className='border border-gray-400'></div>
 												<div className='text-white text-sm p-2 font-normal italic'>{sourceStarts[query.length-i-1][index] + ' to ' + sourceStops[query.length-i-1][index] + ' of "' + paper + '"'}</div>
 												{selectedPaperIdx === (papers.findIndex((p:any)=>p.paper_title===paper)) && selectedPage === sourcePages[query.length-i-1][index] ? 
-													<div className='text-white text-sm p-2 bg-slate-500'>
+													<div className='text-white text-sm p-2 bg-slate-500 dark:bg-slate-700'>
 														<div className='text-white font-bold'>Context</div>
 														{sourceContexts[query.length-i-1][index]}
 													</div> : <></>
@@ -905,7 +905,7 @@ function GPTHome(props:{
 								</div> 
 								: (
 								// when answer is being generated
-								<div className='py-4 px-6 m-4 bg-panel1 rounded-lg shadow-md box2 llm-chat'>
+								<div className={'py-4 px-6 m-4 bg-panel1 dark:bg-panel4-dark rounded-lg shadow-md box2' + (props.currentSettings.darkMode ? ' llm-chat-dark' : ' llm-chat')}>
 									<div className='flex flex-row justify-between font-bold mt-2 mb-4'>
 										<div className='text-white text-sm py-1'>{props.currentSettings.selectedLlm + ' + MyGPT'}</div>
 									</div>
@@ -980,14 +980,14 @@ function GPTHome(props:{
 			</div>
 			{ !answerWithoutContext ? 
 			<>				
-			<div className='col-span-2 mt-24 max-w-5xl w-full bg-panel1 rounded-l-lg overflow-y-auto max-h-[92vh]'>
+			<div className='col-span-2 mt-24 max-w-5xl w-full bg-panel1 dark:bg-panel4-dark rounded-l-lg overflow-y-auto max-h-[92vh]'>
 				<div className=' p-6 text-2xl font-bold text-white'>{papers.length ? 'Your publication library' : 'Your video library'}</div>
 				
 				<div className='p-2 text-sm border-slate-400 border-y'>
 					<div className='text-white inline-block px-2'> Current library </div>
 					{/* <div className='inline-block px-2 py-1 bg-panel3 rounded-md cursor-default'>{props.currentSettings.selectedDataset.split('_').join(' ')}</div> */}
 					<select 
-						className='text-md text-nav bg-panel3 py-1 px-2 mx-1 rounded-md w-28 inline-block'
+						className='text-md text-nav bg-panel3 dark:bg-stjude dark:text-white py-1 px-2 mx-1 rounded-md w-28 inline-block'
 						value={props.currentSettings.selectedDataset}
 						onChange={
 							(e) => {
@@ -1010,7 +1010,7 @@ function GPTHome(props:{
 						})}
 					</select>
 					{ (props.frontendSettings && !props.frontendSettings.restriction_without_login) || (props.frontendSettings.restriction_without_login && props.currentSettings.loggedin) ?
-					<div className='mx-1 inline-block px-2 py-1 bg-white rounded-md cursor-pointer hover:bg-slate-200' 
+					<div className='mx-1 inline-block px-2 py-1 bg-white dark:bg-stjude dark:text-white rounded-md cursor-pointer hover:bg-slate-200' 
 						onClick={()=>{
 							props.settingsCallback({...props.currentSettings, selectedPanel: 'datasets', showSettings: true})
 						}}>
@@ -1021,7 +1021,7 @@ function GPTHome(props:{
 					{/* list all the papers */}
 					{ papers.length ?
 						papers.map((p:any, index:number)=>
-							<div key={index} className={'p-2 ' + (selectedPaperIdx === index ? ' bg-nav cursor-default': ' bg-panel1 cursor-pointer')}>
+							<div key={index} className={'p-2 ' + (selectedPaperIdx === index ? ' bg-nav cursor-default': ' bg-panel1 dark:bg-panel4-dark cursor-pointer')}>
 								<div className='text-white text-sm '
 									onClick={()=> {
 										setselectedPaperIdx(index)
@@ -1033,7 +1033,7 @@ function GPTHome(props:{
 						) :
 						videos.length ?
 						videos.map((v:any, index:number)=>
-							<div key={index} className={'p-2 ' + (selectedPaperIdx === index ? ' bg-nav cursor-default': ' bg-panel1 cursor-pointer')}>
+							<div key={index} className={'p-2 ' + (selectedPaperIdx === index ? ' bg-nav cursor-default': ' bg-panel1 dark:bg-panel4-dark cursor-pointer')}>
 								<div className='text-white text-sm '
 									onClick={()=> {
 										setselectedPaperIdx(index)
@@ -1046,12 +1046,13 @@ function GPTHome(props:{
 					}
 				</div>
 			</div>
-			<div className='col-span-5 mt-24 p-6 max-w-5xl w-full bg-panel2 rounded-r-lg overflow-y-auto max-h-[92vh]'>
+			<div className='col-span-5 mt-24 p-6 max-w-5xl w-full bg-panel2 dark:bg-panel3-dark rounded-r-lg overflow-y-auto max-h-[92vh]'>
 					<div className='overflow-x-auto h-full w-full pt-4 '>
 						<Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.js">
 						<div  className='h-[76vh]'>
 							{papers.length ?
 								<Viewer
+								theme={props.currentSettings.darkMode ? 'dark' : 'light'}
 								fileUrl={`${process.env.REACT_APP_BACKEND_API}media/${papers.length ? papers[selectedPaperIdx][fileAttachmentType] : ''}`}
 								defaultScale={SpecialZoomLevel.ActualSize}
 								initialPage={selectedPage-1}

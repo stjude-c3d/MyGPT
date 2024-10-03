@@ -125,17 +125,17 @@ const LLMSettings = (props: {
 	  return (
 		<div className='px-8 py-2 divide-y'>
 			<div className='flex flex-col justify-start my-4'>
-				<div className='text-nav px-2 flex justify-start my-2 text-lg font-semibold'> Available LLMs on system </div>
-				<div className='text-nav px-4 flex justify-start'>
+				<div className='text-nav dark:text-nav-dark px-2 flex justify-start my-2 text-lg font-semibold'> Available LLMs on system </div>
+				<div className='text-nav dark:text-nav-dark px-4 flex justify-start'>
 					<ul className='list-disc'>
 						{props.llms.map((llm:string, index:number) => {
 							return(
 								<li key={index} className='ml-4'>
-									<div className='flex justify-between m-1 text-nav'>
+									<div className='flex justify-between m-1 text-nav dark:text-nav-dark'>
 										{llm}
 										<div>
-											<button className={'ml-2 text-white px-2 rounded-md w-24' 
-												+ (llm === props.selectedLlm ? ' bg-gray-300' : ' bg-panel1')}
+											<button className={'ml-2 px-2 rounded-md w-24' 
+												+ (llm === props.selectedLlm ? ' bg-gray-300 text-nav' : ' bg-panel1 dark:bg-panel3-dark text-white')}
 												onClick={()=>{
 													currentSettings.selectedLlm = llm
 													props.settingsCallback(currentSettings)
@@ -157,24 +157,24 @@ const LLMSettings = (props: {
 			{ 
 				currentSettings.restriction_without_login ? <></> :
 				<div className='flex flex-col justify-start my-4'>
-					<div className='text-nav px-2 flex justify-start my-2 text-lg font-semibold'> LLMs ready to download </div>
+					<div className='text-nav dark:text-nav-dark px-2 flex justify-start my-2 text-lg font-semibold'> LLMs ready to download </div>
 					{ 
 						message === '' ? <></> :
-						<div className={'ml-2 text-nav px-2 rounded-md' + (modelLoaded ? ' bg-green-200' : ' bg-orange-200')}>
+						<div className={'ml-2 text-nav dark:text-nav-dark px-2 rounded-md' + (modelLoaded ? ' bg-green-200' : ' bg-orange-200')}>
 							{message}
 						</div>
 					}
-					<div className='text-nav px-4 flex justify-start'>
+					<div className='text-nav dark:text-nav-dark px-4 flex justify-start'>
 						<ul className='list-disc'>
 							{llmsDownload.map((llm:string, index:number) => {
 								return(
 									<li key={index} className='ml-4'>
-										<div className='flex justify-between m-1 text-nav'>
+										<div className='flex justify-between m-1 text-nav dark:text-nav-dark'>
 											<div className='w-32'>
 												{llm}
 											</div>
 											<div>
-												<button className={'ml-2 text-white px-2 rounded-md' + (message.length ? ' bg-gray-300' : ' bg-panel1')} 
+												<button className={'ml-2 text-white px-2 rounded-md' + (message.length ? ' bg-gray-300' : ' bg-panel1 dark-bg-nav dark:bg-panel3-dark text-white')} 
 													onClick={()=>{addOllamaModel(llm)}}
 													disabled={message.length && !modelLoaded ? true : false}
 												>{'Download'}</button>
