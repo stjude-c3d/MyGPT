@@ -607,6 +607,7 @@ function GPTHome(props:{
 									setHallucinationIndex([])
 									setSourcePapers([])
 									setSourcePages([])
+									setSourceContexts([])
 								}
 							}>
 								<p className='inline-block mx-2'>
