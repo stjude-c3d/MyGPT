@@ -182,6 +182,7 @@ function GPTHome(props:{
 				setFileAttachmentType('paper_attachment')
 				setSourcePapers([])
 				setSourcePages([])
+				setSourceContexts([])
 			}
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
