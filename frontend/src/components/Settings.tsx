@@ -4,6 +4,7 @@ import Workflow from './Workflow'
 import AddLibrarySettings from './AddLibrarySettings'
 import LLMSettings from './LLMSettings'
 import EmbeddingSettings from './EmbeddingSettings'
+import RelevanceScoreSettings from './RelevanceScoresSettings'
 import { MagnifyingGlassMinusIcon, MagnifyingGlassPlusIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
 
 const Settings = (props:{
@@ -11,7 +12,8 @@ const Settings = (props:{
 	defaultSettings:any,
 	currentSettings:any,
 	settingsCallback:any,
-	user?:any
+	user?:any,
+	djangoLogin?:any
 }) => {
 	const [activeTab, setActiveTab] = useState(props.currentSettings.selectedPanel || props.defaultSettings.selectedPanel)
 	const [workflowZoomedIn, setWorkflowZoomedIn] = useState(false)
@@ -32,9 +34,15 @@ const Settings = (props:{
 		const requestOptions = {
 			method: 'POST',
 			headers: { 
-				'Content-Type': 'application/json'
+				'Content-Type': 'application/json',
+				'Authorization': `${
+					props.user && props.djangoLogin ?
+					'Bearer ' + localStorage.getItem('access') :
+					process.env.NODE_ENV === 'production' ? 
+					process.env.REACT_APP_AUTH_TOKEN_PROD 
+					: process.env.REACT_APP_AUTH_TOKEN_DEV}`
 			},
-			body: JSON.stringify(props.user ? props.user : {'user_email': '', 'user_group': ''})
+			body: JSON.stringify(props.djangoLogin ? props.user : props.user ? {'user_email': props.user.user_email, 'user_group': ''} : {'user_email': '', 'user_group': ''})
 		}
 		if(!datasets.length || props.currentSettings.fetchDatasets)
 			fetch(`${process.env.REACT_APP_BACKEND_API}api/get_datasets/`, requestOptions)
@@ -72,8 +80,14 @@ const Settings = (props:{
 			const requestOptions = {
 				method: 'GET',
 				headers: { 
-					'Content-Type': 'application/json'
-				}
+					'Content-Type': 'application/json',
+					'Authorization': `${
+						props.user && props.djangoLogin ?
+						'Bearer ' + localStorage.getItem('access') :
+						process.env.NODE_ENV === 'production' ? 
+						process.env.REACT_APP_AUTH_TOKEN_PROD 
+						: process.env.REACT_APP_AUTH_TOKEN_DEV}`
+					}
 			}
 			fetch(`${process.env.REACT_APP_BACKEND_API}api/delete_dataset/?dataset=${deleteDataset}`, requestOptions)
 				.then(response => response.json())
@@ -139,7 +153,12 @@ const Settings = (props:{
 					method: 'POST',
 					headers: { 
 						'Content-Type': 'application/json',
-						'Authorization': `${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_AUTH_TOKEN_PROD : process.env.REACT_APP_AUTH_TOKEN_DEV}`
+						'Authorization': `${
+					props.user && props.djangoLogin ?
+					'Bearer ' + localStorage.getItem('access') :
+						process.env.NODE_ENV === 'production' ? 
+						process.env.REACT_APP_AUTH_TOKEN_PROD 
+						: process.env.REACT_APP_AUTH_TOKEN_DEV}`
 					},
 				setConnection: 'keep-alive',
 				keepalive: true,
@@ -152,26 +171,26 @@ const Settings = (props:{
 
 		}
 		postData()
-	},[])
+	},[props.user, props.djangoLogin])
 
 	return (
 		// create floating panel with opque background
 		<div className='fixed inset-0 z-50 bg-black bg-opacity-70 flex items-center justify-center'>
-			<div className={'bg-panel1 w-3/4 max-h-[1100px] max-w-[1200px] rounded-lg ' + (window.screen.availHeight < 1000 ? 'h-[95vh]' : 'h-[85vh]')}>
+			<div className={'bg-panel1 dark:bg-panel4-dark w-3/4 max-h-[1100px] max-w-[1200px] rounded-lg ' + (window.screen.availHeight < 1000 ? 'h-[95vh]' : 'h-[85vh]')}>
 				<div className='flex justify-between'>
-					<div className='text-2xl font-bold text-white mt-8 mx-8'>Settings</div>
+					<div className='text-2xl font-bold text-white mt-8 mx-8'>Customizations</div>
 					<div className='text-2xl font-bold text-white mt-8 mr-8 cursor-pointer' onClick={props.closeSettings}>x</div>
 				</div>
 				<div className={'flex justify-between my-6 '+ (window.screen.availHeight < 1000 ? 'h-[78vh]' : 'h-[55vh]')}>
 					{/* create left side vericle tabs */}
-					<div className={'w-1/4 border-slate-400 border-y-2 ' + (window.screen.availHeight < 1000 ? 'h-[80vh]' : 'h-[60vh]')}>
+					<div className={'w-1/4 border-slate-400 border-y-2 ' + (window.screen.availHeight < 1000 ? 'h-[80vh]' : 'h-[55vh]')}>
 						<div className='grid grid-cols-1 divide-y'>
 							{ props.defaultSettings.settingsPanels.map((panel:any, index:number) => {
 								return(
 									<div 
 										key={index} 
 										data-panel={panel.key}
-										className={`text-white text-xl cursor-pointer p-2 ${activeTab === panel.key ? 'font-normal bg-nav' : 'font-light bg-panel1'}`}
+										className={`text-white text-xl cursor-pointer p-2 ${activeTab === panel.key ? 'font-normal bg-nav' : 'font-light bg-panel1 dark:bg-panel4-dark'}`}
 										onClick={() => setActiveTab(panel.key)}
 									>
 										{panel.text}
@@ -182,7 +201,7 @@ const Settings = (props:{
 						</div>
 					</div>
 					{/* create right side list of settings */}
-					<div className={'w-3/4 bg-panel2 overflow-y-auto ' + (window.screen.availHeight < 1000 ? 'h-[80vh]' : 'h-[60vh]')}>
+					<div className={'w-3/4 bg-panel2 dark:bg-panel2-dark overflow-y-auto ' + (window.screen.availHeight < 1000 ? 'h-[80vh]' : 'h-[55vh]')}>
 						<div className={'mx-4 my-4 px-4 bg-gray-300 rounded-md ' + (workflowZoomedIn ? 'h-[45vh]' : workflowCollapsed ? 'h-8' : 'h-[29vh]')}>
 							<div className='flex justify-between m-1'>
 								<div className='text-panel1 text-lg font-bold'>MyGPT Workflow</div>
@@ -210,11 +229,12 @@ const Settings = (props:{
 									currentSettings={currentSettings}
 									settingsCallback={props.settingsCallback}
 									user={props.user}
+									djangoLogin={props.djangoLogin}
 								/>
 								{/* list of available libraries */}
 								<div className='flex flex-col justify-start mb-8'>
-									<div className='text-nav px-2 flex justify-start mt-2 text-lg font-semibold'> Available libraries </div>
-									<div className='text-nav px-4 flex justify-start'>
+									<div className='text-nav dark:text-nav-dark px-2 flex justify-start mt-2 text-lg font-semibold'> Available libraries </div>
+									<div className='text-nav dark:text-nav-dark px-4 flex justify-start'>
 										<ul className='list-disc'>
 											{datasets.filter((d:any)=>d !== 'None').map((dataset:any, index:number) => {
 												return(
@@ -222,11 +242,18 @@ const Settings = (props:{
 														<div className='flex justify-between m-1'>
 															{dataset.dataset.split('_').join(' ')}
 															<div>
-																<button className={'ml-2 text-white px-2 rounded-md w-24' 
-																	+ (dataset.dataset === currentSettings.selectedDataset ? ' bg-gray-300' : ' bg-panel1')}
+																<button className={'ml-2 px-2 rounded-md w-24' 
+																	+ (dataset.dataset === currentSettings.selectedDataset ? ' bg-gray-300 text-nav' : ' bg-panel1 text-white dark:bg-panel3-dark dark:text-nav-dark')}
 																	onClick={()=>{
 																		setSelectedDataset(dataset.dataset)
-																		props.settingsCallback({...currentSettings, selectedDataset: dataset.dataset, answerWithoutContext: dataset.direct_chat_without_docs,  fetchPapers: !dataset.direct_chat_without_docs})
+																		props.settingsCallback({...currentSettings, 
+																			selectedDataset: dataset.dataset, 
+																			answerWithoutContext: dataset.direct_chat_without_docs,  
+																			fetchPapers: !dataset.direct_chat_without_docs,
+																			use_default_qrs: true,
+																			use_default_ars: true,
+																			use_default_hi: true,
+																		})
 																	}}
 																	disabled={dataset.dataset === currentSettings.selectedDataset ? true : false}
 																>{ dataset.dataset === currentSettings.selectedDataset ? 'Selected' : 'Select'}</button>
@@ -253,7 +280,7 @@ const Settings = (props:{
 											})}
 										</ul>
 									</div>
-									<div className='flex justify-start text-sm text-nav my-4'>
+									<div className='flex justify-start text-sm text-nav dark:text-nav-dark my-4'>
 										<p>
 											<b>Note:</b> Deleting a library is irreversible action and will remove all papers and annotations associated with it.
 										</p>
@@ -272,79 +299,79 @@ const Settings = (props:{
 						}
 						{ activeTab === 'llm_parameters' ?
 							<div className='px-8 py-2 flex flex-col'>
-								<div className='text-nav inline-block px-2 mx-4 my-2 text-lg font-semibold'>System Prompt</div>
+								<div className='text-nav dark:text-nav-dark inline-block px-2 mx-4 my-2 text-lg font-semibold'>System Prompt</div>
 								<div className='mx-4'>
 									<textarea
 										rows={5}
 										cols={30}
 										placeholder='System prompt' 
-										className='rounded-md w-80 p-1'
+										className='rounded-md w-80 p-1 dark:text-white dark:bg-gray-500 dark:placeholder:text-nav-dark'
 										value={currentSettings.system_prompt}
 										onChange={(e)=>props.settingsCallback({...currentSettings, system_prompt: e.target.value})}
 										disabled={editPrompt ? false : true}
 									/>
 									</div>
 								<div>
-									<button className='bg-panel1 text-white px-4 py-1 rounded-md mx-4 my-2' onClick={()=>setEditPrompt(!editPrompt)}>{editPrompt ? 'Save' : 'Edit' }</button>
+									<button className='bg-panel1 dark:bg-panel3-dark text-white px-4 py-1 rounded-md mx-4 my-2' onClick={()=>setEditPrompt(!editPrompt)}>{editPrompt ? 'Save' : 'Edit' }</button>
 									{
 									props.defaultSettings.system_prompt !== currentSettings.system_prompt ?
-										<button className='bg-panel1 text-white px-4 py-1 rounded-md mx-4 my-2' onClick={()=>{
+										<button className='bg-panel1 dark:bg-panel3-dark text-white px-4 py-1 rounded-md mx-4 my-2' onClick={()=>{
 											props.settingsCallback({...currentSettings, system_prompt: props.defaultSettings.system_prompt})
 										}}>Reset</button> : <></>
 									}
 									
 								</div>
-								<div className='text-nav inline-block px-2 mx-4 my-2 text-lg font-semibold'>LLM Parameters</div>
+								<div className='text-nav dark:text-nav-dark inline-block px-2 mx-4 my-2 text-lg font-semibold'>LLM Parameters</div>
 								<div className='flex flex-row my-4'>
-									<div className='h-[20px] text-nav inline-block px-2 mx-4 my-auto text-lg -rotate-90'>Precise</div>
+									<div className='h-[20px] text-nav dark:text-nav-dark inline-block px-2 mx-4 my-auto text-lg -rotate-90'>Precise</div>
 									<div className='w-[500px]'>
 										<div className='flex flex-column mt-2'>
-											<div className='text-nav inline-block px-2 mx-4 my-2 text-md w-[100px]'>Temperature</div>
+											<div className='text-nav dark:text-nav-dark inline-block px-2 mx-4 my-2 text-md w-[100px]'>Temperature</div>
 											{/* slider from value 0 to 1 in increament of 0.1 */}
 											<div className='mx-4'>
 												<input type='range' min='0' max='1' step='0.1' value={currentSettings.temperature} 
 													onChange={(e)=>props.settingsCallback({...currentSettings, temperature: parseFloat(e.target.value)})}
-													className='w-80 p-1 accent-panel1'
+													className='w-80 p-1 accent-panel1 dark:accent-panel3-dark'
 												/>
 												<div className='flex flex-row justify-between'>
-													<div className='text-nav text-sm text-center'>0</div>
-													<div className='text-nav text-sm text-center font-semibold'>{currentSettings.temperature}</div>
-													<div className='text-nav text-sm text-center'>1</div>
+													<div className='text-nav dark:text-nav-dark text-sm text-center'>0</div>
+													<div className='text-nav dark:text-nav-dark text-sm text-center font-semibold'>{currentSettings.temperature}</div>
+													<div className='text-nav dark:text-nav-dark text-sm text-center'>1</div>
 												</div>
 											</div>
 										</div>
 										<div className='flex flex-column mt-2'>
-											<div className='text-nav inline-block px-2 mx-4 my-2 text-md w-[100px]'>Top K</div>
+											<div className='text-nav dark:text-nav-dark inline-block px-2 mx-4 my-2 text-md w-[100px]'>Top K</div>
 											{/* slider from value 0 to 1000 in increament of 50 */}
 											<div className='mx-4'>
 												<input type='range' min='5' max='100' step='5' value={currentSettings.top_k} 
 													onChange={(e)=>props.settingsCallback({...currentSettings, top_k: parseInt(e.target.value)})}
-													className='w-80 p-1 accent-panel1'
+													className='w-80 p-1 accent-panel1 dark:accent-panel3-dark'
 												/>
 												<div className='flex flex-row justify-between'>
-													<div className='text-nav text-sm text-center'>5</div>
-													<div className='text-nav text-sm text-center font-semibold'>{currentSettings.top_k}</div>
-													<div className='text-nav text-sm text-center'>100</div>
+													<div className='text-nav dark:text-nav-dark text-sm text-center'>5</div>
+													<div className='text-nav dark:text-nav-dark text-sm text-center font-semibold'>{currentSettings.top_k}</div>
+													<div className='text-nav dark:text-nav-dark text-sm text-center'>100</div>
 												</div>
 											</div>
 										</div>
 										<div className='flex flex-column mt-2'>
-											<div className='text-nav inline-block px-2 mx-4 my-2 text-md w-[100px]'>Top P</div>
+											<div className='text-nav dark:text-nav-dark inline-block px-2 mx-4 my-2 text-md w-[100px]'>Top P</div>
 											{/* slider from value 0 to 1 in increament of 0.1 */}
 											<div className='mx-4'>
 												<input type='range' min='0.4' max='1.0' step='0.05' value={currentSettings.top_p} 
 													onChange={(e)=>props.settingsCallback({...currentSettings, top_p: parseFloat(e.target.value)})}
-													className='w-80 p-1 accent-panel1'
+													className='w-80 p-1 accent-panel1 dark:accent-panel3-dark'
 												/>
 												<div className='flex flex-row justify-between'>
-													<div className='text-nav text-sm text-center'>0.4</div>
-													<div className='text-nav text-sm text-center font-semibold'>{currentSettings.top_p}</div>
-													<div className='text-nav text-sm text-center'>1.0</div>
+													<div className='text-nav dark:text-nav-dark text-sm text-center'>0.4</div>
+													<div className='text-nav dark:text-nav-dark text-sm text-center font-semibold'>{currentSettings.top_p}</div>
+													<div className='text-nav dark:text-nav-dark text-sm text-center'>1.0</div>
 												</div>
 											</div>
 										</div>
 									</div>
-									<div className='h-[20px] text-nav inline-block px-2 mx-4 my-auto text-lg -rotate-90'>Creative</div>
+									<div className='h-[20px] text-nav dark:text-nav-dark inline-block px-2 mx-4 my-auto text-lg -rotate-90'>Creative</div>
 								</div>
 								{
 									props.defaultSettings.temperature !== currentSettings.temperature || 
@@ -365,10 +392,12 @@ const Settings = (props:{
 								selectedEmbeddingModel={props.currentSettings.selectedEmbeddingModel}
 								currentSettings={currentSettings}
 								settingsCallback={props.settingsCallback}
+								djangoLogin={props.djangoLogin}
+								user={props.user}
 							/> : <></>
 							// <div className='px-8 py-2 flex flex-col divide-y'>
 							// 	<div className='m-2'>
-							// 		<div className='text-nav inline-block px-2 mx-4 my-2 text-lg font-semibold'>Current Sentence Transformer</div>
+							// 		<div className='text-nav dark:text-nav-dark inline-block px-2 mx-4 my-2 text-lg font-semibold'>Current Sentence Transformer</div>
 							// 		<div className='mx-4 px-2'>
 							// 			<DropdownOptions
 							// 				width={'180px'}
@@ -381,12 +410,12 @@ const Settings = (props:{
 							// 		</div>
 							// 	</div>
 							// 	<div className='m-2'>
-							// 		<div className='text-nav inline-block px-2 mx-4 my-2 text-lg font-semibold'>Available Sentence Transformer</div>
+							// 		<div className='text-nav dark:text-nav-dark inline-block px-2 mx-4 my-2 text-lg font-semibold'>Available Sentence Transformer</div>
 							// 		<div className='mx-4'>
 							// 			<ul className='list-disc ml-4'>
 							// 				{props.defaultSettings.embedding_models.map((st:string, index:number) => {
 							// 					return(
-							// 						<li key={index} className='ml-4 text-nav text-sm'>
+							// 						<li key={index} className='ml-4 text-nav dark:text-nav-dark text-sm'>
 							// 								{st + (st === props.defaultSettings.default_sentence_transformer ? ' (default)' : '')}
 							// 						</li>
 							// 					)
@@ -395,8 +424,8 @@ const Settings = (props:{
 							// 		</div>
 							// 	</div>
 							// 	<div className='m-2'>
-							// 		<div className='text-nav inline-block px-2 mx-4 my-2 text-lg font-semibold'>
-							// 			<div className='text-nav p-1 my-1'>Add other Sentence Transformers</div>
+							// 		<div className='text-nav dark:text-nav-dark inline-block px-2 mx-4 my-2 text-lg font-semibold'>
+							// 			<div className='text-nav dark:text-nav-dark p-1 my-1'>Add other Sentence Transformers</div>
 							// 			<p className='text-sm ml-4'> You can choose any Sentence Transformer from this list: <a className='underline' href='https://www.sbert.net/docs/pretrained_models.html'>SBERT.net</a></p>
 							// 			<input type='text' placeholder='Sentence Transformer' className='rounded-md w-60 p-1 ml-4'/>
 							// 			<button className='bg-panel1 text-white px-4 py-1 rounded-md m-2'>Add</button>
@@ -407,26 +436,13 @@ const Settings = (props:{
 						}
 						{
 							activeTab === 'relevance_score' ?
-							<div className='px-8 py-2 flex flex-col divide-y'>
-								<div className='m-2'>
-									<div className='text-nav inline-block px-2 mx-4 my-2 text-lg font-semibold'>Relevance Score Cutoff</div>
-									<div className='mx-4 px-2 w-[200px]'>
-										<div className='flex justify-between font-light text-nav m-2 mb-4'>
-											(work in progress)
-										</div>
-										<div className='flex justify-between'>
-											<div className='text-nav p-1 my-1'>Best</div>
-											<input type='number' placeholder='Best' disabled={true} className='rounded-md w-20 p-1 m-1' value={currentSettings.relevance_score_cutoff.best} onChange={(e)=>props.settingsCallback({...currentSettings, relevance_score_cutoff: {...currentSettings.relevance_score_cutoff, best: e.target.value}})}/>
-										</div>
-										<div className='flex justify-between'>
-											<div className='text-nav p-1 my-1'>Worst</div>
-											<input type='number' placeholder='Worst' disabled={true} className='rounded-md w-20 p-1 m-1' value={currentSettings.relevance_score_cutoff.worst} onChange={(e)=>props.settingsCallback({...currentSettings, relevance_score_cutoff: {...currentSettings.relevance_score_cutoff, worst: e.target.value}})}/>
-										</div>
-									</div>
-									<button className='bg-panel1 text-white px-4 py-1 rounded-md mx-4 my-2' onClick={()=>props.settingsCallback(currentSettings)}>Save</button>
-									<button className='bg-panel1 text-white px-4 py-1 rounded-md mx-4 my-2' onClick={()=>props.settingsCallback(props.defaultSettings)}>Reset</button>
-								</div>
-							</div> : <></>
+							<RelevanceScoreSettings
+								selectedDataset={selectedDataset}
+								currentSettings={currentSettings}
+								settingsCallback={props.settingsCallback}
+								djangoLogin={props.djangoLogin}
+								user={props.user}
+							/> : <></>
 						}
 					</div>
 				</div>

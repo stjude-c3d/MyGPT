@@ -9,7 +9,7 @@ class ModelSerializer(serializers.HyperlinkedModelSerializer):
 class EmbeddingModelSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = EmbeddingModel
-        fields = ['model_name', 'model_size', 'model_source', 'best_distance', 'worst_distance']
+        fields = ['model_name', 'model_size', 'model_source', 'best_distance_q', 'worst_distance_q', 'best_distance_ac', 'worst_distance_ac', 'best_distance_nac', 'worst_distance_nac']
 
 class DatasetSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:

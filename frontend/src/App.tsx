@@ -32,6 +32,7 @@ function App() {
   const [showPlotButton, setShowPlotButton] = useState(false)
   const [frontendSettings, setFrontendSettings] = useState<any>(default_frontend_settings)
   const [user, setUser] = useState<any>(null)
+  const [darkMode, setDarkMode] = useState(false)
 
   const settingsCallback = (newSettings:any) => {
     newSettings.restriction_without_login = frontendSettings.restriction_without_login
@@ -44,6 +45,11 @@ function App() {
   const loginCallback = (user:any) => {
     setUser(user)
     currentSettings.fetchDatasets = true
+  }
+
+  const DarkModeCallback = () => {
+    setDarkMode(!darkMode)
+    setCurrentSettings({...currentSettings, darkMode:!darkMode})
   }
 
   useEffect(()=>{
@@ -76,7 +82,12 @@ function App() {
           method: 'POST',
           headers: { 
             'Content-Type': 'application',
-            'Authorization': `${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_AUTH_TOKEN_PROD : process.env.REACT_APP_AUTH_TOKEN_DEV}`
+            'Authorization': `${
+              frontendSettings.django_login ?
+              'Bearer ' + localStorage.getItem('access') :
+              process.env.NODE_ENV === 'production' ? 
+              process.env.REACT_APP_AUTH_TOKEN_PROD 
+              : process.env.REACT_APP_AUTH_TOKEN_DEV}`
           },
           body: JSON.stringify({
             'user_email': user.user_email,
@@ -94,35 +105,49 @@ function App() {
           const requestOptions = {
             method: 'POST',
             headers: { 
-              'Content-Type': 'application',
-              'Authorization': `${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_AUTH_TOKEN_PROD : process.env.REACT_APP_AUTH_TOKEN_DEV}`
+              'Content-Type': 'application/json',
+              'Authorization': `${
+                frontendSettings.django_login ?
+                'Bearer ' + localStorage.getItem('access') :
+                process.env.NODE_ENV === 'production' ? 
+                process.env.REACT_APP_AUTH_TOKEN_PROD 
+                : process.env.REACT_APP_AUTH_TOKEN_DEV}`
             },
             body: JSON.stringify({
               'user_email': '',
               'user_group': ''
             })
           }
+          if ((frontendSettings.django_login && localStorage.getItem('access')?.length) || !frontendSettings.django_login) {
             fetch(`${process.env.REACT_APP_BACKEND_API}api/get_datasets/?format=json`, requestOptions)
-              .then(response => response.json())
+            .then(response => {
+              if(response.ok){
+                return response.json()
+              }
+            })
               .then(data => {
                 currentSettings.datasets = currentSettings.datasets.filter((d:any)=>d !== 'None')
-                if(data.length > 0)
+                if(data && data.length > 0)
                   setCurrentSettings({...currentSettings, datasets:data.map((d:any)=>d.dataset_name), selectedDataset:data[0].dataset_name, fetchDatasets:false, datasetsUpdated:false})
             })
+          }
         }
-    }, [user, currentSettings])
+    }, [user, currentSettings, frontendSettings.django_login])
 
   return (
-    <>
+    <div className={darkMode ? 'dark': ''}>
     { frontendSettings.azure_login ?
       <MsalProvider instance={msalInstance}>
-        <div className='bg-gray-200'>
+        <div className='bg-gray-200 dark:bg-zinc-800'>
         <TopNav 
           setShowSettings={setShowSettings} 
           setShowChatHistory={setShowChatHistory} 
           setPlotButton={setShowPlotButton}
           showLoginButton={frontendSettings.azure_login}
+          restrictions={frontendSettings.restriction_without_login}
           loginCallback={loginCallback}
+          darkMode={darkMode}
+          darkModeCallback={DarkModeCallback}
         />
         {showSettings ?
           <Settings 
@@ -137,7 +162,8 @@ function App() {
           <ChatHistory
             closeChatHistory={() => setShowChatHistory(false)}
             dataset = {currentSettings.selectedDataset}
-            datasets = {currentSettings.datasets} 
+            datasets = {currentSettings.datasets}
+            darkMode={darkMode} 
           /> : <></>
         }
         {showPlotButton ?
@@ -147,7 +173,11 @@ function App() {
             // />
             <></> : <></>
           }
-        <GPTHome currentSettings={currentSettings} settingsCallback={settingsCallback} frontendSettings={frontendSettings}/>
+        <GPTHome 
+          currentSettings={currentSettings} 
+          settingsCallback={settingsCallback} 
+          frontendSettings={frontendSettings}
+        />
         </div>
       </MsalProvider>
     : 
@@ -167,6 +197,7 @@ function App() {
           defaultSettings={defaultSettings} 
           currentSettings={currentSettings}
           settingsCallback={settingsCallback}
+          djangoLogin={!frontendSettings.django_login}
           user={user}
         /> 
         : <></>}
@@ -174,7 +205,8 @@ function App() {
         <ChatHistory
           closeChatHistory={() => setShowChatHistory(false)}
           dataset = {currentSettings.selectedDataset}
-          datasets = {currentSettings.datasets} 
+          datasets = {currentSettings.datasets}
+          darkMode={darkMode} 
         /> : <></>
       }
       {showPlotButton ?
@@ -216,9 +248,14 @@ function App() {
         <ChatHistory
           closeChatHistory={() => setShowChatHistory(false)}
           dataset = {currentSettings.selectedDataset}
-          datasets = {currentSettings.datasets} 
+          datasets = {currentSettings.datasets}
+          darkMode={darkMode} 
         /> : <></>}
-      <GPTHome currentSettings={currentSettings} settingsCallback={settingsCallback} frontendSettings={frontendSettings}/>
+      <GPTHome 
+        currentSettings={currentSettings} 
+        settingsCallback={settingsCallback} 
+        frontendSettings={frontendSettings}
+      />
     </div>
   }
   {/* add footer */}
@@ -242,7 +279,7 @@ function App() {
       </div> : <></>
     }
 	</div>
-  </>
+  </div>
   )
 }
 
