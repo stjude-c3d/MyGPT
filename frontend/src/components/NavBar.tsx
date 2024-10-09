@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Cog6ToothIcon, InboxIcon, ChartBarSquareIcon } from '@heroicons/react/24/outline'
+import { 
+	// Cog6ToothIcon, InboxIcon,
+	SunIcon, MoonIcon,  
+	ChartBarSquareIcon } from '@heroicons/react/24/outline'
 
 // -----------------------------//
 // Top Navigation with app name //
@@ -28,6 +31,8 @@ interface NavProps {
 	isAuthenticated?: boolean,
 	djangoUser?: any,
 	isAdmin?: boolean,
+	darkMode?: boolean,
+	darkModeCallback?: any,
 }
 
 const defaultNavProps : NavProps = {
@@ -108,7 +113,7 @@ export const NavBar = (props = defaultNavProps) => {
 		else setShowDjangoLogin(false)
 	}
 
-	const AttemptDhagoLogin = () => {
+	const AttemptDjagoLogin = () => {
 		const data = {
 			'username': username,
 			'password': password
@@ -160,6 +165,14 @@ export const NavBar = (props = defaultNavProps) => {
 					</div>
 				</div>
 				<div className='flex flex-row mx-6'>
+					<div>
+						<button className='object-cover text-white dark:text-nav-dark bg-bsk_opp_darker rounded-full p-2 inline-block hover:drop-shadow-sm transition ease-in-out hover:bg-panel1'
+							onClick={props.darkModeCallback}
+						>
+							{!props.darkMode ? <SunIcon className='h-5 w-5'/> : <MoonIcon className='h-5 w-5'/>}
+						</button>
+					
+					</div>
 					{
 						props.showPlotButton ?
 						(
@@ -173,20 +186,21 @@ export const NavBar = (props = defaultNavProps) => {
 					{	
 						props.showHistoryButton ?
 						(
-							<button className='object-cover text-white bg-bsk_opp_darker rounded-full p-2 inline-block ml-2 hover:drop-shadow-sm transition ease-in-out hover:bg-panel1'
+							<button className='flex flex-row object-cover text-white bg-bsk_opp_darker rounded-full p-2 mx-1 hover:drop-shadow-sm transition ease-in-out hover:bg-panel1'
 								onClick={props.historyButtonCallback}
-							>
-								<InboxIcon className='h-6 w-6'/>
+							> <span className='px-2 text-sm'>History</span>
+								{/* <InboxIcon className='h-6 w-6'/> */}
 							</button>
 						) : (<></>)
 					}
 					{
 						props.showSettingsButton ?
 						(
-							<button className='object-cover text-white bg-bsk_opp_darker rounded-full p-2 inline-block mx-2 hover:drop-shadow-sm transition ease-in-out hover:bg-panel1'
+							<button className='flex flex-row object-cover text-white bg-bsk_opp_darker rounded-full p-2 mx-1 hover:drop-shadow-sm transition ease-in-out hover:bg-panel1'
 								onClick={props.settingButtonCallback}
 							>
-								<Cog6ToothIcon className='h-6 w-6'/>
+								<span className='px-2 text-sm'>Customize</span>
+								{/* <Cog6ToothIcon className='h-6 w-6'/> */}
 							</button>
 						) : (<></>)
 					}
@@ -230,7 +244,7 @@ export const NavBar = (props = defaultNavProps) => {
 							onChange={(e) => setPassword(e.target.value)}
 							placeholder='Password'/>
 						<button className='object-cover bg-panel1 text-panel3 rounded-full h-[50px] w-[100px] mx-auto hover:bolder'
-							onClick={() => AttemptDhagoLogin()}>
+							onClick={() => AttemptDjagoLogin()}>
 							Login
 						</button>
 					</div>

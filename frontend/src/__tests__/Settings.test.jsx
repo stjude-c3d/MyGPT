@@ -12,9 +12,11 @@ describe('Settings', () => {
         defaultSettings={defaultSettings} 
         currentSettings={defaultSettings}
         settingsCallback={settingsCallback}
+        djangoLogin={false}
+        user={{user_email: 'abc@xyz.com'}}
       />)
 
-    const element = screen.getByText(/Settings/i)
+    const element = screen.getByText(/Customizations/i)
     expect(element).toBeInTheDocument()
   })
 
@@ -27,6 +29,7 @@ describe('Settings', () => {
         defaultSettings={defaultSettings} 
         currentSettings={defaultSettings}
         settingsCallback={settingsCallback}
+        user={{user_email: 'abc@xyz.com'}}
       />)
 
     const svgEl = container.querySelector(`svg[id="MyGPT_workflow"]`)
@@ -44,6 +47,8 @@ describe('Settings', () => {
         defaultSettings={defaultSettings} 
         currentSettings={defaultSettings}
         settingsCallback={settingsCallback}
+        djangoLogin={false}
+        user={{user_email: 'abc@xyz.com'}}
     />)
 
     const divEl = container.querySelector(`div[data-panel="${activeTab}"]`)
@@ -64,6 +69,8 @@ describe('Settings', () => {
         defaultSettings={defaultSettings} 
         currentSettings={defaultSettings}
         settingsCallback={settingsCallback}
+        djangoLogin={false}
+        user={{user_email: 'abc@xyz.com'}}
     />)
 
     const divEl = container.querySelector(`div[data-panel="${activeTab}"]`)
@@ -84,6 +91,8 @@ describe('Settings', () => {
         defaultSettings={defaultSettings} 
         currentSettings={defaultSettings}
         settingsCallback={settingsCallback}
+        djangoLogin={false}
+        user={{user_email: 'abc@xyz.com'}}
     />)
 
     const divEl = container.querySelector(`div[data-panel="${activeTab}"]`)
@@ -104,6 +113,8 @@ describe('Settings', () => {
         defaultSettings={defaultSettings} 
         currentSettings={defaultSettings}
         settingsCallback={settingsCallback}
+        djangoLogin={false}
+        user={{user_email: 'abc@xyz.com'}}
     />)
 
     const divEl = container.querySelector(`div[data-panel="${activeTab}"]`)
@@ -124,6 +135,8 @@ describe('Settings', () => {
         defaultSettings={defaultSettings} 
         currentSettings={defaultSettings}
         settingsCallback={settingsCallback}
+        djangoLogin={false}
+        user={{user_email: 'abc@xyz.com'}}
     />)
 
     const divEl = container.querySelector(`div[data-panel="${activeTab}"]`)

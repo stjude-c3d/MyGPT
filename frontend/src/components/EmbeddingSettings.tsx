@@ -5,7 +5,9 @@ const EmbeddingSettings = (props: {
 	embeddingModel:string,
 	selectedEmbeddingModel:string,
 	currentSettings:any,
-	settingsCallback:any
+	settingsCallback:any,
+	djangoLogin?: any,
+	user?: any
 }) => {
 	
 	let currentSettings = props.currentSettings
@@ -21,7 +23,12 @@ const EmbeddingSettings = (props: {
 			method: 'GET',
 			headers: { 
 				'Content-Type': 'application/json',
-				'Authorization': `${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_AUTH_TOKEN_PROD : process.env.REACT_APP_AUTH_TOKEN_DEV}`
+				'Authorization': `${
+						props.user && props.djangoLogin ?
+						'Bearer ' + localStorage.getItem('access') :
+						process.env.NODE_ENV === 'production' ? 
+						process.env.REACT_APP_AUTH_TOKEN_PROD 
+						: process.env.REACT_APP_AUTH_TOKEN_DEV}`
 			}
 		}
 		fetch(`${process.env.REACT_APP_BACKEND_API}api/embedding_models/?format=json`, requestOptions)
@@ -85,7 +92,7 @@ const EmbeddingSettings = (props: {
 			}
 
 			// check if the api is available
-			fetch('http://localhost:11434/api/tags', {method: 'GET'})
+			fetch(`${process.env.REACT_APP_OLLAMA_API}api/tags`, {method: 'GET'})
 			.then(response => {
 				if(response.ok){
 					console.log('API is available')
@@ -148,17 +155,17 @@ const EmbeddingSettings = (props: {
 	  return (
 		<div className='px-8 py-2 divide-y'>
 			<div className='flex flex-col justify-start my-4'>
-				<div className='text-nav px-2 flex justify-start my-2 text-lg font-semibold'> Available embeddingModels on system </div>
-				<div className='text-nav px-4 flex justify-start'>
+				<div className='text-nav dark:text-nav-dark px-2 flex justify-start my-2 text-lg font-semibold'> Available embeddingModels on system </div>
+				<div className='text-nav dark:text-nav-dark px-4 flex justify-start'>
 					<ul className='list-disc'>
 						{props.embeddingModels.map((llm:string, index:number) => {
 							return(
 								<li key={index} className='ml-4'>
-									<div className='flex justify-between m-1 text-nav'>
+									<div className='flex justify-between m-1 text-nav dark:text-nav-dark'>
 										{llm}
 										<div>
-											<button className={'ml-2 text-white px-2 rounded-md w-24' 
-												+ (llm === props.selectedEmbeddingModel ? ' bg-gray-300' : ' bg-panel1')}
+											<button className={'ml-2 px-2 rounded-md w-24' 
+												+ (llm === props.selectedEmbeddingModel ? ' bg-gray-300 text-nav' : ' bg-panel1 dark:bg-panel3-dark text-white')}
 												onClick={()=>{
 													currentSettings.selectedEmbeddingModel = llm
 													props.settingsCallback(currentSettings)
@@ -180,26 +187,26 @@ const EmbeddingSettings = (props: {
 			{ 
 				currentSettings.restriction_without_login ? <></> :
 				<div className='flex flex-col justify-start my-4'>
-					<div className='text-nav px-2 flex justify-start my-2 text-lg font-semibold'> embeddingModels ready to download </div>
+					<div className='text-nav dark:text-nav-dark px-2 flex justify-start my-2 text-lg font-semibold'> embeddingModels ready to download </div>
 					{ 
 						message === '' ? <></> :
-						<div className={'ml-2 text-nav px-2 rounded-md' + (modelLoaded ? ' bg-green-200' : ' bg-orange-200')}>
+						<div className={'ml-2 text-nav dark:text-nav-dark px-2 rounded-md' + (modelLoaded ? ' bg-green-200' : ' bg-orange-200')}>
 							{message}
 						</div>
 					}
-					<div className='text-nav px-4 flex justify-start'>
+					<div className='text-nav dark:text-nav-dark px-4 flex justify-start'>
 						<ul className='list-disc'>
 							{embeddingModelsDownload
 								.filter((llm:string) => !downloadedOllamaModels.includes(llm))
 								.map((llm:string, index:number) => {
 								return(
 									<li key={index} className='ml-4'>
-										<div className='flex justify-between m-1 text-nav'>
+										<div className='flex justify-between m-1 text-nav dark:text-nav-dark'>
 											<div className='w-56'>
 												{llm}
 											</div>
 											<div>
-												<button className={'ml-2 text-white px-2 rounded-md' + (message.length ? ' bg-gray-300' : ' bg-panel1')} 
+												<button className={'ml-2 px-2 rounded-md' + (message.length ? ' bg-gray-300 text-nav' : ' bg-panel1 dark:bg-panel3-dark text-white')} 
 													onClick={()=>{addOllamaModel(llm)}}
 													disabled={message.length && !modelLoaded ? true : false}
 												>{'Download'}</button>

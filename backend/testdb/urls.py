@@ -19,6 +19,7 @@ urlpatterns = [
 	path('api/get_context/', apis.get_context, name='get_context'),
 	path('api/get_conversation_history/', apis.get_conversations_by_dataset, name='conversation_history'),
 	path('api/get_question_details/', apis.get_question_details, name='get_question_details'),
+	path('api/get_embedding_model_details/', apis.get_embedding_model_details, name='get_embedding_model_details'),
 	path('api/save_answer/', apis.save_answer, name='save_answer'),
 	path('api/feedback/', apis.feedback_for_answers, name='feedback'),
 	path('api/delete_dataset/', apis.delete_dataset, name='delete_dataset'),

@@ -49,9 +49,9 @@ describe('TopNav', () => {
 			<TopNav setShowSettings={setShowSettings} />
 		)
 
-		// Assert that the navigation bar has 2 buttons
+		// Assert that the navigation bar has 3 buttons
 		const buttons = screen.getAllByRole('button')
-		expect(buttons).toHaveLength(2)
+		expect(buttons).toHaveLength(3)
 	})
 
 	// Check if clicking on 2nd button opens a settings modal
@@ -63,7 +63,7 @@ describe('TopNav', () => {
 		)
 
 		// Click on the 2nd button
-		const settingsButton = screen.getAllByRole('button')[1]
+		const settingsButton = screen.getAllByRole('button')[2]
 		settingsButton.click()
 
 		// Assert that the setShowSettings function was called

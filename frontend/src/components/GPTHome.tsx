@@ -17,17 +17,21 @@ function GPTHome(props:{
 	frontendSettings: any
 }){
 	const [llms, setLlms] = useState<any[]>([])
+	const [selectedDataset, setSelectedDataset] = useState(props.currentSettings.defaultDataset)
 	const [searchTerm, setSearchTerm] = useState<any>('')
 	const [query, setQuery] = useState<any[]>([])
 	const [questionRelevancescore, setQuestionRelevancescore] = useState<any[]>([])
 	const [answerRelevancescore, setAnswerRelevancescore] = useState<any[]>([])
+	const [hallucinationIndex, setHallucinationIndex] = useState<any>([])
 	const [context, setContext] = useState<any>('')
 	const [relatedQuery, setRelatedQuery] = useState<any>(false)
 	const [answer, setAnswer] = useState<any>('')
 	const [answerReceived, setAnswerReceived] = useState<any>(false)
-	const [answerNoContext, setAnswerNoContext] = useState<any>('')
-	const [answerNoContextReceived, setAnswerNoContextReceived] = useState<any>(false)
+	const [nullAnswer, setnullAnswer] = useState<any>('')
+	const [nullAnswerReceived, setnullAnswerReceived] = useState<any>(false)
 	const [answers, setAnswers] = useState<any[]>([])
+	const [nullAnswers, setNullAnswers] = useState<any[]>([])
+	const [showNullAnswerIndexes, setShowNullAnswerIndexes] = useState<any>([])
 	const [papers, setPapers] = useState<any[]>([])
 	const [videos, setVideos] = useState<any[]>([])
 	const [sourcePapers, setSourcePapers] = useState<any[]>([])
@@ -75,16 +79,25 @@ function GPTHome(props:{
 						method: 'POST',
 						headers: { 
 							'Content-Type': 'application/json',
-							'Authorization': `${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_AUTH_TOKEN_PROD : process.env.REACT_APP_AUTH_TOKEN_DEV}`
+							'Authorization': `${
+								props.frontendSettings && props.frontendSettings.django_login ?
+								'Bearer ' + localStorage.getItem('access') :
+								process.env.NODE_ENV === 'production' ? 
+								process.env.REACT_APP_AUTH_TOKEN_PROD 
+								: process.env.REACT_APP_AUTH_TOKEN_DEV}`
 						},
 					setConnection: 'keep-alive',
 					keepalive: true,
 					setTimeout: 10000,
 					body: JSON.stringify({'llms': llms_object})
 					}
-					const response2 = await fetch(`${process.env.REACT_APP_BACKEND_API}api/add_ollama_models/`, requestOptions)
-					const data2 = await response2.json()
-					console.log(data2)
+					if (props.frontendSettings && props.frontendSettings.django_login && localStorage.getItem('access')?.length){
+						const response2 = await fetch(`${process.env.REACT_APP_BACKEND_API}api/add_ollama_models/`, requestOptions)
+						if (response2.ok){
+							const data2 = await response2.json()
+							console.log(data2)
+						}
+					}
 
 					// add embedding models to backend API
 					const embedding_models = data.models.filter((model:any) => 
@@ -102,26 +115,41 @@ function GPTHome(props:{
 						method: 'POST',
 						headers: { 
 							'Content-Type': 'application/json',
-							'Authorization': `${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_AUTH_TOKEN_PROD : process.env.REACT_APP_AUTH_TOKEN_DEV}`
+							'Authorization': `${
+								props.frontendSettings && props.frontendSettings.django_login ?
+								'Bearer ' + localStorage.getItem('access') :
+								process.env.NODE_ENV === 'production' ? 
+								process.env.REACT_APP_AUTH_TOKEN_PROD 
+								: process.env.REACT_APP_AUTH_TOKEN_DEV}`
 						},
 						setConnection: 'keep-alive',
 						keepalive: true,
 						setTimeout: 10000,
 						body: JSON.stringify({'embedding_models': embedding_models_object})
 					}
-					const response3 = await fetch(`${process.env.REACT_APP_BACKEND_API}api/add_embedding_models/`, requestOptions2)
-					const data3 = await response3.json()
-					console.log(data3)
+					if (props.frontendSettings && props.frontendSettings.django_login && localStorage.getItem('access')?.length){
+						const response3 = await fetch(`${process.env.REACT_APP_BACKEND_API}api/add_embedding_models/`, requestOptions2)
+						if (response3.ok){
+							const data3 = await response3.json()
+							console.log(data3)
+						}
+					}
 
 			}
 			postData()
-		},[])
+		},[props.frontendSettings, props.frontendSettings.django_login])
 
 	useEffect(()=>{
 		const requestOptions = {
 			method: 'GET',
 			headers: { 
-				'Content-Type': 'application/json'
+				'Content-Type': 'application/json',
+				'Authorization': `${
+					props.frontendSettings && props.frontendSettings.django_login ?
+					'Bearer ' + localStorage.getItem('access') :
+					process.env.NODE_ENV === 'production' ? 
+					process.env.REACT_APP_AUTH_TOKEN_PROD 
+					: process.env.REACT_APP_AUTH_TOKEN_DEV}`
 			}
 		}
 
@@ -147,11 +175,14 @@ function GPTHome(props:{
 			if (props.currentSettings.fetchPapers === true){
 				setQuery([])
 				setAnswers([])
+				setNullAnswers([])
+				setShowNullAnswerIndexes([])
 				setselectedPaperIdx(0)
 				setSelectedPage(0)
 				setFileAttachmentType('paper_attachment')
 				setSourcePapers([])
 				setSourcePages([])
+				setSourceContexts([])
 			}
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -170,7 +201,13 @@ function GPTHome(props:{
 			const requestOptions = {
 				method: 'GET',
 				headers: { 
-					'Content-Type': 'application/json'
+					'Content-Type': 'application/json',
+					'Authorization': `${
+						props.frontendSettings && props.frontendSettings.django_login ?
+						'Bearer ' + localStorage.getItem('access') :
+						process.env.NODE_ENV === 'production' ? 
+						process.env.REACT_APP_AUTH_TOKEN_PROD 
+						: process.env.REACT_APP_AUTH_TOKEN_DEV}`
 				},
 				body: JSON.stringify({
 					sentence_transformer: props.currentSettings.selected_sentence_transformer
@@ -195,7 +232,12 @@ function GPTHome(props:{
 			method: 'POST',
 			headers: { 
 				'Content-Type': 'application/json',
-				'Authorization': `${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_AUTH_TOKEN_PROD : process.env.REACT_APP_AUTH_TOKEN_DEV}`
+				'Authorization': `${
+					props.frontendSettings && props.frontendSettings.django_login ?
+					'Bearer ' + localStorage.getItem('access') :
+					process.env.NODE_ENV === 'production' ? 
+					process.env.REACT_APP_AUTH_TOKEN_PROD 
+					: process.env.REACT_APP_AUTH_TOKEN_DEV}`
 			},
 			setConnection: 'keep-alive',
 			keepalive: true,
@@ -208,7 +250,10 @@ function GPTHome(props:{
 				related_query: relatedQuery,
 				previous_query: query.length > 1 ? query[query.length-2].question.replaceAll('"',"'") : '',
 				no_context: answerWithoutContext,
-				sentence_transformer: props.currentSettings.selected_sentence_transformer
+				sentence_transformer: props.currentSettings.selected_sentence_transformer,
+				use_default_qrs: props.currentSettings.use_default_qrs,
+				question_best_distance: props.currentSettings.relevance_score_cutoff.question_best,
+				question_worst_distance: props.currentSettings.relevance_score_cutoff.question_worst,
 			})
 		}
 		if(query.length && query.length !== answers.length){
@@ -345,7 +390,7 @@ function GPTHome(props:{
 			}
 		})
 		
-		if(context.length > 1 && question.length > 1 && answerNoContext === ''){
+		if(context.length > 1 && question.length > 1 && nullAnswer === ''){
 			// fetch using async await
 			let leftover:any = ''
 			const postData = async () => {
@@ -382,15 +427,15 @@ function GPTHome(props:{
 						if (json.done === false) {
 							content += json.response
 						} else {
-							setAnswerNoContextReceived(true)
+							setnullAnswerReceived(true)
 						}
 					}
-					setAnswerNoContext(content)
+					setnullAnswer(content)
 
 					if (last_json.length && last_json[last_json.length - 1] === '}'){
 						const last_json_obj = JSON.parse(last_json)
 						if (last_json_obj.done === true){
-							setAnswerNoContextReceived(true)
+							setnullAnswerReceived(true)
 						}
 					}
 				}
@@ -398,7 +443,7 @@ function GPTHome(props:{
 			postData()
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	},[query, context, props.currentSettings.selectedLlm, answerNoContext])
+	},[query, context, props.currentSettings.selectedLlm, nullAnswer])
 
 	useEffect(()=>{
 		if (answerReceived && answer.length !== 0){
@@ -407,23 +452,46 @@ function GPTHome(props:{
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[answer, props.currentSettings.selectedLlm, answerReceived])
 
+	useEffect(()=>{
+		if (nullAnswerReceived && nullAnswer.length !== 0){
+			setNullAnswers((prevNullAnswers:any)=>[...prevNullAnswers, nullAnswer])
+			setShowNullAnswerIndexes((prevShowNullAnswerIndexes:any)=>[...prevShowNullAnswerIndexes, false])
+		}
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	},[nullAnswer, nullAnswerReceived])
+
 	// save answer to backend database
 	useEffect(()=>{
-		if(answers.length && query.length && answerNoContext.length && answerNoContextReceived && answerReceived && query.length === answers.length){
+		if(answers.length && query.length && nullAnswer.length && nullAnswerReceived && answerReceived && query.length === answers.length){
 			const requestOptions = {
 				method: 'POST',
 				headers: { 
 					'Content-Type': 'application/json',
-					'Authorization': `${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_AUTH_TOKEN_PROD : process.env.REACT_APP_AUTH_TOKEN_DEV}`
+					'Authorization': `${
+						props.frontendSettings && props.frontendSettings.django_login ?
+						'Bearer ' + localStorage.getItem('access') :
+						process.env.NODE_ENV === 'production' ? 
+						process.env.REACT_APP_AUTH_TOKEN_PROD 
+						: process.env.REACT_APP_AUTH_TOKEN_DEV}`
 				},
 				body: JSON.stringify({ 
 					question_text: query[query.length-1].question.replaceAll('"',"'"),
 					answer_text: answers[answers.length-1].response.replaceAll('"',"'"),
-					answer_no_context_text: answerNoContext.replaceAll('"',"'"),
+					answer_no_context_text: nullAnswer.replaceAll('"',"'"),
 					model_type: answers[answers.length-1].source,
 					dataset: props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset,
 					sentence_transformer: props.currentSettings.selected_sentence_transformer,
 					no_context: answerWithoutContext,
+					use_default_ars: props.currentSettings.use_default_ars,
+					answer_best_distance: props.currentSettings.relevance_score_cutoff.answer_best,
+					answer_worst_distance: props.currentSettings.relevance_score_cutoff.answer_worst,
+					use_default_hi: props.currentSettings.use_default_hi,
+					a_hi: props.currentSettings.relevance_score_cutoff.HIa,
+					b_hi: props.currentSettings.relevance_score_cutoff.HIb,
+					c_hi: props.currentSettings.relevance_score_cutoff.HIc,
+					temperature: props.currentSettings.temperature,
+					top_k: props.currentSettings.top_k,
+					top_p: props.currentSettings.top_p,
 				})
 			}
 			fetch(`${process.env.REACT_APP_BACKEND_API}api/save_answer/?format=json`, requestOptions)
@@ -431,14 +499,15 @@ function GPTHome(props:{
 				.then(data => {
 					console.log(data)
 					setAnswerRelevancescore((prevAnswerRelevancescore:any)=>[...prevAnswerRelevancescore, data.relevance_score])
+					setHallucinationIndex((prevHallucinationIndex:any)=>[...prevHallucinationIndex, data.hallucination_index])
 					setContext('')
 					setAnswer('')
-					setAnswerNoContext('')
-					setAnswerNoContextReceived(false)
+					setnullAnswer('')
+					setnullAnswerReceived(false)
 				})
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	},[answers, answerNoContext, answerNoContextReceived, query, props.currentSettings.selectedDataset, props.currentSettings.defaultDataset, props.currentSettings.selected_sentence_transformer, answerWithoutContext])
+	},[answers, nullAnswer, nullAnswerReceived, query, props.currentSettings.selectedDataset, props.currentSettings.defaultDataset, props.currentSettings.selected_sentence_transformer, answerWithoutContext])
 
 	const PageNavigationPluginInstance = pageNavigationPlugin()
 
@@ -519,23 +588,27 @@ function GPTHome(props:{
 	})
 
 	return (
-		<div className='grid grid-cols-10 p-4 bg-gray-200 max-w-[2000px] mx-auto h-[94vh]'>
-			<div className={'mt-24 p-6 bg-panel3 rounded-lg max-h-[92vh] overflow-y-auto duration-300 ease-in-out peer-checked:bg-panel1 after:w-4 after:h-4 after:bg-white after:rounded-full after:shadow-md after:duration-300' + 
+		<div className='grid grid-cols-10 p-4 bg-gray-200 dark:bg-neutral-800 max-w-[2000px] mx-auto h-[94vh]'>
+			<div className={'mt-24 p-6 bg-panel3 dark:bg-panel2-dark rounded-lg max-h-[92vh] overflow-y-auto duration-300 ease-in-out peer-checked:bg-panel1 after:w-4 after:h-4 after:bg-white after:rounded-full after:shadow-md after:duration-300' + 
 				(answerWithoutContext ? ' col-span-12 max-w-full' : ' col-span-3 max-w-4xl mr-6') }>
-				<div className='text-2xl font-bold text-nav'>Ask a Question</div>
-				<div className='text-sm text-nav my-2'>Ask a question about a paper or a topic from your publication library. We will try to answer it using the GPT models.</div>
+				<div className='text-2xl font-bold text-nav dark:text-nav-dark'>Ask a Question</div>
+				<div className='text-sm text-nav my-2 dark:text-nav-dark'>Ask a question about a paper or a topic from your publication library. We will try to answer it using the GPT models.</div>
 				{ answers.length && answers[answers.length-1].response ?
 					<div className='p-1 mx-4 flex justify-center'>
-						<button className={'px-2 py-1 mx-4 my-auto bg-white text-sm hover:bg-bsk_dark_blue text-bsk_dark_blue font-semibold hover:text-white hover:border-transparent rounded-full shadow-md hover:shadow-lg outline-none focus:outline-none' + (answers.length && answers[answers.length-1].response ? '':' opacity-50 cursor-not-allowed')} 
+						<button className={'px-2 py-1 mx-4 my-auto bg-white dark:bg-panel3-dark dark:text-nav-dark text-sm hover:bg-bsk_dark_blue text-bsk_dark_blue font-semibold hover:text-white hover:border-transparent rounded-full shadow-md hover:shadow-lg outline-none focus:outline-none' + (answers.length && answers[answers.length-1].response ? '':' opacity-50 cursor-not-allowed')} 
 							disabled={answers.length && answers[answers.length-1].response ? false : true}
 							onClick={
 								()=>{
 									setQuery([])
 									setAnswers([])
+									setNullAnswers([])
+									setShowNullAnswerIndexes([])
 									setQuestionRelevancescore([])
 									setAnswerRelevancescore([])
+									setHallucinationIndex([])
 									setSourcePapers([])
 									setSourcePages([])
+									setSourceContexts([])
 								}
 							}>
 								<p className='inline-block mx-2'>
@@ -545,9 +618,9 @@ function GPTHome(props:{
 					</div> : <></>
 				}
 				<div className='mt-4 p-1 mx-4 flex'>
-					<div className='text-sm text-nav my-auto mx-1'>GPT model</div>
+					<div className='text-sm text-nav dark:text-nav-dark my-auto mx-1'>GPT model</div>
 					<select 
-						className='text-md text-nav bg-panel2 py-1 px-2 mx-2 rounded-md w-32'
+						className='text-md text-nav bg-panel2 dark:bg-stjude dark:text-white py-1 px-2 mx-2 rounded-md w-32'
 						value={props.currentSettings.selectedLlm}
 						// defaultValue={props.currentSettings.defaultLlm}
 						onChange={(e) => props.settingsCallback({...props.currentSettings, selectedLlm: e.target.value})}
@@ -561,32 +634,37 @@ function GPTHome(props:{
 					
 				</div>
 				<div className='pt-4 mb-2 mx-4 flex'>
-					<textarea
-						id='submitter' 
-						rows={4}
-						className='text-gray-900 text-sm rounded-2xl focus:ring-blue-500 focus:border-blue-500 block w-5/6 p-2.5 shadow-md' 
-						placeholder={props.frontendSettings && props.frontendSettings.disable_chat_without_login && !props.currentSettings.loggedin ? 'Login to chat' : 'Type your question here'}
-						value={searchTerm}
-						readOnly={props.frontendSettings && props.frontendSettings.disable_chat_without_login && !props.currentSettings.loggedin}
-						onChange={(e:any)=>{
-							if (!e.target.value.length){
-								// setAnswers([])
-							}
-							setSearchTerm(e.target.value.replace(/\n/g, ''))
-						}}
-						onKeyUp={
-							(e:any)=>{
-								if (e.keyCode === 13){
-									setQuery((prevQuery:any)=>[...prevQuery, 
-										{'question':searchTerm, 'related': relatedQuery}
-									])
-									setSearchTerm('')
+					{
+						props.frontendSettings && props.frontendSettings.disable_chat_without_login && !props.currentSettings.loggedin ?
+						<div className='text-sm text-nav my-auto mx-1 bg-white dark:bg-gray-500 dark:text-white rounded-lg w-full h-20 p-2.5 shadow-md'>Login to chat</div> :
+						<textarea
+							id='submitter' 
+							rows={4}
+							className='text-gray-900 dark:text-white dark:bg-gray-500 dark:placeholder:text-white text-sm rounded-2xl  block w-5/6 p-2.5 shadow-md' 
+							placeholder={props.frontendSettings && props.frontendSettings.disable_chat_without_login && !props.currentSettings.loggedin ? 'Login to chat' : 'Type your question here'}
+							value={searchTerm}
+							readOnly={props.frontendSettings && props.frontendSettings.disable_chat_without_login && !props.currentSettings.loggedin}
+							onChange={(e:any)=>{
+								if (!e.target.value.length){
+									// setAnswers([])
 								}
-							}
-						}>
-					</textarea>
+								setSearchTerm(e.target.value.replace(/\n/g, ''))
+							}}
+							onKeyUp={
+								(e:any)=>{
+									if (e.keyCode === 13){
+										setQuery((prevQuery:any)=>[...prevQuery, 
+											{'question':searchTerm, 'related': relatedQuery}
+										])
+										setSearchTerm('')
+									}
+								}
+							}>
+						</textarea>
+					}
 					<button 
-						className='p-4 mx-2 my-auto bg-white hover:bg-bsk_dark_blue text-bsk_dark_blue font-semibold hover:text-white py-2 px-3 hover:border-transparent rounded-full shadow-md hover:shadow-lg outline-none focus:outline-none h-12'
+						className='p-4 mx-2 my-auto bg-white hover:bg-bsk_dark_blue dark:bg-stjude dark:text-white text-bsk_dark_blue font-semibold hover:text-white py-2 px-3 hover:border-transparent rounded-full shadow-md hover:shadow-lg outline-none focus:outline-none h-12'
+						disabled={props.frontendSettings && props.frontendSettings.disable_chat_without_login && !props.currentSettings.loggedin}
 						onClick={() => {
 							setQuery((prevQuery:any)=>[...prevQuery, 
 									{'question':searchTerm, 'related': relatedQuery}
@@ -617,7 +695,7 @@ function GPTHome(props:{
 					 : null } */}
 				{ props.frontendSettings && props.frontendSettings.show_no_context_switch ? 
 					<div className='p-1 mx-2 flex'>
-						<label className='relative flex justify-between items-center group p-2 text-md text-nav'>
+						<label className='relative flex justify-between items-center group p-2 text-md text-nav dark:text-nav-dark'>
 						<input 
 							type='checkbox' 
 							className='absolute left-1/2 -translate-x-1/2 w-full h-full peer appearance-none rounded-md'
@@ -626,10 +704,15 @@ function GPTHome(props:{
 							onChange={
 								(e:any)=>{
 									setAnswerWithoutContext(e.target.checked)
+									if (e.target.checked){
+										props.settingsCallback({...props.currentSettings, selectedDataset: props.currentSettings.selectedLlm + '_direct_chat', answerWithoutContext: true, fetchPapers: false})
+									} else {
+										props.settingsCallback({...props.currentSettings, selectedDataset: selectedDataset, answerWithoutContext: false, fetchPapers: true})
+									}
 								}
 							}
 						/>
-						<span className='w-10 h-4 flex items-center flex-shrink-0 mx-2 p-0 bg-gray-300 rounded-full duration-300 ease-in-out peer-checked:bg-panel1 after:w-4 after:h-4 after:bg-white after:rounded-full after:shadow-md after:duration-300 peer-checked:after:translate-x-6 group-hover:after:translate-x-1'></span>
+						<span className='w-10 h-4 flex items-center flex-shrink-0 mx-2 p-0 bg-gray-300 rounded-full duration-300 ease-in-out peer-checked:bg-panel1 dark:peer-checked:bg-stjude after:w-4 after:h-4 after:bg-white after:rounded-full after:shadow-md after:duration-300 peer-checked:after:translate-x-6 group-hover:after:translate-x-1'></span>
 							Chat to LLM without documents
 						</label>
 						{/* <input type='checkbox' 
@@ -651,13 +734,13 @@ function GPTHome(props:{
 					query.length ? 
 					<>{ query.map((_q:any, i:any)=>(
 						<div key={i}>
-							<div className='py-4 px-6 m-4 bg-panel2 rounded-lg shadow-md box2 user-chat'>
+							<div className={'py-4 px-6 m-4 bg-panel2 dark:bg-panel3-dark rounded-lg shadow-md box2' + (props.currentSettings.darkMode ? ' user-chat-dark' : ' user-chat') }>
 								<div className='flex flex-row justify-between font-bold'>
-									<div className='text-nav text-sm py-2'>You</div>
+									<div className='text-nav dark:text-nav-dark text-sm py-2'>You</div>
 									{
 										questionRelevancescore[query.length-i-1] !== undefined  && !answerWithoutContext ? 
 										(
-											<div className='text-nav rounded-full text-xs py-2'>
+											<div className='text-nav dark:text-nav-dark rounded-full text-xs py-2'>
 												Relevance 
 												<span style={{ backgroundColor: ConfidenceScoreColor(questionRelevancescore[query.length-i-1])}} 
 													className= {'py-1 px-2 m-1 rounded-full' + (questionRelevancescore[query.length-i-1] > 80 || questionRelevancescore[query.length-i-1] < 20 ? ' text-white' : ' text-nav')}>
@@ -668,31 +751,65 @@ function GPTHome(props:{
 									}
 									{/* <div className='text-nav text-xs py-2'>{query[query.length-i-1].related ? <LinkIcon className='w-4 h-4 inline-block'/> : null}</div> */}
 								</div>
-								<div className='text-nav'>{query[query.length-i-1].question}</div>
+								<div className='text-nav dark:text-nav-dark'>{query[query.length-i-1].question}</div>
 							</div>
 							{	answers[query.length-i-1] && answers[query.length-i-1].response ?
 								// when full answers is ready to display
-								<div className='py-4 px-6 m-4 bg-panel1 rounded-lg shadow-md box2 llm-chat'>
+								<div className={'py-4 px-6 m-4 bg-panel1 dark:bg-panel4-dark rounded-lg shadow-md box2' +  (props.currentSettings.darkMode ? ' llm-chat-dark' : ' llm-chat')}>
 								<div className='flex flex-row justify-between font-bold'>
-									<div className='text-white text-sm py-2'>{answers[query.length-i-1].source.split(':')[0]}</div>
-									<div className='text-white text-xs py-2'>
-									{
-										answerRelevancescore[answers.length-1] !== undefined && !answerWithoutContext ? 
-										(
-											<div className='text-white rounded-full text-xs py-1'>
-												Relevance 
-												<span style={{ backgroundColor: ConfidenceScoreColor(answerRelevancescore[answers.length-i-1])}} 
-													className= {'py-1 px-2 m-1 rounded-full' + (answerRelevancescore[answers.length-i-1] > 80 || answerRelevancescore[answers.length-i-1] < 20 ? ' text-white' : ' text-nav')}>
-													{answerRelevancescore[answers.length-i-1] + '%'}
-												</span>
-											</div>
-										) : ''
-									}
+									{/* <div className='text-white text-sm py-2'>
+										{answers[query.length-i-1].source.split(':')[0] + ' + MyGPT'}
+									</div> */}
+									<div>
+									<select 
+										className='text-sm text-nav bg-panel3 dark:bg-panel2-dark dark:text-nav-dark p-1 rounded-md inline-block'
+										value={showNullAnswerIndexes[query.length-i-1] === true ? 'without_context' : 'with_context'}
+										onChange={(e)=>{
+											if (e.target.value === 'without_context'){
+												setShowNullAnswerIndexes((prevShowNullAnswerIndexes:any)=>[...prevShowNullAnswerIndexes.slice(0, query.length-i-1), true, ...prevShowNullAnswerIndexes.slice(query.length-i)])
+											}else{
+												setShowNullAnswerIndexes((prevShowNullAnswerIndexes:any)=>[...prevShowNullAnswerIndexes.slice(0, query.length-i-1), false, ...prevShowNullAnswerIndexes.slice(query.length-i)])
+											}
+										}}
+									>
+										<option value={'with_context'}>{answers[query.length-i-1].source.split(':')[0] + ' + MyGPT'}</option>
+										<option value={'without_context'}>{answers[query.length-i-1].source.split(':')[0]}</option>
+									</select>
+									</div>
+									<div className='flex flex-col items-end py-2'>
+										<div className='text-white text-xs pb-1'>
+										{
+											answerRelevancescore[query.length-i-1] !== undefined && !answerWithoutContext ? 
+											(
+												<div className='text-white rounded-full text-xs py-1'>
+													Relevance 
+													<span style={{ backgroundColor: ConfidenceScoreColor(answerRelevancescore[query.length-i-1])}} 
+														className= {'py-1 px-2 m-1 rounded-full' + (answerRelevancescore[query.length-i-1] > 80 || answerRelevancescore[query.length-i-1] < 20 ? ' text-white' : ' text-nav')}>
+														{answerRelevancescore[query.length-i-1] + '%'}
+													</span>
+												</div>
+											) : ''
+										}
+										</div>
+										<div className='text-white text-xs'>
+											{
+												hallucinationIndex[query.length-i-1] !== undefined && !answerWithoutContext ? 
+												(
+													<div className='text-white rounded-full text-xs py-1'>
+														Hallucination
+														<span style={{ backgroundColor: ConfidenceScoreColor(100 - hallucinationIndex[query.length-i-1])}} 
+															className= {'py-1 px-2 m-1 rounded-full' + (hallucinationIndex[query.length-i-1] > 80 || hallucinationIndex[query.length-i-1] < 20 ? ' text-white' : ' text-nav')}>
+															{hallucinationIndex[query.length-i-1] + '%'}
+														</span>
+													</div>
+												) : ''
+											}
+										</div>
 									</div>
 								</div>
 								<div className='text-white whitespace-pre-wrap answer-div'>
 									<Markdown>
-										{answers[query.length-i-1].response}
+										{showNullAnswerIndexes[query.length-i-1] === true? nullAnswers[query.length-i-1] : answers[query.length-i-1].response}
 									</Markdown>
 								</div>
 								{/* <Feedback
@@ -729,7 +846,7 @@ function GPTHome(props:{
 											<div 
 												className={ 
 													selectedPaperIdx === (papers.findIndex((p:any)=>p.paper_title===paper)) && selectedPage === sourcePages[query.length-i-1][index] ? 
-													'bg-slate-500':''} 
+													'bg-slate-600 dark:bg-slate-700':''} 
 												key={index} onClick={
 												()=>{
 													// setSourceIdx(index)
@@ -741,7 +858,7 @@ function GPTHome(props:{
 											<div className='border border-gray-400'></div>
 												<div className='text-white text-sm p-2 font-normal italic'>{'Page ' + (sourcePages[query.length-i-1][index]) + ' of "' + paper + '"'}</div>
 												{selectedPaperIdx === (papers.findIndex((p:any)=>p.paper_title===paper)) && selectedPage === sourcePages[query.length-i-1][index] ? 
-													<div className='text-white text-sm p-2 bg-slate-500'>
+													<div className='text-white text-sm p-2 bg-slate-600 dark:bg-slate-700'>
 														<div className='text-white font-bold'>Context</div>
 														{sourceContexts[query.length-i-1][index]}
 													</div> : <></>
@@ -777,7 +894,7 @@ function GPTHome(props:{
 											<div className='border border-gray-400'></div>
 												<div className='text-white text-sm p-2 font-normal italic'>{sourceStarts[query.length-i-1][index] + ' to ' + sourceStops[query.length-i-1][index] + ' of "' + paper + '"'}</div>
 												{selectedPaperIdx === (papers.findIndex((p:any)=>p.paper_title===paper)) && selectedPage === sourcePages[query.length-i-1][index] ? 
-													<div className='text-white text-sm p-2 bg-slate-500'>
+													<div className='text-white text-sm p-2 bg-slate-500 dark:bg-slate-700'>
 														<div className='text-white font-bold'>Context</div>
 														{sourceContexts[query.length-i-1][index]}
 													</div> : <></>
@@ -790,9 +907,9 @@ function GPTHome(props:{
 								</div> 
 								: (
 								// when answer is being generated
-								<div className='py-4 px-6 m-4 bg-panel1 rounded-lg shadow-md box2 llm-chat'>
+								<div className={'py-4 px-6 m-4 bg-panel1 dark:bg-panel4-dark rounded-lg shadow-md box2' + (props.currentSettings.darkMode ? ' llm-chat-dark' : ' llm-chat')}>
 									<div className='flex flex-row justify-between font-bold mt-2 mb-4'>
-										<div className='text-white text-sm py-1'>{props.currentSettings.selectedLlm}</div>
+										<div className='text-white text-sm py-1'>{props.currentSettings.selectedLlm + ' + MyGPT'}</div>
 									</div>
 									<div className='text-white whitespace-pre-wrap answer-div'>
 										<Markdown>
@@ -865,16 +982,28 @@ function GPTHome(props:{
 			</div>
 			{ !answerWithoutContext ? 
 			<>				
-			<div className='col-span-2 mt-24 max-w-5xl w-full bg-panel1 rounded-l-lg overflow-y-auto max-h-[92vh]'>
+			<div className='col-span-2 mt-24 max-w-5xl w-full bg-panel1 dark:bg-panel4-dark rounded-l-lg overflow-y-auto max-h-[92vh]'>
 				<div className=' p-6 text-2xl font-bold text-white'>{papers.length ? 'Your publication library' : 'Your video library'}</div>
 				
 				<div className='p-2 text-sm border-slate-400 border-y'>
 					<div className='text-white inline-block px-2'> Current library </div>
 					{/* <div className='inline-block px-2 py-1 bg-panel3 rounded-md cursor-default'>{props.currentSettings.selectedDataset.split('_').join(' ')}</div> */}
 					<select 
-						className='text-md text-nav bg-panel3 py-1 px-2 mx-1 rounded-md w-28 inline-block'
+						className='text-md text-nav bg-panel3 dark:bg-stjude dark:text-white py-1 px-2 mx-1 rounded-md w-28 inline-block'
 						value={props.currentSettings.selectedDataset}
-						onChange={(e) => props.settingsCallback({...props.currentSettings, selectedDataset: e.target.value, fetchPapers: true})}
+						onChange={
+							(e) => {
+								props.settingsCallback({
+									...props.currentSettings, 
+									selectedDataset: e.target.value, 
+									fetchPapers: true,
+									use_default_qrs: true,
+									use_default_ars: true,
+									use_default_hi: true,
+								})
+								setSelectedDataset(e.target.value)
+							}
+						}
 					>
 						{props.currentSettings.datasets.map((dataset:any) => {
 							return (
@@ -882,18 +1011,19 @@ function GPTHome(props:{
 							)
 						})}
 					</select>
-					<div className='mx-1 inline-block px-2 py-1 bg-white rounded-md cursor-pointer hover:bg-slate-200' 
+					{ (props.frontendSettings && !props.frontendSettings.restriction_without_login) || (props.frontendSettings.restriction_without_login && props.currentSettings.loggedin) ?
+					<div className='mx-1 inline-block px-2 py-1 bg-white dark:bg-stjude dark:text-white rounded-md cursor-pointer hover:bg-slate-200' 
 						onClick={()=>{
 							props.settingsCallback({...props.currentSettings, selectedPanel: 'datasets', showSettings: true})
 						}}>
 						<Cog6ToothIcon className='w-4 h-4 inline-block'/>
-					</div>
+					</div> : <></>}
 				</div>
 				<div className='mb-4 divide-y'>
 					{/* list all the papers */}
 					{ papers.length ?
 						papers.map((p:any, index:number)=>
-							<div key={index} className={'p-2 ' + (selectedPaperIdx === index ? ' bg-nav cursor-default': ' bg-panel1 cursor-pointer')}>
+							<div key={index} className={'p-2 ' + (selectedPaperIdx === index ? ' bg-nav cursor-default': ' bg-panel1 dark:bg-panel4-dark cursor-pointer')}>
 								<div className='text-white text-sm '
 									onClick={()=> {
 										setselectedPaperIdx(index)
@@ -905,7 +1035,7 @@ function GPTHome(props:{
 						) :
 						videos.length ?
 						videos.map((v:any, index:number)=>
-							<div key={index} className={'p-2 ' + (selectedPaperIdx === index ? ' bg-nav cursor-default': ' bg-panel1 cursor-pointer')}>
+							<div key={index} className={'p-2 ' + (selectedPaperIdx === index ? ' bg-nav cursor-default': ' bg-panel1 dark:bg-panel4-dark cursor-pointer')}>
 								<div className='text-white text-sm '
 									onClick={()=> {
 										setselectedPaperIdx(index)
@@ -918,12 +1048,13 @@ function GPTHome(props:{
 					}
 				</div>
 			</div>
-			<div className='col-span-5 mt-24 p-6 max-w-5xl w-full bg-panel2 rounded-r-lg overflow-y-auto max-h-[92vh]'>
+			<div className='col-span-5 mt-24 p-6 max-w-5xl w-full bg-panel2 dark:bg-panel3-dark rounded-r-lg overflow-y-auto max-h-[92vh]'>
 					<div className='overflow-x-auto h-full w-full pt-4 '>
 						<Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.js">
 						<div  className='h-[76vh]'>
 							{papers.length ?
 								<Viewer
+								theme={props.currentSettings.darkMode ? 'dark' : 'light'}
 								fileUrl={`${process.env.REACT_APP_BACKEND_API}media/${papers.length ? papers[selectedPaperIdx][fileAttachmentType] : ''}`}
 								defaultScale={SpecialZoomLevel.ActualSize}
 								initialPage={selectedPage-1}
@@ -944,6 +1075,13 @@ function GPTHome(props:{
 										>
 										</iframe>
 										</div>
+								:
+								!props.currentSettings.loggedin ?
+								<div>
+									<div className='text-center text-nav'>
+										Login to view document library
+									</div>
+								</div> 
 								:
 								<div>
 									<div className='text-center text-nav'>

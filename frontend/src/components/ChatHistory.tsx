@@ -7,6 +7,7 @@ interface ChatHistoryProps {
 	dataset: string,
 	datasets: string[],
 	closeChatHistory: any,
+	darkMode: boolean,
 }
 
 const ChatHistory = (props: ChatHistoryProps) =>{
@@ -20,11 +21,18 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 	const [activeQuestionID, setActiveQuestionID] = useState(0)
 	const [questionDetails, setQuestionDetails]:[any,any] = useState({})
 	const [selectedSource, setSelectedSource] = useState(0)
+	const [showNullAnswer, setShowNullAnswer] = useState(false)
 	const [selectedDataset, setSelectedDataset] = useState(props.dataset)
 
 	useEffect(() => {
 		// fetch chat history from API
-		fetch(`${process.env.REACT_APP_BACKEND_API}api/get_conversation_history/?dataset=${selectedDataset}`)
+		fetch(`${process.env.REACT_APP_BACKEND_API}api/get_conversation_history/?dataset=${selectedDataset}`, {
+			method: 'GET',
+			headers: { 
+				'Content-Type': 'application/json',
+				'Authorization': `${localStorage.getItem('access') ?'Bearer ' + localStorage.getItem('access'):''}`
+			}
+		})
 			.then(response => response.json())
 			.then(data => {
 				const questions_array:any = []
@@ -43,7 +51,13 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 	// fetch answers and sources for selected question
 	useEffect(() => {
 		if (activeQuestionID === 0) return
-		fetch(`${process.env.REACT_APP_BACKEND_API}api/get_question_details/?question_id=${activeQuestionID}`)
+		fetch(`${process.env.REACT_APP_BACKEND_API}api/get_question_details/?question_id=${activeQuestionID}`,{
+			method: 'GET',
+			headers: { 
+				'Content-Type': 'application/json',
+				'Authorization': `${localStorage.getItem('access') ?'Bearer ' + localStorage.getItem('access'):''}`
+			}
+		})
 			.then(response => response.json())
 			.then(data => {
 				setQuestionDetails(data)
@@ -53,7 +67,7 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 	return (
 		// create floating panel with opque background
 		<div className='fixed inset-0 z-50 bg-black bg-opacity-70 flex items-center justify-center'>
-			<div className={'bg-panel1 w-3/4 max-h-[1100px] max-w-[1200px] rounded-lg ' + (window.screen.availHeight < 1000 ? 'h-[95vh]' : 'h-[75vh]')}>
+			<div className={'bg-panel1 dark:bg-panel4-dark w-3/4 max-w-[1200px] rounded-lg ' + (window.screen.availHeight < 1000 ? 'h-[95vh] max-h-[95vh]' : 'h-[70vh] max-h-[70vh]')}>
 				<div className='flex justify-between'>
 					<div className='text-2xl font-bold text-white mt-8 mx-8'>Chat History</div>
 					<div className='text-2xl font-bold text-white mt-8 mr-8 cursor-pointer' onClick={props.closeChatHistory}>x</div>
@@ -68,7 +82,7 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 								</div>
 							{/* dropdown for datasets */}
 							<select 
-								className='text-md text-nav bg-panel2 py-2 px-4 mx-2 rounded-md'
+								className='text-md text-nav bg-panel2 dark:bg-stjude dark:text-nav-dark py-2 px-4 mx-2 rounded-md'
 								value={selectedDataset}
 								onChange={(e) => setSelectedDataset(e.target.value)}
 							>
@@ -88,10 +102,11 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 										<div 
 											key={index} 
 											className={`text-white text-md cursor-pointer py-2 px-4 overflow-y-auto 
-												${activeQuestion === index ? 'font-normal bg-nav' : 'font-light bg-panel1'}`}
+												${activeQuestion === index ? 'font-normal bg-nav' : 'font-light bg-panel1 dark:bg-panel4-dark'}`}
 											onClick={() => {
 												setActiveQuestion(index)
 												setActiveQuestionID(message.question_id)
+												setShowNullAnswer(false)
 											}}
 										>
 											{message.question}
@@ -102,13 +117,13 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 						</div>
 					</div>
 					{/* create right side for answers and sources list */}
-					<div className={'w-2/3 bg-panel3 max-h-[62vh] overflow-y-auto overflow-x-clip border-slate-400 border-y-2 ' + (window.screen.availHeight < 1000 ? 'h-[80vh]' : 'h-[62vh]')}>
+					<div className={'w-2/3 bg-panel3 dark:bg-neutral-800 overflow-y-auto overflow-x-clip border-slate-400 border-y-2 ' + (window.screen.availHeight < 1000 ? 'h-[80vh] max-h-[80vh]' : 'h-[62vh] max-h-[62vh]')}>
 					{ activeQuestionID === 0 ? <div className='px-4 mx-2'> No Q&A to display</div> :
 						<>
-							<div className='py-4 px-6 m-4 bg-panel2 rounded-lg shadow-md box2 user-chat'>
+							<div className={'py-4 px-6 m-4 bg-panel2 dark:bg-panel3-dark rounded-lg shadow-md box2' + (props.darkMode ? ' user-chat-dark' : ' user-chat')}>
 								<div className={'flex flex-row justify-between font-bold overflow-x-auto'}>
-									<div className='text-nav text-sm py-2'>You</div>
-									<div className='text-nav rounded-full text-xs py-2'>
+									<div className='text-nav dark:text-nav-dark text-sm py-2'>You</div>
+									<div className='text-nav dark:text-nav-dark rounded-full text-xs py-2'>
 										Relevance 
 										<span style={{ backgroundColor: ConfidenceScoreColor(questionDetails.relevance_score)}} 
 											className= {'py-1 px-2 m-1 rounded-full' + (questionDetails.relevance_score > 80 || questionDetails.relevance_score < 20 ? ' text-white' : ' text-nav')}>
@@ -116,26 +131,49 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 										</span>
 									</div>
 								</div>
-								<div className='text-nav'>{questionDetails.question}</div>
+								<div className='text-nav dark:text-nav-dark'>{questionDetails.question}</div>
 							</div>
-							<div className='py-4 px-6 m-4 bg-panel1 rounded-lg shadow-md box2 llm-chat'>
+							<div className={'py-4 px-6 m-4 bg-panel1 dark:bg-panel4-dark rounded-lg shadow-md box2' + (props.darkMode ? ' llm-chat-dark' : ' llm-chat')}>
 							{ questionDetails.answers && questionDetails.answers.length >= 0 ?
 								<>
 									<div className='flex flex-row justify-between font-bold'>
-											<div className='text-white text-sm py-2'>{questionDetails.llm}</div>
-											<div className='text-white text-xs py-2'>
-												<div className='text-white rounded-full text-xs py-1'>
-													Relevance 
-													<span style={{ backgroundColor: ConfidenceScoreColor(questionDetails.answers[0].relevance_score)}} 
-														className= {'py-1 px-2 m-1 rounded-full' + (questionDetails.answers[0].relevance_score > 80 || questionDetails.answers[0].relevance_score < 20 ? ' text-white' : ' text-nav')}>
-														{questionDetails.answers[0].relevance_score + '%'}
-													</span>
-												</div>
+											{/* <div className='text-white text-sm py-2'>{questionDetails.llm}</div> */}
+										<div>
+											<select
+												className='text-sm text-nav bg-panel3 dark:bg-panel2-dark dark:text-nav-dark p-1 rounded-md inline-block'
+												value={showNullAnswer ? 'without_context': 'with_context'}
+												onChange={(e)=>{
+													if (e.target.value === 'without_context'){
+														setShowNullAnswer(true)
+													}else{
+														setShowNullAnswer(false)
+													}
+												}}
+											>
+												<option value={'with_context'}>{questionDetails.llm + ' + MyGPT'}</option>
+												<option value={'without_context'}>{questionDetails.llm}</option>
+											</select>
+										</div>
+										<div className='text-white text-xs flex flex-col items-end py-2'>
+											<div className='text-white rounded-full text-xs py-1'>
+												Relevance 
+												<span style={{ backgroundColor: ConfidenceScoreColor(questionDetails.answers[0].relevance_score)}} 
+													className= {'py-1 px-2 m-1 rounded-full' + (questionDetails.answers[0].relevance_score > 80 || questionDetails.answers[0].relevance_score < 20 ? ' text-white' : ' text-nav')}>
+													{questionDetails.answers[0].relevance_score + '%'}
+												</span>
+											</div>
+											<div className='text-white rounded-full text-xs py-1 mt-1'>
+												Hallucination
+												<span style={{ backgroundColor: ConfidenceScoreColor(100 - questionDetails.answers[0].hallucination_index)}} 
+													className= {'py-1 px-2 m-1 rounded-full' + (questionDetails.answers[0].hallucination_index > 80 || questionDetails.answers[0].hallucination_index < 20 ? ' text-white' : ' text-nav')}>
+													{questionDetails.answers[0].hallucination_index + '%'}
+												</span>
 											</div>
 										</div>
+									</div>
 									<div className='text-white whitespace-pre-wrap answer-div'>
 										<Markdown>
-											{questionDetails.answers[0].answer}
+											{showNullAnswer ? questionDetails.answers[0].answer_no_context : questionDetails.answers[0].answer}
 										</Markdown>
 									</div>
 									<div className='text-white text-sm font-bold pt-4'>
@@ -145,14 +183,14 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 									<div key={index}>
 										<div className='border border-gray-400'></div>
 										<div 
-											className={'text-white text-sm p-2 font-normal italic' + (selectedSource === index ? ' bg-nav' : ' bg-panel1')}
+											className={'text-white text-sm p-2 font-normal italic' + (selectedSource === index ? ' bg-nav' : '')}
 											onClick={() => setSelectedSource(index)}
 										>
 												{'Page ' + (source.page) + ' of "' + source.paper + '"'}
 												{selectedSource === index ? <ChevronUpIcon className='h-4 w-4 float-right'/> : <ChevronDownIcon className='h-4 w-4 float-right'/>}
 										</div>
 										{selectedSource === index ? 
-											<div className='text-white text-sm p-2 bg-slate-500'>
+											<div className='text-white text-sm p-2 bg-slate-600 dark:bg-slate-700'>
 												<div className='text-white font-bold'>Context</div>
 												{source.context}
 											</div> : <></>

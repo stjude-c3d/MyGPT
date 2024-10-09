@@ -23,7 +23,7 @@ export const DropdownOptions = (props = defaultDropdownOptionsProps) => {
 	return (
 		<div className='relative inline-block text-left'>
 			<select 
-				className={'border border-bsk_dark_blue rounded focus:ring-blue-500 focus:border-blue-500 block text-sm h-7' + (props.width ? ' w-['+ props.width+']' : ' w-24' )}
+				className={'border border-bsk_dark_blue dark:bg-gray-500 dark:placeholder:text-white dark:text-white rounded focus:ring-blue-500 focus:border-blue-500 block text-sm h-7' + (props.width ? ' w-['+ props.width+']' : ' w-24' )}
 				onChange={(e) => props.dropDownCallback(e.target.value)}
 				defaultValue={defaultOption}
 				disabled={props.disabled}

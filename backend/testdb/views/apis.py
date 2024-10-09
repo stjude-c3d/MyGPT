@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.parsers import JSONParser
 from django.utils.timezone import make_aware
 from django.core import serializers
+import numpy as np
 import chromadb
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework.permissions import IsAuthenticated
@@ -17,7 +18,7 @@ import json
 import re
 from django.contrib.auth.models import User
 from ..models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, Model, EmbeddingModel, FrontEndSettings, DisclaimerAgreement
-from .utils import get_zotero_chunks, add_dataset_from_upload, add_to_chroma, nearestDataChroma, get_relevance_score, add_embeddings_to_qna, highlight_pdf, seconds_to_hhmmss, add_pca_to_qna_and_dataset, add_demo_dataset, get_youtube_transcript, add_video_to_chroma, add_embeddings_to_chunks, add_pca_to_chunks, get_answer_distance, sanitize_filename
+from .utils import get_zotero_chunks, add_dataset_from_upload, add_to_chroma, nearestDataChroma, get_relevance_score, add_embeddings_to_qna, highlight_pdf, seconds_to_hhmmss, add_pca_to_qna_and_dataset, add_demo_dataset, get_youtube_transcript, add_video_to_chroma, get_embedding_model_ef, get_answer_distance, sanitize_filename
 
 ####################
 # APIs             #
@@ -80,6 +81,18 @@ def get_context(request):
             skip_highlight = False
         model_type = Model.objects.get(model_name=model)
         dataset_name = json_request['dataset']
+        use_default_qrs = json_request['use_default_qrs']
+        question_best_distance = json_request['question_best_distance']
+        question_worst_distance = json_request['question_worst_distance']
+        # check if dataset exists or crate a new one
+        dataset_exist = Dataset.objects.filter(dataset_name=dataset_name).exists()
+        if not dataset_exist:
+            Dataset.objects.create(
+                dataset_name=dataset_name,
+                dataset_size=0,
+                dataset_date_time=make_aware(datetime.datetime.now()),
+                user_email='-'
+            )
         dataset = Dataset.objects.get(dataset_name=dataset_name)
         embedding_model = dataset.embedding_model
         new_conversation = json_request['new_conversation']
@@ -94,7 +107,7 @@ def get_context(request):
             context, titles, pages, starts, stops, chunks_txt, distances = nearestDataChroma(question_text, dataset_name, keywords, embedding_model)
             sources = []
             distances = [round(dist, 3) for dist in distances]
-            relevance_score = get_relevance_score(distances, embedding_model)
+            relevance_score = get_relevance_score(distances, embedding_model, True, use_default_qrs, question_best_distance, question_worst_distance)
         library_type = 'papers' if len(pages) else 'videos'
 
         # if no_context is true, create or get dataset
@@ -130,7 +143,12 @@ def get_context(request):
                     start_date_time=current_date_time
                 )
             else:
-                conversation_id = Question.objects.get(question_text=previous_question, model_type=model_type).conversation.id
+                questions = Question.objects.filter(question_text=previous_question, question_dataset=dataset)
+                if questions.count() == 0:
+                    return Response({'error':True, 'error_message':'Previous question not found'}, content_type="application/json")
+                else:
+                    question = questions[0]
+                conversation_id =  question.conversation.id
                 conversation = Conversation.objects.get(id=conversation_id)
                 conversation.question_answer_count += 1
                 conversation.save()
@@ -140,6 +158,8 @@ def get_context(request):
                 model_type=model_type,
                 keywords=keywords,
                 question_dataset=dataset,
+                qrs_lower_range=question_best_distance,
+                qrs_upper_range=question_worst_distance,
                 conversation=conversation,
                 saved_date_time=current_date_time
             )
@@ -266,7 +286,9 @@ def get_question_details(request):
         for answer in answers:
             answers_json.append({
                 'answer': answer.answer_text,
-                'relevance_score': answer.relevance_score
+                'relevance_score': answer.relevance_score,
+                'hallucination_index': answer.hallucination_index,
+                'answer_no_context': answer.answer_no_context_text,
             })
         question_json = {
             'question': question.question_text,
@@ -294,26 +316,160 @@ def save_answer(request):
         question = Question.objects.get(question_text=question_text, model_type=model_type, question_dataset=dataset)
         embedding_model = dataset.embedding_model
         no_context = json_request['no_context']
+        
+        best_distance_a_r = json_request['answer_best_distance']
+        worst_distance_a_r = json_request['answer_worst_distance']
+        use_default_ars = json_request['use_default_ars']
+        
+        use_default_hi = json_request['use_default_hi']
+        a_HI_r = json_request['a_hi']
+        b_HI_r = json_request['b_hi']
+        c_HI_r = json_request['c_hi']
+        temperature = json_request['temperature']
+        top_k = json_request['top_k']
+        top_p = json_request['top_p']
+        
         if not no_context:
             _, _, _, _, _, _, distances = nearestDataChroma(answer_no_context_text, dataset_name, '',embedding_model)
             distances = [round(dist, 3) for dist in distances]
-            mean_distance = sum(distances) / len(distances)
-            relevance_score = get_relevance_score(distances, embedding_model)
+            mean_distance_n = sum(distances) / len(distances)
+            # relevance_score_n = get_relevance_score(distances, embedding_model, False)
+
+            _, _, _, _, _, _, distances_a = nearestDataChroma(answer_text, dataset_name, '',embedding_model)
+            distances_a = [round(dist, 3) for dist in distances_a]
+            mean_distance_a = sum(distances_a) / len(distances_a)
+            # relevance_score_a = get_relevance_score(distances_a, embedding_model, False)
         else:
             relevance_score = 0
+
+        #  calculate answer relevance score
+        if use_default_ars:
+            best_distance_a = 0
+            worst_distance_a = 0
+            distances_ac = []
+            distances_nac = []
+
+            embedding_model_obj = EmbeddingModel.objects.get(model_name=embedding_model)
+            distances_ac.append(embedding_model_obj.best_distance_ac)
+            distances_ac.append(embedding_model_obj.worst_distance_ac)
+            distances_nac.append(embedding_model_obj.best_distance_nac)
+            distances_nac.append(embedding_model_obj.worst_distance_nac)
+
+            # subtract max nac from min ac
+            max_nac = np.array(distances_nac).max()
+            min_ac = np.array(distances_ac).min()
+            worst_distance_a = max_nac - min_ac
+
+            # subtract min nac from max ac
+            min_nac = np.array(distances_nac).min()
+            max_ac = np.array(distances_ac).max()
+            best_distance_a = min_nac - max_ac
+
+            buffer_distance = 0.1 * (worst_distance_a - best_distance_a)
+            best_distance_a = best_distance_a - buffer_distance
+            worst_distance_a = worst_distance_a + buffer_distance
+        else:
+            best_distance_a = best_distance_a_r
+            worst_distance_a = worst_distance_a_r
+
+        # if embedding_model == 'nomic-embed-text:latest':
+        #     best_distance_a = -180
+        #     worst_distance_a = 120
+        # elif embedding_model == 'multi-qa-MiniLM-L6-cos-v1':
+        #     best_distance_a = -0.8
+        #     worst_distance_a = 0.8
+        # elif embedding_model == 'multi-qa-MiniLM-L6-v2':
+        #     best_distance_a = -1
+        #     worst_distance_a = 1.4
+        # else:
+        #     best_distance_a = -1
+        #     worst_distance_a = 1.4
+
+        mean_distance = mean_distance_n - mean_distance_a
+        relevance_score = round(((1 - ((mean_distance - best_distance_a) / (worst_distance_a - best_distance_a))) * 100),0)
+        question_relevance_score = question.relevance_score
+
+        # caclulate hallucination index
+        if use_default_hi:
+            a_HI = 1.0
+            b_HI = 0.33
+            c_HI = 0.66
+        else:
+            a_HI = a_HI_r
+            b_HI = b_HI_r
+            c_HI = c_HI_r
+        maxHI = 0.8
+        minHI = 0.2
+
+        # if embedding_model == 'nomic-embed-text:latest':
+        #     a_HI = 0.758
+        #     b_HI = 0.927
+        #     c_HI = 1.318
+        #     maxHI = 0.14
+        #     minHI = -1.21
+        # elif embedding_model == 'multi-qa-MiniLM-L6-cos-v1':
+        #     a_HI = 0.589
+        #     b_HI = 0.885
+        #     c_HI = 0.938
+        #     maxHI = 0.11
+        #     minHI = -0.87
+        # elif embedding_model == 'multi-qa-MiniLM-L6-v2':
+        #     a_HI = 0.446
+        #     b_HI = 0.673
+        #     c_HI = 1.103
+        #     maxHI = -0.17
+        #     minHI = -0.9
+        # else:
+        #     a_HI = 0.33
+        #     b_HI = 0.33
+        #     c_HI = 0.66
+        #     maxHI = 0.8
+        #     minHI = 0.2
+
+        if(question_relevance_score == 0):
+            hallucination_index_raw = a_HI
+            hallucination_index = round((hallucination_index_raw - minHI)/(maxHI - minHI) * 100, 0)
+        else:
+            hallucination_index_raw = a_HI - (b_HI * question_relevance_score/100) - (c_HI * relevance_score/100)
+            hallucination_index = round((hallucination_index_raw - minHI)/(maxHI - minHI) * 100, 0)
+
+
         Answer.objects.create(
             answer_text=answer_text,
             answer_no_context_text=answer_no_context_text,
-            relevance_score=relevance_score, 
+            relevance_score=relevance_score if question_relevance_score != 0 else 0, 
+            hallucination_index=hallucination_index if hallucination_index < 100 else 100,
+            ars_lower_range=best_distance_a,
+            ars_upper_range=worst_distance_a,
+            a_hi=a_HI,
+            b_hi=b_HI,
+            c_hi=c_HI,
+            temperature=temperature,
+            top_k=top_k,
+            top_p=top_p,
             model_type=model_type, 
             question=question
         )
         # add embeddings to answer
         if not no_context:
             add_embeddings_to_qna(answer_text, 'answer', embedding_model)
-        return Response({'saved':True, 'mean_distance': mean_distance, 'relevance_score': relevance_score}, content_type="application/json")
+            return Response({
+                'saved':True, 
+                # 'mean_distance_a': mean_distance_a,
+                # 'mean_distance_n': mean_distance_n,
+                'mean_distance': mean_distance, 
+                'relevance_score': relevance_score if question_relevance_score != 0 else 0,
+                # 'relevance_score_a': relevance_score_a,
+                # 'relevance_score_n': relevance_score_n,
+                'hallucination_index': hallucination_index if hallucination_index < 100 else 100,
+                # 'best_distance_a': best_distance_a,
+                # 'worst_distance_a': worst_distance_a
+            }, content_type="application/json")
+        else:
+            return Response({'saved':True, 'relevance_score': relevance_score}, content_type="application/json")
 
 @api_view(['POST'])
+
 def feedback_for_answers(request):
     if request.method == 'POST':
         json_request = JSONParser().parse(request)
@@ -367,6 +523,7 @@ def add_zotero_dataset(request):
         user_r = request.POST.get('user')
         user_email_r = request.POST.get('user_email')
         user_group_r = request.POST.get('user_group')
+        distance_function = request.POST.get('distance_function')
 
         # Validate all inputs for code injection
         if not api_key_r or not re.match(r'^[a-zA-Z0-9]+$', api_key_r):
@@ -389,7 +546,7 @@ def add_zotero_dataset(request):
         else:
             collection_id = collection_id_r
 
-        if not embedding_model_request or not re.match(r'^[a-zA-Z0-9_\/-:]+$', embedding_model_request):
+        if not embedding_model_request or not re.match(r'^[a-zA-Z0-9_/:\-.]+$', embedding_model_request):
             return Response({'error': True, 'error_message': 'Invalid embedding model name'}, content_type="application/json")
         else:
             embedding_model = embedding_model_request
@@ -420,7 +577,7 @@ def add_zotero_dataset(request):
 
         # if dataset_name.error:
         #     return Response({'error':True, 'error_message': dataset_name.error}, content_type="application/json")
-        message = add_to_chroma(dataset_name, embedding_model)
+        message = add_to_chroma(dataset_name, embedding_model, distance_function)
 
         if message == False:
             return Response({'error':True}, content_type="application/json")
@@ -437,20 +594,21 @@ def upload_documents(request):
         # if not validation:
         #     return Response({'error': True, 'error_message': validation}, content_type="application/json")
         # else:
-            dataset_name = add_dataset_from_upload(request)
-            
-            # Validate embedding_model input
-            embedding_model_request = request.POST.get('embedding_model')
-            if not embedding_model_request or not re.match(r'^[a-zA-Z0-9_\-:\/]+$', embedding_model_request):
-                return Response({'error': True, 'error_message': 'Invalid embedding model name'}, content_type="application/json")
-            else:
-                embedding_model = embedding_model_request
+        dataset_name = add_dataset_from_upload(request)
+        
+        # Validate embedding_model input
+        embedding_model_request = request.POST.get('embedding_model')
+        distance_function = request.POST.get('distance_function')
+        if not embedding_model_request or not re.match(r'^[a-zA-Z0-9_/:\-.]+$', embedding_model_request):
+            return Response({'error': True, 'error_message': 'Invalid embedding model name'}, content_type="application/json")
+        else:
+            embedding_model = embedding_model_request
 
-            message = add_to_chroma(dataset_name, embedding_model)
+        message = add_to_chroma(dataset_name, embedding_model, distance_function)
 
-            if message == False:
-                return Response({'error': True}, content_type="application/json")
-            return Response({'uploaded': True}, content_type="application/json")
+        if message == False:
+            return Response({'error': True}, content_type="application/json")
+        return Response({'uploaded': True}, content_type="application/json")
 
 @api_view(['POST'])
 def add_ollama_models(request):
@@ -477,6 +635,7 @@ def add_embedding_models(request):
                     model_size=embedding_model['size'],
                     model_source=embedding_model['source'],
                 )
+                get_embedding_model_ef(embedding_model['name'], True)
         return Response({'added':True}, content_type="application/json")
     
 @api_view(['GET'])
@@ -540,7 +699,7 @@ def add_video_library(request):
             dataset_name = dataset_name_f
 
         # Validate embedding_model input
-        if not embedding_model_f or not re.match(r'^[a-zA-Z0-9_\-:]+$', embedding_model_f):
+        if not embedding_model_f or not re.match(r'^[a-zA-Z0-9_\-:.]+$', embedding_model_f):
             return Response({'error': True, 'error_message': 'Invalid embedding model name'}, status=400)
         else:
             embedding_model = embedding_model_f
@@ -666,6 +825,25 @@ def get_distance_between_answers(request):
         embedding_model = json_request['embedding_model']
         distances = get_answer_distance(sentence1, sentence2, embedding_model)
         return Response({'distances': distances}, content_type="application/json")
+    
+@api_view(['GET'])
+def get_embedding_model_details(request):
+    if request.method == 'GET':
+        dataset = request.GET.get('dataset')
+        embedding_model_name = Dataset.objects.get(dataset_name=dataset).embedding_model
+        embedding_model = EmbeddingModel.objects.get(model_name=embedding_model_name)
+        embedding_model_obj = {
+            'model_name': embedding_model.model_name,
+            'model_size': embedding_model.model_size,
+            'model_source': embedding_model.model_source,
+            'best_distance_q': embedding_model.best_distance_q,
+            'worst_distance_q': embedding_model.worst_distance_q,
+            'best_distance_ac': embedding_model.best_distance_ac,
+            'worst_distance_ac': embedding_model.worst_distance_ac,
+            'best_distance_nac': embedding_model.best_distance_nac,
+            'worst_distance_nac': embedding_model.worst_distance_nac,
+        }
+        return Response({'embedding_model': embedding_model_obj})
     
 # get username if access token is valid
 @api_view(['POST'])
