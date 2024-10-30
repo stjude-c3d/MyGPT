@@ -514,11 +514,10 @@ def delete_dataset(request):
 @api_view(['POST'])
 def add_zotero_dataset(request):
     if request.method == 'POST':
-        json_request = JSONParser().parse(request)
-        api_key_r = json_request['api_key']
-        library_id_r = json_request['library_id']
-        library_id_type_r = json_request['library_id_type']
-        collection_id_r = json_request['collection_id']
+        api_key_r = request.POST.get('api_key')
+        library_id_r = request.POST.get('library_id')
+        library_id_type_r = request.POST.get('library_id_type')
+        collection_id_r = request.POST.get('collection_id')
         embedding_model_request = request.POST.get('embedding_model')
         user_r = request.POST.get('user')
         user_email_r = request.POST.get('user_email')
@@ -763,7 +762,7 @@ def get_vector_embeddings(request):
             if question.pca_x == 0 and question.pca_y == 0 and question.pca_z == 0:
                 add_pca_to_qna_and_dataset(question_id)
 
-            return Response({'success': True}, status=200)
+            # return Response({'success': True}, status=200)
 
         pca_embeddings = []
         for dataset_name in datasets:

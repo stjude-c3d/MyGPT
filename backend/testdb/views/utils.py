@@ -439,11 +439,16 @@ def add_to_chroma(dataset_name, embedding_model_request = 'all-MiniLM-L6-v2', di
         dataset.save()
 
         print(f'Added {new_count - count} documents')
-        return True
+        # return True
             
 
         # add embeddings to database
-        # add_embeddings_to_chunks(documents, metadatas, dataset)
+        # add_embeddings_to_chunks(dataset_name)
+
+        # add pca to chunks
+        # add_pca_to_chunks()
+
+        return True
 
 def add_demo_dataset(embedding_model_request = 'multi-qa-MiniLM-L6-cos-v1'):
     documents_directory = '/code/data'
@@ -546,7 +551,7 @@ def add_demo_dataset(embedding_model_request = 'multi-qa-MiniLM-L6-cos-v1'):
 def add_embeddings_to_chunks(dataset):
     # get chunks by reading text file
     chunks_txt = []
-    with open('data/data_chunks/'+ dataset +'.txt', 'r') as file:
+    with open('data/data_chunks/'+ str(dataset) +'.txt', 'r') as file:
         for line in file:
             chunk = eval(line)
             chunks_txt.append(chunk)
@@ -564,7 +569,8 @@ def add_embeddings_to_chunks(dataset):
     for i in tqdm(
         range(0, len(chunks_txt), 100), desc='Adding embeddings', unit_scale=100
     ):
-        default_ef = embedding_functions.DefaultEmbeddingFunction()
+        # default_ef = embedding_functions.DefaultEmbeddingFunction()
+        default_ef = OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "/api/embeddings", model_name='nomic-embed-text:latest')
         for chunk in chunks_txt[i : i + 100]:
             embedding = default_ef([chunk['content']])
             chunk = chunks.objects.create(

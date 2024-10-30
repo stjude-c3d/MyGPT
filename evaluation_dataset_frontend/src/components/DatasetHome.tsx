@@ -148,7 +148,11 @@ function DatasetHome(){
 		if(selectedQuestion !== null){
 			fetch(`${process.env.REACT_APP_BACKEND_API}evaluation_dataset/get_question_by_id/?question_id=${selectedQuestion}&format=json`, requestOptions)
 				.then(response => response.json())
-				.then(data => {setAnswers(data.answers)})
+				.then(data => {
+					const answer_order = ['mygpt_beta','best_1','best_2']
+					const answers = data.answers
+						.sort((a:any,b:any)=>answer_order.indexOf(a.answer_tag)-answer_order.indexOf(b.answer_tag))
+					setAnswers(answers)})
 		setFeedbackReceived(false)
 		}
 	}
@@ -287,8 +291,8 @@ function DatasetHome(){
 													answers.map((a:any, i:number)=>{
 														return (
 															<div key={a.id} className='inline-block m-2 bg-sky-50 rounded-md p-2'>
-																<div className='text-sm font-bold text-panel1 mx-1 rounded-full px-2 py-1 inline-block align-middle'>Setting {i+1}</div>
-																{/* <div>{a.answer_tag}</div> */}
+																{/* <div className='text-sm font-bold text-panel1 mx-1 rounded-full px-2 py-1 inline-block align-middle'>Setting {i+1}</div> */}
+																<div className='text-sm font-bold text-panel1 mx-1 rounded-full px-2 py-1 inline-block align-middle'>{a.answer_tag.replace('_', ' ')}</div>
 																<div className='inline-block mx-2 p-2 text-nav'>{a.answer_text}</div>
 																	<Feedback
 																		answer={JSON.parse(JSON.stringify(a.answer_text))}

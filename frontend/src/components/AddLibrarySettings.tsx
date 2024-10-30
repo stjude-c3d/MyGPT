@@ -43,21 +43,33 @@ const AddLibrarySettings = (props: {
 
   useEffect(() => {
 	if (addLibrary){
+		const formData = new FormData()
+
+		formData.append('api_key', apiKey)
+		formData.append('library_id', libraryId)
+		formData.append('library_id_type', libraryIdType)
+		formData.append('collection_id', collectionId)
+		formData.append('embedding_model', currentSettings.selectedEmbeddingModel)
+		formData.append('use_overlap', useOverlap)
+		formData.append('chunk_size', chunkSize)
+		formData.append('distance_function', distanceFn)
+		formData.append('user', props.user ? props.user.user.replace(', ','_'): '-')
+		formData.append('user_email', props.user ? props.user.user_email : '-')
+		formData.append('user_group', props.user && props.user.isAdmin ? 'admin' : 'user')
+
 		const requestOptions = {
 			method: 'POST',
-			headers: { 
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({
-				api_key: apiKey,
-				library_id: libraryId,
-				library_id_type: libraryIdType,
-				collection_id: collectionId,
-				user: props.user ? props.user.user: '',
-				user_email: props.user ? props.user.user_email : '',
-				user_group: props.user && props.user.isAdmin ? 'admin' : 'user'
-			})
+			headers: {
+				'Authorization': `${
+				props.user && props.djangoLogin ?
+				'Bearer ' + localStorage.getItem('access') :
+					process.env.NODE_ENV === 'production' ? 
+					process.env.REACT_APP_AUTH_TOKEN_PROD 
+					: process.env.REACT_APP_AUTH_TOKEN_DEV}`
+				},
+			body: formData
 		}
+
 		fetch(`${process.env.REACT_APP_BACKEND_API}api/add_zotero_collection/`, requestOptions)
 		.then(response => response.json())
 		.then(data => {
@@ -68,6 +80,8 @@ const AddLibrarySettings = (props: {
 			setCollectionId('')
 			if (data.added){
 				setShowSuccess(true)
+			}else{
+				setShowError(true)
 			}
 		})
 	}
@@ -171,7 +185,7 @@ const AddLibrarySettings = (props: {
 		{ currentSettings.restriction_without_login && !props.user ?
 			<div className='text-nav dark:text-nav-dark p-2 mb-2 flex justify-start text-lg font-semibold'> Note: Please login to add library </div> : <></>
 		}
-		{/*  add choice button with 2 options */}
+		{/*  add choice button with 3 options */}
 		<div className='flex justify-start'>
 			<div className={'inline-block px-4 py-1 shadow rounded-l-lg border-2 border-panel1 ' + 
 				(uploadPanel ? 'bg-panel1 dark:bg-panel3-dark text-white cursor-default ' : 'text-panel1 bg-white dark:bg-nav-dark dark:text-nav cursor-pointer')}
@@ -207,6 +221,21 @@ const AddLibrarySettings = (props: {
 		{ zoteroPanel ?
 			<div className='flex justify-start'>
 				<div className='flex flex-col mt-4'>
+					{ showSuccess ?
+						<div className='flex justify-start'>
+							<div className='text-nav dark:text-nav-dark p-1 text-lg bg-green-200 rounded-md'>Library uploaded successfully</div>
+						</div> : 
+						addLibrary && !showSuccess ?
+						<div className='flex justify-start'>
+							<div className='text-nav dark:text-nav-dark p-1 text-lg bg-orange-200 rounded-md'>Uploading documents...</div>
+						</div> :
+						<></>
+					}
+					{ showError ?
+						<div className='flex justify-start'>
+							<div className='text-nav dark:text-nav-dark p-1 text-lg bg-red-200 rounded-md'>Error uploading documents</div>
+						</div> : <></>	
+					}
 					<div className='flex py-2'>
 						<div className='text-nav dark:text-nav-dark w-48 p-1'>Zotero API key*</div>
 						<input type='text' disabled={currentSettings.restriction_without_login && !props.user} placeholder=' Zotero API key' className='rounded-md w-72 p-1 text-nav dark:bg-gray-500 dark:text-white dark:placeholder:text-white' value={apiKey} onChange={(e) => setApiKey(e.target.value)}/>
@@ -320,11 +349,6 @@ const AddLibrarySettings = (props: {
 					<div className='flex justify-start'>
 						<button className='bg-panel1 dark:bg-panel3-dark text-white px-4 py-2 rounded-md my-2' onClick={()=>setAddLibrary(true)}>Add library</button>
 					</div>
-					{/* show sucess mesage */}
-					{ showSuccess ?
-					<div className='flex justify-start'>
-						<div className='text-nav dark:text-nav-dark p-1 text-lg bg-green-200 rounded-md'>Library added successfully</div>
-					</div> : <></>}
 				</div>
 			</div>
 			: <></>
@@ -350,7 +374,7 @@ const AddLibrarySettings = (props: {
 					{/* <div className='text-nav dark:text-nav-dark p-1 my-2'> Note: Because of limited resources on the hosting server, upload up to 7-10 PDFs per library. It may take 3-4 minutes to see a success message.</div> */}
 					<div className='flex justify-start m-2'>
 						<div className='text-nav dark:text-nav-dark p-1 w-48'>Library Name</div>
-						<input type='text' placeholder=' Library Name' disabled={currentSettings.restriction_without_login && !props.user} className='rounded-md w-[270px] px-2 py-1 dark:bg-gray-500 dark:text-white dark:placeholder:text-white text-nav dark:text-nav-dark' value={UploadLibraryName}
+						<input type='text' placeholder=' Library Name' disabled={currentSettings.restriction_without_login && !props.user} className='rounded-md w-[270px] px-2 py-1 dark:bg-gray-500 dark:text-white dark:placeholder:text-white text-nav' value={UploadLibraryName}
 							onChange={(e) => setUploadLibraryName(e.target.value)}
 						/>
 					</div>
