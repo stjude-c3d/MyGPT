@@ -255,7 +255,7 @@ const AddLibrarySettings = (props: {
 						<div className='text-nav dark:text-nav-dark p-1 text-lg'>+</div>
 					</div> */}
 					<div className='flex pb-2'>
-						<div className='text-nav dark:text-nav-dark w-48 p-1'>Zotero library ID*</div>
+						<div className='text-nav dark:text-nav-dark w-48 p-1'>Zotero User ID* / Group ID*</div>
 						<input type='text' disabled={currentSettings.restriction_without_login && !props.user} placeholder='Zotero user ID or group ID e.g. 1234567' className='rounded-md w-72 p-1 text-nav dark:bg-gray-500 dark:text-white dark:placeholder:text-white h-8' value={libraryId} onChange={(e) => setLibraryId(e.target.value)}/>
 						<div className='text-white text-lg font-bold cursor-pointer mx-1 p-1 hover:bg-panel1 dark:bg-panel3-dark rounded-md h-8' onClick={()=>{setShowLibraryIDHelp(!showLibraryIDHelp)}}>
 							<QuestionMarkCircleIcon className='h-6 w-6 text-white cursor-pointer'/>

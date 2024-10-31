@@ -138,46 +138,53 @@ def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key,
     for idx, title, attachment, abstract in zip( range(1, len(titles)+1), titles, pdf_attachments, abstracts):
         dataset_name = sanitize_filename(dataset_name)
         with open('data/pdfs/'+ dataset_name +'/paper' + str(idx) + '.pdf', 'wb') as f:
-            f.write(zot.file(attachment['data']['key']))
-        pages = getPDFContent('data/pdfs/'+ dataset_name +'/paper' + str(idx) + '.pdf')
-        papers = Papers.objects.filter(paper_title=title, paper_dataset=dataset)
-        if papers.count() > 0:
-            paper = papers[0]
-        else:
-            paper = None
-        if not paper:
-            paper = Papers.objects.create(
-                paper_title=title,
-                paper_dataset=dataset,
-                paper_date_time=make_aware(datetime.datetime.now())
-            )
-            with open('data/pdfs/'+ dataset_name +'/paper' + str(idx) + '.pdf', 'rb') as f:
-                paper.paper_attachment.save(dataset_name + '/paper' + str(idx) + '.pdf', File(f), save=True)
+            write_success = False
+            try:
+                f.write(zot.file(attachment['data']['key']))
+                write_success = True
+            except:
+                print('error writing pdf')
+            # f.write(zot.file(attachment['data']['key']))
+        if write_success:
+            pages = getPDFContent('data/pdfs/'+ dataset_name +'/paper' + str(idx) + '.pdf')
+            papers = Papers.objects.filter(paper_title=title, paper_dataset=dataset)
+            if papers.count() > 0:
+                paper = papers[0]
+            else:
+                paper = None
+            if not paper:
+                paper = Papers.objects.create(
+                    paper_title=title,
+                    paper_dataset=dataset,
+                    paper_date_time=make_aware(datetime.datetime.now())
+                )
+                with open('data/pdfs/'+ dataset_name +'/paper' + str(idx) + '.pdf', 'rb') as f:
+                    paper.paper_attachment.save(dataset_name + '/paper' + str(idx) + '.pdf', File(f), save=True)
 
-        for page_num, page in enumerate(pages):
-            text = page.extract_text()
-            text = text.replace('-\n', '-').replace('\n', ' ')
-            text = ' '.join(text.split())
-            n = 1000
-            splits = []
-            remainder = ''
-            for i in range(0, len(text), n):
-                item = remainder + text[i : i + n]
-                if '. ' in item:
-                    remainder = item[item.rindex('. ') + 2: ]
-                    item = item.removesuffix(remainder)
-                if '(' in item and ')' not in item:
-                    remainder = item[item.rindex('(') + 1: ]
-                    item = item.removesuffix(remainder)
-                elif '(' in item and ')' in item and item.rindex('(') > item.rindex(')'):
-                    remainder = item[item.rindex('(') + 1: ]
-                    item = item.removesuffix(remainder)
+            for page_num, page in enumerate(pages):
+                text = page.extract_text()
+                text = text.replace('-\n', '-').replace('\n', ' ')
+                text = ' '.join(text.split())
+                n = 1000
+                splits = []
+                remainder = ''
+                for i in range(0, len(text), n):
+                    item = remainder + text[i : i + n]
+                    if '. ' in item:
+                        remainder = item[item.rindex('. ') + 2: ]
+                        item = item.removesuffix(remainder)
+                    if '(' in item and ')' not in item:
+                        remainder = item[item.rindex('(') + 1: ]
+                        item = item.removesuffix(remainder)
+                    elif '(' in item and ')' in item and item.rindex('(') > item.rindex(')'):
+                        remainder = item[item.rindex('(') + 1: ]
+                        item = item.removesuffix(remainder)
 
-                if len(item) > 10:
-                    splits.append(item)
-            for split in splits:
-                chunk = {'title': title, 'page': page_num+1, 'content': split, 'type': 'pagechunk'}
-                data.append(chunk)
+                    if len(item) > 10:
+                        splits.append(item)
+                for split in splits:
+                    chunk = {'title': title, 'page': page_num+1, 'content': split, 'type': 'pagechunk'}
+                    data.append(chunk)
     print('zotero chunks loaded')        
 
     dataset_name = sanitize_filename(dataset_name)
