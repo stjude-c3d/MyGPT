@@ -777,6 +777,7 @@ function GPTHome(props:{
 									</select>
 									</div>
 									<div className='flex flex-col items-end py-2'>
+									{showNullAnswerIndexes[query.length - i - 1] === false && (
 										<div className='text-white text-xs pb-1'>
 										{
 											answerRelevancescore[query.length-i-1] !== undefined && !answerWithoutContext ? 
@@ -791,6 +792,8 @@ function GPTHome(props:{
 											) : ''
 										}
 										</div>
+										 )}
+										{showNullAnswerIndexes[query.length - i - 1] === false && ( 
 										<div className='text-white text-xs'>
 											{
 												hallucinationIndex[query.length-i-1] !== undefined && !answerWithoutContext ? 
@@ -805,6 +808,7 @@ function GPTHome(props:{
 												) : ''
 											}
 										</div>
+										 )}
 									</div>
 								</div>
 								<div className='text-white whitespace-pre-wrap answer-div'>
@@ -837,7 +841,7 @@ function GPTHome(props:{
 									}}
 								/> */}
 								{
-									questionRelevancescore[query.length-1] > 0 && sourcePapers.length && sourcePages.length && sourcePapers[query.length-i-1] && sourcePages[query.length-i-1] ?
+								showNullAnswerIndexes[query.length - i - 1] === false &&	questionRelevancescore[query.length-1] > 0 && sourcePapers.length && sourcePages.length && sourcePapers[query.length-i-1] && sourcePages[query.length-i-1] ?
 									<>
 										<div className='text-white text-sm font-bold pt-4'>
 											{sourcePapers[query.length-i-1].length > 1 ? 'Sources' : 'Source'}
