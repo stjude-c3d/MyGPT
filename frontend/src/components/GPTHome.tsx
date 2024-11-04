@@ -519,7 +519,6 @@ function GPTHome(props:{
 		// PageNavigationPluginInstance.jumpToPage(selectedPage-1)
 	},[selectedPage, PageNavigationPluginInstance])
 
-	// console.log('answers', answers, query, questionRelevancescore, answerRelevancescore)
 
 	const renderToolbar = (Toolbar: (props: ToolbarProps) => ReactElement) => (
 		<Toolbar>
@@ -760,22 +759,24 @@ function GPTHome(props:{
 									{/* <div className='text-white text-sm py-2'>
 										{answers[query.length-i-1].source.split(':')[0] + ' + MyGPT'}
 									</div> */}
+									{!answerWithoutContext  ?  (
 									<div>
 									<select 
-										className='text-sm text-nav bg-panel3 dark:bg-panel2-dark dark:text-nav-dark p-1 rounded-md inline-block'
-										value={showNullAnswerIndexes[query.length-i-1] === true ? 'without_context' : 'with_context'}
-										onChange={(e)=>{
-											if (e.target.value === 'without_context'){
-												setShowNullAnswerIndexes((prevShowNullAnswerIndexes:any)=>[...prevShowNullAnswerIndexes.slice(0, query.length-i-1), true, ...prevShowNullAnswerIndexes.slice(query.length-i)])
-											}else{
-												setShowNullAnswerIndexes((prevShowNullAnswerIndexes:any)=>[...prevShowNullAnswerIndexes.slice(0, query.length-i-1), false, ...prevShowNullAnswerIndexes.slice(query.length-i)])
-											}
-										}}
-									>
-										<option value={'with_context'}>{answers[query.length-i-1].source.split(':')[0] + ' + MyGPT'}</option>
-										<option value={'without_context'}>{answers[query.length-i-1].source.split(':')[0]}</option>
-									</select>
-									</div>
+								className='text-sm text-nav bg-panel3 dark:bg-panel2-dark dark:text-nav-dark p-1 rounded-md inline-block'
+								value={showNullAnswerIndexes[query.length-i-1] === true ? 'without_context' : 'with_context'}
+								onChange={(e)=>{
+									if (e.target.value === 'without_context'){
+										setShowNullAnswerIndexes((prevShowNullAnswerIndexes:any)=>[...prevShowNullAnswerIndexes.slice(0, query.length-i-1), true, ...prevShowNullAnswerIndexes.slice(query.length-i)])
+									}else{
+										setShowNullAnswerIndexes((prevShowNullAnswerIndexes:any)=>[...prevShowNullAnswerIndexes.slice(0, query.length-i-1), false, ...prevShowNullAnswerIndexes.slice(query.length-i)])
+									}
+								}}
+							>
+								<option value={'with_context'}>{answers[query.length-i-1].source.split(':')[0] + ' + MyGPT'}</option>
+								<option value={'without_context'}>{answers[query.length-i-1].source.split(':')[0]}</option>
+							</select>
+							</div>
+							): (<div className='text-white dark:text-nav-dark text-sm py-2'>Llama3</div>)}
 									<div className='flex flex-col items-end py-2'>
 									{showNullAnswerIndexes[query.length - i - 1] === false && (
 										<div className='text-white text-xs pb-1'>
@@ -912,9 +913,12 @@ function GPTHome(props:{
 								: (
 								// when answer is being generated
 								<div className={'py-4 px-6 m-4 bg-panel1 dark:bg-panel4-dark rounded-lg shadow-md box2' + (props.currentSettings.darkMode ? ' llm-chat-dark' : ' llm-chat')}>
-									<div className='flex flex-row justify-between font-bold mt-2 mb-4'>
-										<div className='text-white text-sm py-1'>{props.currentSettings.selectedLlm + ' + MyGPT'}</div>
-									</div>
+									{!answerWithoutContext ?(
+										<div className='flex flex-row justify-between font-bold'>
+											<div className='text-white text-sm py-1'>{props.currentSettings.selectedLlm + ' + MyGPT'}</div>
+										</div>
+									):((<div className='text-white dark:text-nav-dark text-sm py-2'>Llama3</div>))} 
+
 									<div className='text-white whitespace-pre-wrap answer-div'>
 										<Markdown>
 											{answer.length ? answer: 'Generating answer...'}
