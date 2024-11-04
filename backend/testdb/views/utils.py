@@ -99,7 +99,7 @@ def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key,
     # Initialize the Zotero API client
     zot = zotero.Zotero(library_id, library_id_type, api_key)
     # Get the 'Llama' collection id
-    dataset_name = zot.all_collections(collection_id)[0]['data']['name']
+    dataset_name = zot.all_collections(collection_id)[0]['data']['name'].replace(' ', '_')
     datasets = Dataset.objects.filter(dataset_name=dataset_name)
     if datasets.count() > 0:
         dataset = datasets[0]

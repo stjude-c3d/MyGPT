@@ -46,7 +46,8 @@ const Plots = (props: plotsProps) => {
 				}
 			}
 			// fetch(`${process.env.REACT_APP_BACKEND_API}api/get_vector_embeddings/?format=json&datasets=${selectedDatasets}&question_id=817`, requestOptions)
-			fetch(`${process.env.REACT_APP_BACKEND_API}api/get_vector_embeddings/?format=json&datasets=${selectedDatasets}`, requestOptions)
+			// fetch(`${process.env.REACT_APP_BACKEND_API}api/get_vector_embeddings/?format=json&datasets=${selectedDatasets}`, requestOptions)
+			fetch(`${process.env.REACT_APP_BACKEND_API}api/get_vector_embeddings/?format=json&datasets=GPCR_PCA_n,Harry_Potter_book_1_n,IDR_PCA_n&question_id=6982`, requestOptions)
 				.then(response => response.json())
 				.then(data => {
 					const point_dataset:any = data.pca_embeddings.map((point:any) => point.dataset)
@@ -160,36 +161,36 @@ const Plots = (props: plotsProps) => {
 					</select> : <></>
 				} */}
 			</div>
-			<div className='bg-black m-4 h-[80%]'>
-				<Canvas frameloop='demand' camera={{position: [75,1,1], zoom: 50}}>
+			<div className='bg-white m-4 h-[80%]'>
+				<Canvas frameloop='demand' camera={{position: [75,1,1], zoom: 20}}>
 					<ambientLight intensity={Math.PI / 2} />
 					<spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} decay={0} intensity={Math.PI} />
 					<pointLight position={[-10, -10, -10]} decay={0} intensity={Math.PI} />
 						{ pointPositionsByDataset.map((_dataset:any, index:number) =>
 							<mesh position={[0, 0, 0]} key={index}>
 								<points geometry={pointGeometries[index]}>
-									<pointsMaterial size={0.4} color={pointsColors[index+3]} />
+									<pointsMaterial size={2} color={pointsColors[index+3]}/>
 								</points>
 							</mesh>
 						)}
 						{ questionPointsPositions.length > 0 ?
 							<mesh position={[0, 0, 0]}>
 								<points geometry={questionGeometries}>
-									<pointsMaterial size={1} color={pointsColors[0]} />
+									<pointsMaterial size={10} color={pointsColors[0]} />
 								</points>
 							</mesh> : <></>
 						}
 						{ answerPointsPositions.length > 0 ?
 							<mesh position={[0, 0, 0]}>
 								<points geometry={answerGeometries}>
-									<pointsMaterial size={1} color={pointsColors[1]} />
+									<pointsMaterial size={10} color={pointsColors[1]} />
 								</points>
 							</mesh> : <></>
 						}
 						{ chunksPointsPositions.length > 0 ?
 							<mesh position={[0, 0, 0]}>
 								<points geometry={chunksGeometries}>
-									<pointsMaterial size={1} color={pointsColors[2]} />
+									<pointsMaterial size={10} color={pointsColors[2]} />
 								</points>
 							</mesh> : <></>
 						}
