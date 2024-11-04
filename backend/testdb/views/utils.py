@@ -118,14 +118,16 @@ def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key,
     items = zot.collection_items(collection_id)
     pdfs = [x for x in items if x['data']['itemType'] in types]
 
-    titles = [x['data']['title'] for x in pdfs]
-    abstracts = [x['data']['abstractNote'] for x in pdfs]
+    all_titles = [x['data']['title'] for x in pdfs]
+    titles = []
+    # abstracts = [x['data']['abstractNote'] for x in pdfs]
     attachments = [zot.children(x['data']['key']) for x in pdfs]
     pdf_attachments = []
-    for attachment_list in attachments:
+    for attachment_list, title in zip(attachments, all_titles):
         for attachment in attachment_list:
             if attachment['data']['itemType'] == 'attachment' and attachment['data']['contentType'] == 'application/pdf':
                 pdf_attachments.append(attachment)
+                titles.append(title)
 
     print('zotero files loaded')
 
@@ -135,7 +137,7 @@ def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key,
         os.makedirs('data/pdfs/'+ dataset_name)
     
     # Loop through PDF attachments, extract content, and store it in 'data' list
-    for idx, title, attachment, abstract in zip( range(1, len(titles)+1), titles, pdf_attachments, abstracts):
+    for idx, title, attachment in zip( range(1, len(titles)+1), titles, pdf_attachments):
         dataset_name = sanitize_filename(dataset_name)
         with open('data/pdfs/'+ dataset_name +'/paper' + str(idx) + '.pdf', 'wb') as f:
             write_success = False
@@ -145,46 +147,46 @@ def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key,
             except:
                 print('error writing pdf')
             # f.write(zot.file(attachment['data']['key']))
-        if write_success:
-            pages = getPDFContent('data/pdfs/'+ dataset_name +'/paper' + str(idx) + '.pdf')
-            papers = Papers.objects.filter(paper_title=title, paper_dataset=dataset)
-            if papers.count() > 0:
-                paper = papers[0]
-            else:
-                paper = None
-            if not paper:
-                paper = Papers.objects.create(
-                    paper_title=title,
-                    paper_dataset=dataset,
-                    paper_date_time=make_aware(datetime.datetime.now())
-                )
+            if write_success:
+                pages = getPDFContent('data/pdfs/'+ dataset_name +'/paper' + str(idx) + '.pdf')
+                papers = Papers.objects.filter(paper_title=title, paper_dataset=dataset)
+                if papers.count() > 0:
+                    paper = papers[0]
+                else:
+                    paper = None
+                if not paper:
+                    paper = Papers.objects.create(
+                        paper_title=title,
+                        paper_dataset=dataset,
+                        paper_date_time=make_aware(datetime.datetime.now())
+                    )
                 with open('data/pdfs/'+ dataset_name +'/paper' + str(idx) + '.pdf', 'rb') as f:
                     paper.paper_attachment.save(dataset_name + '/paper' + str(idx) + '.pdf', File(f), save=True)
 
-            for page_num, page in enumerate(pages):
-                text = page.extract_text()
-                text = text.replace('-\n', '-').replace('\n', ' ')
-                text = ' '.join(text.split())
-                n = 1000
-                splits = []
-                remainder = ''
-                for i in range(0, len(text), n):
-                    item = remainder + text[i : i + n]
-                    if '. ' in item:
-                        remainder = item[item.rindex('. ') + 2: ]
-                        item = item.removesuffix(remainder)
-                    if '(' in item and ')' not in item:
-                        remainder = item[item.rindex('(') + 1: ]
-                        item = item.removesuffix(remainder)
-                    elif '(' in item and ')' in item and item.rindex('(') > item.rindex(')'):
-                        remainder = item[item.rindex('(') + 1: ]
-                        item = item.removesuffix(remainder)
+                for page_num, page in enumerate(pages):
+                    text = page.extract_text()
+                    text = text.replace('-\n', '-').replace('\n', ' ')
+                    text = ' '.join(text.split())
+                    n = 1000
+                    splits = []
+                    remainder = ''
+                    for i in range(0, len(text), n):
+                        item = remainder + text[i : i + n]
+                        if '. ' in item:
+                            remainder = item[item.rindex('. ') + 2: ]
+                            item = item.removesuffix(remainder)
+                        if '(' in item and ')' not in item:
+                            remainder = item[item.rindex('(') + 1: ]
+                            item = item.removesuffix(remainder)
+                        elif '(' in item and ')' in item and item.rindex('(') > item.rindex(')'):
+                            remainder = item[item.rindex('(') + 1: ]
+                            item = item.removesuffix(remainder)
 
-                    if len(item) > 10:
-                        splits.append(item)
-                for split in splits:
-                    chunk = {'title': title, 'page': page_num+1, 'content': split, 'type': 'pagechunk'}
-                    data.append(chunk)
+                        if len(item) > 10:
+                            splits.append(item)
+                    for split in splits:
+                        chunk = {'title': title, 'page': page_num+1, 'content': split, 'type': 'pagechunk'}
+                        data.append(chunk)
     print('zotero chunks loaded')        
 
     dataset_name = sanitize_filename(dataset_name)
