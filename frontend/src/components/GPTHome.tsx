@@ -264,10 +264,9 @@ function GPTHome(props:{
 				fetch(`${process.env.REACT_APP_BACKEND_API}api/${llm_endpoint}/?format=json`, requestOptions)
 					.then(response => response.json())
 					.then((data:any) => {
-						setAnswerReceived(false)
 						if (data.relevance_score === 0){
 							setQuestionRelevancescore((prevQuestionRelevancescore:any)=>[...prevQuestionRelevancescore, data.relevance_score])
-							setContext('None')
+							setContext('')
 							setSourcePapers((prevSourcePapers:any)=>[...prevSourcePapers, []])
 							setSourceContexts((prevSourceContexts:any)=>[...prevSourceContexts, []])
 							if (papers.length){
@@ -506,6 +505,7 @@ function GPTHome(props:{
 					setAnswer('')
 					setnullAnswer('')
 					setnullAnswerReceived(false)
+					setAnswerReceived(false)
 				})
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -595,7 +595,7 @@ function GPTHome(props:{
 			postData()
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	},[query, props.currentSettings.selectedLlm])
+	},[query, props.currentSettings.selectedLlm, answerWithoutContext])
 
 	// save answer to backend database without context
 	useEffect(()=>{
