@@ -340,10 +340,12 @@ def save_answer(request):
             mean_distance_a = sum(distances_a) / len(distances_a)
             # relevance_score_a = get_relevance_score(distances_a, embedding_model, False)
         else:
+            mean_distance_n = 0
+            mean_distance_a = 0
             relevance_score = 0
 
         #  calculate answer relevance score
-        if use_default_ars:
+        if use_default_ars and not no_context:
             best_distance_a = 0
             worst_distance_a = 0
             distances_ac = []

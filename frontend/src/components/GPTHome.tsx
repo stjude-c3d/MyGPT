@@ -303,14 +303,15 @@ function GPTHome(props:{
 
 	// get answer from the ollama
 	useEffect(()=>{
+		if (answerWithoutContext) return
 		const question =  query[query.length-1] && query[query.length-1].question ? query[query.length-1].question.replaceAll('"',"'") : ''
-		const systemPrompt = answerWithoutContext ? props.currentSettings.direct_chat_system_prompt : props.currentSettings.system_prompt + context
+		const systemPrompt = props.currentSettings.system_prompt + context
 		
 		const body:any = JSON.stringify({
 			'model': props.currentSettings.selectedLlm,
 			'prompt': question,
 			'stream': true,
-			'system': answerWithoutContext ? '' : systemPrompt,
+			'system': systemPrompt,
 			'options': {
 				'temperature': props.currentSettings.temperature,
 				'top_k': props.currentSettings.top_k,
@@ -373,8 +374,9 @@ function GPTHome(props:{
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[query, context, props.currentSettings.selectedLlm])
 
-	// get answer from ollama without context 
+	// get null answer from ollama without context 
 	useEffect(()=>{
+		if (answerWithoutContext) return
 		const question =  query[query.length-1] && query[query.length-1].question ? query[query.length-1].question.replaceAll('"',"'") : ''
 		const systemPrompt = props.currentSettings.direct_chat_system_prompt
 		
@@ -508,6 +510,140 @@ function GPTHome(props:{
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[answers, nullAnswer, nullAnswerReceived, query, props.currentSettings.selectedDataset, props.currentSettings.defaultDataset, props.currentSettings.selected_sentence_transformer, answerWithoutContext])
+
+	// get answer from ollama without context while chatting to LLM without documents
+	useEffect(()=>{
+		if (!answerWithoutContext) return
+		const messages:any = []
+		if (query.length && query.length !== answers.length){
+			for (let i=0; i<query.length; i++){
+				messages.push({
+					'role': 'user',
+					'content': query[i].question
+				})
+				if (answers.length > i){
+					messages.push({
+						'role': 'assistant',
+						'content': answers[i].response
+					})
+				}
+			}
+		}
+		
+		const body:any = JSON.stringify({
+			'model': props.currentSettings.selectedLlm,
+			'messages': messages,
+			'stream': true,
+			'options': {
+				'temperature': props.currentSettings.temperature,
+				'top_k': props.currentSettings.top_k,
+				'top_p': props.currentSettings.top_p,
+			}
+		})
+		
+		if(messages.length > 0 && answer === '' && !answerReceived){
+			// fetch using async await
+			let leftover:any = ''
+			const postData = async () => {
+				let content = ''
+				const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/chat`, {body, method: 'POST'})
+				const reader:any = response.body?.getReader()
+				while (true) {
+					const { done, value } = await reader.read()
+					if (done) {
+						break;
+					}
+					let rawjson = new TextDecoder().decode(value);
+					let jsons = []
+					if (leftover.length > 0){
+						rawjson = leftover + rawjson
+						leftover = ''
+					}
+					if (rawjson.includes('\n')){
+						jsons = rawjson.split('\n')
+							.filter((j:any)=>j.length)
+					}else{
+						jsons = [rawjson]
+					}
+					let last_json:any = ''
+					if (rawjson.includes('\n') && rawjson.length > 1000){
+						last_json = jsons.pop()
+						if (last_json[last_json.length-1] !== '}'){
+							leftover = last_json
+						}
+					}
+
+					for (const j of jsons){
+						const json = JSON.parse(j)
+						if (json.done === false) {
+							content += json.message.content
+						} 
+						else {
+							setAnswerReceived(true)
+						}
+					}
+					setAnswer(content)
+
+					if (last_json.length && last_json[last_json.length - 1] === '}'){
+						const last_json_obj = JSON.parse(last_json)
+						if (last_json_obj.done === true){
+							setAnswerReceived(true)
+						}
+					}
+				}
+			}
+			postData()
+		}
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	},[query, props.currentSettings.selectedLlm])
+	console.log(answerReceived)
+
+	// save answer to backend database without context
+	useEffect(()=>{
+		if(answers.length && query.length && answer.length !== 0 && answerReceived && query.length === answers.length){
+			const requestOptions = {
+				method: 'POST',
+				headers: { 
+					'Content-Type': 'application/json',
+					'Authorization': `${
+						props.frontendSettings && props.frontendSettings.django_login ?
+						'Bearer ' + localStorage.getItem('access') :
+						process.env.NODE_ENV === 'production' ?
+						process.env.REACT_APP_AUTH_TOKEN_PROD
+						: process.env.REACT_APP_AUTH_TOKEN_DEV}`
+				},
+				body: JSON.stringify({ 
+					question_text: query[query.length-1].question.replaceAll('"',"'"),
+					answer_text: answer.replaceAll('"',"'"),
+					answer_no_context_text: '',
+					model_type: props.currentSettings.selectedLlm,
+					dataset: props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset,
+					sentence_transformer: props.currentSettings.selected_sentence_transformer,
+					no_context: answerWithoutContext,
+					use_default_ars: props.currentSettings.use_default_ars,
+					answer_best_distance: props.currentSettings.relevance_score_cutoff.answer_best,
+					answer_worst_distance: props.currentSettings.relevance_score_cutoff.answer_worst,
+					use_default_hi: props.currentSettings.use_default_hi,
+					a_hi: props.currentSettings.relevance_score_cutoff.HIa,
+					b_hi: props.currentSettings.relevance_score_cutoff.HIb,
+					c_hi: props.currentSettings.relevance_score_cutoff.HIc,
+					temperature: props.currentSettings.temperature,
+					top_k: props.currentSettings.top_k,
+					top_p: props.currentSettings.top_p,
+				})
+			}
+			fetch(`${process.env.REACT_APP_BACKEND_API}api/save_answer/?format=json`, requestOptions)
+				.then(response => response.json())
+				.then(data => {
+					console.log(data)
+					setAnswerRelevancescore((prevAnswerRelevancescore:any)=>[...prevAnswerRelevancescore, data.relevance_score])
+					setHallucinationIndex((prevHallucinationIndex:any)=>[...prevHallucinationIndex, data.hallucination_index])
+					setAnswer('')
+					setAnswerReceived(false)
+				})
+		}
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	},[answers, query, answerWithoutContext, answerReceived, answer])
 
 	const PageNavigationPluginInstance = pageNavigationPlugin()
 
@@ -759,24 +895,25 @@ function GPTHome(props:{
 									{/* <div className='text-white text-sm py-2'>
 										{answers[query.length-i-1].source.split(':')[0] + ' + MyGPT'}
 									</div> */}
-									{!answerWithoutContext  ?  (
+									{!answerWithoutContext  ?  
+									(
 									<div>
-									<select 
-								className='text-sm text-nav bg-panel3 dark:bg-panel2-dark dark:text-nav-dark p-1 rounded-md inline-block'
-								value={showNullAnswerIndexes[query.length-i-1] === true ? 'without_context' : 'with_context'}
-								onChange={(e)=>{
-									if (e.target.value === 'without_context'){
-										setShowNullAnswerIndexes((prevShowNullAnswerIndexes:any)=>[...prevShowNullAnswerIndexes.slice(0, query.length-i-1), true, ...prevShowNullAnswerIndexes.slice(query.length-i)])
-									}else{
-										setShowNullAnswerIndexes((prevShowNullAnswerIndexes:any)=>[...prevShowNullAnswerIndexes.slice(0, query.length-i-1), false, ...prevShowNullAnswerIndexes.slice(query.length-i)])
-									}
-								}}
-							>
-								<option value={'with_context'}>{answers[query.length-i-1].source.split(':')[0] + ' + MyGPT'}</option>
-								<option value={'without_context'}>{answers[query.length-i-1].source.split(':')[0]}</option>
-							</select>
-							</div>
-							): (<div className='text-white dark:text-nav-dark text-sm py-2'>Llama3</div>)}
+										<select 
+										className='text-sm text-nav bg-panel3 dark:bg-panel2-dark dark:text-nav-dark p-1 rounded-md inline-block'
+										value={showNullAnswerIndexes[query.length-i-1] === true ? 'without_context' : 'with_context'}
+										onChange={(e)=>{
+											if (e.target.value === 'without_context'){
+												setShowNullAnswerIndexes((prevShowNullAnswerIndexes:any)=>[...prevShowNullAnswerIndexes.slice(0, query.length-i-1), true, ...prevShowNullAnswerIndexes.slice(query.length-i)])
+											}else{
+												setShowNullAnswerIndexes((prevShowNullAnswerIndexes:any)=>[...prevShowNullAnswerIndexes.slice(0, query.length-i-1), false, ...prevShowNullAnswerIndexes.slice(query.length-i)])
+											}
+										}}
+										>
+											<option value={'with_context'}>{answers[query.length-i-1].source.split(':')[0] + ' + MyGPT'}</option>
+											<option value={'without_context'}>{answers[query.length-i-1].source.split(':')[0]}</option>
+										</select>
+									</div>
+									): (<div className='text-white dark:text-nav-dark text-sm py-2'>{props.currentSettings.selectedLlm}</div>)}
 									<div className='flex flex-col items-end py-2'>
 									{showNullAnswerIndexes[query.length - i - 1] === false && (
 										<div className='text-white text-xs pb-1'>
@@ -913,12 +1050,12 @@ function GPTHome(props:{
 								: (
 								// when answer is being generated
 								<div className={'py-4 px-6 m-4 bg-panel1 dark:bg-panel4-dark rounded-lg shadow-md box2' + (props.currentSettings.darkMode ? ' llm-chat-dark' : ' llm-chat')}>
-									{!answerWithoutContext ?(
-										<div className='flex flex-row justify-between font-bold'>
-											<div className='text-white text-sm py-1'>{props.currentSettings.selectedLlm + ' + MyGPT'}</div>
-										</div>
-									):((<div className='text-white dark:text-nav-dark text-sm py-2'>Llama3</div>))} 
-
+									<div className='flex flex-row justify-between font-bold'>
+										{!answerWithoutContext ?
+											(<div className='text-white text-sm py-1'>{props.currentSettings.selectedLlm + ' + MyGPT'}</div>)
+											:(<div className='text-white dark:text-nav-dark text-sm py-2'>{props.currentSettings.selectedLlm}</div>)
+										} 
+									</div>
 									<div className='text-white whitespace-pre-wrap answer-div'>
 										<Markdown>
 											{answer.length ? answer: 'Generating answer...'}
