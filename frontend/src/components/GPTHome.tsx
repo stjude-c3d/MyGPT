@@ -721,6 +721,19 @@ function GPTHome(props:{
 		renderToolbar,
 	})
 
+	const resetStates = () => {
+		        setQuery([])
+				setAnswers([])
+				setNullAnswers([])
+				setShowNullAnswerIndexes([])
+				setQuestionRelevancescore([])
+				setAnswerRelevancescore([])
+				setHallucinationIndex([])
+				setSourcePapers([])
+				setSourcePages([])
+				setSourceContexts([])
+				setAnswer('')
+	}
 	return (
 		<div className='grid grid-cols-10 p-4 bg-gray-200 dark:bg-neutral-800 max-w-[2000px] mx-auto h-[94vh]'>
 			<div className={'mt-24 p-6 bg-panel3 dark:bg-panel2-dark rounded-lg max-h-[92vh] overflow-y-auto duration-300 ease-in-out peer-checked:bg-panel1 after:w-4 after:h-4 after:bg-white after:rounded-full after:shadow-md after:duration-300' + 
@@ -731,20 +744,7 @@ function GPTHome(props:{
 					<div className='p-1 mx-4 flex justify-center'>
 						<button className={'px-2 py-1 mx-4 my-auto bg-white dark:bg-panel3-dark dark:text-nav-dark text-sm hover:bg-bsk_dark_blue text-bsk_dark_blue font-semibold hover:text-white hover:border-transparent rounded-full shadow-md hover:shadow-lg outline-none focus:outline-none' + (answers.length && answers[answers.length-1].response ? '':' opacity-50 cursor-not-allowed')} 
 							disabled={answers.length && answers[answers.length-1].response ? false : true}
-							onClick={
-								()=>{
-									setQuery([])
-									setAnswers([])
-									setNullAnswers([])
-									setShowNullAnswerIndexes([])
-									setQuestionRelevancescore([])
-									setAnswerRelevancescore([])
-									setHallucinationIndex([])
-									setSourcePapers([])
-									setSourcePages([])
-									setSourceContexts([])
-								}
-							}>
+							onClick={resetStates}>
 								<p className='inline-block mx-2'>
 									Start a new Chat
 								</p>
@@ -839,9 +839,11 @@ function GPTHome(props:{
 								(e:any)=>{
 									setAnswerWithoutContext(e.target.checked)
 									if (e.target.checked){
+										resetStates()
 										setSelectedDataset(props.currentSettings.selectedDataset)
 										props.settingsCallback({...props.currentSettings, selectedDataset: props.currentSettings.selectedLlm + '_direct_chat', answerWithoutContext: true, fetchPapers: false})
 									} else {
+										resetStates()
 										props.settingsCallback({...props.currentSettings, selectedDataset: selectedDataset, answerWithoutContext: false, fetchPapers: true})
 									}
 								}
