@@ -17,7 +17,7 @@ function GPTHome(props:{
 	frontendSettings: any
 }){
 	const [llms, setLlms] = useState<any[]>([])
-	const [selectedDataset, setSelectedDataset] = useState(props.currentSettings.defaultDataset)
+	const [selectedDataset, setSelectedDataset] = useState(props.currentSettings.selectedDataset)
 	const [searchTerm, setSearchTerm] = useState<any>('')
 	const [query, setQuery] = useState<any[]>([])
 	const [questionRelevancescore, setQuestionRelevancescore] = useState<any[]>([])
@@ -52,92 +52,92 @@ function GPTHome(props:{
 
 	const [addDemoLibrary, setAddDemoLibrary] = useState(false)
 
-		// get llms from backend
-		useEffect(()=>{
+	// get llms from backend
+	useEffect(()=>{
 
-			const postData = async () => {
-				const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/tags`, {method: 'GET'})
-					const data = await response.json()
-	
-					// set models
-					const llms = data.models
-						.filter((model:any) => model.details.quantization_level !== 'F16')
-						.map((model:any) => model.name)
-					setLlms(llms)
-	
-					// add new model to backend API
-					let llms_object:any = []
-					data.models.forEach((model:any) => {
-						// let llm_name = model.name.split(':')[0]
-						let llm_name = model.name
-						let llm_size = model.size* 1e-9
-						let llm_size_gb = llm_size.toFixed(2)
-						llms_object.push({name: llm_name, size: llm_size_gb})
-					})
-					
-					const requestOptions = {
-						method: 'POST',
-						headers: { 
-							'Content-Type': 'application/json',
-							'Authorization': `${
-								props.frontendSettings && props.frontendSettings.django_login ?
-								'Bearer ' + localStorage.getItem('access') :
-								process.env.NODE_ENV === 'production' ? 
-								process.env.REACT_APP_AUTH_TOKEN_PROD 
-								: process.env.REACT_APP_AUTH_TOKEN_DEV}`
-						},
+		const postData = async () => {
+			const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/tags`, {method: 'GET'})
+				const data = await response.json()
+
+				// set models
+				const llms = data.models
+					.filter((model:any) => model.details.quantization_level !== 'F16')
+					.map((model:any) => model.name)
+				setLlms(llms)
+
+				// add new model to backend API
+				let llms_object:any = []
+				data.models.forEach((model:any) => {
+					// let llm_name = model.name.split(':')[0]
+					let llm_name = model.name
+					let llm_size = model.size* 1e-9
+					let llm_size_gb = llm_size.toFixed(2)
+					llms_object.push({name: llm_name, size: llm_size_gb})
+				})
+				
+				const requestOptions = {
+					method: 'POST',
+					headers: { 
+						'Content-Type': 'application/json',
+						'Authorization': `${
+							props.frontendSettings && props.frontendSettings.django_login ?
+							'Bearer ' + localStorage.getItem('access') :
+							process.env.NODE_ENV === 'production' ? 
+							process.env.REACT_APP_AUTH_TOKEN_PROD 
+							: process.env.REACT_APP_AUTH_TOKEN_DEV}`
+					},
+				setConnection: 'keep-alive',
+				keepalive: true,
+				setTimeout: 10000,
+				body: JSON.stringify({'llms': llms_object})
+				}
+				if (props.frontendSettings && props.frontendSettings.django_login && localStorage.getItem('access')?.length){
+					const response2 = await fetch(`${process.env.REACT_APP_BACKEND_API}api/add_ollama_models/`, requestOptions)
+					if (response2.ok){
+						const data2 = await response2.json()
+						console.log(data2)
+					}
+				}
+
+				// add embedding models to backend API
+				const embedding_models = data.models.filter((model:any) => 
+					model.details.quantization_level === 'F16' && model.details.family.includes('bert'))
+				
+				let embedding_models_object:any = []
+				embedding_models.forEach((model:any) => {
+					let model_name = model.name
+					let model_size = model.size* 1e-9
+					let model_size_gb = model_size.toFixed(2)
+					embedding_models_object.push({name: model_name, size: model_size_gb, source: 'ollama'})
+				})
+
+				const requestOptions2 = {
+					method: 'POST',
+					headers: { 
+						'Content-Type': 'application/json',
+						'Authorization': `${
+							props.frontendSettings && props.frontendSettings.django_login ?
+							'Bearer ' + localStorage.getItem('access') :
+							process.env.NODE_ENV === 'production' ? 
+							process.env.REACT_APP_AUTH_TOKEN_PROD 
+							: process.env.REACT_APP_AUTH_TOKEN_DEV}`
+					},
 					setConnection: 'keep-alive',
 					keepalive: true,
 					setTimeout: 10000,
-					body: JSON.stringify({'llms': llms_object})
+					body: JSON.stringify({'embedding_models': embedding_models_object})
+				}
+				if (props.frontendSettings && props.frontendSettings.django_login && localStorage.getItem('access')?.length){
+					const response3 = await fetch(`${process.env.REACT_APP_BACKEND_API}api/add_embedding_models/`, requestOptions2)
+					if (response3.ok){
+						const data3 = await response3.json()
+						console.log(data3)
 					}
-					if (props.frontendSettings && props.frontendSettings.django_login && localStorage.getItem('access')?.length){
-						const response2 = await fetch(`${process.env.REACT_APP_BACKEND_API}api/add_ollama_models/`, requestOptions)
-						if (response2.ok){
-							const data2 = await response2.json()
-							console.log(data2)
-						}
-					}
+				}
 
-					// add embedding models to backend API
-					const embedding_models = data.models.filter((model:any) => 
-						model.details.quantization_level === 'F16' && model.details.family.includes('bert'))
-					
-					let embedding_models_object:any = []
-					embedding_models.forEach((model:any) => {
-						let model_name = model.name
-						let model_size = model.size* 1e-9
-						let model_size_gb = model_size.toFixed(2)
-						embedding_models_object.push({name: model_name, size: model_size_gb, source: 'ollama'})
-					})
-
-					const requestOptions2 = {
-						method: 'POST',
-						headers: { 
-							'Content-Type': 'application/json',
-							'Authorization': `${
-								props.frontendSettings && props.frontendSettings.django_login ?
-								'Bearer ' + localStorage.getItem('access') :
-								process.env.NODE_ENV === 'production' ? 
-								process.env.REACT_APP_AUTH_TOKEN_PROD 
-								: process.env.REACT_APP_AUTH_TOKEN_DEV}`
-						},
-						setConnection: 'keep-alive',
-						keepalive: true,
-						setTimeout: 10000,
-						body: JSON.stringify({'embedding_models': embedding_models_object})
-					}
-					if (props.frontendSettings && props.frontendSettings.django_login && localStorage.getItem('access')?.length){
-						const response3 = await fetch(`${process.env.REACT_APP_BACKEND_API}api/add_embedding_models/`, requestOptions2)
-						if (response3.ok){
-							const data3 = await response3.json()
-							console.log(data3)
-						}
-					}
-
-			}
-			postData()
-		},[props.frontendSettings, props.frontendSettings.django_login])
+		}
+		postData()
+	},[props.frontendSettings, props.frontendSettings.django_login])
 
 	useEffect(()=>{
 		const requestOptions = {
@@ -839,6 +839,7 @@ function GPTHome(props:{
 								(e:any)=>{
 									setAnswerWithoutContext(e.target.checked)
 									if (e.target.checked){
+										setSelectedDataset(props.currentSettings.selectedDataset)
 										props.settingsCallback({...props.currentSettings, selectedDataset: props.currentSettings.selectedLlm + '_direct_chat', answerWithoutContext: true, fetchPapers: false})
 									} else {
 										props.settingsCallback({...props.currentSettings, selectedDataset: selectedDataset, answerWithoutContext: false, fetchPapers: true})
@@ -1145,7 +1146,8 @@ function GPTHome(props:{
 									use_default_ars: true,
 									use_default_hi: true,
 								})
-								setSelectedDataset(e.target.value)
+								// setSelectedDataset(e.target.value)
+								props.currentSettings.selectedDataset = e.target.value
 							}
 						}
 					>
