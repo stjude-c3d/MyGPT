@@ -596,11 +596,10 @@ function GPTHome(props:{
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[query, props.currentSettings.selectedLlm])
-	console.log(answerReceived)
 
 	// save answer to backend database without context
 	useEffect(()=>{
-		if(answers.length && query.length && answer.length !== 0 && answerReceived && query.length === answers.length){
+		if(answers.length && query.length && answer.length !== 0 && answerReceived && query.length === answers.length && answerWithoutContext){
 			const requestOptions = {
 				method: 'POST',
 				headers: { 
