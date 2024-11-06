@@ -10,6 +10,7 @@ import Disclaimer from './components/Disclaimer'
 import { PublicClientApplication } from '@azure/msal-browser'
 import { MsalProvider } from '@azure/msal-react'
 import { msalConfig } from './utils/authConfigEnv'
+import FAQ from './components/FAQ'
 
 const msalInstance = new PublicClientApplication(msalConfig)
 
@@ -33,6 +34,7 @@ function App() {
   const [frontendSettings, setFrontendSettings] = useState<any>(default_frontend_settings)
   const [user, setUser] = useState<any>(null)
   const [darkMode, setDarkMode] = useState(false)
+  const [showFAQ, setShowFAQ] = useState(false)
 
   const settingsCallback = (newSettings:any) => {
     newSettings.restriction_without_login = frontendSettings.restriction_without_login
@@ -256,6 +258,10 @@ function App() {
         settingsCallback={settingsCallback} 
         frontendSettings={frontendSettings}
       />
+      {showFAQ?
+       <FAQ 
+       closeFAQ={()=>setShowFAQ(false)}/> : <></>
+      } 
     </div>
   }
   {/* add footer */}
@@ -274,9 +280,9 @@ function App() {
         </div> : <></>}
     {
       !frontendSettings.django_login ?
-      <div className='text-sm text-white mx-8 my-auto'>
-        <a href='https://form.asana.com/?k=rHXv4eSjiOICn2Ln1p1H_Q&d=12574667816162' target='_blank' rel='noreferrer'>feedback</a>
-      </div> : <></>
+       <div className='text-sm text-white mx-8 my-auto cursor-pointer' onClick={()=>setShowFAQ(true)}>     
+        FAQs </div> 
+        : <></>
     }
 	</div>
   </div>
