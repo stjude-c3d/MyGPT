@@ -23,8 +23,8 @@ We have divided the MyGPT pipeline architecture into three sections:
 MyGPT can be installed on following environments:
 
 - [Personal Computer](#personal-computer)
-- [Server/VM with/without GPU](#servervm-withwithout-gpu)
-- Amazon Web Services (AWS) (coming soon)
+- [Server/VM with GPU](#server-or-vm-with-gpu)
+- [Cloud services (Azure)](#cloud-services-azure)
 
 ### Personal Computer
 
@@ -33,25 +33,32 @@ Also, Ollama is providing direct installation on Mac and Linux only. For Windows
 
 To run the pipleine on following environments, follow the instructions:
 * Mac
-	- [Installation guide](./installation/macOS/README.md)
+	- [Basic Installation](./installation/macOS/README.md)
 	<!-- - Detailed instructions: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1h92XHMT5D_vlmf2oEZ0BRn3ke41Cz9p4?usp=sharing)
 	This are instructions with interactive Jupyter notebook on Google colab, it has troubleshooting steps. If you come across any bug or error, please report it in the issues section. You can also modify Jupyter notebook as per your convenience. -->
 * Linux
-	- [Installation guide](./installation/linux/README.md)
+	- [Basic Installation](./installation/linux/README.md)
 	<!-- - Detailed instructions: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1feKcAvNwMIZpx7UGOb3UYhw_HFMC_kHP?usp=sharing)
 	This are instructions with interactive Jupyter notebook on Google colab, it has troubleshooting steps. If you come across any bug or error, please report it in the issues section. You can also modify Jupyter notebook as per your convenience. -->
 * Windows 
-	- [Installation guide](./installation/windows/README.md)
+	- [Basic Installation](./installation/windows/README.md)
 	<!-- - [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1r9cGHFwl4VStyb0szC4U-6hidXjtZBDE?usp=sharing) -->
 
 	These instructions are simple and easy to follow. You can also modify bash scripts as per your convenience.
 
-### Server/VM with/without GPU
+### Server or VM with GPU
 
-MyGPT can be installed on server/VM with/without GPU. Following readme is in progress and will be updated soon.
+MyGPT can be hosted on a server or VM with GPU. For this installation we recommand to host User interface (UI), Backend server and Ollama (LLM server) on 3 seperate VMs. The Ollama VM should have a GPU with CUDA installed on the server/VM.
 
-* Linux server/VM
-	- [Installation guide](./installation/server_or_VM/README.md)
+To run the pipleine on VM/Server, follow the instructions:
+* [Linux Server Installation](./installation/vm/README.md)
+
+### Cloud services (Azure)
+
+MyGPT can be hosted on any cloud service but we are providing Azure as an example deploymnet. For this installation we recommand to host User interface (UI), Backend server and Ollama (LLM server) on 3 seperate VMs. The Ollama VM should have a GPU with CUDA installed on the VM.
+
+To run the pipleine on Azure, follow the instructions:
+* [Azure Installation](./installation/azure/README.md)
 
 ## User Interface
 MyGPT user interface will allow users to check the publcation library, ask questions, and get answers. The user interface is built using ReactJS.
@@ -59,6 +66,14 @@ MyGPT user interface will allow users to check the publcation library, ask quest
 Here is an example of the user interface with question, answer, and source citing:
 
 <img src='./images/MyGPT_UI.png' width='800px' alt='MyGPT user interface'>
+
+## FAQs
+
+Check out the [FAQs](./FAQs.md) for common questions and answers.
+
+## API Documentation
+
+Developers who are interested in using MyGPT API can check the [API documentation](./API.md).
 
 ## Issues
 

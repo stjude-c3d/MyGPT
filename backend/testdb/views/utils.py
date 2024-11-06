@@ -115,7 +115,7 @@ def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key,
         )
 
     # Get items from the publication collection
-    items = zot.collection_items(collection_id)
+    items = zot.collection_items(collection_id, limit=1000)
     pdfs = [x for x in items if x['data']['itemType'] in types]
 
     all_titles = [x['data']['title'] for x in pdfs]
