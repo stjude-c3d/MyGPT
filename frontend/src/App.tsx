@@ -6,11 +6,11 @@ import Settings from './components/Settings'
 import defaultSettings from './utils/DefaultState'
 import ChatHistory from './components/ChatHistory'
 import Disclaimer from './components/Disclaimer'
+import FAQ from './components/FAQ'
 // import Plots from './components/Plots'
 import { PublicClientApplication } from '@azure/msal-browser'
 import { MsalProvider } from '@azure/msal-react'
 import { msalConfig } from './utils/authConfigEnv'
-import FAQ from './components/FAQ'
 
 const msalInstance = new PublicClientApplication(msalConfig)
 
@@ -34,7 +34,7 @@ function App() {
   const [frontendSettings, setFrontendSettings] = useState<any>(default_frontend_settings)
   const [user, setUser] = useState<any>(null)
   const [darkMode, setDarkMode] = useState(false)
-  const [showFAQ, setShowFAQ] = useState(false)
+  const [showFAQ, setShowFAQ] = useState(currentSettings.showFAQ || defaultSettings.showFAQ)
 
   const settingsCallback = (newSettings:any) => {
     newSettings.restriction_without_login = frontendSettings.restriction_without_login
@@ -180,6 +180,10 @@ function App() {
           settingsCallback={settingsCallback} 
           frontendSettings={frontendSettings}
         />
+        {showFAQ?
+       <FAQ 
+        closeFAQ={()=>setShowFAQ(false)}/> : <></>
+        } 
         </div>
       </MsalProvider>
     : 
@@ -228,6 +232,10 @@ function App() {
         <></>
       }
       <GPTHome currentSettings={currentSettings} settingsCallback={settingsCallback} frontendSettings={frontendSettings}/>
+      {showFAQ?
+       <FAQ 
+       closeFAQ={()=>setShowFAQ(false)}/> : <></>
+      }
     </div>
     :
     <div className='bg-gray-200'>
@@ -278,12 +286,9 @@ function App() {
           setShowDisclaimer(!showDisclaimer)
         }}>Disclaimer</div>
         </div> : <></>}
-    {
-      !frontendSettings.django_login ?
-       <div className='text-sm text-white mx-8 my-auto cursor-pointer' onClick={()=>setShowFAQ(true)}>     
-        FAQs </div> 
-        : <></>
-    }
+       <div className='text-sm text-white mx-8 my-auto cursor-pointer' onClick={()=>{
+          setShowFAQ(!showFAQ)}
+        }>FAQs </div> 
 	</div>
   </div>
   )

@@ -32,6 +32,6 @@ const FAQ = (props:FAQProps) =>{
 			</div>
 		</div>
 	)
-};
+}
 
 export default FAQ
