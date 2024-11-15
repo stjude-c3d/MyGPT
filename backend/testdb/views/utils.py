@@ -115,13 +115,20 @@ def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key,
         )
 
     # Get items from the publication collection
-    items = zot.collection_items(collection_id, limit=1000)
-    pdfs = [x for x in items if x['data']['itemType'] in types]
+    items = zot.everything(zot.collection_items(collection_id))
+    articles_temp = [x for x in items if x['data']['itemType'] in types]
+    # filter articles with attachments
+    articles = []
+    for article in articles_temp:
+        if 'links' in article:
+            if 'attachment' in article['links']:
+                if article['links']['attachment']['attachmentType'] == 'application/pdf' and article['links']['attachment']['attachmentSize'] > 0:
+                    articles.append(article)
 
-    all_titles = [x['data']['title'] for x in pdfs]
+    all_titles = [x['data']['title'] for x in articles]
     titles = []
     # abstracts = [x['data']['abstractNote'] for x in pdfs]
-    attachments = [zot.children(x['data']['key']) for x in pdfs]
+    attachments = [zot.children(x['data']['key']) for x in articles]
     pdf_attachments = []
     for attachment_list, title in zip(attachments, all_titles):
         for attachment in attachment_list:

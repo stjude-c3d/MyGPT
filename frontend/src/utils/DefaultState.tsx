@@ -3,6 +3,7 @@ const defaultSettings = {
 	showLogin: false,
 	loggedin: false,
 	darkMode: false,
+	showFAQ: false,
 	settingsPanels: [ 
 		{key:'datasets', text:'Publication libraries'},
 		{key:'llms', text:'LLMs'},
