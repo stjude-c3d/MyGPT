@@ -31,10 +31,10 @@ const FAQ = (props:FAQProps) =>{
 						</div>
 					</div>
 					{/* create right side for answers and sources list */}
-					<div className={'w-2/3 bg-panel3 dark:bg-neutral-800 overflow-y-auto overflow-x-clip border-slate-400 border-y-2 ' + (window.screen.availHeight < 1000 ? 'h-[80vh] max-h-[80vh]' : 'h-[62vh] max-h-[62vh]')}>
+					<div className={'w-2/3 bg-panel2 dark:bg-panel2-dark overflow-y-auto overflow-x-clip border-slate-400 border-y-2 ' + (window.screen.availHeight < 1000 ? 'h-[80vh] max-h-[80vh]' : 'h-[62vh] max-h-[62vh]')}>
 					{activeCategory && (
               <div>
-				<div className='text-panel1 text-2xl font-bold m-4'>{activeCategory}</div>
+				<div className='text-nav dark:text-nav-dark text-2xl font-bold m-4'>{activeCategory}</div>
 				
                 {faq[activeCategory]?.map((item, index) => (
                   <div key={index} className='m-2'>
