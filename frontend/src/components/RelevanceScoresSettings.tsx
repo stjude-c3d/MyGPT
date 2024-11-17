@@ -40,25 +40,24 @@ export const RelevanceScoreSettings = (props: any) => {
 					const embeddingmodel = data.embedding_model
 					const q_best = embeddingmodel.best_distance_q
 					const q_worst = embeddingmodel.worst_distance_q
-					const buffer10 = (q_worst - q_best) * 0.1
+					const buffer5 = (q_worst - q_best) * 0.05
 					if (currentSettings.use_default_qrs) {
-						setQRSbest(q_best - buffer10)
-						setQRSworst(q_worst + buffer10)
+						setQRSbest(q_best - buffer5)
+						setQRSworst(q_worst + buffer5)
 					}
-					setDefaultQRSbest(q_best - buffer10)
-					setDefaultQRSworst(q_worst + buffer10)
+					setDefaultQRSbest(q_best - buffer5)
+					setDefaultQRSworst(q_worst + buffer5)
 
 					const ac_scores = [embeddingmodel.best_distance_ac, embeddingmodel.worst_distance_ac]
-					const nac_scores = [embeddingmodel.best_distance_nac, embeddingmodel.worst_distance_nac]
-					const a_best = Math.min(...nac_scores) - Math.max(...ac_scores)
-					const a_worst = Math.max(...nac_scores) - Math.min(...ac_scores)
-					const buffer10a = (a_worst - a_best) * 0.1
+					const a_best = Math.min(...ac_scores)
+					const a_worst = Math.max(...ac_scores)
+					const buffer5a = (a_worst - a_best) * 0.05
 					if (currentSettings.use_default_ars) {
-						setARSbest(a_best - buffer10a)
-						setARSworst(a_worst + buffer10a)
+						setARSbest(a_best - buffer5a)
+						setARSworst(a_worst + buffer5a)
 					}
-					setDefaultARSbest(a_best - buffer10a)
-					setDefaultARSworst(a_worst + buffer10a)
+					setDefaultARSbest(a_best - buffer5a)
+					setDefaultARSworst(a_worst + buffer5a)
 				}
 			})
 		}
@@ -103,15 +102,14 @@ export const RelevanceScoreSettings = (props: any) => {
 					<div className='text-nav dark:text-nav-dark inline-block px-2 my-2 text-lg font-semibold'>Answer relevance score (ARS) range</div>
 					<div className='mx-4 px-2 w-[200px]'>
 						<div>
-							<div className='w-24 p-1 m-1 block text-nav dark:text-nav-dark text-xl'><MathJax>{"\\(A = NAC_{mean} - AC_{mean} \\)"}</MathJax></div>
-							<div className='w-24 p-1 m-1 block text-nav dark:text-nav-dark text-2xl '><MathJax>{"\\(ARS = 1 - \\frac{A_{mean} - A_{best}}{A_{worst} - A_{best}} \\)"}</MathJax></div>
+							<div className='w-24 p-1 m-1 block text-nav dark:text-nav-dark text-2xl '><MathJax>{"\\(ARS = 1 - \\frac{AC_{mean} - AC_{best}}{AC_{worst} - AC_{best}} \\)"}</MathJax></div>
 						</div>
 						<div className='flex justify-between'>
-							<div className='text-nav dark:text-nav-dark p-1 my-1 text-xl'><MathJax>{"\\(A_{best} \\)"}</MathJax></div>
+							<div className='text-nav dark:text-nav-dark p-1 my-1 text-xl'><MathJax>{"\\(AC_{best} \\)"}</MathJax></div>
 							<input type='number' placeholder='Best' className='rounded-md w-24 p-1 m-1 dark:text-white dark:bg-gray-500 dark:placeholder:text-nav-dark' value={ARSbest} onChange={(e)=>setARSbest(e.target.value)}/>
 						</div>
 						<div className='flex justify-between'>
-							<div className='text-nav dark:text-nav-dark p-1 my-1 text-xl'><MathJax>{"\\(A_{worst} \\)"}</MathJax></div>
+							<div className='text-nav dark:text-nav-dark p-1 my-1 text-xl'><MathJax>{"\\(AC_{worst} \\)"}</MathJax></div>
 							<input type='number' placeholder='Worst' className='rounded-md w-24 p-1 m-1 dark:text-white dark:bg-gray-500 dark:placeholder:text-nav-dark' value={ARSworst} onChange={(e)=>setARSworst(e.target.value)}/>
 						</div>
 					</div>
@@ -144,9 +142,9 @@ export const RelevanceScoreSettings = (props: any) => {
 					<button className='bg-panel1 dark:bg-panel3-dark text-white px-4 py-1 rounded-md mx-4 my-2' onClick={()=>props.settingsCallback({...currentSettings, use_default_hi: false, relevance_score_cutoff: {...currentSettings.relevance_score_cutoff, HIa: parseFloat(HIa), HIb: parseFloat(HIb), HIc: parseFloat(HIc)}})}>Save</button>
 						<button className='bg-panel1 dark:bg-panel3-dark text-white px-4 py-1 rounded-md mx-4 my-2' onClick={()=>props.settingsCallback(()=>{
 							setHIa(1)
-							setHIb(0.33)
-							setHIc(0.67)
-							return {...currentSettings, use_default_hi: true, relevance_score_cutoff: {...currentSettings.relevance_score_cutoff, HIa: 1, HIb: 0.33, HIc: 0.67}}
+							setHIb(0.5)
+							setHIc(0.5)
+							return {...currentSettings, use_default_hi: true, relevance_score_cutoff: {...currentSettings.relevance_score_cutoff, HIa: 1, HIb: 0.5, HIc: 0.5}}
 						})}>Reset</button>
 				</div>
 			</div>

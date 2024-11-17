@@ -18,7 +18,7 @@ import json
 import re
 from django.contrib.auth.models import User
 from ..models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, Model, EmbeddingModel, FrontEndSettings, DisclaimerAgreement
-from .utils import get_zotero_chunks, add_dataset_from_upload, add_to_chroma, nearestDataChroma, get_relevance_score, add_embeddings_to_qna, highlight_pdf, seconds_to_hhmmss, add_pca_to_qna_and_dataset, add_demo_dataset, get_youtube_transcript, add_video_to_chroma, get_embedding_model_ef, get_answer_distance, sanitize_filename
+from .utils import get_zotero_chunks, add_dataset_from_upload, add_to_chroma, nearestDataChroma, get_relevance_score, add_embeddings_to_qna, highlight_pdf, seconds_to_hhmmss, add_pca_to_qna_and_dataset, add_demo_dataset, get_youtube_transcript, add_video_to_chroma, get_embedding_model_ef, get_answer_distance, sanitize_filename, get_answer_distance_by_context
 
 ####################
 # APIs             #
@@ -328,19 +328,22 @@ def save_answer(request):
         temperature = json_request['temperature']
         top_k = json_request['top_k']
         top_p = json_request['top_p']
+
+        # get context from sources
+        sources = Source.objects.filter(question=question)
+        contexts = []
+
+        for source in sources:
+            contexts.append(source.context)
         
         if not no_context:
-            _, _, _, _, _, _, distances = nearestDataChroma(answer_no_context_text, dataset_name, '',embedding_model)
+            distances = get_answer_distance_by_context(answer_no_context_text, dataset_name, contexts, embedding_model)
             distances = [round(dist, 3) for dist in distances]
-            mean_distance_n = sum(distances) / len(distances)
-            # relevance_score_n = get_relevance_score(distances, embedding_model, False)
 
-            _, _, _, _, _, _, distances_a = nearestDataChroma(answer_text, dataset_name, '',embedding_model)
+            distances_a = get_answer_distance_by_context(answer_text, dataset_name, contexts, embedding_model)
             distances_a = [round(dist, 3) for dist in distances_a]
-            mean_distance_a = sum(distances_a) / len(distances_a)
-            # relevance_score_a = get_relevance_score(distances_a, embedding_model, False)
+            mean_distance_a = round((sum(distances_a) / len(distances_a)), 3)
         else:
-            mean_distance_n = 0
             mean_distance_a = 0
             relevance_score = 0
 
@@ -348,26 +351,12 @@ def save_answer(request):
         if use_default_ars and not no_context:
             best_distance_a = 0
             worst_distance_a = 0
-            distances_ac = []
-            distances_nac = []
 
             embedding_model_obj = EmbeddingModel.objects.get(model_name=embedding_model)
-            distances_ac.append(embedding_model_obj.best_distance_ac)
-            distances_ac.append(embedding_model_obj.worst_distance_ac)
-            distances_nac.append(embedding_model_obj.best_distance_nac)
-            distances_nac.append(embedding_model_obj.worst_distance_nac)
+            best_distance_a = embedding_model_obj.best_distance_ac
+            worst_distance_a = embedding_model_obj.worst_distance_ac
 
-            # subtract max nac from min ac
-            max_nac = np.array(distances_nac).max()
-            min_ac = np.array(distances_ac).min()
-            worst_distance_a = max_nac - min_ac
-
-            # subtract min nac from max ac
-            min_nac = np.array(distances_nac).min()
-            max_ac = np.array(distances_ac).max()
-            best_distance_a = min_nac - max_ac
-
-            buffer_distance = 0.1 * (worst_distance_a - best_distance_a)
+            buffer_distance = 0.05 * (worst_distance_a - best_distance_a)
             best_distance_a = best_distance_a - buffer_distance
             worst_distance_a = worst_distance_a + buffer_distance
         else:
@@ -387,46 +376,21 @@ def save_answer(request):
         #     best_distance_a = -1
         #     worst_distance_a = 1.4
 
-        mean_distance = mean_distance_n - mean_distance_a
-        relevance_score = round(((1 - ((mean_distance - best_distance_a) / (worst_distance_a - best_distance_a))) * 100),0)
+        relevance_score = round(((1 - ((mean_distance_a - best_distance_a) / (worst_distance_a - best_distance_a))) * 100),0)
+        relevance_score = relevance_score if relevance_score <= 100 else 100
         question_relevance_score = question.relevance_score
 
         # caclulate hallucination index
         if use_default_hi:
             a_HI = 1.0
-            b_HI = 0.33
-            c_HI = 0.66
+            b_HI = 0.5
+            c_HI = 0.5
         else:
             a_HI = a_HI_r
             b_HI = b_HI_r
             c_HI = c_HI_r
         maxHI = 0.8
         minHI = 0.2
-
-        # if embedding_model == 'nomic-embed-text:latest':
-        #     a_HI = 0.758
-        #     b_HI = 0.927
-        #     c_HI = 1.318
-        #     maxHI = 0.14
-        #     minHI = -1.21
-        # elif embedding_model == 'multi-qa-MiniLM-L6-cos-v1':
-        #     a_HI = 0.589
-        #     b_HI = 0.885
-        #     c_HI = 0.938
-        #     maxHI = 0.11
-        #     minHI = -0.87
-        # elif embedding_model == 'multi-qa-MiniLM-L6-v2':
-        #     a_HI = 0.446
-        #     b_HI = 0.673
-        #     c_HI = 1.103
-        #     maxHI = -0.17
-        #     minHI = -0.9
-        # else:
-        #     a_HI = 0.33
-        #     b_HI = 0.33
-        #     c_HI = 0.66
-        #     maxHI = 0.8
-        #     minHI = 0.2
 
         if(question_relevance_score == 0):
             hallucination_index_raw = a_HI
@@ -457,15 +421,9 @@ def save_answer(request):
             add_embeddings_to_qna(answer_text, 'answer', embedding_model)
             return Response({
                 'saved':True, 
-                # 'mean_distance_a': mean_distance_a,
-                # 'mean_distance_n': mean_distance_n,
-                'mean_distance': mean_distance, 
+                'mean_distance_a': mean_distance_a,
                 'relevance_score': relevance_score if question_relevance_score != 0 else 0,
-                # 'relevance_score_a': relevance_score_a,
-                # 'relevance_score_n': relevance_score_n,
                 'hallucination_index': hallucination_index if hallucination_index < 100 else 100,
-                # 'best_distance_a': best_distance_a,
-                # 'worst_distance_a': worst_distance_a
             }, content_type="application/json")
         else:
             return Response({'saved':True, 'relevance_score': relevance_score}, content_type="application/json")

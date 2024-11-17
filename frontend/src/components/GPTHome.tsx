@@ -757,7 +757,14 @@ function GPTHome(props:{
 						className='text-md text-nav bg-panel2 dark:bg-stjude dark:text-white py-1 px-2 mx-2 rounded-md w-32'
 						value={props.currentSettings.selectedLlm}
 						// defaultValue={props.currentSettings.defaultLlm}
-						onChange={(e) => props.settingsCallback({...props.currentSettings, selectedLlm: e.target.value})}
+						onChange={(e) => {
+							if (answerWithoutContext){
+								let temp_dataset = e.target.value + '_direct_chat'
+								setSelectedDataset(temp_dataset)
+								props.settingsCallback({...props.currentSettings, selectedLlm: e.target.value, selectedDataset: temp_dataset})
+							} else
+							props.settingsCallback({...props.currentSettings, selectedLlm: e.target.value})
+					}}
 					>
 						{llms.map((model:any) => {
 							return (

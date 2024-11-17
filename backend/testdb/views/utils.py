@@ -825,8 +825,6 @@ def nearestDataChroma(text, dataset_name, keywords_str = '', embedding_model_req
         # where_document={'$contains':'search_string'}  # optional filter
     )
 
-        
-
     # print('results: ', results)
     print('distances: ', results['distances'][0])
     library_type = ''
@@ -912,6 +910,26 @@ def nearestDataChroma(text, dataset_name, keywords_str = '', embedding_model_req
     ret = None
     ret = (context, titles, pages, starts, stops, chunks, distances)
     return ret
+
+def get_answer_distance_by_context(text, dataset_name, contexts = [''], embedding_model_request='multi-qa-MiniLM-L6-cos-v1'):
+    embedding_model_ef = get_embedding_model_ef(embedding_model_request)
+    client = chromadb.PersistentClient(path='/code/chroma_storage/.')
+    collection = client.get_collection(name=dataset_name, embedding_function=embedding_model_ef)
+
+    context_count = len(contexts)
+    documents_filter_wrapper = { "$or": [] }
+    for i in range(context_count):
+        documents_filter_wrapper["$or"].append({ "$contains": contexts[i] })
+
+    results = collection.query(
+        query_texts=[text],
+        n_results=context_count,
+        where={'type': {"$ne": "spreadsheet_full"}},
+        where_document=documents_filter_wrapper
+    )
+
+    distances = results['distances'][0]
+    return distances
 
 # def get_chunks_by_keyword(question_text, dataset_name, embedding_model='multi-qa-MiniLM-L6-cos-v1'):
 #     if embedding_model != 'all-MiniLM-L6-v2':
