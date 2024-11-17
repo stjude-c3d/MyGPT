@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { faq } from "../utils/DefaultState";
+import { faq } from "../utils/FAQData";
 
 interface FAQProps {
 	closeFAQ: any,	
@@ -7,7 +7,7 @@ interface FAQProps {
 
 const FAQ = (props:FAQProps) =>{
 
-	const [activeCategory, setActiveCategory] = useState<string | null>(null);
+	const [activeCategory, setActiveCategory] = useState<string | null>('Asking Questions');
 	return (
 		// create floating panel with opque background
 		<div className='fixed inset-0 z-50 bg-black bg-opacity-70 flex items-center justify-center'>
@@ -20,7 +20,7 @@ const FAQ = (props:FAQProps) =>{
 					{/* create left side panel for questions */}
 					<div className={'w-1/3 border-slate-400 border-y-2 overflow-y-auto ' + (window.screen.availHeight < 1000 ? 'h-[80vh]' : 'h-[62vh]')}>
 						<div className='grid grid-cols-1 divide-y'>
-							{Object.keys(faq).map((category) => (
+							{Object.keys(faq).filter((cat:any) => faq[cat].length).map((category) => (
                             <div key={category} className='w-full'>
 							<div className={`text-white text-xl cursor-pointer p-2 border-b border-white ${activeCategory === category ? 'font-normal bg-nav' : 'font-light bg-panel1 dark:bg-panel4-dark'}`}
 							  onClick={() => setActiveCategory(category)}>
@@ -34,10 +34,10 @@ const FAQ = (props:FAQProps) =>{
 					<div className={'w-2/3 bg-panel3 dark:bg-neutral-800 overflow-y-auto overflow-x-clip border-slate-400 border-y-2 ' + (window.screen.availHeight < 1000 ? 'h-[80vh] max-h-[80vh]' : 'h-[62vh] max-h-[62vh]')}>
 					{activeCategory && (
               <div>
-				<div className='text-panel1 text-lg font-bold'>{activeCategory}</div>
+				<div className='text-panel1 text-2xl font-bold m-4'>{activeCategory}</div>
 				
                 {faq[activeCategory]?.map((item, index) => (
-                  <div key={index}>
+                  <div key={index} className='m-2'>
 					<div className='text-nav dark:text-nav-dark p-2 mt-2 flex justify-start text-lg font-semibold'>{item.question}  </div>
 					<div className='text-nav dark:text-nav-dark p-2'dangerouslySetInnerHTML={{ __html: item.answer }}></div>
                   </div>
