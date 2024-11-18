@@ -1,6 +1,7 @@
 interface FAQItem {
 	question: string;
 	answer: string;
+	image?: string;
   }
   
   interface FAQData {
@@ -13,7 +14,7 @@ interface FAQItem {
         {
 	    "question": "1. What kind of questions can I ask MyGPT?",
 	    "answer": "During MyGPT evaluation, we have used six different question types as follows: <br/>• <b>Keyword search:</b> An acronym or a definition from the papers.For example, 'What is acetyl-CoA?' <br/><b>• Summarization:</b> Question that summarize a topic or method. For example, 'What is the proof that pathogenic gain-of-function mutations can shift the equilibrium towards the active state in FGFRs?'<br/> <b>• Yes/no: </b>The answer can be a simple yes or no. For example, 'Does the regulatory domain inhibit the PAK4 kinase activity?' <br/> <b>• Data query: </b>Question to find data or other facts from a section or information from several papers. For example, 'Where are the leukemia-related breakpoints located in CBP/p300?'<br/> <b>• Complex question:</b> A research question to collect information from different parts of a paper and synthesize a response. For example, “What are the biggest issues facing the development of better CAR-T therapies? Rank them in order of difficulty and provide examples with citations on all potential strategies to overcome these limitations. </br> <b>• Irrelevant question: </b>A question about a topic that is not covered by the publication library. For example, asking questions about Harry Potter to a library of GPCR documents: “What does Hagrid give Harry as a Christmas present?”.  </br>  You can also ask questions that do not follow the above categories, and MyGPT will answer  them if they are within the limits of LLMs and RAG concepts. Several tasks, such as  performing statistical analysis, analyzing whole documents, or listing references from  literature with high accuracy, are beyond the current capability of LLMs and MyGPT"
-		},
+    	},
 		{
 			"question": "2. Can I ask any questions about topics from my library?",
 			"answer": "You can ask questions that can be answered using the information available within your document library. If the data is missing from the documents, MyGPT will not be able to answer it or will let you know that the information is missing from your papers."
@@ -34,7 +35,8 @@ interface FAQItem {
 		},
 		{
 			"question": "3. Can I use MyGPT to chat with LLM without incorporating documents pipeline (RAG), like ChatGPT?",
-			"answer": "You can use MyGPT to chat directly with LLM without the RAG pipeline. Under the input box where users can ask questions, we have provided a switch to skip the RAG pipeline. In this  case, MyGPT will use LLM’s inherent knowledge to answer user’s questions"	
+			"answer": "You can use MyGPT to chat directly with LLM without the RAG pipeline. Under the input box where users can ask questions, we have provided a switch to skip the RAG pipeline. In this  case, MyGPT will use LLM’s inherent knowledge to answer user’s questions",
+		    "image": "./Chat_wo_document.png"
 		},
 		{
 		   "question": "4. What happens if the information to answer the question is not available in my library?",
@@ -50,7 +52,8 @@ interface FAQItem {
 		},
 		{
 			"question": "7. If there is information on my library that is outdated or inconsistent with public information  available on the internetfacts available in public domain, will MyGPT detect the inconsistency?",
-			"answer": "MyGPT is designed to perform question-answering in the context of your library of documents and will hold the information from your documents as the highest truth. If the  information in your document is outdated compared to facts in the public domain, MyGPT will answer them using only information from your documents. If the LLM has more up-to-date information about your question, the answer relevance score (ARS) and hallucination  index (HI) may be able to guide you. MyGPT also provides answers generated without the  RAG pipeline as the drop-down with the original MyGPT-generated answers. You can  compare that answer with an original answer to verify the discrepancy in relevance scores.  However, if the most up-to-date information about your topic is also missing from LLM training data, MyGPT will answer it only using information from your documents"
+			"answer": "MyGPT is designed to perform question-answering in the context of your library of documents and will hold the information from your documents as the highest truth. If the  information in your document is outdated compared to facts in the public domain, MyGPT will answer them using only information from your documents. If the LLM has more up-to-date information about your question, the answer relevance score (ARS) and hallucination  index (HI) may be able to guide you. MyGPT also provides answers generated without the  RAG pipeline as the drop-down with the original MyGPT-generated answers. You can  compare that answer with an original answer to verify the discrepancy in relevance scores.  However, if the most up-to-date information about your topic is also missing from LLM training data, MyGPT will answer it only using information from your documents",
+		    "image": "./Dropdown_Image.png"
 		},
 		{
 			"question": "8. If the answer is related to up-to-date information that is contained in my library but that was missing from the training data used for the LLM being used, will MyGPT be able to answer accurately?",

@@ -40,6 +40,7 @@ const FAQ = (props:FAQProps) =>{
                   <div key={index} className='m-2'>
 					<div className='text-nav dark:text-nav-dark p-2 mt-2 flex justify-start text-lg font-semibold'>{item.question}  </div>
 					<div className='text-nav dark:text-nav-dark p-2'dangerouslySetInnerHTML={{ __html: item.answer }}></div>
+					{item.image && <img src={item.image} alt={item.question} className='mt-4 w-2/4 h-50 ' />}
                   </div>
                 ))}
               </div>
