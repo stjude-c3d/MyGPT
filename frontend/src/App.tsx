@@ -279,16 +279,17 @@ function App() {
       <img src={process.env.PUBLIC_URL + '/stjude-logo-child.png'} alt='St. Jude logo' className='h-[3vh] inline-block'/>
       <p className='inline-block mx-2'>St. Jude Children's Research Hospital</p>
     </div>
+    <div className='text-sm text-white mx-8 my-auto cursor-pointer flex flex-row'>
     { frontendSettings.django_login ?
-      <div className='text-sm text-white mx-8 my-auto cursor-pointer'>
         <div onClick={()=>{
           setForceOpenDisclaimer(true)
           setShowDisclaimer(!showDisclaimer)
         }}>Disclaimer</div>
-        </div> : <></>}
+         : <></>}
        <div className='text-sm text-white mx-8 my-auto cursor-pointer' onClick={()=>{
           setShowFAQ(!showFAQ)}
-        }>FAQs </div> 
+        }>FAQs </div>
+        </div> 
 	</div>
   </div>
   )
