@@ -71,9 +71,9 @@ Here is an example of the user interface with question, answer, and source citin
 
 Check out the [FAQs](./FAQs.md) for common questions and answers.
 
-## Developement Guide
+## Developer's Guide
 
-Developers who are interested in using MyGPT API can check the [development guide](./development.md).
+Developers who are interested in using MyGPT API can check the [developer's guide](./development.md).
 
 ## Issues
 
