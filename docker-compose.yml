@@ -81,6 +81,13 @@ services:
         limits:
           cpus: '10.0'
           memory: 8G
+  optimal_hi:
+    build: ./optimal_HI_NN
+    volumes:
+      - ./optimal_HI_NN:/code
+    depends_on:
+      backend:
+        condition: service_healthy
   evaluation:
     build: ./evaluation
     volumes:
