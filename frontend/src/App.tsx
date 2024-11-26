@@ -179,6 +179,7 @@ function App() {
           currentSettings={currentSettings} 
           settingsCallback={settingsCallback} 
           frontendSettings={frontendSettings}
+          user={user}
         />
         {showFAQ?
        <FAQ 
@@ -231,7 +232,12 @@ function App() {
         /> :
         <></>
       }
-      <GPTHome currentSettings={currentSettings} settingsCallback={settingsCallback} frontendSettings={frontendSettings}/>
+      <GPTHome 
+        currentSettings={currentSettings} 
+        settingsCallback={settingsCallback} 
+        frontendSettings={frontendSettings}
+        user={user}
+      />
       {showFAQ?
        <FAQ 
        closeFAQ={()=>setShowFAQ(false)}/> : <></>
@@ -265,6 +271,7 @@ function App() {
         currentSettings={currentSettings} 
         settingsCallback={settingsCallback} 
         frontendSettings={frontendSettings}
+        user={user}
       />
       {showFAQ?
        <FAQ 

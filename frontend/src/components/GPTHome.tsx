@@ -14,7 +14,8 @@ import Markdown from 'react-markdown'
 function GPTHome(props:{
 	currentSettings:any,
 	settingsCallback:any,
-	frontendSettings: any
+	frontendSettings: any,
+	user: any
 }){
 	const [llms, setLlms] = useState<any[]>([])
 	const [selectedDataset, setSelectedDataset] = useState(props.currentSettings.selectedDataset)
@@ -138,40 +139,45 @@ function GPTHome(props:{
 		}
 		postData()
 	},[props.frontendSettings, props.frontendSettings.django_login])
-
+	
 	useEffect(()=>{
-		const requestOptions = {
-			method: 'GET',
-			headers: { 
-				'Content-Type': 'application/json',
-				'Authorization': `${
-					props.frontendSettings && props.frontendSettings.django_login ?
-					'Bearer ' + localStorage.getItem('access') :
-					process.env.NODE_ENV === 'production' ? 
-					process.env.REACT_APP_AUTH_TOKEN_PROD 
-					: process.env.REACT_APP_AUTH_TOKEN_DEV}`
+		const postData = async () => {
+			const requestOptions = {
+				method: 'POST',
+				headers: { 
+					'Content-Type': 'applicatio`n/json',
+					'Authorization': `${
+						props.frontendSettings && props.frontendSettings.django
+						? 'Bearer ' + localStorage.getItem('access')
+						: process.env.NODE_ENV === 'production' ?
+						process.env.REACT_APP_AUTH_TOKEN_PROD
+						: process.env.REACT_APP_AUTH_TOKEN_DEV}`
+				},
+				body: JSON.stringify({
+					'dataset': props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset,
+					'user_email': props.user && props.user.user_email ? props.user.user_email : '',
+					'user_group': props.user && props.user.user_group ? props.user.user_group : ''
+				  })
 			}
-		}
 
-		if (props.currentSettings.defaultDataset === props.currentSettings.selectedDataset && props.currentSettings.defaultDataset === 'None'){
-			return
-		}
+			if (props.currentSettings.defaultDataset === props.currentSettings.selectedDataset && props.currentSettings.defaultDataset === 'None'){
+				return
+			}
 
-		if((!props.currentSettings.answerWithoutContext && !papers.length && !videos.length) || props.currentSettings.fetchPapers === true){
-			fetch(`${process.env.REACT_APP_BACKEND_API}api/get_documents/?dataset=${props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset }&format=json`, requestOptions)
-				.then(response => response.json())
-				.then(data => {
-					if (data.dataset_type === 'papers'){ 
-						setPapers(data.documents)
-						setVideos([])
-					}
-					else if (data.dataset_type === 'videos'){
-						setVideos(data.documents)
-						setPapers([])
-					}
-				})
-			
+			if((!props.currentSettings.answerWithoutContext && !papers.length && !videos.length) || (props.currentSettings.fetchPapers === true) ){
+				const response = await fetch(`${process.env.REACT_APP_BACKEND_API}api/get_documents/?format=json`, requestOptions)
+				const data = await response.json()
+				if (data.dataset_type === 'papers'){ 
+					setPapers(data.documents)
+					setVideos([])
+				}
+				else if (data.dataset_type === 'videos'){
+					setVideos(data.documents)
+					setPapers([])
+				}
+			}
 			props.settingsCallback({...props.currentSettings, showSettings: false, fetchPapers: false})
+
 			if (props.currentSettings.fetchPapers === true){
 				setQuery([])
 				setAnswers([])
@@ -185,7 +191,8 @@ function GPTHome(props:{
 				setSourceContexts([])
 			}
 		}
-	// eslint-disable-next-line react-hooks/exhaustive-deps
+		postData()
+	// eslint-disable-next-line react-hooks/exhaustive-deps	
 	},[papers, query, props.currentSettings.defaultDataset, props.currentSettings.selectedDataset, props.currentSettings.fetchPapers, props.currentSettings.selectedDataset])
 	
 	// console.log(props.currentSettings.selectedDataset, props.currentSettings.defaultDataset)

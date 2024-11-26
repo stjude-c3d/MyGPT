@@ -46,22 +46,27 @@ def get_datasets(request):
             datasets.append(dataset['fields'])
         return Response(datasets)
 
-@api_view(['GET'])
+@api_view(['POST'])
 def get_documents(request):
-    if request.method == 'GET':
-        if request.GET.get('dataset'):
-            dataset_type = ''
-            dataset_name = request.GET.get('dataset')
-            dataset = Dataset.objects.get(dataset_name=dataset_name)
-            papers = Papers.objects.filter(paper_dataset=dataset).order_by('paper_date_time')
-            if papers.count() > 0:
+    if request.method == 'POST':
+        json_request = JSONParser().parse(request)
+        dataset_name = json_request['dataset']
+        user_email = json_request['user_email']
+        # user_group = json_request['user_group']
+        if user_email == '':
+            dataset = Dataset.objects.get(dataset_name=dataset_name, user_email='-')
+        elif user_email != '':
+            dataset = Dataset.objects.get(dataset_name=dataset_name, user_email=user_email)
+
+        papers = Papers.objects.filter(paper_dataset=dataset).order_by('paper_date_time')
+        if papers.count() > 0:
                 dataset_type = 'papers'
                 docs_ = serializers.serialize('json', papers)
-            else:
-                videos = Videos.objects.filter(video_dataset=dataset).order_by('video_date_time')
-                if videos.count() > 0:
-                    dataset_type = 'videos'
-                    docs_ = serializers.serialize('json', videos)
+        else:
+            videos = Videos.objects.filter(video_dataset=dataset).order_by('video_date_time')
+            if videos.count() > 0:
+                dataset_type = 'videos'
+                docs_ = serializers.serialize('json', videos)
         docs_json = json.loads(docs_)
         documents = []
         for doc in docs_json:
