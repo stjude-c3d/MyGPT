@@ -18,6 +18,7 @@ const AddLibrarySettings = (props: {
   const [addLibrary, setAddLibrary] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [showError, setShowError] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
 
   const [uploadPanel, setUploadPanel] = useState(true)
   const [zoteroPanel, setZoteroPanel] = useState(false)
@@ -100,6 +101,29 @@ const AddLibrarySettings = (props: {
 			formData.append('use_overlap', useOverlap)
 			formData.append('chunk_size', chunkSize)
 			formData.append('distance_function', distanceFn)
+
+			// show error if dataset name is empty
+			if (UploadLibraryName === ''){
+				setShowError(true)
+				setErrorMessage('Library name can not be empty')
+				setUploadLibrary(false)
+				setUploadLibraryName('')
+				setUploadDocs(emptyUploadDocs)
+				return
+			}
+
+			// show error if no file is selected
+			if (uploadDocs.filter((d)=> d.file !== null && d.title !== '').length === 0){
+				setShowError(true)
+				setErrorMessage('No file selected')
+				setUploadLibrary(false)
+				setUploadLibraryName('')
+				setUploadDocs(emptyUploadDocs)
+				return
+			} else {
+				setShowError(false)
+				setErrorMessage('')
+			}
 
 			uploadDocs.filter((d)=> d.file !== null && d.title !== '').forEach((doc:any) => {
 				if (doc.title && doc.file){
@@ -368,7 +392,7 @@ const AddLibrarySettings = (props: {
 					}
 					{ showError ?
 						<div className='flex justify-start'>
-							<div className='text-nav dark:text-nav-dark p-1 text-lg bg-red-200 rounded-md'>Error uploading documents</div>
+							<div className='text-nav dark:text-nav-dark p-1 text-lg bg-red-200 rounded-md'>{ errorMessage.length ? errorMessage : 'Error uploading documents'}</div>
 						</div> : <></>	
 					}
 					{/* <div className='text-nav dark:text-nav-dark p-1 my-2'> Note: Because of limited resources on the hosting server, upload up to 7-10 PDFs per library. It may take 3-4 minutes to see a success message.</div> */}

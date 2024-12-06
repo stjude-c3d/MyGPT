@@ -89,7 +89,7 @@ const Settings = (props:{
 						: process.env.REACT_APP_AUTH_TOKEN_DEV}`
 					}
 			}
-			fetch(`${process.env.REACT_APP_BACKEND_API}api/delete_dataset/?dataset=${deleteDataset}`, requestOptions)
+			fetch(`${process.env.REACT_APP_BACKEND_API}api/delete_dataset/?dataset=${deleteDataset}&user_email=${props.user?.user_email}`, requestOptions)
 				.then(response => response.json())
 				.then(data => {
 					console.log(data)

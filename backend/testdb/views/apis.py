@@ -434,7 +434,6 @@ def save_answer(request):
             return Response({'saved':True, 'relevance_score': relevance_score}, content_type="application/json")
 
 @api_view(['POST'])
-
 def feedback_for_answers(request):
     if request.method == 'POST':
         json_request = JSONParser().parse(request)
@@ -451,7 +450,8 @@ def feedback_for_answers(request):
 def delete_dataset(request):
     if request.method == 'GET':
         dataset_name = request.GET.get('dataset')
-        dataset = Dataset.objects.get(dataset_name=dataset_name)
+        user_email = request.GET.get('user_email')
+        dataset = Dataset.objects.get(dataset_name=dataset_name, user_email=user_email)
         papers = Papers.objects.filter(paper_dataset=dataset)
         for paper in papers:
             paper.delete()
@@ -479,10 +479,11 @@ def delete_dataset(request):
 @api_view(['POST'])
 def add_zotero_dataset(request):
     if request.method == 'POST':
-        api_key_r = request.POST.get('api_key')
-        library_id_r = request.POST.get('library_id')
-        library_id_type_r = request.POST.get('library_id_type')
-        collection_id_r = request.POST.get('collection_id')
+        json_request = JSONParser().parse(request)
+        api_key_r = json_request['api_key']
+        library_id_r = json_request['library_id']
+        library_id_type_r = json_request['library_id_type']
+        collection_id_r = json_request['collection_id']
         embedding_model_request = request.POST.get('embedding_model')
         user_r = request.POST.get('user')
         user_email_r = request.POST.get('user_email')
