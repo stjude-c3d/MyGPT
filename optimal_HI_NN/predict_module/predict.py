@@ -3,6 +3,7 @@ import numpy as np
 from tensorflow.keras.models import load_model
 import os
 import absl.logging
+import pandas as pd
 
 # Suppress the absl warnings
 absl.logging.set_verbosity(absl.logging.ERROR)
@@ -32,13 +33,19 @@ def main():
     prediction = best_model.predict(input_data, verbose=0)
     hallucination_index = prediction[0][0]
 
+    hi_list = pd.read_csv('./predict_module/precomputed_biomedical_hi.csv')['hallucination_index']
+    min_hi = min(hi_list)
+    max_hi = max(hi_list)
+
+    hallucination_index = (hallucination_index-min_hi)/(max_hi-min_hi)
+
     print("Hallucination Index:", hallucination_index)
 
     # Interpret the prediction
-    if (best_model.predict(input_data, verbose=0) > 0.5).astype("int32"):
+    if (hallucination_index > 0.5).astype("int32"):
         print("Prediction: Incorrect answer")
     else:
-        print("Prediction: Correct answer")
+    	print("Prediction: Correct answer")
 
 if __name__ == "__main__":
     main()
