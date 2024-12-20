@@ -54,7 +54,7 @@ function GPTHome(props:{
 	const [addDemoLibrary, setAddDemoLibrary] = useState(false)
 	const [imageAttachment, setImageAttachment] = useState('')
 	const [imageBase64, setImageBase64] = useState('')
-	console.log(imageAttachment)
+	// console.log(imageAttachment)
 
 	// get llms from backend
 	useEffect(()=>{

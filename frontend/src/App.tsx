@@ -197,6 +197,7 @@ function App() {
         showPopupLogin={frontendSettings.django_login}
         showLoginButton={frontendSettings.django_login}
         loginCallback={loginCallback}
+        darkModeCallback={DarkModeCallback}
       />
       {showSettings ?
         <Settings 
@@ -251,6 +252,7 @@ function App() {
         setShowChatHistory={setShowChatHistory} 
         showLoginButton={frontendSettings.azure_login}
         loginCallback={()=>{}}
+        darkModeCallback={DarkModeCallback}
       />
       {showSettings ?
         <Settings 
