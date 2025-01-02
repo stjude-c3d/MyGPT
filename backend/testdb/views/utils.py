@@ -90,7 +90,7 @@ def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key,
     # example gorup id and collection id
     # group_id = 4982570
     # collection_id = 'YTPMLXYY'
-    types = ['journalArticle', 'preprint']
+    types = ['journalArticle', 'preprint', 'blogPost']
     # library_type =  'group'
     api_key = users_api_key
     if not api_key:
