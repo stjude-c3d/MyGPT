@@ -5,7 +5,7 @@ import AddLibrarySettings from './AddLibrarySettings'
 import LLMSettings from './LLMSettings'
 import EmbeddingSettings from './EmbeddingSettings'
 import RelevanceScoreSettings from './RelevanceScoresSettings'
-import { MagnifyingGlassMinusIcon, MagnifyingGlassPlusIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassMinusIcon, MagnifyingGlassPlusIcon, ChevronUpIcon, ChevronDownIcon, InformationCircleIcon } from '@heroicons/react/24/outline'
 
 const Settings = (props:{
 	closeSettings:any,
@@ -53,9 +53,14 @@ const Settings = (props:{
 					dataset_names.forEach((dataset:string) => {
 						const dataset_detail = {
 							'dataset': dataset, 
+							'embedding_model': data.filter((d:any)=>d.dataset_name === dataset)[0].embedding_model,
 							'embedding_added': data.filter((d:any)=>d.dataset_name === dataset)[0].embedding_added, 
 							'direct_chat_without_docs': data.filter((d:any)=>d.dataset_name === dataset)[0].direct_chat_without_docs,
-							'user_group': data.filter((d:any)=>d.dataset_name === dataset)[0].user_group
+							'user_group': data.filter((d:any)=>d.dataset_name === dataset)[0].user_group,
+							'details_open': false,
+							'chunksize': data.filter((d:any)=>d.dataset_name === dataset)[0].chunksize,
+							'overlap': data.filter((d:any)=>d.dataset_name === dataset)[0].overlap,
+							'distance_function': data.filter((d:any)=>d.dataset_name === dataset)[0].distance_function,
 						}
 						dataset_details.push(dataset_detail)
 					})
@@ -172,6 +177,7 @@ const Settings = (props:{
 		}
 		postData()
 	},[props.user, props.djangoLogin])
+	console.log(datasets)
 
 	return (
 		// create floating panel with opque background
@@ -242,6 +248,17 @@ const Settings = (props:{
 														<div className='flex justify-between m-1'>
 															{dataset.dataset.split('_').join(' ')}
 															<div>
+																<button className={'ml-1 px-1 rounded-md' + ( dataset.details_open ? ' bg-gray-300 text-nav' : ' bg-panel1 text-white dark:bg-panel3-dark dark:text-nav-dark')}
+																	onClick={()=>{ 
+																		const dataset_details = datasets.map((d:any) => {
+																			if (d.dataset === dataset.dataset) d.details_open = !d.details_open
+																			return d
+																		})
+																		setDatasets(dataset_details)
+																	}
+																}>
+																	<InformationCircleIcon className='h-5 w-5 inline-block'/>
+																</button>
 																<button className={'ml-2 px-2 rounded-md w-24' 
 																	+ (dataset.dataset === currentSettings.selectedDataset ? ' bg-gray-300 text-nav' : ' bg-panel1 text-white dark:bg-panel3-dark dark:text-nav-dark')}
 																	onClick={()=>{
@@ -275,6 +292,22 @@ const Settings = (props:{
 																}
 															</div>
 														</div>
+														{ dataset.details_open ?
+															<div className='flex flex-col rounded-md bg-gray-300 dark:bg-panel3-dark p-2'>
+																<div className='text-nav dark:text-nav-dark text-sm'>
+																	<b>Embedding Model:</b> {dataset.embedding_model}
+																</div>
+																<div className='text-nav dark:text-nav-dark text-sm'>
+																	<b>Chunksize:</b> {dataset.chunksize}
+																</div>
+																<div className='text-nav dark:text-nav-dark text-sm'>
+																	<b>Overlap:</b> {dataset.overlap === false ? 'No' : 'Yes'}
+																</div>
+																<div className='text-nav dark:text-nav-dark text-sm'>
+																	<b>Distance Function:</b> {dataset.distance_function}
+																</div>
+															</div> : <></>
+														}
 													</li>
 												)
 											})}
