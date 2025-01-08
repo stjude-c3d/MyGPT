@@ -80,7 +80,10 @@ def get_documents(request):
         for doc in docs_json:
             documents.append(doc['fields'])
         # sort documents alphabetically
-        documents = sorted(documents, key=lambda x: x['paper_title'])
+        if dataset_type == 'videos':
+            documents = sorted(documents, key=lambda x: x['video_title'])
+        else:
+            documents = sorted(documents, key=lambda x: x['paper_title'])
         return Response({'documents': documents, 'dataset_type': dataset_type})
 
 # example json: {"text": "how many inactive conformational states ABL1 has?", "dataset": "ABL1"}
