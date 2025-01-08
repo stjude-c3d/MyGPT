@@ -65,7 +65,12 @@ function TopNav(props:{
 
     useEffect(() => {
       if (userAuthenticated) {
-        const user = { 'user': activeAccounts[0].name, 'user_email':  activeAccounts[0].username ,'isAdmin': isAdmin}
+        const user = { 
+          'user': activeAccounts[0].name, 
+          'user_email':  activeAccounts[0].username ,
+          'isAdmin': isAdmin, 
+          'otherRoles': appRoles.filter((role:any) => role !== 'MyGPTAdmin') 
+        }
         props.loginCallback(user)
       } else if (djangoAuthenticated && djangoUser.user) {
         props.loginCallback(djangoUser)

@@ -52,11 +52,17 @@ def get_documents(request):
         json_request = JSONParser().parse(request)
         dataset_name = json_request['dataset']
         user_email = json_request['user_email']
-        # user_group = json_request['user_group']
+        user_group = json_request['user_group']
         if user_email == '':
             dataset = Dataset.objects.get(dataset_name=dataset_name, user_email='-')
-        elif user_email != '':
-            dataset = Dataset.objects.get(dataset_name=dataset_name, user_email=user_email)
+        elif user_email != '' or user_email != '-':
+            dataset_count = Dataset.objects.filter(dataset_name=dataset_name, user_email=user_email).count()
+            if dataset_count == 0 and user_group != '' and user_group != 'user':
+                dataset = Dataset.objects.get(dataset_name=dataset_name, user_group=user_group)
+            else:
+                dataset = Dataset.objects.get(dataset_name=dataset_name, user_email=user_email)
+        elif user_group != '' and user_group != 'user':
+            dataset = Dataset.objects.get(dataset_name=dataset_name, user_group=user_group)
 
         papers = Papers.objects.filter(paper_dataset=dataset).order_by('paper_date_time')
         if papers.count() > 0:

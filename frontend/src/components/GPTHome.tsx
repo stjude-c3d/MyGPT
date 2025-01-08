@@ -148,7 +148,7 @@ function GPTHome(props:{
 			const requestOptions = {
 				method: 'POST',
 				headers: { 
-					'Content-Type': 'applicatio`n/json',
+					'Content-Type': 'application/json',
 					'Authorization': `${
 						props.frontendSettings && props.frontendSettings.django
 						? 'Bearer ' + localStorage.getItem('access')
@@ -159,7 +159,7 @@ function GPTHome(props:{
 				body: JSON.stringify({
 					'dataset': props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset,
 					'user_email': props.user && props.user.user_email ? props.user.user_email : '',
-					'user_group': props.user && props.user.user_group ? props.user.user_group : ''
+					'user_group': props.user && props.user.otherRoles && props.user.otherRoles.length ? props.user.otherRoles[0] : ''
 				  })
 			}
 
