@@ -31,7 +31,7 @@ def get_datasets(request):
         user_email = json_request['user_email']
         user_group = json_request['user_group']
         if user_email == '':
-            datasets = Dataset.objects.filter(user_email='-')
+            datasets = Dataset.objects.filter(user_email='-', user_group='user')
         elif user_group != '' and user_group != 'user' and user_email != '':
             group_datasets = Dataset.objects.filter(user_group=user_group)
             email_datasets = Dataset.objects.filter(user_email=user_email)
@@ -44,6 +44,8 @@ def get_datasets(request):
         datasets = []
         for dataset in datasets_json:
             datasets.append(dataset['fields'])
+        # sort datasets alphabetically
+        datasets = sorted(datasets, key=lambda x: x['dataset_name'])
         return Response(datasets)
 
 @api_view(['POST'])
@@ -77,6 +79,8 @@ def get_documents(request):
         documents = []
         for doc in docs_json:
             documents.append(doc['fields'])
+        # sort documents alphabetically
+        documents = sorted(documents, key=lambda x: x['paper_title'])
         return Response({'documents': documents, 'dataset_type': dataset_type})
 
 # example json: {"text": "how many inactive conformational states ABL1 has?", "dataset": "ABL1"}
