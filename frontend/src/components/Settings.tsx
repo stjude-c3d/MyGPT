@@ -44,7 +44,7 @@ const Settings = (props:{
 			},
 			body: JSON.stringify(props.djangoLogin ? props.user : props.user ? {
 				'user_email': props.user.user_email, 
-				'user_group': props.user.otherRoles.length ? props.user.otherRoles[0] : ''
+				'user_group': props.user.otherRoles && props.user.otherRoles.length ? props.user.otherRoles[0] : ''
 			} : {
 				'user_email': '', 
 				'user_group': ''
