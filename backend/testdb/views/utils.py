@@ -586,7 +586,7 @@ def add_embeddings_to_chunks(dataset):
         range(0, len(chunks_txt), 100), desc='Adding embeddings', unit_scale=100
     ):
         # default_ef = embedding_functions.DefaultEmbeddingFunction()
-        default_ef = OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "/api/embeddings", model_name='nomic-embed-text:latest')
+        default_ef = OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "/api/embeddings", model_name='nomic-embed-text')
         for chunk in chunks_txt[i : i + 100]:
             embedding = default_ef([chunk['content']])
             chunk = chunks.objects.create(
@@ -1221,7 +1221,7 @@ def get_embedding_model_ef(embedding_model_request, add_distances = False):
     if embedding_model == 'all-MiniLM-L6-v2':
         embedding_model_ef = embedding_functions.DefaultEmbeddingFunction()
     elif embedding_model_source == 'ollama':
-        embedding_model_ef = OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "/api/embeddings", model_name=embedding_model)
+        embedding_model_ef = OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "/api/embeddings", model_name=embedding_model.split(':')[0])
     elif '/' in embedding_model:
         embedding_model_ef = HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=embedding_model)
     elif embedding_model_source == 'sentence-transformer':    
