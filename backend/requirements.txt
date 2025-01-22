@@ -11,7 +11,7 @@ pandas
 pyzotero
 pymupdf==1.22.5
 numpy
-chromadb==0.5.4
+chromadb==0.5.7
 tqdm
 python-dotenv
 pytest-django

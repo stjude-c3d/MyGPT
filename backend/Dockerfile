@@ -1,4 +1,4 @@
-FROM ghcr.io/chroma-core/chroma:latest
+FROM ghcr.io/chroma-core/chroma:0.5.7
 # please don't change the above line
 # FROM --platform=amd64 ghcr.io/chroma-core/chroma:latest
 ENV PYTHONDONTWRITEBYTECODE=1
