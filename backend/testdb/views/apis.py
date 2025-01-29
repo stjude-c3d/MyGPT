@@ -99,9 +99,12 @@ def get_context(request):
             skip_highlight = False
         model_type = Model.objects.get(model_name=model)
         dataset_name = json_request['dataset']
+        document_title = json_request['document_title']
         use_default_qrs = json_request['use_default_qrs']
         question_best_distance = json_request['question_best_distance']
         question_worst_distance = json_request['question_worst_distance']
+        maximum_chunks_count = json_request['maximum_chunks_count']
+        no_cutoff = json_request['no_cutoff']
         # check if dataset exists or crate a new one
         dataset_exist = Dataset.objects.filter(dataset_name=dataset_name).exists()
         if not dataset_exist:
@@ -122,7 +125,7 @@ def get_context(request):
             sources = []
             relevance_score = 0
         else:
-            context, titles, pages, starts, stops, chunks_txt, distances = nearestDataChroma(question_text, dataset_name, keywords, embedding_model)
+            context, titles, pages, starts, stops, chunks_txt, distances = nearestDataChroma(question_text, dataset_name, document_title, keywords, embedding_model, maximum_chunks_count, no_cutoff)
             sources = []
             distances = [round(dist, 3) for dist in distances]
             relevance_score = get_relevance_score(distances, embedding_model, True, use_default_qrs, question_best_distance, question_worst_distance)

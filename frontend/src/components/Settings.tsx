@@ -359,6 +359,36 @@ const Settings = (props:{
 									}
 									
 								</div>
+								<div className='text-nav dark:text-nav-dark inline-block px-2 mx-4 my-2 text-lg font-semibold'>Context Parameters</div>
+								<div className='flex flex-row my-4'>
+									<div className='w-[500px]'>
+										<div className='flex flex-column mt-2'>
+											<div className='text-nav dark:text-nav-dark inline-block px-2 mx-4 my-2 text-md w-[100px]'>Maximum Chunks</div>
+											{/* slider from value 1 to 20 in increament of 1 */}
+											<div className='mx-4'>
+												<input type='range' min='1' max='30' step='1' value={currentSettings.maximum_chunks_count} 
+													onChange={(e)=>props.settingsCallback({...currentSettings, maximum_chunks_count: parseInt(e.target.value)})}
+													className='w-80 p-1 accent-panel1 dark:accent-panel3-dark'
+												/>
+												<div className='flex flex-row justify-between'>
+													<div className='text-nav dark:text-nav-dark text-sm text-center'>1</div>
+													<div className='text-nav dark:text-nav-dark text-sm text-center font-semibold'>{currentSettings.maximum_chunks_count}</div>
+													<div className='text-nav dark:text-nav-dark text-sm text-center'>30</div>
+												</div>
+											</div>
+										</div>
+										<div className='flex flex-column mt-2'>
+											<div className='text-nav dark:text-nav-dark inline-block px-2 mx-4 my-2 text-md w-[100px]'>No Chunk Cutoff</div>
+											{/* checkbox */}
+											<div className='mx-4'>
+												<input type='checkbox' checked={currentSettings.no_chunk_cutoff} 
+													onChange={(e)=>props.settingsCallback({...currentSettings, no_chunk_cutoff: e.target.checked})}
+													className='p-1 accent-panel1 dark:accent-panel3-dark'
+												/>
+											</div>
+										</div>
+									</div>
+								</div>	
 								<div className='text-nav dark:text-nav-dark inline-block px-2 mx-4 my-2 text-lg font-semibold'>LLM Parameters</div>
 								<div className='flex flex-row my-4'>
 									<div className='h-[20px] text-nav dark:text-nav-dark inline-block px-2 mx-4 my-auto text-lg -rotate-90'>Precise</div>

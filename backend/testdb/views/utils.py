@@ -775,7 +775,7 @@ def find_cutoff_distance(distances):
             break
     return cutoff_distance
 
-def nearestDataChroma(text, dataset_name, keywords_str = '', embedding_model_request='multi-qa-MiniLM-L6-cos-v1'):
+def nearestDataChroma(text, dataset_name, document_title_str = '', keywords_str = '', embedding_model_request='multi-qa-MiniLM-L6-cos-v1', maximum_chunks_count=15, no_cutoff=False):
     # collection_name = 'pub_collection'
     # client = chromadb.Client()
         # query embedding model from database
@@ -792,6 +792,7 @@ def nearestDataChroma(text, dataset_name, keywords_str = '', embedding_model_req
     print(f'Collection contains {count} documents')
 
     keywords = keywords_str.split(';') if keywords_str != '' else []
+    document_title = document_title_str if document_title_str != '' else 'all'
     # remove keywords if it's '-'
     if '-' in keywords:
         keywords.remove('-')
@@ -817,13 +818,23 @@ def nearestDataChroma(text, dataset_name, keywords_str = '', embedding_model_req
                 where_document={'$contains': keywords[0]}
             )
 
-    results = collection.query(
-        query_texts=[text],
-        n_results=15,
-        where={'type': {"$ne": "spreadsheet_full"}}
-        # where={'metadata_field': 'is_equal_to_this'}, # optional filter
-        # where_document={'$contains':'search_string'}  # optional filter
-    )
+    if document_title == 'all':
+        results = collection.query(
+            query_texts=[text],
+            n_results=maximum_chunks_count,
+            where={'type': {"$ne": "spreadsheet_full"}}
+            # where={'metadata_field': 'is_equal_to_this'}, # optional filter
+            # where_document={'$contains':'search_string'}  # optional filter
+        )
+    else:
+        results = collection.query(
+            query_texts=[text],
+            n_results=maximum_chunks_count,
+            where={'$and':[
+                {'type': {"$ne": "spreadsheet_full"}},
+                {'filename': {'$eq': document_title}}
+            ]}
+        )
 
     # print('results: ', results)
     print('distances: ', results['distances'][0])
@@ -835,7 +846,10 @@ def nearestDataChroma(text, dataset_name, keywords_str = '', embedding_model_req
     #find highest score
     # lowest_distance = 10
     # cutoff_distance = statistics.median(results['distances'][0])
-    cutoff_distance = find_cutoff_distance(results['distances'][0])
+    if no_cutoff:
+        cutoff_distance = results['distances'][0][len(results['distances'][0])-1]
+    else:
+        cutoff_distance = find_cutoff_distance(results['distances'][0])
     #     cutoff_distance = 5
     print('cutoff_distance: ', cutoff_distance)
     titles, pages, starts, stops, chunks, distances = [], [], [], [], [], []
