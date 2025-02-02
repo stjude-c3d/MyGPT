@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:16
+    image: postgres:14
     volumes:
       - ./data/db:/var/lib/postgresql/data
     ports:

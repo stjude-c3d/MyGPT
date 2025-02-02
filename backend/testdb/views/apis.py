@@ -398,7 +398,10 @@ def save_answer(request):
         #     worst_distance_a = 1.4
 
         relevance_score = round(((1 - ((mean_distance_a - best_distance_a) / (worst_distance_a - best_distance_a))) * 100),0)
-        relevance_score = relevance_score if relevance_score <= 100 else 100
+        if relevance_score < 0:
+            relevance_score = 0
+        elif relevance_score > 100:
+            relevance_score = 100
         question_relevance_score = question.relevance_score
 
         # caclulate hallucination index

@@ -279,7 +279,7 @@ function GPTHome(props:{
 					.then((data:any) => {
 						if (data.relevance_score === 0){
 							setQuestionRelevancescore((prevQuestionRelevancescore:any)=>[...prevQuestionRelevancescore, data.relevance_score])
-							setContext('')
+							setContext('None')
 							setSourcePapers((prevSourcePapers:any)=>[...prevSourcePapers, []])
 							setSourceContexts((prevSourceContexts:any)=>[...prevSourceContexts, []])
 							if (papers.length){
@@ -288,6 +288,7 @@ function GPTHome(props:{
 								setSourceStarts((prevSourceStarts:any)=>[...prevSourceStarts, []])
 								setSourceStops((prevSourceStops:any)=>[...prevSourceStops, []])
 							}
+							setAnswerReceived(false)
 						}else{
 							setQuestionRelevancescore((prevQuestionRelevancescore:any)=>[...prevQuestionRelevancescore, data.relevance_score])
 							setContext(data.context)
