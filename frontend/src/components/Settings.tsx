@@ -88,6 +88,7 @@ const Settings = (props:{
 
 	useEffect(()=>{
 		if(deleteDataset){
+			const email = props.user ? props.user.user_email : '-'
 			const requestOptions = {
 				method: 'GET',
 				headers: { 
@@ -100,7 +101,7 @@ const Settings = (props:{
 						: process.env.REACT_APP_AUTH_TOKEN_DEV}`
 					}
 			}
-			fetch(`${process.env.REACT_APP_BACKEND_API}api/delete_dataset/?dataset=${deleteDataset}&user_email=${props.user?.user_email}`, requestOptions)
+			fetch(`${process.env.REACT_APP_BACKEND_API}api/delete_dataset/?dataset=${deleteDataset}&user_email=${email}`, requestOptions)
 				.then(response => response.json())
 				.then(data => {
 					console.log(data)
