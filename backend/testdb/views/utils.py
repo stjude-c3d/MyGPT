@@ -20,6 +20,7 @@ import json
 import pdfkit
 import base64
 from langchain_community.llms import Ollama
+from typing import Union, cast
 from ..models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, EmbeddingModel
 
 # imports for embedding functions
@@ -586,7 +587,7 @@ def add_embeddings_to_chunks(dataset):
         range(0, len(chunks_txt), 100), desc='Adding embeddings', unit_scale=100
     ):
         # default_ef = embedding_functions.DefaultEmbeddingFunction()
-        default_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "/api/embeddings", model_name='nomic-embed-text')
+        default_ef = OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "/api/embeddings", model_name='nomic-embed-text')
         for chunk in chunks_txt[i : i + 100]:
             embedding = default_ef([chunk['content']])
             chunk = chunks.objects.create(
@@ -1235,7 +1236,7 @@ def get_embedding_model_ef(embedding_model_request, add_distances = False):
     if embedding_model == 'all-MiniLM-L6-v2':
         embedding_model_ef = embedding_functions.DefaultEmbeddingFunction()
     elif embedding_model_source == 'ollama':
-        embedding_model_ef = embedding_functions.OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "/api/embeddings", model_name=embedding_model.split(':')[0])
+        embedding_model_ef = OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "/api/embeddings", model_name=embedding_model.split(':')[0])
     elif '/' in embedding_model:
         embedding_model_ef = HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=embedding_model)
     elif embedding_model_source == 'sentence-transformer':    
@@ -1376,3 +1377,59 @@ class HuggingFaceEmbeddingFunction(EmbeddingFunction[Documents]):
                 json={"inputs": input, "options": {"wait_for_model": True}},
             ).json(),
         )
+    
+class OllamaEmbeddingFunction(EmbeddingFunction[Documents]):
+    """
+    This class is used to generate embeddings for a list of texts using the Ollama Embedding API (https://github.com/ollama/ollama/blob/main/docs/api.md#generate-embeddings).
+    """
+
+    def __init__(self, url: str, model_name: str) -> None:
+        """
+        Initialize the Ollama Embedding Function.
+
+        Args:
+            url (str): The URL of the Ollama Server.
+            model_name (str): The name of the model to use for text embeddings. E.g. "nomic-embed-text" (see https://ollama.com/library for available models).
+        """
+        self._api_url = f"{url}"
+        self._model_name = model_name
+        self._session = httpx.Client(verify=False)
+
+    def __call__(self, input: Union[Documents, str]) -> Embeddings:
+        """
+        Get the embeddings for a list of texts.
+
+        Args:
+            input (Documents): A list of texts to get embeddings for.
+
+        Returns:
+            Embeddings: The embeddings for the texts.
+
+        Example:
+            >>> ollama_ef = OllamaEmbeddingFunction(url="http://localhost:11434/api/embeddings", model_name="nomic-embed-text")
+            >>> texts = ["Hello, world!", "How are you?"]
+            >>> embeddings = ollama_ef(texts)
+        """
+        # Call Ollama Server API for each document
+        texts = input if isinstance(input, list) else [input]
+        embeddings = [
+            self._session.post(
+                self._api_url, json={"model": self._model_name, "prompt": text}
+            ).json()
+            for text in texts
+        ]
+        return cast(
+            Embeddings,
+            [
+                embedding["embedding"]
+                for embedding in embeddings
+                if "embedding" in embedding
+            ],
+        )
+    
+
+    # Identify and highlight sections in this grant proposal that discuss Diversity, Equity, and Inclusion (DEI), including any initiatives, goals, strategies, programs, objectives, outcomes, and compliance with federal DEI regulations or legal requirements. Highlight any parts that mention keywords such as ‘gender’, ‘gender affirmation’, ‘minority’, ‘under-represented minority’, 'diversity', 'equity', 'inclusion', 'underrepresented', 'marginalized', 'accessibility', 'cultural competence', 'equal opportunity', and 'non-discrimination.'
+
+    # Find  and highlight sections in this grant proposal that address DEI efforts, including engagement with diverse communities or stakeholders, partnerships with organizations focused on DEI, funding allocation, resources dedicated to supporting DEI efforts, training or professional development, and capacity-building for DEI. Identify any parts that describe how DEI efforts will be measured or evaluated, including metrics or indicators related to DEI.
+
+    # Identify and highlight sections in this grant proposal that discuss gender-related initiatives or goals, gender affirmation efforts, minority-related initiatives or goals, and efforts addressing underrepresented minorities (URM). Summarize the content and mention any anticipated outcomes or expected impact of these initiatives.
