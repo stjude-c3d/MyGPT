@@ -192,6 +192,7 @@ function GPTHome(props:{
 				setFileAttachmentType('paper_attachment')
 				setSourcePapers([])
 				setSourcePages([])
+				setSourceColorCodes([])
 				setSourceContexts([])
 			}
 		}
@@ -325,7 +326,7 @@ function GPTHome(props:{
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[query])
-	console.log(sourceColorCodes)
+
 	// get answer from the ollama
 	useEffect(()=>{
 		if (answerWithoutContext) return
@@ -759,6 +760,7 @@ function GPTHome(props:{
 				setSourcePapers([])
 				setSourcePages([])
 				setSourceContexts([])
+				setSourceColorCodes([])
 				setAnswer('')
 	}
 	return (
