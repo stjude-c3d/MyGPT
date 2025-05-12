@@ -124,11 +124,12 @@ def get_context(request):
             context, titles, pages, starts, stops, chunks_txt, distances = '', [], [], [], [], [], []
             sources = []
             relevance_score = 0
+            normalized_distances = []
         else:
             context, titles, pages, starts, stops, chunks_txt, distances = nearestDataChroma(question_text, dataset_name, document_title, keywords, embedding_model, maximum_chunks_count, no_cutoff)
             sources = []
             distances = [round(dist, 3) for dist in distances]
-            relevance_score = get_relevance_score(distances, embedding_model, True, use_default_qrs, question_best_distance, question_worst_distance)
+            relevance_score, normalized_distances = get_relevance_score(distances, embedding_model, True, use_default_qrs, question_best_distance, question_worst_distance)
         library_type = 'papers' if len(pages) else 'videos'
 
         # if no_context is true, create or get dataset
@@ -197,7 +198,8 @@ def get_context(request):
                 'start': seconds_to_hhmmss(starts[idx]) if library_type == 'videos' else '',
                 'stop': seconds_to_hhmmss(stops[idx]) if library_type == 'videos' else '',
                 'context': chunks_txt[idx],
-                'distance': round(distances[idx],3) #round to 3 decimals
+                'distance': round(distances[idx],3), #round to 3 decimals,
+                'normalized_distance': round(normalized_distances[idx],3)
             })
             if len(question_sources) == 0:
                 chunk = chunks.objects.filter(chunk_text=chunks_txt[idx], chunk_dataset=dataset)
@@ -253,6 +255,7 @@ def get_context(request):
                     # create highlighted paper object
                     paper = Papers.objects.filter(paper_dataset=dataset).filter(paper_title=source_grp[0]['document'])[0]
                     with open(highlighted_pdf_path, 'rb') as f:
+                        # paper.paper_attachment.save(dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf', File(f), save=True)
                         paper.highlighted_attachment.save(dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf', File(f), save=True)
             
         context_json = {

@@ -40,6 +40,7 @@ function GPTHome(props:{
 	const [sourceContexts, setSourceContexts] = useState<any[]>([])
 	const [sourceStarts, setSourceStarts] = useState<any[]>([])
 	const [sourceStops, setSourceStops] = useState<any[]>([])
+	const [sourceColorCodes, setSourceColorCodes] = useState<any[]>([])
 	const [selectedPaperIdx, setselectedPaperIdx] = useState(0)
 	const [selectedPage, setSelectedPage] = useState(0)
 	const [selectedStart, setSelectedStart] = useState(0)
@@ -105,7 +106,7 @@ function GPTHome(props:{
 
 				// add embedding models to backend API
 				const embedding_models = data.models.filter((model:any) => 
-					model.details.quantization_level === 'F16' && model.details.family.includes('bert'))
+					(model.details.quantization_level === 'F16' && model.details.family.includes('bert')) || (model.details.family.includes('nomic-bert')))
 				
 				let embedding_models_object:any = []
 				embedding_models.forEach((model:any) => {
@@ -131,7 +132,7 @@ function GPTHome(props:{
 					setTimeout: 10000,
 					body: JSON.stringify({'embedding_models': embedding_models_object})
 				}
-				if (props.frontendSettings && props.frontendSettings.django_login && localStorage.getItem('access')?.length){
+				if (props.frontendSettings){
 					const response3 = await fetch(`${process.env.REACT_APP_BACKEND_API}api/add_embedding_models/`, requestOptions2)
 					if (response3.ok){
 						const data3 = await response3.json()
@@ -282,6 +283,7 @@ function GPTHome(props:{
 							setContext('None')
 							setSourcePapers((prevSourcePapers:any)=>[...prevSourcePapers, []])
 							setSourceContexts((prevSourceContexts:any)=>[...prevSourceContexts, []])
+							setSourceColorCodes((prevSourceColorCodes:any)=>[...prevSourceColorCodes, []])
 							if (papers.length){
 								setSourcePages((prevSourcePages:any)=>[...prevSourcePages, []])
 							}else if (videos.length){
@@ -294,6 +296,16 @@ function GPTHome(props:{
 							setContext(data.context)
 							setSourcePapers((prevSourcePapers:any)=>[...prevSourcePapers, data.sources.map((s:any)=>s.document)])
 							setSourceContexts((prevSourceContexts:any)=>[...prevSourceContexts, data.sources.map((s:any)=>s.context)])
+							setSourceColorCodes((prevSourceColorCodes:any)=>[...prevSourceColorCodes, data.sources.map((s:any)=>{
+								if (s.normalized_distance < 0.4)
+									return 'green'
+								else if (s.normalized_distance < 0.6)
+									return 'yellow'
+								else if (s.normalized_distance < 0.8)
+									return 'light_yellow'
+								else
+									return 'gray'
+							})])
 							if (data.sources[0].page !== ''){
 								setSourcePages((prevSourcePages:any)=>[...prevSourcePages, data.sources.map((s:any)=>s.page)])
 								setSelectedPage(data.sources[0].page)
@@ -313,7 +325,7 @@ function GPTHome(props:{
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[query])
-
+	console.log(sourceColorCodes)
 	// get answer from the ollama
 	useEffect(()=>{
 		if (answerWithoutContext) return
@@ -1067,7 +1079,7 @@ function GPTHome(props:{
 												}}
 											>
 											<div className='border border-gray-400'></div>
-												<div className='text-white text-sm p-2 font-normal italic'>{'Page ' + (sourcePages[query.length-i-1][index]) + ' of "' + paper + '"'}</div>
+												<div className={'text-white text-sm p-2 font-normal italic ' + (sourceColorCodes[query.length-i-1][index] === 'green' ? 'bg-green-600' : sourceColorCodes[query.length-i-1][index] === 'yellow' ? 'bg-yellow-500' :  sourceColorCodes[query.length-i-1][index] === 'light_yellow' ? 'bg-amber-600' : '')}>{'Page ' + (sourcePages[query.length-i-1][index]) + ' of "' + paper + '"'}</div>
 												{selectedPaperIdx === (papers.findIndex((p:any)=>p.paper_title===paper)) && selectedPage === sourcePages[query.length-i-1][index] ? 
 													<div className='text-white text-sm p-2 bg-slate-600 dark:bg-slate-700'>
 														<div className='text-white font-bold'>Context</div>
@@ -1151,7 +1163,7 @@ function GPTHome(props:{
 												}}
 											>
 												<div className='border border-gray-400'></div>
-												<div className='text-white text-sm p-2 font-normal italic'>{'Page ' + (sourcePages[query.length-1][index]) + ' of "' + paper + '"'}</div>
+												<div className={'text-white text-sm p-2 font-normal italic ' + (sourceColorCodes[query.length-i-1][index] === 'green' ? 'bg-green-600' : sourceColorCodes[query.length-i-1][index] === 'yellow' ? 'bg-yellow-500' :  sourceColorCodes[query.length-i-1][index] === 'light_yellow' ? 'bg-amber-600' : '')}>{'Page ' + (sourcePages[query.length-i-1][index]) + ' of "' + paper + '"'}</div>
 											</div>
 										))}
 									</>:

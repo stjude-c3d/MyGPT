@@ -1017,6 +1017,7 @@ def get_relevance_score(distances, embedding_model, question=True, use_default=T
     # else:
     #     best_distance = 0.5
     #     worst_distance = 1.5
+    
     if use_default:
         embedding_model_obj = EmbeddingModel.objects.filter(model_name=embedding_model)[0]
         if question:
@@ -1042,7 +1043,11 @@ def get_relevance_score(distances, embedding_model, question=True, use_default=T
         relevance_score = (1 - (mean_distance - best_distance) / (worst_distance - best_distance)) * 100
         # trim confidence score to 2 decimal places
         relevance_score = round(relevance_score, 0)
-    return relevance_score
+    normalized_distances = []
+    for distance in distances:
+        normalized_distance = (distance - best_distance) / (worst_distance - best_distance)
+        normalized_distances.append(normalized_distance)
+    return relevance_score, normalized_distances
 
 #  embedd 2 answers into vector database and get distance between them
 def get_answer_distance(answer1, answer2, embedding_model_request = 'multi-qa-MiniLM-L6-cos-v1'):
@@ -1109,6 +1114,26 @@ def highlight_pdf(input_file, output_file, source_grp):
                     highlight = page.add_highlight_annot(inst)
                     highlight.set_colors()
                     highlight.update()
+                    
+                    if source['normalized_distance'] < 0.4:
+                        # highlight with green color rgb(120, 198, 121)
+                        highlight.set_colors(stroke=[0.486, 0.988, 0])
+                        highlight.update()
+                    elif source['normalized_distance'] >= 0.4 and source['normalized_distance'] < 0.6:
+                        # highlight with yellow color
+                        highlight.set_colors(stroke=[1, 1, 0])
+                        highlight.update()
+                    elif source['normalized_distance'] >= 0.6 and source['normalized_distance'] < 0.7:
+                        # highlight with light yellow color (247, 252, 185)
+                        highlight.set_colors(stroke=[0.97, 0.98, 0.72])
+                        highlight.update()
+                        # # highlight with red color (250,128,114)
+                        # highlight.set_colors(stroke=[0.98, 0.5, 0.45])
+                        # highlight.update()
+                    else:
+                        # highlight gray (220,220,220)
+                        highlight.set_colors(stroke=[0.863, 0.863, 0.863])
+                        highlight.update()
 
     input_pdf.save(output_file, garbage=4, deflate=True, clean=True)
 
@@ -1236,7 +1261,8 @@ def get_embedding_model_ef(embedding_model_request, add_distances = False):
     if embedding_model == 'all-MiniLM-L6-v2':
         embedding_model_ef = embedding_functions.DefaultEmbeddingFunction()
     elif embedding_model_source == 'ollama':
-        embedding_model_ef = OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "/api/embeddings", model_name=embedding_model.split(':')[0])
+        embedding_model_ef = OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "/api/embeddings", model_name=embedding_model.split(':')[0]) 
+        # embedding_model_ef = OllamaEmbeddingFunction(url=os.environ.get('OLLAMA_SERVER') + "/api/embeddings", model_name=embedding_model.split(':')[0] if embedding_model.split(':')[1] == 'latest' else embedding_model) 
     elif '/' in embedding_model:
         embedding_model_ef = HuggingFaceEmbeddingFunction(api_key=os.environ.get('HUGGINGFACE_API_KEY'), model_name=embedding_model)
     elif embedding_model_source == 'sentence-transformer':    
