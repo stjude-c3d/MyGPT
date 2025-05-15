@@ -20,8 +20,8 @@ const defaultSettings = {
     selectedDataset: 'None',
 	fetchDatasets: true,
 	datasetsUpdated: false,
-    defaultEmbeddingModel: 'multi-qa-MiniLM-L6-cos-v1',
-	selectedEmbeddingModel: 'multi-qa-MiniLM-L6-cos-v1',
+    defaultEmbeddingModel: 'nomic-embed-text:latest',
+	selectedEmbeddingModel: 'nomic-embed-text:latest',
 	embedding_models: [
 		'multi-qa-MiniLM-L6-cos-v1',
 		'all-MiniLM-L6-v2',
@@ -31,7 +31,10 @@ const defaultSettings = {
 		'paraphrase-albert-small-v2',
 		'snowflake-arctic-embed:latest',
 		'nomic-embed-text:latest',
+		'nomic-embed-text:v1.5',
 		// 'nomic-ai/nomic-embed-text-v1',
+		// 'hf.co/nomic-ai/nomic-embed-text-v2-moe-GGUF:Q4_K_M',
+		// 'hf.co/nomic-ai/nomic-embed-text-v1.5-GGUF:latest',
 		'bge-m3:latest',
 		'mxbai-embed-large:latest'
 	],

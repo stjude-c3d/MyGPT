@@ -34,6 +34,7 @@ function GPTHome(props:{
 	const [nullAnswers, setNullAnswers] = useState<any[]>([])
 	const [showNullAnswerIndexes, setShowNullAnswerIndexes] = useState<any>([])
 	const [papers, setPapers] = useState<any[]>([])
+	const [focusedPaper, setFocusedPaper] = useState<any>(null)
 	const [videos, setVideos] = useState<any[]>([])
 	const [sourcePapers, setSourcePapers] = useState<any[]>([])
 	const [sourcePages, setSourcePages] = useState<any[]>([])
@@ -169,16 +170,19 @@ function GPTHome(props:{
 			}
 
 			if((!props.currentSettings.answerWithoutContext && !papers.length && !videos.length) || (props.currentSettings.fetchPapers === true) ){
-				const response = await fetch(`${process.env.REACT_APP_BACKEND_API}api/get_documents/?format=json`, requestOptions)
-				const data = await response.json()
-				if (data.dataset_type === 'papers'){ 
-					setPapers(data.documents)
-					setVideos([])
-				}
-				else if (data.dataset_type === 'videos'){
-					setVideos(data.documents)
-					setPapers([])
-				}
+				setTimeout(async () => {
+					const response = await fetch(`${process.env.REACT_APP_BACKEND_API}api/get_documents/?format=json`, requestOptions)
+					const data = await response.json()
+					if (data.dataset_type === 'papers'){ 
+						setPapers(data.documents)
+						setVideos([])
+					}
+					else if (data.dataset_type === 'videos'){
+						setVideos(data.documents)
+						setPapers([])
+					}
+				}, 500)
+				
 			}
 			props.settingsCallback({...props.currentSettings, showSettings: false, fetchPapers: false})
 
@@ -259,7 +263,7 @@ function GPTHome(props:{
 				model_type: props.currentSettings.selectedLlm,
 				dataset: props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset,
 				new_conversation: query.length === 1 ? true : false,
-				document_title: '',
+				document_title: focusedPaper ? focusedPaper : '',
 				maximum_chunks_count: props.currentSettings.maximum_chunks_count,
 				no_cutoff: props.currentSettings.no_chunk_cutoff,
 				related_query: relatedQuery,
@@ -1248,9 +1252,44 @@ function GPTHome(props:{
 						<Cog6ToothIcon className='w-4 h-4 inline-block'/>
 					</div> : <></>}
 				</div>
+				{/* add filter column for documents */}
+				{ papers.length > 1 ?
+					<div className='p-2 text-sm border-slate-400 border-b'>
+						<div className='text-white inline-block px-2'> Focus on document </div>
+						<select 
+							className={'text-md text-nav dark:bg-stjude dark:text-white py-1 px-2 mx-1 rounded-md w-28 inline-block' + (focusedPaper !== null ? ' bg-panel3' : ' bg-panel2 dark:bg-panel4-dark')}
+							value={focusedPaper}
+							onChange={
+								(e) => {
+									if (e.target.value === 'None'){
+										setFocusedPaper(null)
+										setselectedPaperIdx(0)
+									} else {
+										setFocusedPaper(e.target.value)
+										setselectedPaperIdx(papers.findIndex((p:any)=>p.paper_title===e.target.value))
+								}}
+							}
+						>
+							<option value={'None'}>None</option>
+							{papers.length ?
+								papers.map((p:any, index:number) => {
+									return (
+										<option key={index} value={p['paper_title']}>{p['paper_title']}</option>
+									)
+								}) :
+								videos.map((v:any, index:number) => {
+									return (
+										<option key={index} value={v['video_title']}>{v['video_title']}</option>
+									)
+								})
+							}
+						</select>
+					</div> : <></>
+				}
+				
 				<div className='mb-4 divide-y'>
 					{/* list all the papers */}
-					{ papers.length ?
+					{ papers.length && focusedPaper === null ?
 						papers.map((p:any, index:number)=>
 							<div key={index} className={'p-2 ' + (selectedPaperIdx === index ? ' bg-nav cursor-default': ' bg-panel1 dark:bg-panel4-dark cursor-pointer')}>
 								<div className='text-white text-sm '
@@ -1261,6 +1300,18 @@ function GPTHome(props:{
 									}}	
 								>{p['paper_title']}</div>
 							</div>
+						) :
+						focusedPaper !== null && papers.length ?
+							papers.filter((p:any)=>p['paper_title'] === focusedPaper).map((p:any, index:number)=>
+								<div key={index} className={'p-2 ' + (selectedPaperIdx === papers.findIndex((p:any)=>p.paper_title===focusedPaper) ? ' bg-nav cursor-default': ' bg-panel1 dark:bg-panel4-dark cursor-pointer')}>
+									<div className='text-white text-sm '
+										onClick={()=> {
+											setselectedPaperIdx(index)
+											setSelectedPage(0)
+											setFileAttachmentType('paper_attachment')
+										}}	
+									>{p['paper_title']}</div>
+								</div>
 						) :
 						videos.length ?
 						videos.map((v:any, index:number)=>
