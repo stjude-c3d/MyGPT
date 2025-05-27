@@ -37,3 +37,4 @@ backend/generated_sql_query.txt
 backend/chroma_context.txt
 evaluation_dataset_frontend/node_modules/
 frontend/.env.azure
+backend/data/bm25_tokenizer/*

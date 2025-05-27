@@ -302,11 +302,11 @@ function GPTHome(props:{
 							setSourcePapers((prevSourcePapers:any)=>[...prevSourcePapers, data.sources.map((s:any)=>s.document)])
 							setSourceContexts((prevSourceContexts:any)=>[...prevSourceContexts, data.sources.map((s:any)=>s.context)])
 							setSourceColorCodes((prevSourceColorCodes:any)=>[...prevSourceColorCodes, data.sources.map((s:any)=>{
-								if (s.normalized_distance < 0.4)
+								if (s.normalized_distance > 0.6)
 									return 'green'
-								else if (s.normalized_distance < 0.6)
+								else if (s.normalized_distance > 0.4)
 									return 'yellow'
-								else if (s.normalized_distance < 0.8)
+								else if (s.normalized_distance > 0.2)
 									return 'light_yellow'
 								else
 									return 'gray'
@@ -807,7 +807,7 @@ function GPTHome(props:{
 					</select>
 					
 				</div>
-				<div className='pt-4 mb-2 mx-4 flex'>
+				<div className='pt-4 mb-2 flex'>
 					{
 						props.frontendSettings && props.frontendSettings.disable_chat_without_login && !props.currentSettings.loggedin ?
 						<div className='text-sm text-nav my-auto mx-1 bg-white dark:bg-gray-500 dark:text-white rounded-lg w-full h-20 p-2.5 shadow-md'>Login to chat</div> :
@@ -956,7 +956,7 @@ function GPTHome(props:{
 					query.length ? 
 					<>{ query.map((_q:any, i:any)=>(
 						<div key={i}>
-							<div className={'py-4 px-6 m-4 bg-panel2 dark:bg-panel3-dark rounded-lg shadow-md box2' + (props.currentSettings.darkMode ? ' user-chat-dark' : ' user-chat') }>
+							<div className={'py-4 px-6 my-4 bg-panel2 dark:bg-panel3-dark rounded-lg shadow-md box2' + (props.currentSettings.darkMode ? ' user-chat-dark' : ' user-chat') }>
 								<div className='flex flex-row justify-between font-bold'>
 									<div className='text-nav dark:text-nav-dark text-sm py-2'>You</div>
 									{
@@ -977,7 +977,7 @@ function GPTHome(props:{
 							</div>
 							{	answers[query.length-i-1] && answers[query.length-i-1].response ?
 								// when full answers is ready to display
-								<div className={'py-4 px-6 m-4 bg-panel1 dark:bg-panel4-dark rounded-lg shadow-md box2' +  (props.currentSettings.darkMode ? ' llm-chat-dark' : ' llm-chat')}>
+								<div className={'py-4 px-6 my-4 bg-panel1 dark:bg-panel4-dark rounded-lg shadow-md box2' +  (props.currentSettings.darkMode ? ' llm-chat-dark' : ' llm-chat')}>
 								<div className='flex flex-row justify-between font-bold'>
 									{/* <div className='text-white text-sm py-2'>
 										{answers[query.length-i-1].source.split(':')[0] + ' + MyGPT'}
@@ -1136,7 +1136,7 @@ function GPTHome(props:{
 								</div> 
 								: (
 								// when answer is being generated
-								<div className={'py-4 px-6 m-4 bg-panel1 dark:bg-panel4-dark rounded-lg shadow-md box2' + (props.currentSettings.darkMode ? ' llm-chat-dark' : ' llm-chat')}>
+								<div className={'py-4 px-6 my-4 bg-panel1 dark:bg-panel4-dark rounded-lg shadow-md box2' + (props.currentSettings.darkMode ? ' llm-chat-dark' : ' llm-chat')}>
 									<div className='flex flex-row justify-between font-bold'>
 										{!answerWithoutContext ?
 											(<div className='text-white text-sm py-1'>{props.currentSettings.selectedLlm + ' + MyGPT'}</div>)

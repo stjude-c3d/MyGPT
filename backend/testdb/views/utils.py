@@ -28,6 +28,11 @@ from typing import cast
 import httpx
 from chromadb.api.types import Documents, EmbeddingFunction, Embeddings
 
+#libraries to import for keyword search
+from pathlib import Path
+import bm25s
+import Stemmer
+
 app_config = apps.get_app_config('testdb')
 con = duckdb.connect()
 
@@ -1043,10 +1048,10 @@ def get_relevance_score(distances, embedding_model, question=True, use_default=T
         relevance_score = (1 - (mean_distance - best_distance) / (worst_distance - best_distance)) * 100
         # trim confidence score to 2 decimal places
         relevance_score = round(relevance_score, 0)
-    normalized_distances = []
-    for distance in distances:
-        normalized_distance = (distance - best_distance) / (worst_distance - best_distance)
-        normalized_distances.append(normalized_distance)
+    normalized_distances = min_max_normalization(distances, best_distance, worst_distance, True)
+    # for distance in distances:
+    #     normalized_distance = (distance - best_distance) / (worst_distance - best_distance)
+    #     normalized_distances.append(normalized_distance)
     return relevance_score, normalized_distances
 
 #  embedd 2 answers into vector database and get distance between them
@@ -1115,7 +1120,7 @@ def highlight_pdf(input_file, output_file, source_grp):
                     highlight.set_colors()
                     highlight.update()
                     
-                    if source['normalized_distance'] < 0.4:
+                    if source['normalized_distance'] > 0.6:
                         # highlight with green color rgb(120, 198, 121)
                         highlight.set_colors(stroke=[0.486, 0.988, 0])
                         highlight.update()
@@ -1123,7 +1128,7 @@ def highlight_pdf(input_file, output_file, source_grp):
                         # highlight with yellow color
                         highlight.set_colors(stroke=[1, 1, 0])
                         highlight.update()
-                    elif source['normalized_distance'] >= 0.6 and source['normalized_distance'] < 0.7:
+                    elif source['normalized_distance'] >= 0.2 and source['normalized_distance'] < 0.4:
                         # highlight with light yellow color (247, 252, 185)
                         highlight.set_colors(stroke=[0.97, 0.98, 0.72])
                         highlight.update()
@@ -1453,9 +1458,60 @@ class OllamaEmbeddingFunction(EmbeddingFunction[Documents]):
             ],
         )
     
+#this method should be called as part of the upload document process just after adding chunks into the chromadb
+def index_document_by_bm25(dataset_name):
+    documents_directory = '/code/data/data_chunks' # some other directory can be initalized for storing indices for each document
+    # tokenizer_directory = '/code/data/bm25_tokenizer/' + dataset_name
+    tokenizer_directory = Path('/code/data/bm25_tokenizer') / dataset_name
+    tokenizer_directory.mkdir(parents=True, exist_ok=True)
 
-    # Identify and highlight sections in this grant proposal that discuss Diversity, Equity, and Inclusion (DEI), including any initiatives, goals, strategies, programs, objectives, outcomes, and compliance with federal DEI regulations or legal requirements. Highlight any parts that mention keywords such as ‘gender’, ‘gender affirmation’, ‘minority’, ‘under-represented minority’, 'diversity', 'equity', 'inclusion', 'underrepresented', 'marginalized', 'accessibility', 'cultural competence', 'equal opportunity', and 'non-discrimination.'
+    documents = []
 
-    # Find  and highlight sections in this grant proposal that address DEI efforts, including engagement with diverse communities or stakeholders, partnerships with organizations focused on DEI, funding allocation, resources dedicated to supporting DEI efforts, training or professional development, and capacity-building for DEI. Identify any parts that describe how DEI efforts will be measured or evaluated, including metrics or indicators related to DEI.
+    with open(f'{documents_directory}/{dataset_name}.txt', 'r') as file:
+        for line_number, line in enumerate(
+                tqdm((file.readlines()), desc=f'Reading {dataset_name}'), 100
+        ):
+            # Strip whitespace and append the line to the documents list
+            line = line.strip()
+            # convert line to json
+            line_json = eval(line)
+            documents.append('page ' +str(line_json['page'])+ ': ' + line_json['content'].strip())
 
-    # Identify and highlight sections in this grant proposal that discuss gender-related initiatives or goals, gender affirmation efforts, minority-related initiatives or goals, and efforts addressing underrepresented minorities (URM). Summarize the content and mention any anticipated outcomes or expected impact of these initiatives.
+    # default tokenizer
+    stemmer = Stemmer.Stemmer("english")
+    tokenizer = bm25s.tokenization.Tokenizer(stemmer=stemmer)
+    corpus_tokenized = tokenizer.tokenize(documents, return_as='tuple')
+
+    retriever = bm25s.BM25(corpus=documents, backend='numba')
+    retriever.index(corpus_tokenized)
+    retriever.save(tokenizer_directory)
+    tokenizer.save_vocab(tokenizer_directory)
+    tokenizer.save_stopwords(tokenizer_directory)
+
+def retrieve_chunks_by_bm25(queryText, dataset_name, chunk_count=10):
+
+    stemmer = Stemmer.Stemmer("english")
+
+     # Tokenize the queries
+    queriesTokenized = bm25s.tokenize([queryText], stemmer=stemmer)
+
+    retriever_loaded = bm25s.BM25.load(f"/code/data/bm25_tokenizer/{dataset_name}", mmap=True, load_corpus=True)
+    results, scores = retriever_loaded.retrieve(queriesTokenized, k=chunk_count, return_as="tuple")
+
+    # returns ids of the chunks as a list
+    return results[0], scores[0]
+
+def min_max_normalization(data, best_val, worst_val, reverse=False):
+    """
+    Normalize the data using min-max normalization.
+    this function assumes the bigger the value the better
+    if reverse is true, then the smaller the value the better
+    """
+    normalized_data = []
+    for value in data:
+        if reverse:
+            normalized_value = (worst_val - value) / (worst_val - best_val)
+        else:
+            normalized_value = (value - worst_val) / (best_val - worst_val)
+        normalized_data.append(normalized_value)
+    return normalized_data
