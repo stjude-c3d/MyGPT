@@ -951,6 +951,33 @@ def get_answer_distance_by_context(text, dataset_name, contexts = [''], embeddin
     distances = results['distances'][0]
     return distances
 
+def get_answer_distance_by_context_bm25(text, contexts = ['']):
+
+    tokenizer_directory = Path('/code/data/bm25_tokenizer') / 'answers'
+    tokenizer_directory.mkdir(parents=True, exist_ok=True)
+
+    # default tokenizer
+    stemmer = Stemmer.Stemmer("english")
+    tokenizer = bm25s.tokenization.Tokenizer(stemmer=stemmer)
+    corpus_tokenized = tokenizer.tokenize(contexts, return_as='tuple')
+
+    retriever = bm25s.BM25(corpus=contexts, backend='numba')
+    retriever.index(corpus_tokenized)
+    retriever.save(tokenizer_directory)
+    tokenizer.save_vocab(tokenizer_directory)
+    tokenizer.save_stopwords(tokenizer_directory)
+
+     # Tokenize the queries
+    queriesTokenized = bm25s.tokenize([text], stemmer=stemmer)
+
+    retriever_loaded = bm25s.BM25.load(f"/code/data/bm25_tokenizer/answers", mmap=True, load_corpus=True)
+
+    # Get the top 10 results
+    results, scores = retriever_loaded.retrieve(queriesTokenized, k=len(contexts), return_as="tuple")
+
+    # returns ids of the chunks as a list
+    return results[0], scores[0]
+
 # def get_chunks_by_keyword(question_text, dataset_name, embedding_model='multi-qa-MiniLM-L6-cos-v1'):
 #     if embedding_model != 'all-MiniLM-L6-v2':
 #         embedding_model_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=embedding_model)
@@ -1475,7 +1502,7 @@ def index_document_by_bm25(dataset_name):
             line = line.strip()
             # convert line to json
             line_json = eval(line)
-            documents.append('page ' +str(line_json['page'])+ ': ' + line_json['content'].strip())
+            documents.append('document ' + str(line_json['title']) +  '; page ' + str(line_json['page'])+ '; ' + line_json['content'].strip())
 
     # default tokenizer
     stemmer = Stemmer.Stemmer("english")

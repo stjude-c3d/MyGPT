@@ -18,7 +18,7 @@ import json
 import re
 from django.contrib.auth.models import User
 from ..models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, Model, EmbeddingModel, FrontEndSettings, DisclaimerAgreement
-from .utils import get_zotero_chunks, add_dataset_from_upload, add_to_chroma, nearestDataChroma, get_relevance_score, add_embeddings_to_qna, highlight_pdf, seconds_to_hhmmss, add_pca_to_qna_and_dataset, add_demo_dataset, get_youtube_transcript, add_video_to_chroma, get_embedding_model_ef, get_answer_distance, sanitize_filename, get_answer_distance_by_context, index_document_by_bm25, retrieve_chunks_by_bm25, min_max_normalization
+from .utils import get_zotero_chunks, add_dataset_from_upload, add_to_chroma, nearestDataChroma, get_relevance_score, add_embeddings_to_qna, highlight_pdf, seconds_to_hhmmss, add_pca_to_qna_and_dataset, add_demo_dataset, get_youtube_transcript, add_video_to_chroma, get_embedding_model_ef, get_answer_distance, sanitize_filename, get_answer_distance_by_context, index_document_by_bm25, retrieve_chunks_by_bm25, get_answer_distance_by_context_bm25, min_max_normalization
 
 ####################
 # APIs             #
@@ -142,15 +142,15 @@ def get_context(request):
             results, scores = retrieve_chunks_by_bm25(question_text, dataset_name, maximum_chunks_count)
             normalized_scores = min_max_normalization(scores, best_bm25_score, worst_bm25_score, False)
             for idx, result in enumerate(results):
-                title = dataset_name
                 cleaned_chunk = re.sub(r'\s+', ' ', str(result['text']))
                 # remove all new lines
                 cleaned_chunk = re.sub(r'\n+', ' ', cleaned_chunk)
-                chunk_split = cleaned_chunk.split(': ', 1)
-                page = chunk_split[0].replace('page ', '')
-                chunk_txt = chunk_split[1]
+                chunk_split = cleaned_chunk.split('; ', 2)
+                document_title = chunk_split[0].replace('document ', '')
+                page = chunk_split[1].replace('page ', '')
+                chunk_txt = chunk_split[2]
                 bm25_sources.append({
-                    'document': title,
+                    'document': document_title,
                     'page': int(page),
                     'context': chunk_txt,
                     'bm25_score_raw': round(float(scores[idx]),2),
@@ -396,6 +396,8 @@ def save_answer(request):
             distances_a = get_answer_distance_by_context(answer_text, dataset_name, contexts, embedding_model)
             distances_a = [round(dist, 3) for dist in distances_a]
             mean_distance_a = round((sum(distances_a) / len(distances_a)), 3)
+
+            bm25_docs, bm25_scores = get_answer_distance_by_context_bm25(answer_text, contexts)
         else:
             mean_distance_a = 0
             relevance_score = 0
@@ -480,6 +482,8 @@ def save_answer(request):
                 'mean_distance_a': mean_distance_a,
                 'relevance_score': relevance_score if question_relevance_score != 0 else 0,
                 'hallucination_index': hallucination_index if hallucination_index < 100 else 100,
+                'bm25_scores': bm25_scores, 
+                'bm25_docs': bm25_docs
             }, content_type="application/json")
         else:
             return Response({'saved':True, 'relevance_score': relevance_score}, content_type="application/json")
