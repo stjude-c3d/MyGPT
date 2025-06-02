@@ -1318,7 +1318,8 @@ def get_embedding_cutoff_distance(embedding_model_ef, chunks, question, answer, 
         for collection in client.list_collections():
             if collection.name == dataset_name:
                 client.delete_collection(name=dataset_name)
-    collection = client.get_or_create_collection(name=dataset_name, embedding_function=embedding_model_ef)
+
+    collection = client.create_collection(name=dataset_name, embedding_function=embedding_model_ef)
 
     # add chunks to collection
     ids = [str(i) for i in range(len(chunks))]
@@ -1362,6 +1363,8 @@ def get_embedding_cutoff_distance(embedding_model_ef, chunks, question, answer, 
 
     # emtpy collection
     collection.delete(ids=ids)
+
+    client.delete_collection(name=dataset_name)
 
     return distance_q, distance_a, distance_na
 
