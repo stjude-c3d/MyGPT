@@ -28,11 +28,6 @@ from typing import cast
 import httpx
 from chromadb.api.types import Documents, EmbeddingFunction, Embeddings
 
-#libraries to import for keyword search
-from pathlib import Path
-import bm25s
-import Stemmer
-
 app_config = apps.get_app_config('testdb')
 con = duckdb.connect()
 
@@ -1460,61 +1455,3 @@ class OllamaEmbeddingFunction(EmbeddingFunction[Documents]):
                 if "embedding" in embedding
             ],
         )
-    
-#this method should be called as part of the upload document process just after adding chunks into the chromadb
-def index_document_by_bm25(dataset_name):
-    documents_directory = '/code/data/data_chunks' # some other directory can be initalized for storing indices for each document
-    # tokenizer_directory = '/code/data/bm25_tokenizer/' + dataset_name
-    tokenizer_directory = Path('/code/data/bm25_tokenizer') / dataset_name
-    tokenizer_directory.mkdir(parents=True, exist_ok=True)
-
-    documents = []
-
-    with open(f'{documents_directory}/{dataset_name}.txt', 'r') as file:
-        for line_number, line in enumerate(
-                tqdm((file.readlines()), desc=f'Reading {dataset_name}'), 100
-        ):
-            # Strip whitespace and append the line to the documents list
-            line = line.strip()
-            # convert line to json
-            line_json = eval(line)
-            documents.append('page ' +str(line_json['page'])+ ': ' + line_json['content'].strip())
-
-    # default tokenizer
-    stemmer = Stemmer.Stemmer("english")
-    tokenizer = bm25s.tokenization.Tokenizer(stemmer=stemmer)
-    corpus_tokenized = tokenizer.tokenize(documents, return_as='tuple')
-
-    retriever = bm25s.BM25(corpus=documents, backend='numba')
-    retriever.index(corpus_tokenized)
-    retriever.save(tokenizer_directory)
-    tokenizer.save_vocab(tokenizer_directory)
-    tokenizer.save_stopwords(tokenizer_directory)
-
-def retrieve_chunks_by_bm25(queryText, dataset_name, chunk_count=10):
-
-    stemmer = Stemmer.Stemmer("english")
-
-     # Tokenize the queries
-    queriesTokenized = bm25s.tokenize([queryText], stemmer=stemmer)
-
-    retriever_loaded = bm25s.BM25.load(f"/code/data/bm25_tokenizer/{dataset_name}", mmap=True, load_corpus=True)
-    results, scores = retriever_loaded.retrieve(queriesTokenized, k=chunk_count, return_as="tuple")
-
-    # returns ids of the chunks as a list
-    return results[0], scores[0]
-
-def min_max_normalization(data, best_val, worst_val, reverse=False):
-    """
-    Normalize the data using min-max normalization.
-    this function assumes the bigger the value the better
-    if reverse is true, then the smaller the value the better
-    """
-    normalized_data = []
-    for value in data:
-        if reverse:
-            normalized_value = (worst_val - value) / (worst_val - best_val)
-        else:
-            normalized_value = (value - worst_val) / (best_val - worst_val)
-        normalized_data.append(normalized_value)
-    return normalized_data

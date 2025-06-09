@@ -18,7 +18,7 @@ import json
 import re
 from django.contrib.auth.models import User
 from ..models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, Model, EmbeddingModel, FrontEndSettings, DisclaimerAgreement
-from .utils import get_zotero_chunks, add_dataset_from_upload, add_to_chroma, nearestDataChroma, get_relevance_score, add_embeddings_to_qna, highlight_pdf, seconds_to_hhmmss, add_pca_to_qna_and_dataset, add_demo_dataset, get_youtube_transcript, add_video_to_chroma, get_embedding_model_ef, get_answer_distance, sanitize_filename, get_answer_distance_by_context, index_document_by_bm25, retrieve_chunks_by_bm25, min_max_normalization
+from .utils import get_zotero_chunks, add_dataset_from_upload, add_to_chroma, nearestDataChroma, get_relevance_score, add_embeddings_to_qna, highlight_pdf, seconds_to_hhmmss, add_pca_to_qna_and_dataset, add_demo_dataset, get_youtube_transcript, add_video_to_chroma, get_embedding_model_ef, get_answer_distance, sanitize_filename, get_answer_distance_by_context
 
 ####################
 # APIs             #
@@ -128,7 +128,6 @@ def get_context(request):
         if no_context:    
             context, titles, pages, starts, stops, chunks_txt, distances = '', [], [], [], [], [], []
             sources = []
-            bm25_sources = []
             relevance_score = 0
             normalized_distances = []
         else:
@@ -137,27 +136,6 @@ def get_context(request):
             distances = [round(dist, 3) for dist in distances]
             relevance_score, normalized_distances = get_relevance_score(distances, embedding_model, True, use_default_qrs, question_best_distance, question_worst_distance)
 
-            # get similar chunks using BM25
-            bm25_sources = []
-            results, scores = retrieve_chunks_by_bm25(question_text, dataset_name, maximum_chunks_count)
-            normalized_scores = min_max_normalization(scores, best_bm25_score, worst_bm25_score, False)
-            for idx, result in enumerate(results):
-                title = dataset_name
-                cleaned_chunk = re.sub(r'\s+', ' ', str(result['text']))
-                # remove all new lines
-                cleaned_chunk = re.sub(r'\n+', ' ', cleaned_chunk)
-                chunk_split = cleaned_chunk.split(': ', 1)
-                page = chunk_split[0].replace('page ', '')
-                chunk_txt = chunk_split[1]
-                bm25_sources.append({
-                    'document': title,
-                    'page': int(page),
-                    'context': chunk_txt,
-                    'bm25_score_raw': round(float(scores[idx]),2),
-                    'bm25_score': round(normalized_scores[idx], 3),
-                    'vector_score': 0,
-                    'rank': idx + 1,
-                })
         library_type = 'papers' if len(pages) else 'videos'
 
         # if no_context is true, create or get dataset
@@ -289,8 +267,7 @@ def get_context(request):
         context_json = {
             'context': context,
             'relevance_score': relevance_score,
-            'sources': sources, 
-            'bm25_sources': bm25_sources,
+            'sources': sources,
         }
         
         return Response(context_json, content_type="application/json")
@@ -593,7 +570,6 @@ def add_zotero_dataset(request):
         # if dataset_name.error:
         #     return Response({'error':True, 'error_message': dataset_name.error}, content_type="application/json")
         message = add_to_chroma(dataset_name, embedding_model, distance_function)
-        index_document_by_bm25(dataset_name)
 
         if message == False:
             return Response({'error':True}, content_type="application/json")
@@ -621,7 +597,6 @@ def upload_documents(request):
             embedding_model = embedding_model_request
 
         message = add_to_chroma(dataset_name, embedding_model, distance_function)
-        index_document_by_bm25(dataset_name)
 
         if message == False:
             return Response({'error': True}, content_type="application/json")
