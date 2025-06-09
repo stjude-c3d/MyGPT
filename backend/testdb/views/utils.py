@@ -1455,3 +1455,18 @@ class OllamaEmbeddingFunction(EmbeddingFunction[Documents]):
                 if "embedding" in embedding
             ],
         )
+    
+def min_max_normalization(data, best_val, worst_val, reverse=False):
+    """
+    Normalize the data using min-max normalization.
+    this function assumes the bigger the value the better
+    if reverse is true, then the smaller the value the better
+    """
+    normalized_data = []
+    for value in data:
+        if reverse:
+            normalized_value = (worst_val - value) / (worst_val - best_val)
+        else:
+            normalized_value = (value - worst_val) / (best_val - worst_val)
+        normalized_data.append(normalized_value)
+    return normalized_data
