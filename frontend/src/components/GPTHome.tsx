@@ -1235,6 +1235,7 @@ function GPTHome(props:{
 								})
 								// setSelectedDataset(e.target.value)
 								props.currentSettings.selectedDataset = e.target.value
+								resetStates()
 							}
 						}
 					>

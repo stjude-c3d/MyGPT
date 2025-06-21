@@ -1422,7 +1422,7 @@ class OllamaEmbeddingFunction(EmbeddingFunction[Documents]):
         """
         self._api_url = f"{url}"
         self._model_name = model_name
-        self._session = httpx.Client(verify=False)
+        self._session = httpx.Client(timeout=None)
 
     def __call__(self, input: Union[Documents, str]) -> Embeddings:
         """
