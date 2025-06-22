@@ -35,6 +35,8 @@ function GPTHome(props:{
 	const [showNullAnswerIndexes, setShowNullAnswerIndexes] = useState<any>([])
 	const [papers, setPapers] = useState<any[]>([])
 	const [focusedPaper, setFocusedPaper] = useState<any>(null)
+	const [sections, setSections] = useState<any[]>([])
+	const [focusedSection, setFocusedSection] = useState<any>(null)
 	const [videos, setVideos] = useState<any[]>([])
 	const [sourcePapers, setSourcePapers] = useState<any[]>([])
 	const [sourcePages, setSourcePages] = useState<any[]>([])
@@ -206,6 +208,41 @@ function GPTHome(props:{
 	
 	// console.log(props.currentSettings.selectedDataset, props.currentSettings.defaultDataset)
 
+	// set section by getting form this api/get_sections/ and dataset_name
+	useEffect(()=>{
+		const requestOptions = {
+			method: 'POST',
+			headers: { 
+				'Content-Type': 'application/json',
+				'Authorization': `${
+					props.frontendSettings && props.frontendSettings.django_login ?
+					'Bearer ' + localStorage.getItem('access') :
+					process.env.NODE_ENV === 'production' ?
+					process.env.REACT_APP_AUTH_TOKEN_PROD
+					: process.env.REACT_APP_AUTH_TOKEN_DEV}`
+			},
+			body: JSON.stringify({
+				dataset_name: props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset
+			})
+		}
+
+		if (props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset && props.currentSettings.selectedDataset !== 'None'){
+			fetch(`${process.env.REACT_APP_BACKEND_API}api/get_sections/?format=json`, requestOptions)
+				.then(response => response.json())
+				.then(data => {
+					if (data.sections && data.sections.length){
+						setSections(data.sections)
+					}else{
+						setSections([])
+					}
+				})
+		}
+		else{
+			setSections([])
+		}
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	},[props.currentSettings.selectedDataset, props.currentSettings.defaultDataset])
+
 	// change answer without context 
 	useEffect(()=>{
 		setAnswerWithoutContext(props.currentSettings.answerWithoutContext)
@@ -264,6 +301,7 @@ function GPTHome(props:{
 				dataset: props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset,
 				new_conversation: query.length === 1 ? true : false,
 				document_title: focusedPaper ? focusedPaper : '',
+				focused_section: focusedSection ? focusedSection.split(' (')[0] : '',
 				maximum_chunks_count: props.currentSettings.maximum_chunks_count,
 				no_cutoff: props.currentSettings.no_chunk_cutoff,
 				related_query: relatedQuery,
@@ -1283,6 +1321,33 @@ function GPTHome(props:{
 										<option key={index} value={v['video_title']}>{v['video_title']}</option>
 									)
 								})
+							}
+						</select>
+					</div>	: <></>
+				}
+				{ sections.length ?
+					<div className='p-2 text-sm border-slate-400 border-b'>
+						<div className='text-white inline-block px-2'> Focus on section </div>
+						<select 
+							className={'text-md text-nav dark:bg-stjude dark:text-white py-1 px-2 mx-1 rounded-md w-28 inline-block' + (focusedSection !== null ? ' bg-panel3' : ' bg-panel2 dark:bg-panel4-dark')}
+							value={focusedSection}
+							onChange={
+								(e) => {
+									if (e.target.value === 'None'){
+										setFocusedSection(null)
+									} else {
+										setFocusedSection(e.target.value)
+									}
+								}
+							}
+						>
+							<option value={'None'}>None</option>
+							{papers.length && sections.length ?
+								sections.map(s=>s['section_title'] + ' (' +s['section_count']+')').map((st:any, index:number) => {
+									return (
+										<option key={index} value={st}>{st}</option>
+									)
+								}) : <></>
 							}
 						</select>
 					</div> : <></>

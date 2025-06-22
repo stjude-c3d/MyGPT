@@ -17,7 +17,7 @@ import shutil
 import json
 import re
 from django.contrib.auth.models import User
-from ..models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, Model, EmbeddingModel, FrontEndSettings, DisclaimerAgreement
+from ..models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, Model, EmbeddingModel, FrontEndSettings, DisclaimerAgreement, PaperSections
 from .utils import get_zotero_chunks, add_dataset_from_upload, add_to_chroma, nearestDataChroma, get_relevance_score, add_embeddings_to_qna, highlight_pdf, seconds_to_hhmmss, add_pca_to_qna_and_dataset, add_demo_dataset, get_youtube_transcript, add_video_to_chroma, get_embedding_model_ef, get_answer_distance, sanitize_filename, get_answer_distance_by_context
 
 ####################
@@ -99,7 +99,8 @@ def get_context(request):
             skip_highlight = False
         model_type = Model.objects.get(model_name=model)
         dataset_name = json_request['dataset']
-        document_title = json_request['document_title']
+        document_title = json_request['document_title'] if 'document_title' in json_request else ''
+        focused_section = json_request['focused_section'] if 'focused_section' in json_request else ''
         use_default_qrs = json_request['use_default_qrs']
         question_best_distance = json_request['question_best_distance']
         question_worst_distance = json_request['question_worst_distance']
@@ -131,7 +132,7 @@ def get_context(request):
             relevance_score = 0
             normalized_distances = []
         else:
-            context, titles, pages, starts, stops, chunks_txt, distances = nearestDataChroma(question_text, dataset_name, document_title, keywords, embedding_model, maximum_chunks_count, no_cutoff)
+            context, titles, pages, starts, stops, chunks_txt, distances = nearestDataChroma(question_text, dataset_name, document_title, focused_section, keywords, embedding_model, maximum_chunks_count, no_cutoff)
             sources = []
             distances = [round(dist, 3) for dist in distances]
             relevance_score, normalized_distances = get_relevance_score(distances, embedding_model, True, use_default_qrs, question_best_distance, question_worst_distance)
@@ -836,6 +837,21 @@ def get_embedding_model_details(request):
             'worst_distance_nac': embedding_model.worst_distance_nac,
         }
         return Response({'embedding_model': embedding_model_obj})
+    
+@api_view(['POST'])
+def get_dataset_sections(request):
+    if request.method == 'POST':
+        json_request = JSONParser().parse(request)
+        dataset_name = json_request['dataset_name']
+        dataset = Dataset.objects.get(dataset_name=dataset_name)
+        sections = PaperSections.objects.filter(section_dataset=dataset).order_by('section_count')
+        sections_json = []
+        for section in sections:
+            sections_json.append({
+                'section_title': section.section_title,
+                'section_count': section.section_count
+            })
+        return Response({'sections': sections_json}, content_type="application/json")
     
 # get username if access token is valid
 @api_view(['POST'])

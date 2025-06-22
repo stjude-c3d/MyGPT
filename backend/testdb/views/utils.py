@@ -5,6 +5,7 @@ from pypdf import PdfReader
 from pyzotero import zotero
 from typing import cast
 import fitz
+import pymupdf
 from tqdm import tqdm
 import chromadb
 from chromadb.utils import embedding_functions
@@ -21,7 +22,7 @@ import pdfkit
 import base64
 from langchain_community.llms import Ollama
 from typing import Union, cast
-from ..models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, EmbeddingModel
+from ..models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, EmbeddingModel, PaperSections
 
 # imports for embedding functions
 from typing import cast
@@ -53,21 +54,6 @@ def convert_to_pdf(input_file, output_dir):
     
     # Run the command
     subprocess.run(command, check=True)
-
-def convert_to_pdf(input_file, output_dir):
-    
-    # Construct the command to convert PPTX to PDF
-    command = [
-        "soffice",
-        "--headless",
-        "--convert-to", "pdf",
-        "--outdir", output_dir,
-        input_file
-    ]
-    
-    # Run the command
-    subprocess.run(command, check=True)
-
 
 def extractPDFImages(path, title, data_list):
     pdf_file = fitz.open(path)
@@ -213,6 +199,7 @@ def add_dataset_from_upload(request):
     user_email_r = request.POST.get('user_email')
     user_group_r = request.POST.get('user_group')
     use_overlap = request.POST.get('use_overlap')
+    chunking_method = request.POST.get('chunking_method')
     chunk_size = request.POST.get('chunk_size')
     distance_function_r = request.POST.get('distance_function')
 
@@ -269,6 +256,7 @@ def add_dataset_from_upload(request):
             dataset_name=dataset_name,
             dataset_size=0,
             chunksize=chunk_size,
+            chunking_method=chunking_method,
             overlap=use_overlap,
             distance_function=distance_function,
             user = user if len(user) else '-',
@@ -362,25 +350,93 @@ def add_dataset_from_upload(request):
             
             with open(pdf_name, 'rb') as f:
                 paper.paper_attachment.save(dataset_name + '/paper' + str(idx+1) + '.pdf', File(f), save=True)
-                    
-            pages = getPDFContent(pdf_name)
 
-            for page_num, page in enumerate(pages):
-                text = page.extract_text()
-                n = chunk_size
-                splits = []
-                remainder = ''
-                for i in range(0, len(text), n - overlap_size):
-                    item = remainder + text[i : i + n]
-                    item = ' '.join(item.split())
-                    if '. ' in item and not use_overlap:
-                        remainder = item.split('. ')[-1]
-                        item = item.removesuffix(remainder)
-                    if len(item) > 10:
-                        splits.append(item)
-                for split in splits:
-                    chunk = {'title': paper_titles[idx], 'page': page_num+1, 'content': split, 'type': 'pagechunk'}
-                    data.append(chunk)
+            if chunking_method == 'fixed_chunk_size':        
+                pages = getPDFContent(pdf_name)
+
+                for page_num, page in enumerate(pages):
+                    text = page.extract_text()
+                    n = chunk_size
+                    splits = []
+                    remainder = ''
+                    for i in range(0, len(text), n - overlap_size):
+                        item = remainder + text[i : i + n]
+                        item = ' '.join(item.split())
+                        if '. ' in item and not use_overlap:
+                            remainder = item.split('. ')[-1]
+                            item = item.removesuffix(remainder)
+                        if len(item) > 10:
+                            splits.append(item)
+                    for split in splits:
+                        chunk = {'title': paper_titles[idx], 'page': page_num+1, 'content': split, 'type': 'pagechunk'}
+                        data.append(chunk)
+            elif chunking_method == 'structure_preserving':
+                doc = pymupdf.Document(pdf_name)
+                # get table of contents
+                toc = doc.get_toc(simple=True)
+                final_section_titles = []
+                section_title = ''
+                previous_section_title = ''   
+                for page in doc:
+                    page_text = page.get_text("text").encode('utf-8').replace(b'\n', b' ').replace(b'\r', b' ')
+
+                    page_sections = []
+                    for toc_item in toc:
+                        if toc_item[2] == page.number + 1:
+                            section_title = toc_item[1].strip().replace('\r', '')
+                            page_sections.append(section_title)
+                    
+                    if len(page_sections) == 0:
+                        previous_section_title = 'Abstract/Introduction'
+                    else:
+                        previous_section_title = page_sections[len(page_sections) - 1]
+                    
+                        # convert the page_text to chunks, split by pragraph, and for long paragraphs, split by 5 sentences
+                        paragraphs = page_text.decode('utf-8').split('\n\n')
+
+                        for paragraph in paragraphs:
+                            paragraph = paragraph.strip()
+                            section_title = ''
+                            if len(page_sections) > 0:
+                                for section in page_sections:
+                                    if section in paragraph:
+                                        section_title = section
+                                        break
+                            
+                            if section_title == '' and previous_section_title != '':
+                                section_title = previous_section_title
+                            elif section_title == '':
+                                section_title = 'Abstract/Introduction'
+
+                            if len(paragraph) < 10:
+                                continue
+                            sentences = re.split(r'(?<=[.!?]) +', paragraph)
+                            n = 5
+                            for i in range(0, len(sentences), n):
+                                chunk_text = ' '.join(sentences[i:i+n])
+                                chunk_text = chunk_text.strip()
+                            
+                                if len(chunk_text) > 10:
+                                    chunk = {'title': paper_titles[idx], 'page': page.number + 1, 'content': chunk_text, 'section': section_title, 'type': 'pagechunk'}
+                                    data.append(chunk)
+                                    if section_title not in final_section_titles:
+                                        final_section_titles.append(section_title)     
+
+                # save sections to database
+                for section_title in set(final_section_titles):
+                    count = 1
+                    section_obj = PaperSections.objects.filter(section_title=section_title, section_dataset=dataset)
+                    if section_obj.count() > 0:
+                        count = section_obj[0].section_count
+                        section_obj = section_obj[0]
+                        section_obj.section_count += count
+                        section_obj.save()
+                    else:
+                        PaperSections.objects.create(
+                            section_title=section_title,
+                            section_count=count,
+                            section_dataset=dataset
+                        )                         
 
     with open('data/data_chunks/'+ dataset_name +'.txt', 'w') as f:
         for chunk in data:
@@ -431,7 +487,7 @@ def add_to_chroma(dataset_name, embedding_model_request = 'all-MiniLM-L6-v2', di
                     #convert line to json
                     line_json = eval(line)
                     documents.append(line_json['content'])
-                    metadatas.append({'filename': line_json['title'], 'page': line_json['page'], 'type': line_json['type']})
+                    metadatas.append({'filename': line_json['title'], 'page': line_json['page'], 'section': line_json['section'], 'type': line_json['type']})
         ids = [str(i) for i in range(count, count + len(documents))]
         
         # add to vector database
@@ -776,7 +832,7 @@ def find_cutoff_distance(distances):
             break
     return cutoff_distance
 
-def nearestDataChroma(text, dataset_name, document_title_str = '', keywords_str = '', embedding_model_request='multi-qa-MiniLM-L6-cos-v1', maximum_chunks_count=15, no_cutoff=False):
+def nearestDataChroma(text, dataset_name, document_title_str = '', focused_section_str = '', keywords_str = '', embedding_model_request='multi-qa-MiniLM-L6-cos-v1', maximum_chunks_count=15, no_cutoff=False):
     # collection_name = 'pub_collection'
     # client = chromadb.Client()
         # query embedding model from database
@@ -794,6 +850,7 @@ def nearestDataChroma(text, dataset_name, document_title_str = '', keywords_str 
 
     keywords = keywords_str.split(';') if keywords_str != '' else []
     document_title = document_title_str if document_title_str != '' else 'all'
+    focused_section = focused_section_str if focused_section_str != '' else 'all'
     # remove keywords if it's '-'
     if '-' in keywords:
         keywords.remove('-')
@@ -819,7 +876,7 @@ def nearestDataChroma(text, dataset_name, document_title_str = '', keywords_str 
                 where_document={'$contains': keywords[0]}
             )
 
-    if document_title == 'all':
+    if document_title == 'all' and focused_section == 'all':
         results = collection.query(
             query_texts=[text],
             n_results=maximum_chunks_count,
@@ -827,13 +884,32 @@ def nearestDataChroma(text, dataset_name, document_title_str = '', keywords_str 
             # where={'metadata_field': 'is_equal_to_this'}, # optional filter
             # where_document={'$contains':'search_string'}  # optional filter
         )
-    else:
+    elif document_title != 'all' and focused_section == 'all':
         results = collection.query(
             query_texts=[text],
             n_results=maximum_chunks_count,
             where={'$and':[
                 {'type': {"$ne": "spreadsheet_full"}},
                 {'filename': {'$eq': document_title}}
+            ]}
+        )
+    elif document_title == 'all' and focused_section != 'all':
+        results = collection.query(
+            query_texts=[text],
+            n_results=maximum_chunks_count,
+            where={'$and':[
+                {'type': {"$ne": "spreadsheet_full"}},
+                {'section': {'$eq': focused_section}}
+            ]}
+        )
+    elif document_title != 'all' and focused_section != 'all':
+        results = collection.query(
+            query_texts=[text],
+            n_results=maximum_chunks_count,
+            where={'$and':[
+                {'type': {"$ne": "spreadsheet_full"}},
+                {'filename': {'$eq': document_title}},
+                {'section': {'$eq': focused_section}}
             ]}
         )
 

@@ -73,24 +73,24 @@ const Workflow = (props:{
 			</g>
 			<text className="cls-59" transform="translate(197.89 198.7)"><tspan x="0" y="0">E</tspan><tspan className="cls-120" x="6.89" y="0">x</tspan><tspan x="13.55" y="0">t</tspan><tspan className="cls-103" x="18.19" y="0">r</tspan><tspan className="cls-111" x="22.69" y="0">a</tspan><tspan className="cls-120" x="29.44" y="0">c</tspan><tspan x="35.9" y="0">t </tspan><tspan className="cls-67" x="43.5" y="0">t</tspan><tspan className="cls-41" x="48.05" y="0">e</tspan><tspan className="cls-114" x="55.02" y="0">x</tspan><tspan className="cls-80" x="61.68" y="0">t f</tspan><tspan className="cls-14" x="73.37" y="0">r</tspan><tspan x="77.81" y="0">om </tspan><tspan x="-.15" y="16.8">public</tspan><tspan className="cls-82" x="36.34" y="16.8">a</tspan><tspan x="43.04" y="16.8">tions and </tspan><tspan x="2.31" y="33.6">split i</tspan><tspan className="cls-88" x="33.28" y="33.6">n</tspan><tspan className="cls-67" x="40.99" y="33.6">t</tspan><tspan x="45.54" y="33.6">o chunks</tspan></text>
 			<g id="data_chunks">
-				<rect className="cls-18" x="314.51" y="87.51" width="128" height="159" rx="6.91" ry="6.91"/>
-				<rect className="cls-18" x="325.51" y="101.51" width="104" height="26"/>
-				<rect className="cls-18" x="325.51" y="137.51" width="104" height="26"/>
-				<rect className="cls-18" x="326.51" y="173.51" width="104" height="26"/>
-				<rect className="cls-18" x="326.51" y="207.51" width="104" height="26"/>
-				<line className="cls-26" x1="366.51" y1="110.51" x2="421.51" y2="110.51"/>
-				<line className="cls-26" x1="367.51" y1="115.51" x2="398.51" y2="115.51"/>
-				<line className="cls-26" x1="364.51" y1="146.51" x2="419.51" y2="146.51"/>
-				<line className="cls-26" x1="387.96" y1="151.13" x2="418.96" y2="151.13"/>
-				<line className="cls-26" x1="364.51" y1="181.51" x2="395.51" y2="181.51"/>
-				<line className="cls-26" x1="364.51" y1="187.51" x2="419.51" y2="187.51"/>
-				<line className="cls-26" x1="362.51" y1="215.51" x2="417.51" y2="215.51"/>
-				<line className="cls-26" x1="362.51" y1="221.51" x2="417.51" y2="221.51"/>
-				<text className="cls-35" transform="translate(338.95 269.51)"><tspan x="0" y="0">D</tspan><tspan className="cls-85" x="10.66" y="0">a</tspan><tspan x="18.3" y="0">ta chunks</tspan></text>
-				<text className="cls-12" transform="translate(333.26 120.37)"><tspan x="0" y="0">01</tspan></text>
-				<text className="cls-12" transform="translate(331.26 155.37)"><tspan x="0" y="0">02</tspan></text>
-				<text className="cls-12" transform="translate(335.02 225.37)"><tspan x="0" y="0">n</tspan></text>
-				<text className="cls-12" transform="translate(333.5 187.37)"><tspan x="0" y="0">...</tspan></text>
+				<rect className={props.focusComponent === 'datasets' ? 'cls-18-focus' : "cls-18"} x="314.51" y="87.51" width="128" height="159" rx="6.91" ry="6.91"/>
+				<rect className={props.focusComponent === 'datasets' ? 'cls-18-focus' : "cls-18"} x="325.51" y="101.51" width="104" height="26"/>
+				<rect className={props.focusComponent === 'datasets' ? 'cls-18-focus' : "cls-18"} x="325.51" y="137.51" width="104" height="26"/>
+				<rect className={props.focusComponent === 'datasets' ? 'cls-18-focus' : "cls-18"} x="326.51" y="173.51" width="104" height="26"/>
+				<rect className={props.focusComponent === 'datasets' ? 'cls-18-focus' : "cls-18"} x="326.51" y="207.51" width="104" height="26"/>
+				<line className={props.focusComponent === 'datasets' ? 'cls-26-focus' : "cls-26"} x1="366.51" y1="110.51" x2="421.51" y2="110.51"/>
+				<line className={props.focusComponent === 'datasets' ? 'cls-26-focus' : "cls-26"} x1="367.51" y1="115.51" x2="398.51" y2="115.51"/>
+				<line className={props.focusComponent === 'datasets' ? 'cls-26-focus' : "cls-26"} x1="364.51" y1="146.51" x2="419.51" y2="146.51"/>
+				<line className={props.focusComponent === 'datasets' ? 'cls-26-focus' : "cls-26"} x1="387.96" y1="151.13" x2="418.96" y2="151.13"/>
+				<line className={props.focusComponent === 'datasets' ? 'cls-26-focus' : "cls-26"} x1="364.51" y1="181.51" x2="395.51" y2="181.51"/>
+				<line className={props.focusComponent === 'datasets' ? 'cls-26-focus' : "cls-26"} x1="364.51" y1="187.51" x2="419.51" y2="187.51"/>
+				<line className={props.focusComponent === 'datasets' ? 'cls-26-focus' : "cls-26"} x1="362.51" y1="215.51" x2="417.51" y2="215.51"/>
+				<line className={props.focusComponent === 'datasets' ? 'cls-26-focus' : "cls-26"} x1="362.51" y1="221.51" x2="417.51" y2="221.51"/>
+				<text className={ props.focusComponent === 'datasets' ? 'cls-35 cls-35-focus' : "cls-35"} transform="translate(338.95 269.51)"><tspan x="0" y="0">D</tspan><tspan className="cls-85" x="10.66" y="0">a</tspan><tspan x="18.3" y="0">ta chunks</tspan></text>
+				<text className={props.focusComponent === 'datasets' ? 'cls-12-focus' : "cls-12"} transform="translate(333.26 120.37)"><tspan x="0" y="0">01</tspan></text>
+				<text className={props.focusComponent === 'datasets' ? 'cls-12-focus' : "cls-12"} transform="translate(331.26 155.37)"><tspan x="0" y="0">02</tspan></text>
+				<text className={props.focusComponent === 'datasets' ? 'cls-12-focus' : "cls-12"} transform="translate(335.02 225.37)"><tspan x="0" y="0">n</tspan></text>
+				<text className={props.focusComponent === 'datasets' ? 'cls-12-focus' : "cls-12"} transform="translate(333.5 187.37)"><tspan x="0" y="0">...</tspan></text>
 			</g>
 			<text className="cls-59" transform="translate(460.28 190.7)"><tspan className="cls-92" x="0" y="0">C</tspan><tspan x="7.97" y="0">o</tspan><tspan className="cls-116" x="15.65" y="0">n</tspan><tspan className="cls-14" x="23.24" y="0">v</tspan><tspan x="29.83" y="0">e</tspan><tspan className="cls-16" x="36.85" y="0">r</tspan><tspan x="41.76" y="0">t </tspan><tspan className="cls-67" x="49.36" y="0">t</tspan><tspan className="cls-41" x="53.91" y="0">e</tspan><tspan className="cls-120" x="60.89" y="0">x</tspan><tspan x="67.55" y="0">t i</tspan><tspan className="cls-88" x="78.43" y="0">n</tspan><tspan className="cls-67" x="86.14" y="0">t</tspan><tspan x="90.69" y="0">o </tspan><tspan className="cls-14" x="10.43" y="16.8">v</tspan><tspan className="cls-80" x="17.02" y="16.8">e</tspan><tspan className="cls-114" x="24.04" y="16.8">c</tspan><tspan className="cls-67" x="30.49" y="16.8">t</tspan><tspan x="35.04" y="16.8">ors using </tspan><tspan className="cls-69" x="-12.85" y="33.6">S</tspan><tspan className="cls-80" x="-5.86" y="33.6">e</tspan><tspan className="cls-88" x="1.15" y="33.6">n</tspan><tspan className="cls-67" x="8.87" y="33.6">t</tspan><tspan x="13.42" y="33.6">en</tspan><tspan className="cls-67" x="28.2" y="33.6">c</tspan><tspan className="cls-80" x="34.39" y="33.6">e</tspan><tspan className="cls-31" x="41.4" y="33.6"> </tspan><tspan className="cls-95" x="43.8" y="33.6">T</tspan><tspan className="cls-103" x="50.13" y="33.6">r</tspan><tspan x="54.63" y="33.6">ans</tspan><tspan className="cls-116" x="74.7" y="33.6">f</tspan><tspan x="78.6" y="33.6">o</tspan><tspan className="cls-55" x="86.29" y="33.6">r</tspan><tspan className="cls-111" x="90.92" y="33.6">mer</tspan></text>
 			<g id="sentence_transformer">
