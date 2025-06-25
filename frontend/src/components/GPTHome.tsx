@@ -1294,9 +1294,9 @@ function GPTHome(props:{
 				{/* add filter column for documents */}
 				{ papers.length > 1 ?
 					<div className='p-2 text-sm border-slate-400 border-b'>
-						<div className='text-white inline-block px-2'> Focus on document </div>
+						<div className='text-white inline-block px-2 w-40'> Focus on document </div>
 						<select 
-							className={'text-md text-nav dark:bg-stjude dark:text-white py-1 px-2 mx-1 rounded-md w-28 inline-block' + (focusedPaper !== null ? ' bg-panel3' : ' bg-panel2 dark:bg-panel4-dark')}
+							className={'text-md text-nav dark:bg-stjude dark:text-white py-1 px-2 mx-1 rounded-md w-40 inline-block' + (focusedPaper !== null ? ' bg-panel3' : ' bg-panel2 dark:bg-panel4-dark')}
 							value={focusedPaper}
 							onChange={
 								(e) => {
@@ -1327,9 +1327,9 @@ function GPTHome(props:{
 				}
 				{ sections.length ?
 					<div className='p-2 text-sm border-slate-400 border-b'>
-						<div className='text-white inline-block px-2'> Focus on section </div>
+						<div className='text-white inline-block px-2 w-40'> Focus on section </div>
 						<select 
-							className={'text-md text-nav dark:bg-stjude dark:text-white py-1 px-2 mx-1 rounded-md w-28 inline-block' + (focusedSection !== null ? ' bg-panel3' : ' bg-panel2 dark:bg-panel4-dark')}
+							className={'text-md text-nav dark:bg-stjude dark:text-white py-1 px-2 mx-1 rounded-md w-40 inline-block' + (focusedSection !== null ? ' bg-panel3' : ' bg-panel2 dark:bg-panel4-dark')}
 							value={focusedSection}
 							onChange={
 								(e) => {
