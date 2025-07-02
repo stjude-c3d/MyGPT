@@ -588,6 +588,7 @@ def upload_documents(request):
         #     return Response({'error': True, 'error_message': validation}, content_type="application/json")
         # else:
         dataset_name = add_dataset_from_upload(request)
+        chunking_method = request.POST.get('chunking_method')
         
         # Validate embedding_model input
         embedding_model_request = request.POST.get('embedding_model')
@@ -597,7 +598,7 @@ def upload_documents(request):
         else:
             embedding_model = embedding_model_request
 
-        message = add_to_chroma(dataset_name, embedding_model, distance_function)
+        message = add_to_chroma(dataset_name, embedding_model, distance_function, chunking_method)
 
         if message == False:
             return Response({'error': True}, content_type="application/json")

@@ -445,7 +445,7 @@ def add_dataset_from_upload(request):
     return dataset_name
 
 
-def add_to_chroma(dataset_name, embedding_model_request = 'all-MiniLM-L6-v2', distance_function = 'l2'):
+def add_to_chroma(dataset_name, embedding_model_request = 'all-MiniLM-L6-v2', distance_function = 'l2', chunking_method = 'fixed_chunk_size'):
     documents_directory = '/code/data/data_chunks'
     # collection_name = 'pub_collection'
     # Read all files in the data directory
@@ -487,7 +487,10 @@ def add_to_chroma(dataset_name, embedding_model_request = 'all-MiniLM-L6-v2', di
                     #convert line to json
                     line_json = eval(line)
                     documents.append(line_json['content'])
-                    metadatas.append({'filename': line_json['title'], 'page': line_json['page'], 'section': line_json['section'], 'type': line_json['type']})
+                    if chunking_method == 'structure_preserving':
+                        metadatas.append({'filename': line_json['title'], 'page': line_json['page'], 'section': line_json['section'], 'type': line_json['type']})
+                    else:
+                        metadatas.append({'filename': line_json['title'], 'page': line_json['page'], 'type': line_json['type']})
         ids = [str(i) for i in range(count, count + len(documents))]
         
         # add to vector database
