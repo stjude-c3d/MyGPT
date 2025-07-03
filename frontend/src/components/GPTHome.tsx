@@ -1246,7 +1246,7 @@ function GPTHome(props:{
 											</div>
 										))}
 									</>:
-									questionRelevancescore[query.length-1] > 0 && sourcePapers.length && sourceStarts.length && sourceStarts[query.length-1] && sourcePapers[query.length-1] && sourcePapers[query.length-1] && sourceStops.length && sourceStops[query.length-1] ?
+									questionRelevancescore[query.length-1] > 0 && sourcePapers.length && sourceStarts.length && sourceStarts[query.length-1] && sourcePapers[query.length-1] && sourceStops.length && sourceStops[query.length-1] ?
 									<>
 									<div className='text-white text-sm font-bold pt-4'>
 											{sourcePapers[query.length-i-1].length > 1 ? 'Sources' : 'Source'}
