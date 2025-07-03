@@ -1,8 +1,11 @@
 import { useState, useEffect, ReactElement} from 'react'
 import { 
-	Viewer, Worker, SpecialZoomLevel,
+	Viewer, Worker, SpecialZoomLevel, Icon
 } from '@react-pdf-viewer/core'
-import { defaultLayoutPlugin, ToolbarProps, ToolbarSlot } from '@react-pdf-viewer/default-layout'
+import { defaultLayoutPlugin, ToolbarProps, ToolbarSlot, BookmarkIcon } from '@react-pdf-viewer/default-layout'
+import { bookmarkPlugin } from '@react-pdf-viewer/bookmark';
+import '@react-pdf-viewer/bookmark/lib/styles/index.css';
+import type { RenderBookmarkItemProps } from '@react-pdf-viewer/bookmark'
 import { pageNavigationPlugin } from '@react-pdf-viewer/page-navigation'
 import '@react-pdf-viewer/default-layout/lib/styles/index.css'
 import { PaperAirplaneIcon, Cog6ToothIcon, PaperClipIcon, XMarkIcon } from '@heroicons/react/24/outline'
@@ -724,6 +727,8 @@ function GPTHome(props:{
 		// PageNavigationPluginInstance.jumpToPage(selectedPage-1)
 	},[selectedPage, PageNavigationPluginInstance])
 
+	const bookmarkPluginInstance = bookmarkPlugin()
+	const { Bookmarks } = bookmarkPluginInstance
 
 	const renderToolbar = (Toolbar: (props: ToolbarProps) => ReactElement) => (
 		<Toolbar>
@@ -784,10 +789,39 @@ function GPTHome(props:{
 		</Toolbar>
 	)
 
+	const ExpandIcon = () => (
+    <Icon size={16}>
+        <path d="M.541,5.627,11.666,18.2a.5.5,0,0,0,.749,0L23.541,5.627" />
+    </Icon>
+);
+
+	const CollapseIcon = () => (
+		<Icon size={16}>
+			<path d="M5.651,23.5,18.227,12.374a.5.5,0,0,0,0-.748L5.651.5" />
+		</Icon>
+	);
+
+
+	const renderBookmarkItem = (renderProps: RenderBookmarkItemProps) =>
+        renderProps.defaultRenderItem(
+            renderProps.onClickItem,
+            <>
+                {renderProps.defaultRenderToggle(<ExpandIcon />, <CollapseIcon />)}
+                {renderProps.defaultRenderTitle(() => {
+                    renderProps.onClickTitle();
+                })}
+            </>
+        );
+	
 	const DefaultLayoutPlunginInstance = defaultLayoutPlugin({
-		sidebarTabs: (defaultTabs) => {
-			return defaultTabs.filter((tab) => tab === defaultTabs[0])
-		},
+		sidebarTabs: (defaultTabs:any) => [
+			defaultTabs[0],
+            {
+                content: <Bookmarks renderBookmarkItem={renderBookmarkItem} />,
+                icon: <BookmarkIcon />,
+                title: 'Bookmark',
+            },
+		],
 		renderToolbar,
 	})
 
@@ -1408,6 +1442,7 @@ function GPTHome(props:{
 								plugins={[
 									DefaultLayoutPlunginInstance, 
 									PageNavigationPluginInstance,
+									bookmarkPluginInstance,
 								]}
 								/> : videos.length && videos[selectedPaperIdx] && videos[selectedPaperIdx]['video_link'] ?
 								// show embedded youtube videos

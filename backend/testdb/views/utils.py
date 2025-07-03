@@ -376,51 +376,62 @@ def add_dataset_from_upload(request):
                 toc = doc.get_toc(simple=True)
                 final_section_titles = []
                 section_title = ''
-                previous_section_title = ''   
+                previous_section_title = ''
+
+                #  from toc, get the section levels and filter for the levels if count is more than 2 and less than 10
+                # toc_counts = {}
+                # for item in toc:
+                #     if item[0] not in toc_counts:
+                #         toc_counts[item[0]] = 1
+                #     else:
+                #         toc_counts[item[0]] += 1
+                # toc_filter = [item for item in toc if 2 < toc_counts[item[0]] < 20]
+
+                #  filter toc till levels 2 only
+                toc_filter = [item for item in toc if item[0] <= 2]
+
                 for page in doc:
                     page_text = page.get_text("text").encode('utf-8').replace(b'\n', b' ').replace(b'\r', b' ')
 
                     page_sections = []
-                    for toc_item in toc:
+                    for toc_item in toc_filter:
                         if toc_item[2] == page.number + 1:
                             section_title = toc_item[1].strip().replace('\r', '')
                             page_sections.append(section_title)
                     
-                    if len(page_sections) == 0:
+                    if len(page_sections) == 0 and previous_section_title == '':
                         previous_section_title = 'Abstract/Introduction'
-                    else:
+                    elif len(page_sections) != 0:
                         previous_section_title = page_sections[len(page_sections) - 1]
                     
-                        # convert the page_text to chunks, split by pragraph, and for long paragraphs, split by 5 sentences
-                        paragraphs = page_text.decode('utf-8').split('\n\n')
+                    # convert the page_text to chunks, split by pragraph, and for long paragraphs, split by 5 sentences
+                    paragraphs = page_text.decode('utf-8').split('\n\n')
 
-                        for paragraph in paragraphs:
-                            paragraph = paragraph.strip()
-                            section_title = ''
-                            if len(page_sections) > 0:
-                                for section in page_sections:
-                                    if section in paragraph:
-                                        section_title = section
-                                        break
-                            
+                    for paragraph in paragraphs:
+                        paragraph = paragraph.strip()
+                        section_title = ''
+                       
+                        if len(paragraph) < 10:
+                            continue
+                        sentences = re.split(r'(?<=[.!?]) +', paragraph)
+                        n = 5
+                        for i in range(0, len(sentences), n):
+                            chunk_text = ' '.join(sentences[i:i+n])
+                            chunk_text = chunk_text.strip()
+                            for section in page_sections:
+                                if section in chunk_text:
+                                    section_title = section
+                                    break
                             if section_title == '' and previous_section_title != '':
                                 section_title = previous_section_title
-                            elif section_title == '':
+                            elif section_title == '' and len(page_sections) != 0:
                                 section_title = 'Abstract/Introduction'
-
-                            if len(paragraph) < 10:
-                                continue
-                            sentences = re.split(r'(?<=[.!?]) +', paragraph)
-                            n = 5
-                            for i in range(0, len(sentences), n):
-                                chunk_text = ' '.join(sentences[i:i+n])
-                                chunk_text = chunk_text.strip()
-                            
-                                if len(chunk_text) > 10:
-                                    chunk = {'title': paper_titles[idx], 'page': page.number + 1, 'content': chunk_text, 'section': section_title, 'type': 'pagechunk'}
-                                    data.append(chunk)
-                                    if section_title not in final_section_titles:
-                                        final_section_titles.append(section_title)     
+                        
+                            if len(chunk_text) > 10:
+                                chunk = {'title': paper_titles[idx], 'page': page.number + 1, 'content': chunk_text, 'section': section_title, 'type': 'pagechunk'}
+                                data.append(chunk)
+                                if section_title not in final_section_titles:
+                                    final_section_titles.append(section_title)     
 
                 # save sections to database
                 for section_title in set(final_section_titles):
