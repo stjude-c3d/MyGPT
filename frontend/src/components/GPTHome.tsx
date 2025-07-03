@@ -813,7 +813,7 @@ function GPTHome(props:{
             </>
         );
 	
-	const DefaultLayoutPlunginInstance = defaultLayoutPlugin({
+	const DefaultLayoutPluginInstance = defaultLayoutPlugin({
 		sidebarTabs: (defaultTabs:any) => [
 			defaultTabs[0],
             {
