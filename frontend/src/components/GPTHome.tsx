@@ -960,7 +960,7 @@ function GPTHome(props:{
 								className='px-4 mx-2 bg-bsk_dark_blue dark:bg-stjude dark:text-white text-bsk_dark_blue font-semibold hover:text-white hover:border-transparent rounded-full shadow-md hover:shadow-lg outline-none focus:outline-none h-8'
 								onClick={()=>{
 									setImageAttachment(imageAttachment.filter((_, i) => i !== idx));
-									setImageBase64(imageBase64);
+									setImageBase64(prev => prev.filter((_, i) => i !== idx));
 								}}
 							>
 								<p className='text-white my-auto'><XMarkIcon className='w-8 h-8 inline-block'/></p>
