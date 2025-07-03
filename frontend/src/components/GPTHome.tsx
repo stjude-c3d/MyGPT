@@ -1440,7 +1440,7 @@ function GPTHome(props:{
 								defaultScale={SpecialZoomLevel.ActualSize}
 								initialPage={selectedPage-1}
 								plugins={[
-									DefaultLayoutPlunginInstance, 
+									DefaultLayoutPluginInstance, 
 									PageNavigationPluginInstance,
 									bookmarkPluginInstance,
 								]}
