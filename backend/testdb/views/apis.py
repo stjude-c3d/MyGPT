@@ -17,7 +17,7 @@ import shutil
 import json
 import re
 from django.contrib.auth.models import User
-from ..models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, Model, EmbeddingModel, FrontEndSettings, DisclaimerAgreement
+from ..models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, Model, EmbeddingModel, FrontEndSettings, DisclaimerAgreement, PaperSections
 from .utils import get_zotero_chunks, add_dataset_from_upload, add_to_chroma, nearestDataChroma, get_relevance_score, add_embeddings_to_qna, highlight_pdf, seconds_to_hhmmss, add_pca_to_qna_and_dataset, add_demo_dataset, get_youtube_transcript, add_video_to_chroma, get_embedding_model_ef, get_answer_distance, sanitize_filename, get_answer_distance_by_context
 
 ####################
@@ -99,7 +99,8 @@ def get_context(request):
             skip_highlight = False
         model_type = Model.objects.get(model_name=model)
         dataset_name = json_request['dataset']
-        document_title = json_request['document_title']
+        document_title = json_request['document_title'] if 'document_title' in json_request else ''
+        focused_section = json_request['focused_section'] if 'focused_section' in json_request else ''
         use_default_qrs = json_request['use_default_qrs']
         question_best_distance = json_request['question_best_distance']
         question_worst_distance = json_request['question_worst_distance']
@@ -107,8 +108,8 @@ def get_context(request):
         no_cutoff = json_request['no_cutoff']
 
         # best and worst scores for BM25
-        best_bm25_score = 35
-        worst_bm25_score = 0
+        # best_bm25_score = 35
+        # worst_bm25_score = 0
 
         # check if dataset exists or crate a new one
         dataset_exist = Dataset.objects.filter(dataset_name=dataset_name).exists()
@@ -131,7 +132,7 @@ def get_context(request):
             relevance_score = 0
             normalized_distances = []
         else:
-            context, titles, pages, starts, stops, chunks_txt, distances = nearestDataChroma(question_text, dataset_name, document_title, keywords, embedding_model, maximum_chunks_count, no_cutoff)
+            context, titles, pages, starts, stops, chunks_txt, distances = nearestDataChroma(question_text, dataset_name, document_title, focused_section, keywords, embedding_model, maximum_chunks_count, no_cutoff)
             sources = []
             distances = [round(dist, 3) for dist in distances]
             relevance_score, normalized_distances = get_relevance_score(distances, embedding_model, True, use_default_qrs, question_best_distance, question_worst_distance)
@@ -198,6 +199,9 @@ def get_context(request):
 
         question_sources = Source.objects.filter(question=question)
         for idx, title in enumerate(titles):
+            # filter distances if normalized_distances are less than 0.1
+            if normalized_distances[idx] < 0.1:
+                continue
             sources.append({
                 'document': title,
                 'page': pages[idx] if library_type == 'papers' else '',
@@ -207,6 +211,7 @@ def get_context(request):
                 'distance': round(distances[idx],3), #round to 3 decimals,
                 'normalized_distance': round(normalized_distances[idx],3)
             })
+
             if len(question_sources) == 0:
                 chunk = chunks.objects.filter(chunk_text=chunks_txt[idx], chunk_dataset=dataset)
                 Source.objects.create(
@@ -493,6 +498,27 @@ def delete_dataset(request):
         pdf_folder = 'data/pdfs/' + dataset_name
         if len(dataset_name) == 0:
             return Response({'error':True, 'error_message': 'Dataset name can\'t be empty'}, content_type="application/json")
+        #  delete /data/data_chunks/ + dataset_name + .txt
+        data_chunks_file = 'data/data_chunks/' + dataset_name + '.txt'
+        if os.path.exists(data_chunks_file):
+            try:
+                os.remove(data_chunks_file)
+            except:
+                return Response({'error':True, 'error_message': 'Could not delete data chunks file'}, content_type="application/json")
+            
+        # delete files from media folder
+        media_folder = 'media/papers/' + dataset_name
+        if os.path.exists(media_folder):
+            # remove all files with output_file name in thier name
+            files = [f for f in os.listdir(media_folder) if dataset_name in f]
+            # remove all files with output_file name in thier name
+            for f in files:
+                if f.endswith('.pdf') and os.path.exists(os.path.join(media_folder, f)):
+                    try:
+                        os.remove(os.path.join(media_folder, f))
+                    except:
+                        return Response({'error':True, 'error_message': 'Could not delete media folder'}, content_type="application/json")
+
         if os.path.exists(pdf_folder):
             # remove all files with output_file name in thier name
             # files = [f for f in os.listdir(pdf_folder) if dataset_name in f]
@@ -587,6 +613,7 @@ def upload_documents(request):
         #     return Response({'error': True, 'error_message': validation}, content_type="application/json")
         # else:
         dataset_name = add_dataset_from_upload(request)
+        chunking_method = request.POST.get('chunking_method')
         
         # Validate embedding_model input
         embedding_model_request = request.POST.get('embedding_model')
@@ -596,7 +623,7 @@ def upload_documents(request):
         else:
             embedding_model = embedding_model_request
 
-        message = add_to_chroma(dataset_name, embedding_model, distance_function)
+        message = add_to_chroma(dataset_name, embedding_model, distance_function, chunking_method)
 
         if message == False:
             return Response({'error': True}, content_type="application/json")
@@ -836,6 +863,22 @@ def get_embedding_model_details(request):
             'worst_distance_nac': embedding_model.worst_distance_nac,
         }
         return Response({'embedding_model': embedding_model_obj})
+    
+@api_view(['POST'])
+def get_dataset_sections(request):
+    if request.method == 'POST':
+        json_request = JSONParser().parse(request)
+        dataset_name = json_request['dataset_name']
+        dataset = Dataset.objects.get(dataset_name=dataset_name)
+        # order by count descending and then by alphanumeric order
+        sections = PaperSections.objects.filter(section_dataset=dataset).order_by('-section_count', 'section_title')
+        sections_json = []
+        for section in sections:
+            sections_json.append({
+                'section_title': section.section_title,
+                'section_count': section.section_count
+            })
+        return Response({'sections': sections_json}, content_type="application/json")
     
 # get username if access token is valid
 @api_view(['POST'])

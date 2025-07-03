@@ -5,6 +5,7 @@ from pypdf import PdfReader
 from pyzotero import zotero
 from typing import cast
 import fitz
+import pymupdf
 from tqdm import tqdm
 import chromadb
 from chromadb.utils import embedding_functions
@@ -20,8 +21,11 @@ import json
 import pdfkit
 import base64
 from langchain_community.llms import Ollama
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 from typing import Union, cast
-from ..models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, EmbeddingModel
+from ..models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, EmbeddingModel, PaperSections
+import requests
+import xml.etree.ElementTree as ET
 
 # imports for embedding functions
 from typing import cast
@@ -53,21 +57,6 @@ def convert_to_pdf(input_file, output_dir):
     
     # Run the command
     subprocess.run(command, check=True)
-
-def convert_to_pdf(input_file, output_dir):
-    
-    # Construct the command to convert PPTX to PDF
-    command = [
-        "soffice",
-        "--headless",
-        "--convert-to", "pdf",
-        "--outdir", output_dir,
-        input_file
-    ]
-    
-    # Run the command
-    subprocess.run(command, check=True)
-
 
 def extractPDFImages(path, title, data_list):
     pdf_file = fitz.open(path)
@@ -213,6 +202,7 @@ def add_dataset_from_upload(request):
     user_email_r = request.POST.get('user_email')
     user_group_r = request.POST.get('user_group')
     use_overlap = request.POST.get('use_overlap')
+    chunking_method = request.POST.get('chunking_method')
     chunk_size = request.POST.get('chunk_size')
     distance_function_r = request.POST.get('distance_function')
 
@@ -269,6 +259,7 @@ def add_dataset_from_upload(request):
             dataset_name=dataset_name,
             dataset_size=0,
             chunksize=chunk_size,
+            chunking_method=chunking_method,
             overlap=use_overlap,
             distance_function=distance_function,
             user = user if len(user) else '-',
@@ -362,25 +353,121 @@ def add_dataset_from_upload(request):
             
             with open(pdf_name, 'rb') as f:
                 paper.paper_attachment.save(dataset_name + '/paper' + str(idx+1) + '.pdf', File(f), save=True)
-                    
-            pages = getPDFContent(pdf_name)
 
-            for page_num, page in enumerate(pages):
-                text = page.extract_text()
-                n = chunk_size
-                splits = []
-                remainder = ''
-                for i in range(0, len(text), n - overlap_size):
-                    item = remainder + text[i : i + n]
-                    item = ' '.join(item.split())
-                    if '. ' in item and not use_overlap:
-                        remainder = item.split('. ')[-1]
-                        item = item.removesuffix(remainder)
-                    if len(item) > 10:
-                        splits.append(item)
-                for split in splits:
-                    chunk = {'title': paper_titles[idx], 'page': page_num+1, 'content': split, 'type': 'pagechunk'}
-                    data.append(chunk)
+            if chunking_method == 'fixed_chunk_size':        
+                pages = getPDFContent(pdf_name)
+
+                for page_num, page in enumerate(pages):
+                    text = page.extract_text()
+                    n = chunk_size
+                    splits = []
+                    remainder = ''
+                    for i in range(0, len(text), n - overlap_size):
+                        item = remainder + text[i : i + n]
+                        item = ' '.join(item.split())
+                        if '. ' in item and not use_overlap:
+                            remainder = item.split('. ')[-1]
+                            item = item.removesuffix(remainder)
+                        if len(item) > 10:
+                            splits.append(item)
+                    for split in splits:
+                        chunk = {'title': paper_titles[idx], 'page': page_num+1, 'content': split, 'type': 'pagechunk'}
+                        data.append(chunk)
+            elif chunking_method == 'structure_preserving':
+                doc = pymupdf.Document(pdf_name)
+                # get table of contents
+                toc = doc.get_toc(simple=True)
+                # if toc is empty, use grobid to get the table of contents
+                if len(toc) == 0:
+                    toc = get_toc_from_grobid(pdf_name)
+                final_section_titles = []
+                section_title = ''
+                previous_section_title = ''
+
+                #  filter toc till levels 2 only
+                toc_filter = [item for item in toc if item[0] <= 2]
+
+                for page in doc:
+                    splitter = RecursiveCharacterTextSplitter(
+                        chunk_size=chunk_size,
+                        chunk_overlap=int(0.2 * chunk_size) if use_overlap else 0,
+                        separators=["\n\n", "\n", ".", " "],
+                        length_function=len
+                    )
+                    # get text from page
+                    page_text = page.get_text("text")
+                    raw_chunks = splitter.create_documents([page_text])
+
+                    chunks = []
+                    for i, chunk in enumerate(raw_chunks):
+                        chunks.append({
+                            "chunk_id": i,
+                            "text": chunk.page_content,
+                            "metadata": {
+                                "source_pdf": pdf_name
+                            }
+                        })
+
+                    page_sections = []
+                    for toc_item in toc_filter:
+                        if toc_item[2] == page.number + 1:
+                            section_title = toc_item[1].strip().replace('\r', '')
+                            page_sections.append(section_title)
+                    
+                    if len(page_sections) == 0 and previous_section_title == '':
+                        previous_section_title = 'Abstract/Introduction'
+                    elif len(page_sections) != 0:
+                        previous_section_title = page_sections[len(page_sections) - 1]
+                    
+                    for chunk in chunks:
+                        chunk_text = chunk['text'].strip()
+                        for section in page_sections:
+                            if section in chunk_text:
+                                section_title = section
+                                break
+                        if section_title == '' and previous_section_title != '':
+                            section_title = previous_section_title
+                        elif section_title == '' and len(page_sections) != 0:
+                            section_title = 'Abstract/Introduction'
+                    
+                        if len(chunk_text) > 10:
+                            if section in chunk_text:
+                                chunks = chunk_text.split(section)
+                                # find previous entry before section in page_sections otherwise use previous_section_title
+                                section_index = page_sections.index(section)
+                                if section_index > 0:
+                                    previous_section_title = page_sections[section_index - 1]
+                                elif section_index == 0 and previous_section_title != '':
+                                    previous_section_title = previous_section_title
+                                else:
+                                    previous_section_title = 'Abstract/Introduction'
+                                if len(chunks[0]) > 10:
+                                    chunk_1 = {'title': paper_titles[idx], 'page': page.number + 1, 'content': chunks[0].strip(), 'section': previous_section_title, 'type': 'pagechunk'}
+                                    data.append(chunk_1)
+                                if len(chunks[1]) > 10:
+                                    chunks_2 = {'title': paper_titles[idx], 'page': page.number + 1, 'content': chunks[1].strip(), 'section': section_title, 'type': 'pagechunk'}
+                                    data.append(chunks_2)
+                            else:
+                                chunk = {'title': paper_titles[idx], 'page': page.number + 1, 'content': chunk_text, 'section': section_title, 'type': 'pagechunk'}
+                                data.append(chunk)
+                            if section_title not in final_section_titles:
+                                final_section_titles.append(section_title)     
+
+                # save sections to database
+                for section_title in set(final_section_titles):
+                    count = 1
+                    section_obj = PaperSections.objects.filter(section_title=section_title, section_dataset=dataset)
+                    if section_obj.count() > 0:
+                        count = section_obj[0].section_count
+                        section_obj = section_obj[0]
+                        section_obj.section_count += count
+                        section_obj.save()
+                    else:
+                        PaperSections.objects.create(
+                            section_title=section_title,
+                            section_count=count,
+                            section_dataset=dataset
+                        )                         
 
     with open('data/data_chunks/'+ dataset_name +'.txt', 'w') as f:
         for chunk in data:
@@ -389,7 +476,7 @@ def add_dataset_from_upload(request):
     return dataset_name
 
 
-def add_to_chroma(dataset_name, embedding_model_request = 'all-MiniLM-L6-v2', distance_function = 'l2'):
+def add_to_chroma(dataset_name, embedding_model_request = 'all-MiniLM-L6-v2', distance_function = 'l2', chunking_method = 'fixed_chunk_size'):
     documents_directory = '/code/data/data_chunks'
     # collection_name = 'pub_collection'
     # Read all files in the data directory
@@ -431,7 +518,10 @@ def add_to_chroma(dataset_name, embedding_model_request = 'all-MiniLM-L6-v2', di
                     #convert line to json
                     line_json = eval(line)
                     documents.append(line_json['content'])
-                    metadatas.append({'filename': line_json['title'], 'page': line_json['page'], 'type': line_json['type']})
+                    if chunking_method == 'structure_preserving':
+                        metadatas.append({'filename': line_json['title'], 'page': line_json['page'], 'section': line_json['section'], 'type': line_json['type']})
+                    else:
+                        metadatas.append({'filename': line_json['title'], 'page': line_json['page'], 'type': line_json['type']})
         ids = [str(i) for i in range(count, count + len(documents))]
         
         # add to vector database
@@ -776,7 +866,7 @@ def find_cutoff_distance(distances):
             break
     return cutoff_distance
 
-def nearestDataChroma(text, dataset_name, document_title_str = '', keywords_str = '', embedding_model_request='multi-qa-MiniLM-L6-cos-v1', maximum_chunks_count=15, no_cutoff=False):
+def nearestDataChroma(text, dataset_name, document_title_str = '', focused_section_str = '', keywords_str = '', embedding_model_request='multi-qa-MiniLM-L6-cos-v1', maximum_chunks_count=15, no_cutoff=False):
     # collection_name = 'pub_collection'
     # client = chromadb.Client()
         # query embedding model from database
@@ -794,6 +884,7 @@ def nearestDataChroma(text, dataset_name, document_title_str = '', keywords_str 
 
     keywords = keywords_str.split(';') if keywords_str != '' else []
     document_title = document_title_str if document_title_str != '' else 'all'
+    focused_section = focused_section_str if focused_section_str != '' else 'all'
     # remove keywords if it's '-'
     if '-' in keywords:
         keywords.remove('-')
@@ -819,7 +910,7 @@ def nearestDataChroma(text, dataset_name, document_title_str = '', keywords_str 
                 where_document={'$contains': keywords[0]}
             )
 
-    if document_title == 'all':
+    if document_title == 'all' and focused_section == 'all':
         results = collection.query(
             query_texts=[text],
             n_results=maximum_chunks_count,
@@ -827,13 +918,32 @@ def nearestDataChroma(text, dataset_name, document_title_str = '', keywords_str 
             # where={'metadata_field': 'is_equal_to_this'}, # optional filter
             # where_document={'$contains':'search_string'}  # optional filter
         )
-    else:
+    elif document_title != 'all' and focused_section == 'all':
         results = collection.query(
             query_texts=[text],
             n_results=maximum_chunks_count,
             where={'$and':[
                 {'type': {"$ne": "spreadsheet_full"}},
                 {'filename': {'$eq': document_title}}
+            ]}
+        )
+    elif document_title == 'all' and focused_section != 'all':
+        results = collection.query(
+            query_texts=[text],
+            n_results=maximum_chunks_count,
+            where={'$and':[
+                {'type': {"$ne": "spreadsheet_full"}},
+                {'section': {'$eq': focused_section}}
+            ]}
+        )
+    elif document_title != 'all' and focused_section != 'all':
+        results = collection.query(
+            query_texts=[text],
+            n_results=maximum_chunks_count,
+            where={'$and':[
+                {'type': {"$ne": "spreadsheet_full"}},
+                {'filename': {'$eq': document_title}},
+                {'section': {'$eq': focused_section}}
             ]}
         )
 
@@ -1036,7 +1146,7 @@ def get_relevance_score(distances, embedding_model, question=True, use_default=T
 
     # calculate confidence score
     # if maximum distance is more than 1.5 then confidence score is 0
-    if max(distances) > worst_distance:
+    if min(distances) > worst_distance:
         relevance_score = 0
     else:
         mean_distance = sum(distances) / len(distances)
@@ -1470,3 +1580,43 @@ def min_max_normalization(data, best_val, worst_val, reverse=False):
             normalized_value = (value - worst_val) / (best_val - worst_val)
         normalized_data.append(normalized_value)
     return normalized_data
+
+def get_toc_from_grobid(pdf_path):
+    """
+    Extract the table of contents from a PDF file using GROBID.
+    Grobid is available at http://localhost:8070 by default.
+    """
+    # Use GROBID to extract the table of contents
+    url = 'http://host.docker.internal:8070/api/processFulltextDocument'
+    files = {'input': open(pdf_path, 'rb')}
+    data = {'consolidateHeader': '1', 'teiCoordinates': 'head'}
+    response = requests.post(url, files=files, data=data)
+    
+    # Parse the response to get the table of contents
+    toc = []
+    if response.status_code == 200:
+        xml_content = response.content
+        # Parse the XML content and get <head> elements across entire XML
+        root = ET.fromstring(xml_content)
+
+        for head in root.findall('.//{http://www.tei-c.org/ns/1.0}head'):
+            # Extract the text from the <head> element
+            head_text = head.text.strip() if head.text else ''
+            # get page number from coords attribute from head <head coords="1,72.02,292.61,212.67,11.99"> 
+            coords = head.get('coords')
+            page = coords.split(',')[0] if coords else '1'
+            # add to toc if not empty as pymupdf format
+            if head_text:
+                toc.append([1, head_text, int(page) ])  # Assuming level 1 for all headings
+            
+    else:
+        print(f"Error: {response.status_code} - {response.text}")
+
+    # remove header and footer from toc by removing repetitive elements
+    if len(toc) > 0:
+        # find most common element in toc
+        for i in range(len(toc)-1, 0, -1):
+            if toc[i][1] == toc[i-1][1]:
+                toc.pop(i)
+    
+    return toc

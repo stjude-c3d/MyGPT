@@ -9,7 +9,7 @@ sentence_transformers>=3.0.0
 pypdf
 pandas
 pyzotero
-pymupdf==1.22.5
+pymupdf==1.24.14
 numpy
 chromadb==0.5.7
 tqdm

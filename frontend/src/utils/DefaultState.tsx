@@ -36,7 +36,8 @@ const defaultSettings = {
 		// 'hf.co/nomic-ai/nomic-embed-text-v2-moe-GGUF:Q4_K_M',
 		// 'hf.co/nomic-ai/nomic-embed-text-v1.5-GGUF:latest',
 		'bge-m3:latest',
-		'mxbai-embed-large:latest'
+		'mxbai-embed-large:latest',
+		'granite-embedding:latest'
 	],
     system_prompt: 'Use following information to answer the question in less than 200 words, try not to use anything else:',
 	direct_chat_system_prompt: 'Answer the question in less than 200 words.',
