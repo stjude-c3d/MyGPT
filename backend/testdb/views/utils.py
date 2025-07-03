@@ -21,6 +21,7 @@ import json
 import pdfkit
 import base64
 from langchain_community.llms import Ollama
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 from typing import Union, cast
 from ..models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, EmbeddingModel, PaperSections
 import requests
@@ -383,20 +384,29 @@ def add_dataset_from_upload(request):
                 section_title = ''
                 previous_section_title = ''
 
-                #  from toc, get the section levels and filter for the levels if count is more than 2 and less than 10
-                # toc_counts = {}
-                # for item in toc:
-                #     if item[0] not in toc_counts:
-                #         toc_counts[item[0]] = 1
-                #     else:
-                #         toc_counts[item[0]] += 1
-                # toc_filter = [item for item in toc if 2 < toc_counts[item[0]] < 20]
-
                 #  filter toc till levels 2 only
                 toc_filter = [item for item in toc if item[0] <= 2]
 
                 for page in doc:
-                    page_text = page.get_text("text").encode('utf-8').replace(b'\n', b' ').replace(b'\r', b' ')
+                    splitter = RecursiveCharacterTextSplitter(
+                        chunk_size=chunk_size,
+                        chunk_overlap=int(0.2 * chunk_size) if use_overlap else 0,
+                        separators=["\n\n", "\n", ".", " "],
+                        length_function=len
+                    )
+                    # get text from page
+                    page_text = page.get_text("text")
+                    raw_chunks = splitter.create_documents([page_text])
+
+                    chunks = []
+                    for i, chunk in enumerate(raw_chunks):
+                        chunks.append({
+                            "chunk_id": i,
+                            "text": chunk.page_content,
+                            "metadata": {
+                                "source_pdf": pdf_name
+                            }
+                        })
 
                     page_sections = []
                     for toc_item in toc_filter:
@@ -409,34 +419,39 @@ def add_dataset_from_upload(request):
                     elif len(page_sections) != 0:
                         previous_section_title = page_sections[len(page_sections) - 1]
                     
-                    # convert the page_text to chunks, split by pragraph, and for long paragraphs, split by 5 sentences
-                    paragraphs = page_text.decode('utf-8').split('\n\n')
-
-                    for paragraph in paragraphs:
-                        paragraph = paragraph.strip()
-                        section_title = ''
-                       
-                        if len(paragraph) < 10:
-                            continue
-                        sentences = re.split(r'(?<=[.!?]) +', paragraph)
-                        n = 5
-                        for i in range(0, len(sentences), n):
-                            chunk_text = ' '.join(sentences[i:i+n])
-                            chunk_text = chunk_text.strip()
-                            for section in page_sections:
-                                if section in chunk_text:
-                                    section_title = section
-                                    break
-                            if section_title == '' and previous_section_title != '':
-                                section_title = previous_section_title
-                            elif section_title == '' and len(page_sections) != 0:
-                                section_title = 'Abstract/Introduction'
-                        
-                            if len(chunk_text) > 10:
+                    for chunk in chunks:
+                        chunk_text = chunk['text'].strip()
+                        for section in page_sections:
+                            if section in chunk_text:
+                                section_title = section
+                                break
+                        if section_title == '' and previous_section_title != '':
+                            section_title = previous_section_title
+                        elif section_title == '' and len(page_sections) != 0:
+                            section_title = 'Abstract/Introduction'
+                    
+                        if len(chunk_text) > 10:
+                            if section in chunk_text:
+                                chunks = chunk_text.split(section)
+                                # find previous entry before section in page_sections otherwise use previous_section_title
+                                section_index = page_sections.index(section)
+                                if section_index > 0:
+                                    previous_section_title = page_sections[section_index - 1]
+                                elif section_index == 0 and previous_section_title != '':
+                                    previous_section_title = previous_section_title
+                                else:
+                                    previous_section_title = 'Abstract/Introduction'
+                                if len(chunks[0]) > 10:
+                                    chunk_1 = {'title': paper_titles[idx], 'page': page.number + 1, 'content': chunks[0].strip(), 'section': previous_section_title, 'type': 'pagechunk'}
+                                    data.append(chunk_1)
+                                if len(chunks[1]) > 10:
+                                    chunks_2 = {'title': paper_titles[idx], 'page': page.number + 1, 'content': chunks[1].strip(), 'section': section_title, 'type': 'pagechunk'}
+                                    data.append(chunks_2)
+                            else:
                                 chunk = {'title': paper_titles[idx], 'page': page.number + 1, 'content': chunk_text, 'section': section_title, 'type': 'pagechunk'}
                                 data.append(chunk)
-                                if section_title not in final_section_titles:
-                                    final_section_titles.append(section_title)     
+                            if section_title not in final_section_titles:
+                                final_section_titles.append(section_title)     
 
                 # save sections to database
                 for section_title in set(final_section_titles):
@@ -1131,7 +1146,7 @@ def get_relevance_score(distances, embedding_model, question=True, use_default=T
 
     # calculate confidence score
     # if maximum distance is more than 1.5 then confidence score is 0
-    if max(distances) > worst_distance:
+    if min(distances) > worst_distance:
         relevance_score = 0
     else:
         mean_distance = sum(distances) / len(distances)

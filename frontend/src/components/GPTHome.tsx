@@ -1362,7 +1362,7 @@ function GPTHome(props:{
 				}
 				{ sections.length ?
 					<div className='p-2 text-sm border-slate-400 border-b'>
-						<div className='text-white inline-block px-2 w-40'> Focus on section </div>
+						<div className='text-white inline-block px-2 w-full'> Focus on section (#documents) </div>
 						<select 
 							className={'text-md text-nav dark:bg-stjude dark:text-white py-1 px-2 mx-1 rounded-md w-40 inline-block' + (focusedSection !== null ? ' bg-panel3' : ' bg-panel2 dark:bg-panel4-dark')}
 							value={focusedSection}

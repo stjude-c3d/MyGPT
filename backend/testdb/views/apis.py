@@ -108,8 +108,8 @@ def get_context(request):
         no_cutoff = json_request['no_cutoff']
 
         # best and worst scores for BM25
-        best_bm25_score = 35
-        worst_bm25_score = 0
+        # best_bm25_score = 35
+        # worst_bm25_score = 0
 
         # check if dataset exists or crate a new one
         dataset_exist = Dataset.objects.filter(dataset_name=dataset_name).exists()
@@ -199,6 +199,9 @@ def get_context(request):
 
         question_sources = Source.objects.filter(question=question)
         for idx, title in enumerate(titles):
+            # filter distances if normalized_distances are less than 0.1
+            if normalized_distances[idx] < 0.1:
+                continue
             sources.append({
                 'document': title,
                 'page': pages[idx] if library_type == 'papers' else '',
@@ -208,6 +211,7 @@ def get_context(request):
                 'distance': round(distances[idx],3), #round to 3 decimals,
                 'normalized_distance': round(normalized_distances[idx],3)
             })
+
             if len(question_sources) == 0:
                 chunk = chunks.objects.filter(chunk_text=chunks_txt[idx], chunk_dataset=dataset)
                 Source.objects.create(
@@ -494,6 +498,27 @@ def delete_dataset(request):
         pdf_folder = 'data/pdfs/' + dataset_name
         if len(dataset_name) == 0:
             return Response({'error':True, 'error_message': 'Dataset name can\'t be empty'}, content_type="application/json")
+        #  delete /data/data_chunks/ + dataset_name + .txt
+        data_chunks_file = 'data/data_chunks/' + dataset_name + '.txt'
+        if os.path.exists(data_chunks_file):
+            try:
+                os.remove(data_chunks_file)
+            except:
+                return Response({'error':True, 'error_message': 'Could not delete data chunks file'}, content_type="application/json")
+            
+        # delete files from media folder
+        media_folder = 'media/papers/' + dataset_name
+        if os.path.exists(media_folder):
+            # remove all files with output_file name in thier name
+            files = [f for f in os.listdir(media_folder) if dataset_name in f]
+            # remove all files with output_file name in thier name
+            for f in files:
+                if f.endswith('.pdf') and os.path.exists(os.path.join(media_folder, f)):
+                    try:
+                        os.remove(os.path.join(media_folder, f))
+                    except:
+                        return Response({'error':True, 'error_message': 'Could not delete media folder'}, content_type="application/json")
+
         if os.path.exists(pdf_folder):
             # remove all files with output_file name in thier name
             # files = [f for f in os.listdir(pdf_folder) if dataset_name in f]
@@ -845,7 +870,8 @@ def get_dataset_sections(request):
         json_request = JSONParser().parse(request)
         dataset_name = json_request['dataset_name']
         dataset = Dataset.objects.get(dataset_name=dataset_name)
-        sections = PaperSections.objects.filter(section_dataset=dataset).order_by('section_count')
+        # order by count descending and then by alphanumeric order
+        sections = PaperSections.objects.filter(section_dataset=dataset).order_by('-section_count', 'section_title')
         sections_json = []
         for section in sections:
             sections_json.append({
