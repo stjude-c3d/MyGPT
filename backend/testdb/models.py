@@ -35,6 +35,12 @@ embedding_model_source = (
 	('huggingface', 'huggingface'),
 )
 
+chunking_methods_choice = (
+	('fixed_chunk_size', 'fixed_chunk_size'),
+	('structure_preserving', 'structure_preserving'),
+	('-', '-')
+)
+
 class Dataset(models.Model):
 	dataset_name = models.CharField(max_length=200, default='-')
 	zotero_id = models.CharField(max_length=40, default='-')
@@ -44,6 +50,7 @@ class Dataset(models.Model):
 	user_group = models.CharField(max_length=200, default='-')
 	embedding_added = models.BooleanField(default=False)
 	embedding_model = models.CharField(max_length=60, default='-')
+	chunking_method = models.CharField(max_length=40, choices=chunking_methods_choice, default='-')
 	chunksize = models.IntegerField(default=1000)
 	overlap = models.BooleanField(default=False)
 	distance_function = models.CharField(max_length=40, default='l2')
@@ -78,6 +85,18 @@ class Papers(models.Model):
 
 	def __str__(self):
 		return self.paper_title
+	
+class PaperSections(models.Model):
+	section_title = models.TextField(default='-')
+	section_count = models.IntegerField(default=0)
+	section_dataset = models.ForeignKey('Dataset', on_delete=models.CASCADE)
+
+	class Meta:
+		verbose_name_plural = 'paper sections'
+		verbose_name = 'paper section'
+
+	def __str__(self):
+		return self.section_title
 
 class Videos(models.Model):
 	video_title = models.TextField(default='-')

@@ -1,8 +1,11 @@
 import { useState, useEffect, ReactElement} from 'react'
 import { 
-	Viewer, Worker, SpecialZoomLevel,
+	Viewer, Worker, SpecialZoomLevel, Icon
 } from '@react-pdf-viewer/core'
-import { defaultLayoutPlugin, ToolbarProps, ToolbarSlot } from '@react-pdf-viewer/default-layout'
+import { defaultLayoutPlugin, ToolbarProps, ToolbarSlot, BookmarkIcon } from '@react-pdf-viewer/default-layout'
+import { bookmarkPlugin } from '@react-pdf-viewer/bookmark';
+import '@react-pdf-viewer/bookmark/lib/styles/index.css';
+import type { RenderBookmarkItemProps } from '@react-pdf-viewer/bookmark'
 import { pageNavigationPlugin } from '@react-pdf-viewer/page-navigation'
 import '@react-pdf-viewer/default-layout/lib/styles/index.css'
 import { PaperAirplaneIcon, Cog6ToothIcon, PaperClipIcon, XMarkIcon } from '@heroicons/react/24/outline'
@@ -35,6 +38,8 @@ function GPTHome(props:{
 	const [showNullAnswerIndexes, setShowNullAnswerIndexes] = useState<any>([])
 	const [papers, setPapers] = useState<any[]>([])
 	const [focusedPaper, setFocusedPaper] = useState<any>(null)
+	const [sections, setSections] = useState<any[]>([])
+	const [focusedSection, setFocusedSection] = useState<any>(null)
 	const [videos, setVideos] = useState<any[]>([])
 	const [sourcePapers, setSourcePapers] = useState<any[]>([])
 	const [sourcePages, setSourcePages] = useState<any[]>([])
@@ -54,8 +59,8 @@ function GPTHome(props:{
 	const [answerWithoutContext, setAnswerWithoutContext] = useState(props.currentSettings.answerWithoutContext)
 
 	const [addDemoLibrary, setAddDemoLibrary] = useState(false)
-	const [imageAttachment, setImageAttachment] = useState('')
-	const [imageBase64, setImageBase64] = useState('')
+	const [imageAttachment, setImageAttachment] = useState([])
+	const [imageBase64, setImageBase64] = useState([])
 	// console.log(imageAttachment)
 
 	// get llms from backend
@@ -206,6 +211,41 @@ function GPTHome(props:{
 	
 	// console.log(props.currentSettings.selectedDataset, props.currentSettings.defaultDataset)
 
+	// set section by getting form this api/get_sections/ and dataset_name
+	useEffect(()=>{
+		const requestOptions = {
+			method: 'POST',
+			headers: { 
+				'Content-Type': 'application/json',
+				'Authorization': `${
+					props.frontendSettings && props.frontendSettings.django_login ?
+					'Bearer ' + localStorage.getItem('access') :
+					process.env.NODE_ENV === 'production' ?
+					process.env.REACT_APP_AUTH_TOKEN_PROD
+					: process.env.REACT_APP_AUTH_TOKEN_DEV}`
+			},
+			body: JSON.stringify({
+				dataset_name: props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset
+			})
+		}
+
+		if (props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset && props.currentSettings.selectedDataset !== 'None'){
+			fetch(`${process.env.REACT_APP_BACKEND_API}api/get_sections/?format=json`, requestOptions)
+				.then(response => response.json())
+				.then(data => {
+					if (data.sections && data.sections.length){
+						setSections(data.sections)
+					}else{
+						setSections([])
+					}
+				})
+		}
+		else{
+			setSections([])
+		}
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	},[props.currentSettings.selectedDataset, props.currentSettings.defaultDataset])
+
 	// change answer without context 
 	useEffect(()=>{
 		setAnswerWithoutContext(props.currentSettings.answerWithoutContext)
@@ -264,6 +304,7 @@ function GPTHome(props:{
 				dataset: props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset,
 				new_conversation: query.length === 1 ? true : false,
 				document_title: focusedPaper ? focusedPaper : '',
+				focused_section: focusedSection ? focusedSection.split(' (')[0] : '',
 				maximum_chunks_count: props.currentSettings.maximum_chunks_count,
 				no_cutoff: props.currentSettings.no_chunk_cutoff,
 				related_query: relatedQuery,
@@ -551,7 +592,7 @@ function GPTHome(props:{
 				messages.push({
 					'role': 'user',
 					'content': query[i].question,
-					'images': imageBase64 !== '' ? [imageBase64] : []
+					'images': imageBase64.length ? imageBase64 : []
 				})
 				if (answers.length > i){
 					messages.push({
@@ -686,6 +727,8 @@ function GPTHome(props:{
 		// PageNavigationPluginInstance.jumpToPage(selectedPage-1)
 	},[selectedPage, PageNavigationPluginInstance])
 
+	const bookmarkPluginInstance = bookmarkPlugin()
+	const { Bookmarks } = bookmarkPluginInstance
 
 	const renderToolbar = (Toolbar: (props: ToolbarProps) => ReactElement) => (
 		<Toolbar>
@@ -746,10 +789,39 @@ function GPTHome(props:{
 		</Toolbar>
 	)
 
-	const DefaultLayoutPlunginInstance = defaultLayoutPlugin({
-		sidebarTabs: (defaultTabs) => {
-			return defaultTabs.filter((tab) => tab === defaultTabs[0])
-		},
+	const ExpandIcon = () => (
+    <Icon size={16}>
+        <path d="M.541,5.627,11.666,18.2a.5.5,0,0,0,.749,0L23.541,5.627" />
+    </Icon>
+);
+
+	const CollapseIcon = () => (
+		<Icon size={16}>
+			<path d="M5.651,23.5,18.227,12.374a.5.5,0,0,0,0-.748L5.651.5" />
+		</Icon>
+	);
+
+
+	const renderBookmarkItem = (renderProps: RenderBookmarkItemProps) =>
+        renderProps.defaultRenderItem(
+            renderProps.onClickItem,
+            <>
+                {renderProps.defaultRenderToggle(<ExpandIcon />, <CollapseIcon />)}
+                {renderProps.defaultRenderTitle(() => {
+                    renderProps.onClickTitle();
+                })}
+            </>
+        );
+	
+	const DefaultLayoutPluginInstance = defaultLayoutPlugin({
+		sidebarTabs: (defaultTabs:any) => [
+			defaultTabs[0],
+            {
+                content: <Bookmarks renderBookmarkItem={renderBookmarkItem} />,
+                icon: <BookmarkIcon />,
+                title: 'Bookmark',
+            },
+		],
 		renderToolbar,
 	})
 
@@ -850,50 +922,51 @@ function GPTHome(props:{
 						<p className='inline-block ml-2'><PaperAirplaneIcon className='w-6 h-6 inline-block'/></p>
 					</button>
 				</div>
-				{ props.currentSettings && props.currentSettings.answerWithoutContext && props.currentSettings.selectedLlm === 'llama3.2-vision:latest' && imageAttachment === '' ?
-					<div className='flex flex-row w-40  mx-4'>
+				{ props.currentSettings && props.currentSettings.answerWithoutContext && (props.currentSettings.selectedLlm === 'llama3.2-vision:latest' || props.currentSettings.selectedLlm === 'gemma3:27b') ?
+					<div className='flex flex-row w-40 mx-4'>
 					{/* attachment button for images */}
 					<label htmlFor="file-upload" className="relative cursor-pointer flex justify-center items-center bg-white dark:bg-gray-500 dark:text-white shadow-md rounded-lg w-8 h-8 p-2 my-auto">
 						<PaperClipIcon className='w-6 h-6 text-bsk_dark_blue'/>
 					</label>
-					<input id="file-upload" type="file" className="hidden" accept="image/*"
+					<input id="file-upload" type="file" className="hidden" accept="image/*" multiple
 						onChange={(e:any)=>{
-							const file:any = e.target.files[0]
-							// encode image to base64
-							let reader:any = new FileReader()
-							reader.readAsDataURL(file)
-							reader.onloadend = () => {
-								setImageAttachment(reader.result)
-								// const base64 = btoa(reader.result)
-								setImageBase64(reader.result.split(',')[1])
-							}
-							// reader = new FileReader()
-							// const dataURL = reader.readAsDataURL(file)
-							// setImageBase64(dataURL)
-
-							// setImageAttachment(URL.createObjectURL(file))
-							// const reader:any = new FileReader()
-							// reader.onloadend = () => {
-							// 	setImageAttachment(reader.result)
-							// }
-							// reader.readAsDataURL(file)
+							const files = Array.from(e.target.files);
+							let images:any = []
+							let imageBase64 = []
+							files.forEach((file:any) => {
+								let reader = new FileReader();
+								reader.readAsDataURL(file);
+								reader.onloadend = () => {
+									images.push(reader.result);
+									if (images.length === files.length) {
+										setImageAttachment(images);
+										imageBase64 = images.map((img:any) => img.split(',')[1]);
+										setImageBase64(imageBase64);
+									}
+								};
+							});
 						}}
 					/>
-					<div className='text-nav my-auto mx-2'>Upload image</div>
+					<div className='text-nav my-auto mx-2'>Upload images</div>
 
 					</div> :<></>}
-				{ imageAttachment !== '' ?
-				// show image
-				<div className='flex flex-row dark:text-white rounded-lg mx-4'>
-					<img src={imageAttachment} alt='attachment' className='px-4 h-80'/>
-					<button 
-						className='px-4 mx-2 bg-bsk_dark_blue dark:bg-stjude dark:text-white text-bsk_dark_blue font-semibold hover:text-white hover:border-transparent rounded-full shadow-md hover:shadow-lg outline-none focus:outline-none h-8'
-						onClick={()=>{
-							setImageAttachment('')
-						}}
-					>
-						<p className='text-white my-auto'><XMarkIcon className='w-8 h-8 inline-block'/></p>
-					</button>
+				{ imageAttachment && imageAttachment.length > 0 ?
+				// show images
+				<div className='flex flex-col dark:text-white rounded-lg mx-4'>
+					{imageAttachment.map((img:any, idx:any) => (
+						<div key={idx} className='flex flex-row items-center mb-4'>
+							<img src={img} alt={`attachment-${idx}`} className='px-4 h-80'/>
+							<button 
+								className='px-4 mx-2 bg-bsk_dark_blue dark:bg-stjude dark:text-white text-bsk_dark_blue font-semibold hover:text-white hover:border-transparent rounded-full shadow-md hover:shadow-lg outline-none focus:outline-none h-8'
+								onClick={()=>{
+									setImageAttachment(imageAttachment.filter((_, i) => i !== idx));
+									setImageBase64(prev => prev.filter((_, i) => i !== idx));
+								}}
+							>
+								<p className='text-white my-auto'><XMarkIcon className='w-8 h-8 inline-block'/></p>
+							</button>
+						</div>
+					))}
 				</div> : <></>}
 				{/* { answers.length && answers[answers.length-1].response && searchTerm.length ?
 					<div className='p-1 mx-4 flex'>
@@ -938,7 +1011,7 @@ function GPTHome(props:{
 							Chat to LLM without documents
 						</label>
 						{/* <input type='checkbox' 
-						// className="mr-2 mt-[0.3rem] h-3.5 w-8 appearance-none rounded-[0.4375rem] bg-neutral-300 before:pointer-events-none before:absolute before:h-3.5 before:w-3.5 before:rounded-full before:bg-transparent before:content-[''] after:absolute after:z-[2] after:-mt-[0.1875rem] after:h-5 after:w-5 after:rounded-full after:border-none after:bg-neutral-100 after:shadow-[0_0px_3px_0_rgb(0_0_0_/_7%),_0_2px_2px_0_rgb(0_0_0_/_4%)] after:transition-[background-color_0.2s,transform_0.2s] after:content-[''] checked:bg-primary checked:after:absolute checked:after:z-[2] checked:after:-mt-[3px] checked:after:ml-[1.0625rem] checked:after:h-5 checked:after:w-5 checked:after:rounded-full checked:after:border-none checked:after:bg-primary checked:after:shadow-[0_3px_1px_-2px_rgba(0,0,0,0.2),_0_2px_2px_0_rgba(0,0,0,0.14),_0_1px_5px_0_rgba(0,0,0,0.12)] checked:after:transition-[background-color_0.2s,transform_0.2s] checked:after:content-[''] hover:cursor-pointer focus:outline-none focus:ring-0 focus:before:scale-100 focus:before:opacity-[0.12] focus:before:shadow-[3px_-1px_0px_13px_rgba(0,0,0,0.6)] focus:before:transition-[box-shadow_0.2s,transform_0.2s] focus:after:absolute focus:after:z-[1] focus:after:block focus:after:h-5 focus:after:w-5 focus:after:rounded-full focus:after:content-[''] checked:focus:border-primary checked:focus:bg-primary checked:focus:before:ml-[1.0625rem] checked:focus:before:scale-100"
+						// className="mr-2 mt-[0.3rem] h-3.5 w-8 appearance-none rounded-[0.4375rem] bg-neutral-300 before:pointer-events-none before:absolute before:h-3.5 before:w-3.5 before:rounded-full before:bg-transparent before:content-[''] after:absolute after:z-[2] after:-mt-[0.1875rem] after:h-5 after:w-5 after:rounded-full after:border-none after:bg-neutral-100 after:shadow-[0_0px_3px_0_rgb(0_0_0_/_7%),_0_2px_2px_0_rgb(0_0_0_/_4%)] after:transition-[background-color_0.2s,transform_0.2s] after:content-[''] checked:bg-primary checked:after:absolute checked:after:z-[2] checked:after:-mt-[3px] checked:after:ml-[1.0625rem] checked:after:h-5 checked:after:w-5 checked:after:rounded-full checked:after:border-none checked:after:bg-primary checked:after:shadow-[0_3px_1px_-2px_rgba(0,0,0,0.2),_0_2px_2px_0_rgba(0,0,0,0.14),_0_1px_5px_0_rgba(0,0,0,0.12)] checked:after:transition-[background-color_0.2s,transform_0.2s] checked:after:content-[''] hover:cursor-pointer focus:outline-none focus:ring-0 focus:before:scale-100 focus:before:opacity-[0.12] focus:before:shadow-[3px_-1px_0px_13px_rgba(0,0,0,0.6)] focus:before:transition-[box-shadow_0.2s,transform_0.2s] focus:after:absolute focus:after:z-[1] focus:after:block focus:after:h-5 focus:after:w-5 focus:after:rounded-full focus:after:content-[''] checked:focus:border-primary checked:focus:bg-primary checked:focus:before:ml-[1.0625rem] checked:focus:before:scale-100 checked:focus:before:shadow-[3px_-1px_0px_13px_#3b71ca] checked:focus:before:transition-[box-shadow_0.2s,transform_0.2s] dark:bg-neutral-600 dark:after:bg-neutral-400 dark:checked:bg-primary dark:checked:after:bg-primary dark:focus:before:shadow-[3px_-1px_0px_13px_rgba(255,255,255,0.4)] dark:checked:focus:before:shadow-[3px_-1px_0px_13px_#3b71ca]"
 							role={'switch'}
 							checked={answerWithoutContext}
 							onChange={
@@ -1096,7 +1169,7 @@ function GPTHome(props:{
 										))}
 									</>
 									:
-									questionRelevancescore[query.length-1] > 0 && sourcePapers.length && sourceStarts.length && sourceStarts[query.length-1] && sourcePapers[query.length-1] && sourcePapers[query.length-1] && sourceStops.length && sourceStops[query.length-1] ?
+									questionRelevancescore[query.length-1] > 0 && sourcePapers.length && sourceStarts.length && sourcePapers[query.length-1] && sourceStarts[query.length-1] && sourceStops.length && sourceStops[query.length-1] ?
 									<>
 									<div className='text-white text-sm font-bold pt-4'>
 											{sourcePapers[query.length-i-1].length > 1 ? 'Sources' : 'Source'}
@@ -1197,7 +1270,7 @@ function GPTHome(props:{
 												}}
 											>
 											<div className='border border-gray-400'></div>
-												<div className='text-white text-sm p-2 font-normal italic'>{sourceStarts[query.length-1][index] + ' to ' + sourceStops[query.length-1][index] + ' of "' + paper + '"'}</div>
+												<div className='text-white text-sm p-2 font-normal italic'>{sourceStarts[query.length-i-1][index] + ' to ' + sourceStops[query.length-i-1][index] + ' of "' + paper + '"'}</div>
 											</div>
 										))}
 									</>
@@ -1235,6 +1308,7 @@ function GPTHome(props:{
 								})
 								// setSelectedDataset(e.target.value)
 								props.currentSettings.selectedDataset = e.target.value
+								resetStates()
 							}
 						}
 					>
@@ -1255,9 +1329,9 @@ function GPTHome(props:{
 				{/* add filter column for documents */}
 				{ papers.length > 1 ?
 					<div className='p-2 text-sm border-slate-400 border-b'>
-						<div className='text-white inline-block px-2'> Focus on document </div>
+						<div className='text-white inline-block px-2 w-40'> Focus on document </div>
 						<select 
-							className={'text-md text-nav dark:bg-stjude dark:text-white py-1 px-2 mx-1 rounded-md w-28 inline-block' + (focusedPaper !== null ? ' bg-panel3' : ' bg-panel2 dark:bg-panel4-dark')}
+							className={'text-md text-nav dark:bg-stjude dark:text-white py-1 px-2 mx-1 rounded-md w-40 inline-block' + (focusedPaper !== null ? ' bg-panel3' : ' bg-panel2 dark:bg-panel4-dark')}
 							value={focusedPaper}
 							onChange={
 								(e) => {
@@ -1282,6 +1356,33 @@ function GPTHome(props:{
 										<option key={index} value={v['video_title']}>{v['video_title']}</option>
 									)
 								})
+							}
+						</select>
+					</div>	: <></>
+				}
+				{ sections.length ?
+					<div className='p-2 text-sm border-slate-400 border-b'>
+						<div className='text-white inline-block px-2 w-full'> Focus on section (#documents) </div>
+						<select 
+							className={'text-md text-nav dark:bg-stjude dark:text-white py-1 px-2 mx-1 rounded-md w-40 inline-block' + (focusedSection !== null ? ' bg-panel3' : ' bg-panel2 dark:bg-panel4-dark')}
+							value={focusedSection}
+							onChange={
+								(e) => {
+									if (e.target.value === 'None'){
+										setFocusedSection(null)
+									} else {
+										setFocusedSection(e.target.value)
+									}
+								}
+							}
+						>
+							<option value={'None'}>None</option>
+							{papers.length && sections.length ?
+								sections.map(s=>s['section_title'] + ' (' +s['section_count']+')').map((st:any, index:number) => {
+									return (
+										<option key={index} value={st}>{st}</option>
+									)
+								}) : <></>
 							}
 						</select>
 					</div> : <></>
@@ -1339,8 +1440,9 @@ function GPTHome(props:{
 								defaultScale={SpecialZoomLevel.ActualSize}
 								initialPage={selectedPage-1}
 								plugins={[
-									DefaultLayoutPlunginInstance, 
+									DefaultLayoutPluginInstance, 
 									PageNavigationPluginInstance,
+									bookmarkPluginInstance,
 								]}
 								/> : videos.length && videos[selectedPaperIdx] && videos[selectedPaperIdx]['video_link'] ?
 								// show embedded youtube videos
