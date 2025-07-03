@@ -23,6 +23,8 @@ import base64
 from langchain_community.llms import Ollama
 from typing import Union, cast
 from ..models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, EmbeddingModel, PaperSections
+import requests
+import xml.etree.ElementTree as ET
 
 # imports for embedding functions
 from typing import cast
@@ -374,6 +376,9 @@ def add_dataset_from_upload(request):
                 doc = pymupdf.Document(pdf_name)
                 # get table of contents
                 toc = doc.get_toc(simple=True)
+                # if toc is empty, use grobid to get the table of contents
+                if len(toc) == 0:
+                    toc = get_toc_from_grobid(pdf_name)
                 final_section_titles = []
                 section_title = ''
                 previous_section_title = ''
@@ -1560,3 +1565,43 @@ def min_max_normalization(data, best_val, worst_val, reverse=False):
             normalized_value = (value - worst_val) / (best_val - worst_val)
         normalized_data.append(normalized_value)
     return normalized_data
+
+def get_toc_from_grobid(pdf_path):
+    """
+    Extract the table of contents from a PDF file using GROBID.
+    Grobid is available at http://localhost:8070 by default.
+    """
+    # Use GROBID to extract the table of contents
+    url = 'http://host.docker.internal:8070/api/processFulltextDocument'
+    files = {'input': open(pdf_path, 'rb')}
+    data = {'consolidateHeader': '1', 'teiCoordinates': 'head'}
+    response = requests.post(url, files=files, data=data)
+    
+    # Parse the response to get the table of contents
+    toc = []
+    if response.status_code == 200:
+        xml_content = response.content
+        # Parse the XML content and get <head> elements across entire XML
+        root = ET.fromstring(xml_content)
+
+        for head in root.findall('.//{http://www.tei-c.org/ns/1.0}head'):
+            # Extract the text from the <head> element
+            head_text = head.text.strip() if head.text else ''
+            # get page number from coords attribute from head <head coords="1,72.02,292.61,212.67,11.99"> 
+            coords = head.get('coords')
+            page = coords.split(',')[0] if coords else '1'
+            # add to toc if not empty as pymupdf format
+            if head_text:
+                toc.append([1, head_text, int(page) ])  # Assuming level 1 for all headings
+            
+    else:
+        print(f"Error: {response.status_code} - {response.text}")
+
+    # remove header and footer from toc by removing repetitive elements
+    if len(toc) > 0:
+        # find most common element in toc
+        for i in range(len(toc)-1, 0, -1):
+            if toc[i][1] == toc[i-1][1]:
+                toc.pop(i)
+    
+    return toc
