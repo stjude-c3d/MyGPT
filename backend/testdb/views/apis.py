@@ -108,8 +108,8 @@ def get_context(request):
         no_cutoff = json_request['no_cutoff']
 
         # best and worst scores for BM25
-        # best_bm25_score = 35
-        # worst_bm25_score = 0
+        best_bm25_score = 25
+        worst_bm25_score = 0
 
         # check if dataset exists or crate a new one
         dataset_exist = Dataset.objects.filter(dataset_name=dataset_name).exists()
@@ -139,7 +139,7 @@ def get_context(request):
 
             # get similar chunks using BM25
             bm25_sources = []
-            results, scores = retrieve_chunks_by_bm25(question_text, dataset_name, maximum_chunks_count)
+            results, scores = retrieve_chunks_by_bm25(question_text, dataset_name, 3)
             normalized_scores = min_max_normalization(scores, best_bm25_score, worst_bm25_score, False)
             for idx, result in enumerate(results):
                 cleaned_chunk = re.sub(r'\s+', ' ', str(result['text']))
@@ -289,11 +289,38 @@ def get_context(request):
                     with open(highlighted_pdf_path, 'rb') as f:
                         # paper.paper_attachment.save(dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf', File(f), save=True)
                         paper.highlighted_attachment.save(dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf', File(f), save=True)
+        
+        combined_sources = sources.copy()
+        chunking_method = dataset.chunking_method if dataset.chunking_method else 'fixed_chunk_size'
+        # combine sources and bm25_sources and remove duplicates, keeping the highest relevance score
+        if len(sources) > 0 and len(bm25_sources) > 0 and chunking_method == 'fixed_chunk_size':
+            for bm25_source in bm25_sources:
+                found = False
+                for source in combined_sources:
+                    # remove \n and extra spaces from context
+                    source['context'] = re.sub(r'\s+', ' ', source['context']).strip()
+                    bm25_source['context'] = re.sub(r'\s+', ' ', bm25_source['context']).strip()
+                    if source['context'] == bm25_source['context'] and source['page'] == bm25_source['page']:
+                        found = True
+                        if bm25_source['bm25_score'] > source['normalized_distance']:
+                            source['distance'] = bm25_source['bm25_score_raw']
+                            source['normalized_distance'] = bm25_source['bm25_score']
+                            source['rank'] = bm25_source['rank']
+                        break
+                if not found:
+                    combined_sources.append({
+                        'document': bm25_source['document'],
+                        'page': bm25_source['page'],
+                        'context': bm25_source['context'],
+                        'distance': bm25_source['bm25_score_raw'],
+                        'normalized_distance': bm25_source['bm25_score'],
+                        'rank': bm25_source['rank']
+                    })
             
         context_json = {
             'context': context,
             'relevance_score': relevance_score,
-            'sources': sources,
+            'sources': combined_sources if not no_context else []
         }
         
         return Response(context_json, content_type="application/json")
@@ -639,6 +666,8 @@ def upload_documents(request):
         # else:
         dataset_name = add_dataset_from_upload(request)
         chunking_method = request.POST.get('chunking_method')
+
+        index_document_by_bm25(dataset_name)
         
         # Validate embedding_model input
         embedding_model_request = request.POST.get('embedding_model')

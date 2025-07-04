@@ -407,7 +407,7 @@ def add_dataset_from_upload(request):
                     for i, chunk in enumerate(raw_chunks):
                         chunks.append({
                             "chunk_id": i,
-                            "text": chunk.page_content,
+                            "text": chunk.page_content.strip(),
                             "metadata": {
                                 "source_pdf": pdf_name
                             }
@@ -1071,7 +1071,7 @@ def get_answer_distance_by_context_bm25(text, contexts = ['']):
     tokenizer = bm25s.tokenization.Tokenizer(stemmer=stemmer)
     corpus_tokenized = tokenizer.tokenize(contexts, return_as='tuple')
 
-    retriever = bm25s.BM25(corpus=contexts, backend='numba')
+    retriever = bm25s.BM25(corpus=contexts)
     retriever.index(corpus_tokenized)
     retriever.save(tokenizer_directory)
     tokenizer.save_vocab(tokenizer_directory)
@@ -1622,7 +1622,7 @@ def index_document_by_bm25(dataset_name):
     tokenizer = bm25s.tokenization.Tokenizer(stemmer=stemmer)
     corpus_tokenized = tokenizer.tokenize(documents, return_as='tuple')
 
-    retriever = bm25s.BM25(corpus=documents, backend='numba')
+    retriever = bm25s.BM25(corpus=documents)
     retriever.index(corpus_tokenized)
     retriever.save(tokenizer_directory)
     tokenizer.save_vocab(tokenizer_directory)
