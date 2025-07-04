@@ -291,9 +291,8 @@ def get_context(request):
                         paper.highlighted_attachment.save(dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf', File(f), save=True)
         
         combined_sources = sources.copy()
-        chunking_method = dataset.chunking_method if dataset.chunking_method else 'fixed_chunk_size'
         # combine sources and bm25_sources and remove duplicates, keeping the highest relevance score
-        if len(sources) > 0 and len(bm25_sources) > 0 and chunking_method == 'fixed_chunk_size':
+        if len(sources) > 0 and len(bm25_sources) > 0 and len(focused_section) == 0:
             for bm25_source in bm25_sources:
                 found = False
                 for source in combined_sources:
