@@ -1,0 +1,14 @@
+{
+	"servers": {
+		"my-mcp-server-a844b839": {
+			"type": "stdio",
+			"command": "uv",
+			"args": [
+				"--directory",
+				"/Users/jpatel2/Desktop/github_repos/MyGPT/MCP-server",
+				"run",
+				"mygpt_backend.py"
+			]
+		}
+	}
+}
