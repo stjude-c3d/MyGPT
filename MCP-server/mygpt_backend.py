@@ -55,5 +55,8 @@ async def get_mygpt_datasets(user_email: str) -> dict[str, Any] | None:
 		"datasets_names": dataset_names,
 	}
 
+async def main():
+	await mcp.run_async(transport="sse")
+
 if __name__ == "__main__":
-   asyncio.run(mcp.run_sse_async())
+   asyncio.run(main())

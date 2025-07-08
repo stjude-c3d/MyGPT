@@ -3,11 +3,15 @@ name = "mygpt-backend"
 version = "0.1.0"
 description = "MCP server for MyGPT"
 readme = "README.md"
+tool.uv.package = true
 requires-python = ">=3.11"
 dependencies = [
-    "mcp[cli]>=1.8.1",
-    "fastmcp>=2.3.0",
+    "mcp[cli]>=1.10.1",
+    "fastmcp>=2.10.1",
     "httpx>=0.28.1",
+    "asyncio>=3.4.3",
+	"anyio==4.9.0",
+	"httpcore['asyncio']>=1.0.9",
 ]
 
 [project.scripts]
