@@ -6,6 +6,7 @@ import LLMSettings from './LLMSettings'
 import EmbeddingSettings from './EmbeddingSettings'
 import RelevanceScoreSettings from './RelevanceScoresSettings'
 import { MagnifyingGlassMinusIcon, MagnifyingGlassPlusIcon, ChevronUpIcon, ChevronDownIcon, InformationCircleIcon } from '@heroicons/react/24/outline'
+import MCPClient from './MCPClient'
 
 const Settings = (props:{
 	closeSettings:any,
@@ -511,6 +512,13 @@ const Settings = (props:{
 								settingsCallback={props.settingsCallback}
 								djangoLogin={props.djangoLogin}
 								user={props.user}
+							/> : <></>
+						}
+						{
+							activeTab === 'mcp' ?
+							<MCPClient
+								currentSettings={currentSettings}
+								settingsCallback={props.settingsCallback}
 							/> : <></>
 						}
 					</div>

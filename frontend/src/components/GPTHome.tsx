@@ -61,7 +61,9 @@ function GPTHome(props:{
 	const [addDemoLibrary, setAddDemoLibrary] = useState(false)
 	const [imageAttachment, setImageAttachment] = useState([])
 	const [imageBase64, setImageBase64] = useState([])
+	const [mcpOllamaTools, setMcpOllamaTools] = useState<any[]>([])
 	// console.log(imageAttachment)
+	console.log(props.currentSettings.MCPTools, mcpOllamaTools)
 
 	// get llms from backend
 	useEffect(()=>{
@@ -603,7 +605,7 @@ function GPTHome(props:{
 			}
 		}
 		
-		const body:any = JSON.stringify({
+		const body_:any = {
 			'model': props.currentSettings.selectedLlm,
 			'messages': messages,
 			'stream': true,
@@ -612,9 +614,16 @@ function GPTHome(props:{
 				'top_k': props.currentSettings.top_k,
 				'top_p': props.currentSettings.top_p,
 			}
-		})
+		}
+
+		if (props.currentSettings.selectedLlm === 'llama3.1:latest'){
+			body_['tools'] = mcpOllamaTools
+			body_['stream'] = false
+		}
+
+		const body = JSON.stringify(body_)
 		
-		if(messages.length > 0 && answer === '' && !answerReceived){
+		if(messages.length > 0 && answer === '' && !answerReceived && props.currentSettings.selectedLlm !== 'llama3.1:latest'){
 			// fetch using async await
 			let leftover:any = ''
 			const postData = async () => {
@@ -650,7 +659,7 @@ function GPTHome(props:{
 						const json = JSON.parse(j)
 						if (json.done === false) {
 							content += json.message.content
-						} 
+						}
 						else {
 							setAnswerReceived(true)
 						}
@@ -664,8 +673,104 @@ function GPTHome(props:{
 						}
 					}
 				}
+				setAnswer(content)
+				setAnswerReceived(true)
 			}
 			postData()
+		}
+
+		else if (messages.length > 0 && answer === '' && !answerReceived && props.currentSettings.selectedLlm === 'llama3.1:latest'){
+			
+			const postdata2 = async () => {
+			// fetch using async await
+				let content = ''
+				fetch(`${process.env.REACT_APP_OLLAMA_API}api/chat`, {body, method: 'POST'})
+					.then(response => response.json())
+					.then(async (data:any)=>{
+						if (data.message && data.message.content && data.message.content.length > 0){
+							content = data.message.content
+						}
+						else if (data.message.tool_calls && data.message.tool_calls.length > 0){
+								// handle tool calls here
+								await Promise.all(props.currentSettings.MCPTools.map(async (tool:any) => {
+									const result = await props.currentSettings.MCPClient.callTool({
+									name: tool['name'],
+									arguments: data.message.tool_calls[0].arguments,
+									})
+									if (result.content && result.content.length > 0){
+										messages.push({
+											role: 'tool',
+											content: JSON.stringify(result.content)
+										})
+									}
+								}))
+
+								// call the API again with updated messages
+								const body_2:any = {
+									'model': props.currentSettings.selectedLlm,
+									'messages': messages,
+									'stream': true,
+									'options': {
+										'temperature': props.currentSettings.temperature,
+										'top_k': props.currentSettings.top_k,
+										'top_p': props.currentSettings.top_p,
+									}
+								}
+								const body = JSON.stringify(body_2)
+								const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/chat`, {body, method: 'POST'})
+								const reader:any = response.body?.getReader()
+								let leftover:any = ''
+								while (true) {
+									const { done, value } = await reader.read()
+									if (done) {
+										break;
+									}
+									let rawjson = new TextDecoder().decode(value);
+									let jsons = []
+									if (leftover.length > 0){
+										rawjson = leftover + rawjson
+										leftover = ''
+									}
+									if (rawjson.includes('\n')){
+										jsons = rawjson.split('\n')
+											.filter((j:any)=>j.length)
+									}else{
+										jsons = [rawjson]
+									}
+									let last_json:any = ''
+									if (rawjson.includes('\n') && rawjson.length > 1000){
+										last_json = jsons.pop()
+										if (last_json[last_json.length-1] !== '}'){
+											leftover = last_json
+										}
+									}
+
+									for (const j of jsons){
+										const json = JSON.parse(j)
+										if (json.done === false) {
+											content += json.message.content
+										}
+										else {
+											setAnswerReceived(true)
+										}
+									}
+									setAnswer(content)
+
+									if (last_json.length && last_json[last_json.length - 1] === '}'){
+										const last_json_obj = JSON.parse(last_json)
+										if (last_json_obj.done === true){
+											setAnswerReceived(true)
+										}
+									}
+								}
+								setAnswer(content)
+								setAnswerReceived(true)
+							}
+					})
+				
+			}
+
+			postdata2()
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[query, props.currentSettings.selectedLlm, answerWithoutContext])
@@ -729,6 +834,33 @@ function GPTHome(props:{
 
 	const bookmarkPluginInstance = bookmarkPlugin()
 	const { Bookmarks } = bookmarkPluginInstance
+
+	useEffect(()=>{
+		if (props.currentSettings.MCPTools && props.currentSettings.MCPTools.length){
+			const mcpOllamaTools = props.currentSettings.MCP_tools.map((tool:any)=>{
+				return {
+					type: 'function',
+					function: {
+						name: tool.name,
+						description: tool.description,
+						parameters: {
+							type: 'object',
+							required: tool.inputSchema.required || [],
+							properties: Object.entries(tool.inputSchema.properties).reduce((acc:any, property:any) => {
+								acc[property[0]] = {
+									type: property[1].type,
+									description: property[1].title || ''
+								};
+								return acc;
+							}, {})
+						}
+					},
+				}
+			})
+			setMcpOllamaTools(mcpOllamaTools)
+		}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [props.currentSettings.MCP_tools])
 
 	const renderToolbar = (Toolbar: (props: ToolbarProps) => ReactElement) => (
 		<Toolbar>
@@ -826,18 +958,18 @@ function GPTHome(props:{
 	})
 
 	const resetStates = () => {
-		        setQuery([])
-				setAnswers([])
-				setNullAnswers([])
-				setShowNullAnswerIndexes([])
-				setQuestionRelevancescore([])
-				setAnswerRelevancescore([])
-				setHallucinationIndex([])
-				setSourcePapers([])
-				setSourcePages([])
-				setSourceContexts([])
-				setSourceColorCodes([])
-				setAnswer('')
+		setQuery([])
+		setAnswers([])
+		setNullAnswers([])
+		setShowNullAnswerIndexes([])
+		setQuestionRelevancescore([])
+		setAnswerRelevancescore([])
+		setHallucinationIndex([])
+		setSourcePapers([])
+		setSourcePages([])
+		setSourceContexts([])
+		setSourceColorCodes([])
+		setAnswer('')
 	}
 	return (
 		<div className='grid grid-cols-10 p-4 bg-gray-200 dark:bg-neutral-800 max-w-[2000px] mx-auto h-[94vh]'>
@@ -922,7 +1054,7 @@ function GPTHome(props:{
 						<p className='inline-block ml-2'><PaperAirplaneIcon className='w-6 h-6 inline-block'/></p>
 					</button>
 				</div>
-				{ props.currentSettings && props.currentSettings.answerWithoutContext && (props.currentSettings.selectedLlm === 'llama3.2-vision:latest' || props.currentSettings.selectedLlm === 'gemma3:27b') ?
+				{ props.currentSettings && props.currentSettings.answerWithoutContext && (props.currentSettings.selectedLlm === 'llama3.2-vision:latest' || props.currentSettings.selectedLlm.toLowerCase() === 'gemma3:27b') ?
 					<div className='flex flex-row w-40 mx-4'>
 					{/* attachment button for images */}
 					<label htmlFor="file-upload" className="relative cursor-pointer flex justify-center items-center bg-white dark:bg-gray-500 dark:text-white shadow-md rounded-lg w-8 h-8 p-2 my-auto">
@@ -985,6 +1117,19 @@ function GPTHome(props:{
 						</p>
 					</div>
 					 : null } */}
+				{/* show MCP tool name in tags if llm is llama3.1 */}
+				{ props.currentSettings.selectedLlm === 'llama3.1:latest' && props.currentSettings.MCPTools && props.currentSettings.MCPTools.length > 0 ?
+					<div className='flex flex-row flex-wrap'>
+						<div className='text-sm text-nav dark:text-nav-dark my-auto mx-1'>MCP Tools:</div>
+						{props.currentSettings.MCPTools.map((tool:any, idx:any) => (
+							<div key={idx} className='bg-panel2 dark:bg-panel3-dark text-nav dark:text-nav-dark rounded-full px-2 py-1 m-1 text-sm'>
+								{tool.name}
+							</div>
+						))}
+					</div>
+					: <></>
+				}
+
 				{ props.frontendSettings && props.frontendSettings.show_no_context_switch ? 
 					<div className='p-1 mx-2 flex'>
 						<label className='relative flex justify-between items-center group p-2 text-md text-nav dark:text-nav-dark'>

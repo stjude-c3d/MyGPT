@@ -3,9 +3,22 @@ import httpx
 import asyncio
 # from mcp.server.fastmcp import FastMCP
 from fastmcp import FastMCP
+from starlette.middleware import Middleware
+from starlette.middleware.cors import CORSMiddleware
 
 # Initialize FastMCP server
 mcp = FastMCP("MyGPT-MCP", host="0.0.0.0", port=5001)
+
+# custom CORS middleware
+custom_middleware = [
+    Middleware(
+        CORSMiddleware,
+        allow_origins=["*"],  # Allow all origins for development
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    ),
+]
 
 # MyGPT backend service
 MYGPT_BACKEND_URL = "http://host.docker.internal:8000"
@@ -56,7 +69,7 @@ async def get_mygpt_datasets(user_email: str) -> dict[str, Any] | None:
 	}
 
 async def main():
-	await mcp.run_async(transport="sse")
+	await mcp.run_async(transport="sse", middleware=custom_middleware)
 
 if __name__ == "__main__":
    asyncio.run(main())

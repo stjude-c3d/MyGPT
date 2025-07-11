@@ -12,6 +12,7 @@ dependencies = [
     "asyncio>=3.4.3",
 	"anyio==4.9.0",
 	"httpcore['asyncio']>=1.0.9",
+	"fastapi>=0.95.2",
 ]
 
 [project.scripts]
