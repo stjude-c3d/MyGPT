@@ -63,7 +63,11 @@ function GPTHome(props:{
 	const [imageBase64, setImageBase64] = useState([])
 	const [mcpOllamaTools, setMcpOllamaTools] = useState<any[]>([])
 	// console.log(imageAttachment)
-	console.log(props.currentSettings.MCPTools, mcpOllamaTools)
+	// console.log(props.currentSettings.MCPTools, mcpOllamaTools)
+
+	const llmsWithToolSupport = [
+		'llama3.1', 'llama3.2', 'llama3.3' 
+	]
 
 	// get llms from backend
 	useEffect(()=>{
@@ -623,7 +627,7 @@ function GPTHome(props:{
 
 		const body = JSON.stringify(body_)
 		
-		if(messages.length > 0 && answer === '' && !answerReceived && props.currentSettings.selectedLlm !== 'llama3.1:latest'){
+		if(messages.length > 0 && answer === '' && !answerReceived && !llmsWithToolSupport.includes(props.currentSettings.selectedLlm.split(':')[0])){
 			// fetch using async await
 			let leftover:any = ''
 			const postData = async () => {
@@ -679,7 +683,7 @@ function GPTHome(props:{
 			postData()
 		}
 
-		else if (messages.length > 0 && answer === '' && !answerReceived && props.currentSettings.selectedLlm === 'llama3.1:latest'){
+		else if (messages.length > 0 && answer === '' && !answerReceived && llmsWithToolSupport.includes(props.currentSettings.selectedLlm.split(':')[0])){
 			
 			const postdata2 = async () => {
 			// fetch using async await
@@ -695,7 +699,7 @@ function GPTHome(props:{
 								await Promise.all(props.currentSettings.MCPTools.map(async (tool:any) => {
 									const result = await props.currentSettings.MCPClient.callTool({
 									name: tool['name'],
-									arguments: data.message.tool_calls[0].arguments,
+									arguments: data.message.tool_calls[0].function.arguments,
 									})
 									if (result.content && result.content.length > 0){
 										messages.push({
@@ -1118,7 +1122,7 @@ function GPTHome(props:{
 					</div>
 					 : null } */}
 				{/* show MCP tool name in tags if llm is llama3.1 */}
-				{ props.currentSettings.selectedLlm === 'llama3.1:latest' && props.currentSettings.MCPTools && props.currentSettings.MCPTools.length > 0 ?
+				{ llmsWithToolSupport.includes(props.currentSettings.selectedLlm.split(':')[0]) && props.currentSettings.MCPTools && props.currentSettings.MCPTools.length > 0 ?
 					<div className='flex flex-row flex-wrap'>
 						<div className='text-sm text-nav dark:text-nav-dark my-auto mx-1'>MCP Tools:</div>
 						{props.currentSettings.MCPTools.map((tool:any, idx:any) => (

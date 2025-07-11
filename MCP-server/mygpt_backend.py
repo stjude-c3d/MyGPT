@@ -23,7 +23,7 @@ custom_middleware = [
 # MyGPT backend service
 MYGPT_BACKEND_URL = "http://host.docker.internal:8000"
 
-async def mygpt_backend_handler(email:str) -> dict[str, Any] | None:
+async def mygpt_backend_handler(endpoint:str, email:str, additional_data: object) -> dict[Any] | None:
 	"""
 	Handles requests to the MyGPT backend service.
 	"""
@@ -32,12 +32,16 @@ async def mygpt_backend_handler(email:str) -> dict[str, Any] | None:
 	}
 	async with httpx.AsyncClient() as client:
 		try:
+			json_data = {
+				"user_email": email,
+				"user_group": ""
+			}
+			if additional_data:
+				for key, value in additional_data.items():
+					json_data[key] = value
 			response = await client.post(
-				f"{MYGPT_BACKEND_URL}/api/get_datasets/",
-				json={
-					"user_email": email,
-					"user_group": ""
-					},
+				f"{MYGPT_BACKEND_URL}{endpoint}",
+				json=json_data,
 				headers=headers,
 				timeout=10.0  # Set a timeout for the request
 			)
@@ -56,7 +60,8 @@ async def get_mygpt_datasets(user_email: str) -> dict[str, Any] | None:
 	"""
 	Retrieves datasets for a user.
 	"""
-	data = await mygpt_backend_handler(user_email)
+	endpoint = "/api/get_datasets/"
+	data = await mygpt_backend_handler(endpoint, user_email, additional_data={})
 	dataset_names = []
 	for dataset in data:
 		if "dataset_name" in dataset:
@@ -66,6 +71,22 @@ async def get_mygpt_datasets(user_email: str) -> dict[str, Any] | None:
 		return {"error": "Failed to retrieve datasets."}
 	return {
 		"datasets_names": dataset_names,
+	}
+
+@mcp.tool()
+async def get_mygpt_documents(user_email: str, dataset: str) -> dict[str, Any] | None:
+	"""Retrieves documents for a specific dataset of a user.
+	"""
+	endpoint = "/api/get_documents/"
+	data = await mygpt_backend_handler(endpoint, user_email, additional_data={"dataset": dataset})
+	if data is None:
+		return {"error": "Failed to retrieve datasets."}
+	document_names = []
+	if "documents" in data:
+		for document in data["documents"]:
+			document_names.append(document["paper_title"])
+	return {
+		"document_names": document_names,
 	}
 
 async def main():

@@ -87,11 +87,15 @@ const MCPClient = (props:{
     if (selectedTools.length > 0) {
       props.currentSettings.MCP_tools = selectedTools
     }
-    props.settingsCallback({
-      ...currentSettings,
-      MCPTools: selectedTools,
-      MCPClient: client,
-    })
+    const runSelectedTools = async () => {
+      await client.connect(transport)
+      props.settingsCallback({
+        ...currentSettings,
+        MCPTools: selectedTools,
+        MCPClient: client,
+      })
+    }
+    runSelectedTools()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   },[selectedTools])
   
