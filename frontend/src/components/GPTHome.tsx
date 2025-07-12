@@ -64,6 +64,7 @@ function GPTHome(props:{
 	const [imageAttachment, setImageAttachment] = useState([])
 	const [imageBase64, setImageBase64] = useState([])
 	const [mcpOllamaTools, setMcpOllamaTools] = useState<any[]>([])
+	const [mcpResponse, setMcpResponse] = useState<any>('')
 	// console.log(imageAttachment)
 	// console.log(props.currentSettings.MCPTools, mcpOllamaTools)
 
@@ -324,9 +325,45 @@ function GPTHome(props:{
 				question_worst_distance: props.currentSettings.relevance_score_cutoff.question_worst,
 			})
 		}
-		if(query.length && query.length !== answers.length){
-			// setSelectedPage(0)
-			// setselectedPaperIdx(0)
+		const postDataWithTools = async () => {
+			const toolsBody:any = {
+				'model': props.currentSettings.selectedLlm,
+				'messages': [
+					{
+						'role': 'system',
+						'content': props.currentSettings.system_prompt
+					},
+					{
+						'role': 'user',
+						'content': query[query.length-1] && query[query.length-1].question ? query[query.length-1].question.replaceAll('"',"'") : ''
+					}
+				],
+				'stream': false,
+				'tools': mcpOllamaTools,
+				'options': {
+					'temperature': props.currentSettings.temperature,
+					'top_k': props.currentSettings.top_k,
+					'top_p': props.currentSettings.top_p,
+				}
+			}
+			const body = JSON.stringify(toolsBody)
+			let stream = false
+			let returnToolResponse = true
+			// fetch using async await and wait for the response and then call the getContext function
+			const ollamaData:any = await Promise.resolve(OllamaChatStreamWithToolSupport(body, ()=>{}, props.currentSettings.MCPTools, props.currentSettings.MCPClient, stream, returnToolResponse))
+			if (ollamaData && ollamaData.answerReceived) {
+				setAnswerReceived(ollamaData.answerReceived)
+				let answer = ollamaData.content;
+				let requestOptionsBody: any = JSON.parse(requestOptions.body);
+				requestOptionsBody['text'] = requestOptionsBody['text'] + '<tool_response>' + answer + '</tool_response>';
+				setMcpResponse(answer)
+				// requestOptionsBody['text'] = answer + '
+				requestOptions.body = JSON.stringify(requestOptionsBody);
+				getContext();
+			}
+		}
+
+		const getContext = () => {
 			setRelatedQuery(false)
 			let llm_endpoint = 'get_context'
 				fetch(`${process.env.REACT_APP_BACKEND_API}api/${llm_endpoint}/?format=json`, requestOptions)
@@ -376,6 +413,17 @@ function GPTHome(props:{
 							setAnswerReceived(false)
 						}
 					})
+				}
+
+			if(query.length && query.length !== answers.length){
+			// setSelectedPage(0)
+			// setselectedPaperIdx(0)
+			if (llmsWithToolSupport.includes(props.currentSettings.selectedLlm.split(':')[0]) && mcpOllamaTools.length > 0){
+				postDataWithTools()
+			}
+			else{
+				getContext()
+			}
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[query])
@@ -386,7 +434,7 @@ function GPTHome(props:{
 		const question =  query[query.length-1] && query[query.length-1].question ? query[query.length-1].question.replaceAll('"',"'") : ''
 		const systemPrompt = props.currentSettings.system_prompt + context
 		
-		const body:any = JSON.stringify({
+		const body_:any = {
 			'model': props.currentSettings.selectedLlm,
 			'prompt': question,
 			'stream': true,
@@ -396,7 +444,11 @@ function GPTHome(props:{
 				'top_k': props.currentSettings.top_k,
 				'top_p': props.currentSettings.top_p,
 			}
-		})
+		}
+		if (llmsWithToolSupport.includes(props.currentSettings.selectedLlm.split(':')[0]) && mcpOllamaTools.length > 0){
+			body_.prompt += '\n\n<tool_response>' + mcpResponse + '</tool_response>'
+		}
+		const body = JSON.stringify(body_)
 		
 		if(context.length > 1 && question.length > 1){
 			const postData = async () => {
@@ -533,7 +585,7 @@ function GPTHome(props:{
 			}
 		}
 
-		if (props.currentSettings.selectedLlm === 'llama3.1:latest'){
+		if (llmsWithToolSupport.includes(props.currentSettings.selectedLlm.split(':')[0]) && props.currentSettings.MCPTools && props.currentSettings.MCPTools.length){
 			body_['tools'] = mcpOllamaTools
 			body_['stream'] = false
 		}
@@ -554,9 +606,10 @@ function GPTHome(props:{
 			
 			const postDataWithTools = async () => {
 				// fetch using async await
-				const data = await OllamaChatStreamWithToolSupport(body, setAnswer, props.currentSettings.MCPTools, props.currentSettings.MCPClient)
-				let answerReceived = data.answerReceived
-				setAnswerReceived(answerReceived)
+				let stream = true
+				let returnToolResponse = false
+				const data = await OllamaChatStreamWithToolSupport(body, setAnswer, props.currentSettings.MCPTools, props.currentSettings.MCPClient, stream, returnToolResponse)
+				setAnswerReceived(data.answerReceived)
 			}
 			postDataWithTools()
 		}
@@ -1317,6 +1370,7 @@ function GPTHome(props:{
 									)
 								}) : <></>
 							}
+
 						</select>
 					</div> : <></>
 				}

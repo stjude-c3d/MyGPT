@@ -48,3 +48,6 @@ export const  OllamaDirectGenerateStream = async (body:any, setAnswer:any) => {
 	}
 	return answerReceived
 }
+
+
+// Which are the top 3 kinases curated from Kinase curation project. Is there any information about them in this paper? If yes, then list all the mutations that were used in the substrate phosphorylation assay, activity assay or catalytic activity assay.
