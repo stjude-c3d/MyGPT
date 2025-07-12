@@ -12,7 +12,8 @@ import { PaperAirplaneIcon, Cog6ToothIcon, PaperClipIcon, XMarkIcon } from '@her
 import { scaleSequential, interpolateRdYlGn } from 'd3'
 import Markdown from 'react-markdown'
 // import Feedback from './Feedback'
-import { OllamaDirectChatStream, OllamaChatStreamWithToolSupport  } from '../utils/OllamaChatStream'
+import { OllamaDirectChatStream, OllamaChatStreamWithToolSupport  } from '../utils/OllamaChat'
+import { OllamaDirectGenerateStream } from '../utils/OllamaGenerate'
 
 
 function GPTHome(props:{
@@ -32,8 +33,8 @@ function GPTHome(props:{
 	const [relatedQuery, setRelatedQuery] = useState<any>(false)
 	const [answer, setAnswer] = useState<any>('')
 	const [answerReceived, setAnswerReceived] = useState<any>(false)
-	const [nullAnswer, setnullAnswer] = useState<any>('')
-	const [nullAnswerReceived, setnullAnswerReceived] = useState<any>(false)
+	const [nullAnswer, setNullAnswer] = useState<any>('')
+	const [nullAnswerReceived, setNullAnswerReceived] = useState<any>(false)
 	const [answers, setAnswers] = useState<any[]>([])
 	const [nullAnswers, setNullAnswers] = useState<any[]>([])
 	const [showNullAnswerIndexes, setShowNullAnswerIndexes] = useState<any>([])
@@ -398,54 +399,9 @@ function GPTHome(props:{
 		})
 		
 		if(context.length > 1 && question.length > 1){
-			// fetch using async await
-			let leftover:any = ''
 			const postData = async () => {
-				let content = ''
-				const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/generate`, {body, method: 'POST'})
-				const reader:any = response.body?.getReader()
-				while (true) {
-					const { done, value } = await reader.read()
-					if (done) {
-						break;
-					}
-					let rawjson = new TextDecoder().decode(value);
-					let jsons = []
-					if (leftover.length > 0){
-						rawjson = leftover + rawjson
-						leftover = ''
-					}
-					if (rawjson.includes('\n')){
-						jsons = rawjson.split('\n')
-							.filter((j:any)=>j.length)
-					}else{
-						jsons = [rawjson]
-					}
-					let last_json:any = ''
-					if (rawjson.includes('\n') && rawjson.length > 1000){
-						last_json = jsons.pop()
-						if (last_json[last_json.length-1] !== '}'){
-							leftover = last_json
-						}
-					}
-
-					for (const j of jsons){
-						const json = JSON.parse(j)
-						if (json.done === false) {
-							content += json.response
-						}else{
-							setAnswerReceived(true)
-						}
-					}
-					setAnswer(content)
-
-					if (last_json.length && last_json[last_json.length - 1] === '}'){
-						const last_json_obj = JSON.parse(last_json)
-						if (last_json_obj.done === true){
-							setAnswerReceived(true)
-						}
-					}
-				}
+				let answerReceived = await OllamaDirectGenerateStream(body, setAnswer)
+				setAnswerReceived(answerReceived)
 			}
 			postData()
 		}
@@ -471,54 +427,10 @@ function GPTHome(props:{
 		})
 		
 		if(context.length > 1 && question.length > 1 && nullAnswer === ''){
-			// fetch using async await
-			let leftover:any = ''
+
 			const postData = async () => {
-				let content = ''
-				const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/generate`, {body, method: 'POST'})
-				const reader:any = response.body?.getReader()
-				while (true) {
-					const { done, value } = await reader.read()
-					if (done) {
-						break;
-					}
-					let rawjson = new TextDecoder().decode(value);
-					let jsons = []
-					if (leftover.length > 0){
-						rawjson = leftover + rawjson
-						leftover = ''
-					}
-					if (rawjson.includes('\n')){
-						jsons = rawjson.split('\n')
-							.filter((j:any)=>j.length)
-					}else{
-						jsons = [rawjson]
-					}
-					let last_json:any = ''
-					if (rawjson.includes('\n') && rawjson.length > 1000){
-						last_json = jsons.pop()
-						if (last_json[last_json.length-1] !== '}'){
-							leftover = last_json
-						}
-					}
-
-					for (const j of jsons){
-						const json = JSON.parse(j)
-						if (json.done === false) {
-							content += json.response
-						} else {
-							setnullAnswerReceived(true)
-						}
-					}
-					setnullAnswer(content)
-
-					if (last_json.length && last_json[last_json.length - 1] === '}'){
-						const last_json_obj = JSON.parse(last_json)
-						if (last_json_obj.done === true){
-							setnullAnswerReceived(true)
-						}
-					}
-				}
+				let nullAnswerReceived = await OllamaDirectGenerateStream(body, setNullAnswer)
+				setNullAnswerReceived(nullAnswerReceived)
 			}
 			postData()
 		}
@@ -582,8 +494,8 @@ function GPTHome(props:{
 					setHallucinationIndex((prevHallucinationIndex:any)=>[...prevHallucinationIndex, data.hallucination_index])
 					setContext('')
 					setAnswer('')
-					setnullAnswer('')
-					setnullAnswerReceived(false)
+					setNullAnswer('')
+					setNullAnswerReceived(false)
 					setAnswerReceived(false)
 				})
 		}
