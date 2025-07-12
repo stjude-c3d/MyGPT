@@ -12,6 +12,7 @@ import { PaperAirplaneIcon, Cog6ToothIcon, PaperClipIcon, XMarkIcon } from '@her
 import { scaleSequential, interpolateRdYlGn } from 'd3'
 import Markdown from 'react-markdown'
 // import Feedback from './Feedback'
+import { OllamaDirectChatStream, OllamaChatStreamWithToolSupport  } from '../utils/OllamaChatStream'
 
 
 function GPTHome(props:{
@@ -629,152 +630,23 @@ function GPTHome(props:{
 		
 		if(messages.length > 0 && answer === '' && !answerReceived && !llmsWithToolSupport.includes(props.currentSettings.selectedLlm.split(':')[0])){
 			// fetch using async await
-			let leftover:any = ''
 			const postData = async () => {
-				let content = ''
-				const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/chat`, {body, method: 'POST'})
-				const reader:any = response.body?.getReader()
-				while (true) {
-					const { done, value } = await reader.read()
-					if (done) {
-						break;
-					}
-					let rawjson = new TextDecoder().decode(value);
-					let jsons = []
-					if (leftover.length > 0){
-						rawjson = leftover + rawjson
-						leftover = ''
-					}
-					if (rawjson.includes('\n')){
-						jsons = rawjson.split('\n')
-							.filter((j:any)=>j.length)
-					}else{
-						jsons = [rawjson]
-					}
-					let last_json:any = ''
-					if (rawjson.includes('\n') && rawjson.length > 1000){
-						last_json = jsons.pop()
-						if (last_json[last_json.length-1] !== '}'){
-							leftover = last_json
-						}
-					}
-
-					for (const j of jsons){
-						const json = JSON.parse(j)
-						if (json.done === false) {
-							content += json.message.content
-						}
-						else {
-							setAnswerReceived(true)
-						}
-					}
-					setAnswer(content)
-
-					if (last_json.length && last_json[last_json.length - 1] === '}'){
-						const last_json_obj = JSON.parse(last_json)
-						if (last_json_obj.done === true){
-							setAnswerReceived(true)
-						}
-					}
-				}
-				setAnswer(content)
-				setAnswerReceived(true)
+				const data = await OllamaDirectChatStream(body, setAnswer)
+				let answerReceived = data.answerReceived
+				setAnswerReceived(answerReceived)
 			}
 			postData()
 		}
 
 		else if (messages.length > 0 && answer === '' && !answerReceived && llmsWithToolSupport.includes(props.currentSettings.selectedLlm.split(':')[0])){
 			
-			const postdata2 = async () => {
-			// fetch using async await
-				let content = ''
-				fetch(`${process.env.REACT_APP_OLLAMA_API}api/chat`, {body, method: 'POST'})
-					.then(response => response.json())
-					.then(async (data:any)=>{
-						if (data.message && data.message.content && data.message.content.length > 0){
-							content = data.message.content
-						}
-						else if (data.message.tool_calls && data.message.tool_calls.length > 0){
-								// handle tool calls here
-								await Promise.all(props.currentSettings.MCPTools.map(async (tool:any) => {
-									const result = await props.currentSettings.MCPClient.callTool({
-									name: tool['name'],
-									arguments: data.message.tool_calls[0].function.arguments,
-									})
-									if (result.content && result.content.length > 0){
-										messages.push({
-											role: 'tool',
-											content: JSON.stringify(result.content)
-										})
-									}
-								}))
-
-								// call the API again with updated messages
-								const body_2:any = {
-									'model': props.currentSettings.selectedLlm,
-									'messages': messages,
-									'stream': true,
-									'options': {
-										'temperature': props.currentSettings.temperature,
-										'top_k': props.currentSettings.top_k,
-										'top_p': props.currentSettings.top_p,
-									}
-								}
-								const body = JSON.stringify(body_2)
-								const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/chat`, {body, method: 'POST'})
-								const reader:any = response.body?.getReader()
-								let leftover:any = ''
-								while (true) {
-									const { done, value } = await reader.read()
-									if (done) {
-										break;
-									}
-									let rawjson = new TextDecoder().decode(value);
-									let jsons = []
-									if (leftover.length > 0){
-										rawjson = leftover + rawjson
-										leftover = ''
-									}
-									if (rawjson.includes('\n')){
-										jsons = rawjson.split('\n')
-											.filter((j:any)=>j.length)
-									}else{
-										jsons = [rawjson]
-									}
-									let last_json:any = ''
-									if (rawjson.includes('\n') && rawjson.length > 1000){
-										last_json = jsons.pop()
-										if (last_json[last_json.length-1] !== '}'){
-											leftover = last_json
-										}
-									}
-
-									for (const j of jsons){
-										const json = JSON.parse(j)
-										if (json.done === false) {
-											content += json.message.content
-										}
-										else {
-											setAnswerReceived(true)
-										}
-									}
-									setAnswer(content)
-
-									if (last_json.length && last_json[last_json.length - 1] === '}'){
-										const last_json_obj = JSON.parse(last_json)
-										if (last_json_obj.done === true){
-											setAnswerReceived(true)
-										}
-									}
-								}
-								setAnswer(content)
-								setAnswerReceived(true)
-							}
-					})
-				
+			const postDataWithTools = async () => {
+				// fetch using async await
+				const data = await OllamaChatStreamWithToolSupport(body, setAnswer, props.currentSettings.MCPTools, props.currentSettings.MCPClient)
+				let answerReceived = data.answerReceived
+				setAnswerReceived(answerReceived)
 			}
-
-			postdata2()
+			postDataWithTools()
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[query, props.currentSettings.selectedLlm, answerWithoutContext])
