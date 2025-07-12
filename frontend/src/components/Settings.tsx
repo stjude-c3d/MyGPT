@@ -199,6 +199,7 @@ const Settings = (props:{
 					<div className={'w-1/4 border-slate-400 border-y-2 ' + (window.screen.availHeight < 1000 ? 'h-[80vh]' : 'h-[55vh]')}>
 						<div className='grid grid-cols-1 divide-y'>
 							{ props.defaultSettings.settingsPanels.map((panel:any, index:number) => {
+								if (process.env.REACT_APP_MCP_SHOW_MCP_MENU === 'false' && panel.key === 'mcp') return null
 								return(
 									<div 
 										key={index} 
