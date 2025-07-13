@@ -10,6 +10,7 @@ const defaultSettings = {
 		{key:'llm_parameters', text:'Prompt and LLM parameters'},
 		{key:'embedding_models', text:'Embedding Models'},
 		{key:'relevance_score', text:'Relevance score parameters'},
+		{key: 'mcp', text: 'Model Context Protocol (MCP)'},
 ],
 	selectedPanel: 'datasets',
 	llms: [process.env.REACT_APP_DEFAULT_LLM || 'llama3:latest'],
@@ -61,6 +62,7 @@ const defaultSettings = {
 	use_default_hi: true,
 	restriction_without_login: false,
 	answerWithoutContext: false,
+	MCP_tools: [],
 	papers: [
 		{
 			"paper_title": "Control of G protein-coupled receptor function via membrane-interacting intrinsically disordered C-terminal domains",
