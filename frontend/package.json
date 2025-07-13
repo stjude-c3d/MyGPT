@@ -76,7 +76,11 @@
   "jest": {
     "transformIgnorePatterns": [
       "!node_modules/(?!@src/*.)"
-    ]
+    ],
+    "moduleNameMapper": {
+      "@modelcontextprotocol/sdk/client/index": "<rootDir>/node_modules/@modelcontextprotocol/sdk/dist/esm/client/index",
+      "@modelcontextprotocol/sdk/client/sse": "<rootDir>/node_modules/@modelcontextprotocol/sdk/dist/esm/server/sse"
+    }
   },
   "overrides": {
     "nth-check": "2.1.1"
