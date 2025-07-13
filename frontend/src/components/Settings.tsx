@@ -199,7 +199,10 @@ const Settings = (props:{
 					<div className={'w-1/4 border-slate-400 border-y-2 ' + (window.screen.availHeight < 1000 ? 'h-[80vh]' : 'h-[55vh]')}>
 						<div className='grid grid-cols-1 divide-y'>
 							{ props.defaultSettings.settingsPanels.map((panel:any, index:number) => {
-								const showMCPMenu = parseBoolean(process.env.REACT_APP_MCP_SHOW_MCP_MENU);
+								const showMCPMenu = process.env.REACT_APP_MCP_SHOW_MCP_MENU === 'false' ? false :
+									process.env.REACT_APP_MCP_SHOW_MCP_MENU === 'true' ? true : false
+								console.log('showMCPMenu', showMCPMenu)
+								// if MCP menu is not shown, skip the mcp panel
 								if (!showMCPMenu && panel.key === 'mcp') return null
 								return(
 									<div 
