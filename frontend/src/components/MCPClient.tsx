@@ -19,7 +19,7 @@ const MCPClient = (props:{
   // }))
   
   const currentSettings = props.currentSettings
-  const transport = new SSEClientTransport(new URL(process.env.REACT_MCP_SERVER_URL || 'http://localhost:5001/sse'))
+  const transport = new SSEClientTransport(new URL(process.env.REACT_APP_MCP_SERVER_URL || 'http://localhost:5001/sse'))
   const client = new Client({
     name: 'MyGPT-MCP-Client',
     description: 'A client for MyGPT using Model Context Protocol',
