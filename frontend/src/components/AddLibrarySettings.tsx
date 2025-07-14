@@ -225,7 +225,7 @@ const AddLibrarySettings = (props: {
 			>
 				Upload documents
 			</div>
-			<div className={'inline-block px-4 py-1 shadow border-2 border-y-panel1 ' + 
+			<div className={'inline-block px-4 py-1 shadow rounded-r-lg border-2 border-panel1 ' + 
 				(zoteroPanel ? 'bg-panel1 dark:bg-panel3-dark text-white cursor-default ' : 'text-panel1 bg-white dark:bg-nav-dark dark:text-nav cursor-pointer')}
 				onClick={() => {
 					setZoteroPanel(true)
@@ -235,7 +235,7 @@ const AddLibrarySettings = (props: {
 			>
 				Add Zotero library
 			</div>
-			<div className={'inline-block px-4 py-1 shadow rounded-r-lg border-2 border-panel1 ' + 
+			{/* <div className={'inline-block px-4 py-1 shadow rounded-r-lg border-2 border-panel1 ' + 
 				(videoPanel ? 'bg-panel1 dark:bg-panel3-dark text-white cursor-default ' : 'text-panel1 bg-white dark:bg-nav-dark dark:text-nav cursor-pointer')}
 				onClick={() => {
 					setZoteroPanel(false)
@@ -244,7 +244,7 @@ const AddLibrarySettings = (props: {
 				}}
 			>
 				Youtube video library
-			</div>
+			</div> */}
 		</div>
 		{ zoteroPanel ?
 			<div className='flex justify-start'>

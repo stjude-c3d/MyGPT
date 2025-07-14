@@ -10,6 +10,7 @@ const MCPClient = (props:{
    // get tools from the client
   const [tools, setTools]:any = useState([])
   const [connected, setConnected] = useState(false)
+  const [serverName, setServerName] = useState('')
   const [selectedTools, setSelectedTools]:any = useState([])
   // const [toolResult, setToolResult]:any = useState('')
   // const [client, setClient] = useState(new Client({
@@ -20,7 +21,7 @@ const MCPClient = (props:{
   
   const currentSettings = props.currentSettings
   const transport = new SSEClientTransport(new URL(process.env.REACT_APP_MCP_SERVER_URL || 'http://localhost:5001/sse'))
-  const client = new Client({
+  const client:any = new Client({
     name: 'MyGPT-MCP-Client',
     description: 'A client for MyGPT using Model Context Protocol',
     version: '0.1.0',
@@ -44,6 +45,9 @@ const MCPClient = (props:{
         // console.log('Connecting to MCP server at:', serverURL)
         try {
           await client.connect(transport)
+          // get server name
+          const serverInfo = client._serverVersion
+          setServerName(serverInfo.name || 'MCP Server')
           console.log('MCP Client connected successfully')
           setConnected(true)
         } catch (error) {
@@ -152,10 +156,11 @@ const MCPClient = (props:{
       {/* add place to input server url and connect button, once connected show server name and success message */}
       <div className='px-4 py-2'>
         <div className='flex flex-col text-sm w-1/2 mx-auto'>
-          <label className='text-nav dark:text-nav-dark mb-2 text-lg mx-auto'>MCP Server URL</label>
+          <label className='text-nav dark:text-nav-dark mb-2 text-lg mx-auto'>MCP Server</label>
           {/* add example url */}
           <p className='text-xs text-gray-500 dark:text-gray-400 mb-2 mx-auto'>
-            <span className='text-nav dark:text-nav-dark'>URL: {process.env.REACT_MCP_SERVER_URL}</span>
+            <span className='text-nav dark:text-nav-dark'>URL: {process.env.REACT_APP_MCP_SERVER_URL}</span><br/>
+            <span className='text-nav dark:text-nav-dark'>Server Name: {serverName} </span>
           </p>
           {/* add connect button */}
           <button
