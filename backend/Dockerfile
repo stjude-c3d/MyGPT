@@ -3,6 +3,7 @@ FROM ghcr.io/chroma-core/chroma:0.5.7
 # FROM --platform=amd64 ghcr.io/chroma-core/chroma:latest
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV CHROMA_SERVER_NOFILE=${CHROMA_SERVER_NOFILE}
 RUN mkdir /code
 WORKDIR /code
 RUN apt update

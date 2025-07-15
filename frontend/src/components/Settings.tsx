@@ -6,6 +6,7 @@ import LLMSettings from './LLMSettings'
 import EmbeddingSettings from './EmbeddingSettings'
 import RelevanceScoreSettings from './RelevanceScoresSettings'
 import { MagnifyingGlassMinusIcon, MagnifyingGlassPlusIcon, ChevronUpIcon, ChevronDownIcon, InformationCircleIcon } from '@heroicons/react/24/outline'
+import MCPClient from './MCPClient'
 
 const Settings = (props:{
 	closeSettings:any,
@@ -198,6 +199,11 @@ const Settings = (props:{
 					<div className={'w-1/4 border-slate-400 border-y-2 ' + (window.screen.availHeight < 1000 ? 'h-[80vh]' : 'h-[55vh]')}>
 						<div className='grid grid-cols-1 divide-y'>
 							{ props.defaultSettings.settingsPanels.map((panel:any, index:number) => {
+								const showMCPMenu = process.env.REACT_APP_MCP_SHOW_MCP_MENU === 'false' ? false :
+									process.env.REACT_APP_MCP_SHOW_MCP_MENU === 'true' ? true : false
+								console.log('showMCPMenu', showMCPMenu)
+								// if MCP menu is not shown, skip the mcp panel
+								if (!showMCPMenu && panel.key === 'mcp') return null
 								return(
 									<div 
 										key={index} 
@@ -511,6 +517,13 @@ const Settings = (props:{
 								settingsCallback={props.settingsCallback}
 								djangoLogin={props.djangoLogin}
 								user={props.user}
+							/> : <></>
+						}
+						{
+							activeTab === 'mcp' ?
+							<MCPClient
+								currentSettings={currentSettings}
+								settingsCallback={props.settingsCallback}
 							/> : <></>
 						}
 					</div>

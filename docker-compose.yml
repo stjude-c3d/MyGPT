@@ -80,6 +80,15 @@ services:
       timeout: 30s
       retries: 5
       start_period: 30s
+  mcp_server:
+    build: ./MCP-server
+    volumes:
+      - ./MCP-server:/app
+    ports:
+      - "5001:5001"
+    depends_on:
+      backend:
+        condition: service_healthy
   ollama:
     build: ./ollama
     # set environment variables

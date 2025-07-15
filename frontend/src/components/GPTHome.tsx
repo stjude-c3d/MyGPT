@@ -12,6 +12,8 @@ import { PaperAirplaneIcon, Cog6ToothIcon, PaperClipIcon, XMarkIcon } from '@her
 import { scaleSequential, interpolateRdYlGn } from 'd3'
 import Markdown from 'react-markdown'
 // import Feedback from './Feedback'
+import { OllamaDirectChatStream, OllamaChatStreamWithToolSupport  } from '../utils/OllamaChat'
+import { OllamaDirectGenerateStream } from '../utils/OllamaGenerate'
 
 
 function GPTHome(props:{
@@ -31,8 +33,8 @@ function GPTHome(props:{
 	const [relatedQuery, setRelatedQuery] = useState<any>(false)
 	const [answer, setAnswer] = useState<any>('')
 	const [answerReceived, setAnswerReceived] = useState<any>(false)
-	const [nullAnswer, setnullAnswer] = useState<any>('')
-	const [nullAnswerReceived, setnullAnswerReceived] = useState<any>(false)
+	const [nullAnswer, setNullAnswer] = useState<any>('')
+	const [nullAnswerReceived, setNullAnswerReceived] = useState<any>(false)
 	const [answers, setAnswers] = useState<any[]>([])
 	const [nullAnswers, setNullAnswers] = useState<any[]>([])
 	const [showNullAnswerIndexes, setShowNullAnswerIndexes] = useState<any>([])
@@ -61,7 +63,14 @@ function GPTHome(props:{
 	const [addDemoLibrary, setAddDemoLibrary] = useState(false)
 	const [imageAttachment, setImageAttachment] = useState([])
 	const [imageBase64, setImageBase64] = useState([])
+	const [mcpOllamaTools, setMcpOllamaTools] = useState<any[]>([])
+	const [mcpResponse, setMcpResponse] = useState<any>('')
 	// console.log(imageAttachment)
+	// console.log(props.currentSettings.MCPTools, mcpOllamaTools)
+
+	const llmsWithToolSupport = [
+		'llama3.1', 'llama3.2', 'llama3.3' 
+	]
 
 	// get llms from backend
 	useEffect(()=>{
@@ -316,9 +325,45 @@ function GPTHome(props:{
 				question_worst_distance: props.currentSettings.relevance_score_cutoff.question_worst,
 			})
 		}
-		if(query.length && query.length !== answers.length){
-			// setSelectedPage(0)
-			// setselectedPaperIdx(0)
+		const postDataWithTools = async () => {
+			const toolsBody:any = {
+				'model': props.currentSettings.selectedLlm,
+				'messages': [
+					{
+						'role': 'system',
+						'content': props.currentSettings.system_prompt
+					},
+					{
+						'role': 'user',
+						'content': query[query.length-1] && query[query.length-1].question ? query[query.length-1].question.replaceAll('"',"'") : ''
+					}
+				],
+				'stream': false,
+				'tools': mcpOllamaTools,
+				'options': {
+					'temperature': props.currentSettings.temperature,
+					'top_k': props.currentSettings.top_k,
+					'top_p': props.currentSettings.top_p,
+				}
+			}
+			const body = JSON.stringify(toolsBody)
+			let stream = false
+			let returnToolResponse = true
+			// fetch using async await and wait for the response and then call the getContext function
+			const ollamaData:any = await Promise.resolve(OllamaChatStreamWithToolSupport(body, ()=>{}, props.currentSettings.MCPTools, props.currentSettings.MCPClient, stream, returnToolResponse))
+			if (ollamaData && ollamaData.answerReceived) {
+				setAnswerReceived(ollamaData.answerReceived)
+				let answer = ollamaData.content;
+				let requestOptionsBody: any = JSON.parse(requestOptions.body);
+				requestOptionsBody['text'] = requestOptionsBody['text'] + '<tool_response>' + answer + '</tool_response>';
+				setMcpResponse(answer)
+				// requestOptionsBody['text'] = answer + '
+				requestOptions.body = JSON.stringify(requestOptionsBody);
+				getContext();
+			}
+		}
+
+		const getContext = () => {
 			setRelatedQuery(false)
 			let llm_endpoint = 'get_context'
 				fetch(`${process.env.REACT_APP_BACKEND_API}api/${llm_endpoint}/?format=json`, requestOptions)
@@ -368,6 +413,17 @@ function GPTHome(props:{
 							setAnswerReceived(false)
 						}
 					})
+				}
+
+			if(query.length && query.length !== answers.length){
+			// setSelectedPage(0)
+			// setselectedPaperIdx(0)
+			if (llmsWithToolSupport.includes(props.currentSettings.selectedLlm.split(':')[0]) && mcpOllamaTools.length > 0){
+				postDataWithTools()
+			}
+			else{
+				getContext()
+			}
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[query])
@@ -378,7 +434,7 @@ function GPTHome(props:{
 		const question =  query[query.length-1] && query[query.length-1].question ? query[query.length-1].question.replaceAll('"',"'") : ''
 		const systemPrompt = props.currentSettings.system_prompt + context
 		
-		const body:any = JSON.stringify({
+		const body_:any = {
 			'model': props.currentSettings.selectedLlm,
 			'prompt': question,
 			'stream': true,
@@ -388,57 +444,16 @@ function GPTHome(props:{
 				'top_k': props.currentSettings.top_k,
 				'top_p': props.currentSettings.top_p,
 			}
-		})
+		}
+		if (llmsWithToolSupport.includes(props.currentSettings.selectedLlm.split(':')[0]) && mcpOllamaTools.length > 0){
+			body_.prompt += '\n\n<tool_response>' + mcpResponse + '</tool_response>'
+		}
+		const body = JSON.stringify(body_)
 		
 		if(context.length > 1 && question.length > 1){
-			// fetch using async await
-			let leftover:any = ''
 			const postData = async () => {
-				let content = ''
-				const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/generate`, {body, method: 'POST'})
-				const reader:any = response.body?.getReader()
-				while (true) {
-					const { done, value } = await reader.read()
-					if (done) {
-						break;
-					}
-					let rawjson = new TextDecoder().decode(value);
-					let jsons = []
-					if (leftover.length > 0){
-						rawjson = leftover + rawjson
-						leftover = ''
-					}
-					if (rawjson.includes('\n')){
-						jsons = rawjson.split('\n')
-							.filter((j:any)=>j.length)
-					}else{
-						jsons = [rawjson]
-					}
-					let last_json:any = ''
-					if (rawjson.includes('\n') && rawjson.length > 1000){
-						last_json = jsons.pop()
-						if (last_json[last_json.length-1] !== '}'){
-							leftover = last_json
-						}
-					}
-
-					for (const j of jsons){
-						const json = JSON.parse(j)
-						if (json.done === false) {
-							content += json.response
-						}else{
-							setAnswerReceived(true)
-						}
-					}
-					setAnswer(content)
-
-					if (last_json.length && last_json[last_json.length - 1] === '}'){
-						const last_json_obj = JSON.parse(last_json)
-						if (last_json_obj.done === true){
-							setAnswerReceived(true)
-						}
-					}
-				}
+				let answerReceived = await OllamaDirectGenerateStream(body, setAnswer)
+				setAnswerReceived(answerReceived)
 			}
 			postData()
 		}
@@ -464,54 +479,10 @@ function GPTHome(props:{
 		})
 		
 		if(context.length > 1 && question.length > 1 && nullAnswer === ''){
-			// fetch using async await
-			let leftover:any = ''
+
 			const postData = async () => {
-				let content = ''
-				const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/generate`, {body, method: 'POST'})
-				const reader:any = response.body?.getReader()
-				while (true) {
-					const { done, value } = await reader.read()
-					if (done) {
-						break;
-					}
-					let rawjson = new TextDecoder().decode(value);
-					let jsons = []
-					if (leftover.length > 0){
-						rawjson = leftover + rawjson
-						leftover = ''
-					}
-					if (rawjson.includes('\n')){
-						jsons = rawjson.split('\n')
-							.filter((j:any)=>j.length)
-					}else{
-						jsons = [rawjson]
-					}
-					let last_json:any = ''
-					if (rawjson.includes('\n') && rawjson.length > 1000){
-						last_json = jsons.pop()
-						if (last_json[last_json.length-1] !== '}'){
-							leftover = last_json
-						}
-					}
-
-					for (const j of jsons){
-						const json = JSON.parse(j)
-						if (json.done === false) {
-							content += json.response
-						} else {
-							setnullAnswerReceived(true)
-						}
-					}
-					setnullAnswer(content)
-
-					if (last_json.length && last_json[last_json.length - 1] === '}'){
-						const last_json_obj = JSON.parse(last_json)
-						if (last_json_obj.done === true){
-							setnullAnswerReceived(true)
-						}
-					}
-				}
+				let nullAnswerReceived = await OllamaDirectGenerateStream(body, setNullAnswer)
+				setNullAnswerReceived(nullAnswerReceived)
 			}
 			postData()
 		}
@@ -575,8 +546,8 @@ function GPTHome(props:{
 					setHallucinationIndex((prevHallucinationIndex:any)=>[...prevHallucinationIndex, data.hallucination_index])
 					setContext('')
 					setAnswer('')
-					setnullAnswer('')
-					setnullAnswerReceived(false)
+					setNullAnswer('')
+					setNullAnswerReceived(false)
 					setAnswerReceived(false)
 				})
 		}
@@ -603,7 +574,7 @@ function GPTHome(props:{
 			}
 		}
 		
-		const body:any = JSON.stringify({
+		const body_:any = {
 			'model': props.currentSettings.selectedLlm,
 			'messages': messages,
 			'stream': true,
@@ -612,60 +583,35 @@ function GPTHome(props:{
 				'top_k': props.currentSettings.top_k,
 				'top_p': props.currentSettings.top_p,
 			}
-		})
+		}
+
+		if (llmsWithToolSupport.includes(props.currentSettings.selectedLlm.split(':')[0]) && props.currentSettings.MCPTools && props.currentSettings.MCPTools.length){
+			body_['tools'] = mcpOllamaTools
+			body_['stream'] = false
+		}
+
+		const body = JSON.stringify(body_)
 		
-		if(messages.length > 0 && answer === '' && !answerReceived){
+		if(messages.length > 0 && answer === '' && !answerReceived && !llmsWithToolSupport.includes(props.currentSettings.selectedLlm.split(':')[0])){
 			// fetch using async await
-			let leftover:any = ''
 			const postData = async () => {
-				let content = ''
-				const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/chat`, {body, method: 'POST'})
-				const reader:any = response.body?.getReader()
-				while (true) {
-					const { done, value } = await reader.read()
-					if (done) {
-						break;
-					}
-					let rawjson = new TextDecoder().decode(value);
-					let jsons = []
-					if (leftover.length > 0){
-						rawjson = leftover + rawjson
-						leftover = ''
-					}
-					if (rawjson.includes('\n')){
-						jsons = rawjson.split('\n')
-							.filter((j:any)=>j.length)
-					}else{
-						jsons = [rawjson]
-					}
-					let last_json:any = ''
-					if (rawjson.includes('\n') && rawjson.length > 1000){
-						last_json = jsons.pop()
-						if (last_json[last_json.length-1] !== '}'){
-							leftover = last_json
-						}
-					}
-
-					for (const j of jsons){
-						const json = JSON.parse(j)
-						if (json.done === false) {
-							content += json.message.content
-						} 
-						else {
-							setAnswerReceived(true)
-						}
-					}
-					setAnswer(content)
-
-					if (last_json.length && last_json[last_json.length - 1] === '}'){
-						const last_json_obj = JSON.parse(last_json)
-						if (last_json_obj.done === true){
-							setAnswerReceived(true)
-						}
-					}
-				}
+				const data = await OllamaDirectChatStream(body, setAnswer)
+				let answerReceived = data.answerReceived
+				setAnswerReceived(answerReceived)
 			}
 			postData()
+		}
+
+		else if (messages.length > 0 && answer === '' && !answerReceived && llmsWithToolSupport.includes(props.currentSettings.selectedLlm.split(':')[0])){
+			
+			const postDataWithTools = async () => {
+				// fetch using async await
+				let stream = true
+				let returnToolResponse = false
+				const data = await OllamaChatStreamWithToolSupport(body, setAnswer, props.currentSettings.MCPTools, props.currentSettings.MCPClient, stream, returnToolResponse)
+				setAnswerReceived(data.answerReceived)
+			}
+			postDataWithTools()
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[query, props.currentSettings.selectedLlm, answerWithoutContext])
@@ -729,6 +675,33 @@ function GPTHome(props:{
 
 	const bookmarkPluginInstance = bookmarkPlugin()
 	const { Bookmarks } = bookmarkPluginInstance
+
+	useEffect(()=>{
+		if (props.currentSettings.MCPTools && props.currentSettings.MCPTools.length){
+			const mcpOllamaTools = props.currentSettings.MCP_tools.map((tool:any)=>{
+				return {
+					type: 'function',
+					function: {
+						name: tool.name,
+						description: tool.description,
+						parameters: {
+							type: 'object',
+							required: tool.inputSchema.required || [],
+							properties: Object.entries(tool.inputSchema.properties).reduce((acc:any, property:any) => {
+								acc[property[0]] = {
+									type: property[1].type,
+									description: property[1].title || ''
+								};
+								return acc;
+							}, {})
+						}
+					},
+				}
+			})
+			setMcpOllamaTools(mcpOllamaTools)
+		}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [props.currentSettings.MCP_tools])
 
 	const renderToolbar = (Toolbar: (props: ToolbarProps) => ReactElement) => (
 		<Toolbar>
@@ -826,18 +799,18 @@ function GPTHome(props:{
 	})
 
 	const resetStates = () => {
-		        setQuery([])
-				setAnswers([])
-				setNullAnswers([])
-				setShowNullAnswerIndexes([])
-				setQuestionRelevancescore([])
-				setAnswerRelevancescore([])
-				setHallucinationIndex([])
-				setSourcePapers([])
-				setSourcePages([])
-				setSourceContexts([])
-				setSourceColorCodes([])
-				setAnswer('')
+		setQuery([])
+		setAnswers([])
+		setNullAnswers([])
+		setShowNullAnswerIndexes([])
+		setQuestionRelevancescore([])
+		setAnswerRelevancescore([])
+		setHallucinationIndex([])
+		setSourcePapers([])
+		setSourcePages([])
+		setSourceContexts([])
+		setSourceColorCodes([])
+		setAnswer('')
 	}
 	return (
 		<div className='grid grid-cols-10 p-4 bg-gray-200 dark:bg-neutral-800 max-w-[2000px] mx-auto h-[94vh]'>
@@ -922,7 +895,7 @@ function GPTHome(props:{
 						<p className='inline-block ml-2'><PaperAirplaneIcon className='w-6 h-6 inline-block'/></p>
 					</button>
 				</div>
-				{ props.currentSettings && props.currentSettings.answerWithoutContext && (props.currentSettings.selectedLlm === 'llama3.2-vision:latest' || props.currentSettings.selectedLlm === 'gemma3:27b') ?
+				{ props.currentSettings && props.currentSettings.answerWithoutContext && (props.currentSettings.selectedLlm === 'llama3.2-vision:latest' || props.currentSettings.selectedLlm.toLowerCase() === 'gemma3:27b') ?
 					<div className='flex flex-row w-40 mx-4'>
 					{/* attachment button for images */}
 					<label htmlFor="file-upload" className="relative cursor-pointer flex justify-center items-center bg-white dark:bg-gray-500 dark:text-white shadow-md rounded-lg w-8 h-8 p-2 my-auto">
@@ -985,6 +958,19 @@ function GPTHome(props:{
 						</p>
 					</div>
 					 : null } */}
+				{/* show MCP tool name in tags if llm is llama3.1 */}
+				{ llmsWithToolSupport.includes(props.currentSettings.selectedLlm.split(':')[0]) && props.currentSettings.MCPTools && props.currentSettings.MCPTools.length > 0 ?
+					<div className='flex flex-row flex-wrap'>
+						<div className='text-sm text-nav dark:text-nav-dark my-auto mx-1'>MCP Tools:</div>
+						{props.currentSettings.MCPTools.map((tool:any, idx:any) => (
+							<div key={idx} className='bg-panel2 dark:bg-panel3-dark text-nav dark:text-nav-dark rounded-full px-2 py-1 m-1 text-sm'>
+								{tool.name}
+							</div>
+						))}
+					</div>
+					: <></>
+				}
+
 				{ props.frontendSettings && props.frontendSettings.show_no_context_switch ? 
 					<div className='p-1 mx-2 flex'>
 						<label className='relative flex justify-between items-center group p-2 text-md text-nav dark:text-nav-dark'>
@@ -1288,7 +1274,7 @@ function GPTHome(props:{
 			{ !answerWithoutContext ? 
 			<>				
 			<div className='col-span-2 mt-24 max-w-5xl w-full bg-panel1 dark:bg-panel4-dark rounded-l-lg overflow-y-auto max-h-[92vh]'>
-				<div className=' p-6 text-2xl font-bold text-white'>{papers.length ? 'Your publication library' : 'Your video library'}</div>
+				<div className=' p-6 text-2xl font-bold text-white'>{papers.length ? 'Your document library' : 'Your video library'}</div>
 				
 				<div className='p-2 text-sm border-slate-400 border-y'>
 					<div className='text-white inline-block px-2'> Current library </div>
@@ -1384,6 +1370,7 @@ function GPTHome(props:{
 									)
 								}) : <></>
 							}
+
 						</select>
 					</div> : <></>
 				}

@@ -176,6 +176,7 @@ def get_context(request):
         # save question to database
         current_date_time = make_aware(datetime.datetime.now())
         dataset = Dataset.objects.get(dataset_name=dataset_name)
+        question_text = question_text.split('<tool_response>')[0]
         quesiton_exist = Question.objects.filter(question_dataset=dataset).filter(question_text=question_text).filter(model_type=model_type).exists()
         if quesiton_exist:
             questions = Question.objects.filter(question_text=question_text, model_type=model_type, question_dataset=dataset)
