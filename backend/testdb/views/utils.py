@@ -434,7 +434,7 @@ def add_dataset_from_upload(request):
                             if section in chunk_text:
                                 chunks = chunk_text.split(section)
                                 # find previous entry before section in page_sections otherwise use previous_section_title
-                                section_index = page_sections.index(section)
+                                section_index = page_sections.index(section) if section in page_sections else -1 
                                 if section_index > 0:
                                     previous_section_title = page_sections[section_index - 1]
                                 elif section_index == 0 and previous_section_title != '':
