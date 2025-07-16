@@ -53,6 +53,7 @@ class Dataset(models.Model):
 	chunking_method = models.CharField(max_length=40, choices=chunking_methods_choice, default='-')
 	chunksize = models.IntegerField(default=1000)
 	overlap = models.BooleanField(default=False)
+	use_bm25 = models.BooleanField(default=False)
 	distance_function = models.CharField(max_length=40, default='l2')
 	direct_chat_without_docs = models.BooleanField(default=False)
 	dataset_date_time = models.DateTimeField(default=timezone.now, null=True)

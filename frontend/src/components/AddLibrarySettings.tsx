@@ -40,6 +40,7 @@ const AddLibrarySettings = (props: {
   const [chunkSizeActive, setChunkSizeActive] = useState(true)
   const [useOverlap, setUseOverlap] = useState('Yes')
   const [chunkSize, setChunkSize] = useState('1000')
+  const [useBM25, setUseBM25] = useState(true)
   const [distanceFn, setDistanceFn] = useState('l2')
 
 //   console.log(UploadLibraryName, uploadDocs)
@@ -56,6 +57,7 @@ const AddLibrarySettings = (props: {
 		formData.append('use_overlap', useOverlap)
 		formData.append('chunking_method', chunkingMethod)
 		formData.append('chunk_size', chunkSize)
+		formData.append('use_bm25', useBM25 ? 'True' : 'False')
 		formData.append('distance_function', distanceFn)
 		formData.append('user', props.user ? props.user.user.replace(', ','_'): '-')
 		formData.append('user_email', props.user ? props.user.user_email : '-')
@@ -104,6 +106,7 @@ const AddLibrarySettings = (props: {
 			formData.append('chunking_method', chunkingMethod)
 			formData.append('use_overlap', useOverlap)
 			formData.append('chunk_size', chunkSize)
+			formData.append('use_bm25', useBM25 ? 'True' : 'False')
 			formData.append('distance_function', distanceFn)
 
 			// show error if dataset name is empty
@@ -339,17 +342,6 @@ const AddLibrarySettings = (props: {
 						/>
 					</div>
 					<div className='flex justify-start mx-2 my-1'>
-						<div className='text-nav dark:text-nav-dark p-1 w-48'>Use Overlap</div>
-						<DropdownOptions
-							width={'280px'}
-							optionsList={['Yes', 'No']}
-							defaultOption={'Yes'}
-							dropDownCallback={(option:string)=>{
-								setUseOverlap(option)
-							}}
-						/>
-					</div>
-					<div className='flex justify-start mx-2 my-1'>
 						<div className='text-nav dark:text-nav-dark p-1 w-48'>Chunking Method</div>
 						<DropdownOptions
 							width={'280px'}
@@ -368,15 +360,37 @@ const AddLibrarySettings = (props: {
 							}}
 						/>
 					</div>
-					<div className='flex justify-start mx-2 my-1'>
+					<div className='flex justify-start mx-6 my-1'>
 						<div className='text-nav dark:text-nav-dark p-1 w-48'>Chunk Size</div>
 						<DropdownOptions
-							width={'280px'}
+							width={'200px'}
 							disabled={!chunkSizeActive}
 							optionsList={['500', '750', '1000', '1200']}
 							defaultOption={'1000'}
 							dropDownCallback={(option:string)=>{
 								setChunkSize(option)
+							}}
+						/>
+					</div>
+					<div className='flex justify-start mx-2 my-1'>
+						<div className='text-nav dark:text-nav-dark p-1 w-48'>Use Overlap</div>
+						<DropdownOptions
+							width={'280px'}
+							optionsList={['Yes', 'No']}
+							defaultOption={'Yes'}
+							dropDownCallback={(option:string)=>{
+								setUseOverlap(option)
+							}}
+						/>
+					</div>
+					<div className='flex justify-start m-2'>
+						<div className='text-nav dark:text-nav-dark p-1 w-48'>Use BM25</div>
+						<DropdownOptions
+							width={'280px'}
+							optionsList={['Yes', 'No']}
+							defaultOption={'Yes'}
+							dropDownCallback={(option:string)=>{
+								setUseBM25(option === 'Yes' ? true : false)
 							}}
 						/>
 					</div>
@@ -487,6 +501,17 @@ const AddLibrarySettings = (props: {
 							defaultOption={'Yes'}
 							dropDownCallback={(option:string)=>{
 								setUseOverlap(option)
+							}}
+						/>
+					</div>
+					<div className='flex justify-start m-2'>
+						<div className='text-nav dark:text-nav-dark p-1 w-48'>Use BM25</div>
+						<DropdownOptions
+							width={'270px'}
+							optionsList={['Yes', 'No']}
+							defaultOption={'Yes'}
+							dropDownCallback={(option:string)=>{
+								setUseBM25(option === 'Yes' ? true : false)
 							}}
 						/>
 					</div>

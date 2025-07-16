@@ -210,6 +210,7 @@ def add_dataset_from_upload(request):
     chunking_method = request.POST.get('chunking_method')
     chunk_size = request.POST.get('chunk_size')
     distance_function_r = request.POST.get('distance_function')
+    use_bm25 = request.POST.get('use_bm25')
 
     # Validate all inputs for code injection
     if not dataset_name_r or not re.match(r'^[a-zA-Z0-9_\-\s\w]+$', dataset_name_r):
@@ -266,6 +267,7 @@ def add_dataset_from_upload(request):
             chunksize=chunk_size,
             chunking_method=chunking_method,
             overlap=use_overlap,
+            use_bm25=use_bm25,
             distance_function=distance_function,
             user = user if len(user) else '-',
             user_email = user_email if len(user_email) else '-',
@@ -627,6 +629,11 @@ def add_demo_dataset(embedding_model_request = 'multi-qa-MiniLM-L6-cos-v1'):
         dataset = Dataset.objects.create(
             dataset_name=dataset_name,
             dataset_size=new_count,
+            chunksize=1000,
+            chunking_method='fixed_chunk_size',
+            overlap=False,
+            use_bm25=False,
+            distance_function='l2',
             dataset_date_time=make_aware(datetime.datetime.now())
         )
 

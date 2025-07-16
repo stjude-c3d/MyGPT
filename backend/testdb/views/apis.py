@@ -125,10 +125,12 @@ def get_context(request):
         new_conversation = json_request['new_conversation']
         previous_question = json_request['previous_query']
         no_context = json_request['no_context']
+        use_bm25 = dataset.use_bm25 if hasattr(dataset, 'use_bm25') else False
         keywords = json_request['keywords'] if 'keywords' in json_request else ''
         if no_context:    
             context, titles, pages, starts, stops, chunks_txt, distances = '', [], [], [], [], [], []
             vector_sources = []
+            bm25_sources = []
             relevance_score = 0
             normalized_distances = []
         else:
@@ -137,28 +139,29 @@ def get_context(request):
             distances = [round(dist, 3) for dist in distances]
             relevance_score, normalized_distances = get_relevance_score(distances, embedding_model, True, use_default_qrs, question_best_distance, question_worst_distance)
 
-            # get similar chunks using BM25
             bm25_sources = []
-            results, scores = retrieve_chunks_by_bm25(question_text, dataset_name, 3)
-            normalized_scores = min_max_normalization(scores, best_bm25_score, worst_bm25_score, False)
-            for idx, result in enumerate(results):
-                cleaned_chunk = re.sub(r'\s+', ' ', str(result['text']))
-                # remove all new lines
-                cleaned_chunk = re.sub(r'\n+', ' ', cleaned_chunk)
-                chunk_split = cleaned_chunk.split('; ', 2)
-                document_title = chunk_split[0].replace('document ', '')
-                page = chunk_split[1].replace('page ', '')
-                chunk_txt = chunk_split[2]
-                bm25_sources.append({
-                    'document': document_title,
-                    'page': int(page),
-                    'context': chunk_txt,
-                    'bm25_score_raw': round(float(scores[idx]),2),
-                    'bm25_score': round(normalized_scores[idx], 3),
-                    'vector_score': 0,
-                    'rank': idx + 1,
-                    'vector_distance_raw': 0,
-                })
+            if use_bm25:
+                # get similar chunks using BM25
+                results, scores = retrieve_chunks_by_bm25(question_text, dataset_name, 3)
+                normalized_scores = min_max_normalization(scores, best_bm25_score, worst_bm25_score, False)
+                for idx, result in enumerate(results):
+                    cleaned_chunk = re.sub(r'\s+', ' ', str(result['text']))
+                    # remove all new lines
+                    cleaned_chunk = re.sub(r'\n+', ' ', cleaned_chunk)
+                    chunk_split = cleaned_chunk.split('; ', 2)
+                    document_title = chunk_split[0].replace('document ', '')
+                    page = chunk_split[1].replace('page ', '')
+                    chunk_txt = chunk_split[2]
+                    bm25_sources.append({
+                        'document': document_title,
+                        'page': int(page),
+                        'context': chunk_txt,
+                        'bm25_score_raw': round(float(scores[idx]),2),
+                        'bm25_score': round(normalized_scores[idx], 3),
+                        'vector_score': 0,
+                        'rank': idx + 1,
+                        'vector_distance_raw': 0,
+                    })
         library_type = 'papers' if len(pages) else 'videos'
 
         # if no_context is true, create or get dataset
@@ -220,7 +223,6 @@ def get_context(request):
         if not no_context:
             add_embeddings_to_qna(question_text, 'question', embedding_model)
 
-        question_sources = Source.objects.filter(question=question)
         for idx, title in enumerate(titles):
             # filter distances if normalized_distances are less than 0.1
             if normalized_distances[idx] < 0.1:
@@ -238,18 +240,6 @@ def get_context(request):
                 'bm25_score': 0,
                 'bm25_rank': 0
             })
-
-            # if len(question_sources) == 0:
-            #     chunk = chunks.objects.filter(chunk_text=chunks_txt[idx], chunk_dataset=dataset)
-            #     Source.objects.create(
-            #         source_doc=title,
-            #         source_pointer=pages[idx] if library_type == 'papers' else starts[idx],
-            #         context=chunks_txt[idx].replace("\x00", "\uFFFD"),
-            #         vector_distance_raw=round(distances[idx],3),
-            #         vector_score=round(normalized_distances[idx],3),
-            #         question=question,
-            #         chunk=chunk[0] if chunk.count() else None
-            #     )
 
         sources_grouped = []
         for source in vector_sources:
@@ -416,6 +406,7 @@ def save_answer(request):
         model_type = Model.objects.get(model_name=model)
         dataset_name = json_request['dataset']
         dataset = Dataset.objects.get(dataset_name=dataset_name)
+        use_bm25 = dataset.use_bm25 if hasattr(dataset, 'use_bm25') else False
         question = Question.objects.get(question_text=question_text, model_type=model_type, question_dataset=dataset)
         embedding_model = dataset.embedding_model
         no_context = json_request['no_context']
@@ -452,7 +443,10 @@ def save_answer(request):
             distances_a = [round(dist, 3) for dist in distances_a]
             mean_distance_a = round((sum(distances_a) / len(distances_a)), 3)
 
-            bm25_docs, bm25_scores = get_answer_distance_by_context_bm25(answer_text, bm25_contexts)
+            if use_bm25:
+                bm25_docs, bm25_scores = get_answer_distance_by_context_bm25(answer_text, bm25_contexts)
+                extra_score = round((sum(bm25_scores) / len(bm25_scores)), 3)
+                mean_distance_a += extra_score
         else:
             mean_distance_a = 0
             relevance_score = 0
@@ -536,9 +530,7 @@ def save_answer(request):
                 'saved':True, 
                 'mean_distance_a': mean_distance_a,
                 'relevance_score': relevance_score if question_relevance_score != 0 else 0,
-                'hallucination_index': hallucination_index if hallucination_index < 100 else 100,
-                'bm25_scores': bm25_scores, 
-                'bm25_docs': bm25_docs
+                'hallucination_index': hallucination_index if hallucination_index < 100 else 100
             }, content_type="application/json")
         else:
             return Response({'saved':True, 'relevance_score': relevance_score}, content_type="application/json")
@@ -615,6 +607,7 @@ def add_zotero_dataset(request):
         library_id_type_r = request.POST.get('library_id_type')
         collection_id_r = request.POST.get('collection_id')
         embedding_model_request = request.POST.get('embedding_model')
+        use_bm25 = request.POST.get('use_bm25', 'false').lower() == 'true'
         user_r = request.POST.get('user')
         user_email_r = request.POST.get('user_email')
         user_group_r = request.POST.get('user_group')
@@ -670,6 +663,9 @@ def add_zotero_dataset(request):
         else:
             dataset_name = sanitize_filename(dataset_name)
 
+        if use_bm25:
+            index_document_by_bm25(dataset_name)
+
         # if dataset_name.error:
         #     return Response({'error':True, 'error_message': dataset_name.error}, content_type="application/json")
         message = add_to_chroma(dataset_name, embedding_model, distance_function)
@@ -691,8 +687,10 @@ def upload_documents(request):
         # else:
         dataset_name = add_dataset_from_upload(request)
         chunking_method = request.POST.get('chunking_method')
+        use_bm25 = request.POST.get('use_bm25')
 
-        index_document_by_bm25(dataset_name)
+        if use_bm25 == True or use_bm25 == 'true':
+            index_document_by_bm25(dataset_name)
         
         # Validate embedding_model input
         embedding_model_request = request.POST.get('embedding_model')
