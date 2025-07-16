@@ -17,7 +17,7 @@ import shutil
 import json
 import re
 from django.contrib.auth.models import User
-from .utils import get_zotero_chunks, add_dataset_from_upload, add_to_chroma, nearestDataChroma, get_relevance_score, add_embeddings_to_qna, highlight_pdf, seconds_to_hhmmss, add_pca_to_qna_and_dataset, add_demo_dataset, get_youtube_transcript, add_video_to_chroma, get_embedding_model_ef, get_answer_distance, sanitize_filename, get_answer_distance_by_context, index_document_by_bm25, retrieve_chunks_by_bm25, get_answer_distance_by_context_bm25, min_max_normalization
+from .utils import get_zotero_chunks, add_dataset_from_upload, add_to_chroma, nearestDataChroma, get_relevance_score, add_embeddings_to_qna, highlight_pdf, seconds_to_hhmmss, add_pca_to_qna_and_dataset, add_demo_dataset, get_youtube_transcript, add_video_to_chroma, get_embedding_model_ef, get_answer_distance, sanitize_filename, get_answer_distance_by_context, index_document_by_bm25, retrieve_chunks_by_bm25, get_answer_distance_by_context_bm25, min_max_normalization, hybrid_source_combination
 from ..models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, Model, EmbeddingModel, FrontEndSettings, DisclaimerAgreement, PaperSections
 
 ####################
@@ -108,7 +108,7 @@ def get_context(request):
         no_cutoff = json_request['no_cutoff']
 
         # best and worst scores for BM25
-        best_bm25_score = 25
+        best_bm25_score = 20
         worst_bm25_score = 0
 
         # check if dataset exists or crate a new one
@@ -128,12 +128,12 @@ def get_context(request):
         keywords = json_request['keywords'] if 'keywords' in json_request else ''
         if no_context:    
             context, titles, pages, starts, stops, chunks_txt, distances = '', [], [], [], [], [], []
-            sources = []
+            vector_sources = []
             relevance_score = 0
             normalized_distances = []
         else:
             context, titles, pages, starts, stops, chunks_txt, distances = nearestDataChroma(question_text, dataset_name, document_title, focused_section, keywords, embedding_model, maximum_chunks_count, no_cutoff)
-            sources = []
+            vector_sources = []
             distances = [round(dist, 3) for dist in distances]
             relevance_score, normalized_distances = get_relevance_score(distances, embedding_model, True, use_default_qrs, question_best_distance, question_worst_distance)
 
@@ -157,6 +157,7 @@ def get_context(request):
                     'bm25_score': round(normalized_scores[idx], 3),
                     'vector_score': 0,
                     'rank': idx + 1,
+                    'vector_distance_raw': 0,
                 })
         library_type = 'papers' if len(pages) else 'videos'
 
@@ -224,29 +225,34 @@ def get_context(request):
             # filter distances if normalized_distances are less than 0.1
             if normalized_distances[idx] < 0.1:
                 continue
-            sources.append({
+            vector_sources.append({
                 'document': title,
                 'page': pages[idx] if library_type == 'papers' else '',
                 'start': seconds_to_hhmmss(starts[idx]) if library_type == 'videos' else '',
                 'stop': seconds_to_hhmmss(stops[idx]) if library_type == 'videos' else '',
-                'context': chunks_txt[idx],
-                'distance': round(distances[idx],3), #round to 3 decimals,
-                'normalized_distance': round(normalized_distances[idx],3)
+                'context': str(chunks_txt[idx]),
+                'vector_distance_raw': round(distances[idx],3), #round to 3 decimals,
+                'vector_score': round(normalized_distances[idx],3),
+                'rank': idx + 1,
+                'bm25_score_raw': 0,
+                'bm25_score': 0,
+                'bm25_rank': 0
             })
 
-            if len(question_sources) == 0:
-                chunk = chunks.objects.filter(chunk_text=chunks_txt[idx], chunk_dataset=dataset)
-                Source.objects.create(
-                    source_doc=title,
-                    source_pointer=pages[idx] if library_type == 'papers' else starts[idx],
-                    context=chunks_txt[idx].replace("\x00", "\uFFFD"),
-                    distance=round(distances[idx],3),
-                    question=question,
-                    chunk=chunk[0] if chunk.count() else None
-                )
+            # if len(question_sources) == 0:
+            #     chunk = chunks.objects.filter(chunk_text=chunks_txt[idx], chunk_dataset=dataset)
+            #     Source.objects.create(
+            #         source_doc=title,
+            #         source_pointer=pages[idx] if library_type == 'papers' else starts[idx],
+            #         context=chunks_txt[idx].replace("\x00", "\uFFFD"),
+            #         vector_distance_raw=round(distances[idx],3),
+            #         vector_score=round(normalized_distances[idx],3),
+            #         question=question,
+            #         chunk=chunk[0] if chunk.count() else None
+            #     )
 
         sources_grouped = []
-        for source in sources:
+        for source in vector_sources:
             if len(sources_grouped) == 0:
                 sources_grouped.append([source])
             else:
@@ -291,31 +297,38 @@ def get_context(request):
                         # paper.paper_attachment.save(dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf', File(f), save=True)
                         paper.highlighted_attachment.save(dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf', File(f), save=True)
         
-        combined_sources = sources.copy()
-        # combine sources and bm25_sources and remove duplicates, keeping the highest relevance score
-        if len(sources) > 0 and len(bm25_sources) > 0 and len(focused_section) == 0:
-            for bm25_source in bm25_sources:
-                found = False
-                for source in combined_sources:
-                    # remove \n and extra spaces from context
-                    source['context'] = re.sub(r'\s+', ' ', source['context']).strip()
-                    bm25_source['context'] = re.sub(r'\s+', ' ', bm25_source['context']).strip()
-                    if source['context'] == bm25_source['context'] and source['page'] == bm25_source['page']:
-                        found = True
-                        if bm25_source['bm25_score'] > source['normalized_distance']:
-                            source['distance'] = bm25_source['bm25_score_raw']
-                            source['normalized_distance'] = bm25_source['bm25_score']
-                            source['rank'] = bm25_source['rank']
-                        break
-                if not found:
-                    combined_sources.append({
-                        'document': bm25_source['document'],
-                        'page': bm25_source['page'],
-                        'context': bm25_source['context'],
-                        'distance': bm25_source['bm25_score_raw'],
-                        'normalized_distance': bm25_source['bm25_score'],
-                        'rank': bm25_source['rank']
-                    })
+         # combine vector_sources and bm25_sources
+        combined_sources = hybrid_source_combination(vector_sources, bm25_sources)
+        
+        
+        for source in combined_sources:
+            chunk = chunks.objects.filter(chunk_text=source['context'], chunk_dataset=dataset)
+            Source.objects.create(
+                source_doc=source['document'],
+                source_pointer=source['page'] if library_type == 'papers' else source['start'],
+                context=source['context'].replace("\x00", "\uFFFD"),
+                vector_distance_raw=source['vector_distance_raw'] if 'vector_distance_raw' in source else 0,
+                vector_score=source['vector_score'] if 'vector_score' in source else 0,
+                bm25_score_raw=source['bm25_score_raw'] if 'bm25_score_raw' in source else 0,
+                bm25_score=source['bm25_score'] if 'bm25_score' in source else 0,
+                rank=source['rank'],
+                secondary_rank=source['bm25_rank'] if 'bm25_rank' in source else 0,
+                question=question,
+                chunk=chunk[0] if chunk.count() else None
+            )
+            
+            # Determine the color code based on distance or score
+            if (source['vector_score'] != 0 and source['vector_score'] > 0.5) or (source['bm25_score'] != 0 and source['bm25_score'] > 0.5):
+                source['color_code'] = 'green'
+            elif (source['vector_score'] != 0 and source['vector_score'] > 0.3) or (source['bm25_score'] != 0 and source['bm25_score'] > 0.3):
+                source['color_code'] = 'yellow'
+            elif (source['vector_score'] != 0 and source['vector_score'] > 0.15) or (source['bm25_score'] != 0 and source['bm25_score'] > 0.15):
+                source['color_code'] = 'red'
+            else:
+                source['color_code'] = 'gray'
+
+        # combine the vector_scores and bm25_scores and sort them from high to low
+        combined_sources = sorted(combined_sources, key=lambda x: (x['vector_score'] if 'vector_score' in x else 0) + (x['bm25_score'] if 'bm25_score' in x else 0), reverse=True)
             
         context_json = {
             'context': context,
@@ -363,8 +376,15 @@ def get_question_details(request):
                 'paper': source.source_doc,
                 'page': source.source_pointer,
                 'context': source.context,
-                'distance': source.distance
+                'vector_distance_raw': source.vector_distance_raw,
+                'vector_score': source.vector_score,
+                'bm25_score_raw': source.bm25_score_raw,
+                'bm25_score': source.bm25_score,
+                'rank': source.rank,
+                'secondary_rank': source.secondary_rank,
             })
+        # sort sources by vector_score and bm25_score
+        sources_json = sorted(sources_json, key=lambda x: (x['vector_score'] if 'vector_score' in x else 0) + (x['bm25_score'] if 'bm25_score' in x else 0), reverse=True)
         answers_json = []
         for answer in answers:
             answers_json.append({
@@ -414,20 +434,25 @@ def save_answer(request):
 
         # get context from sources
         sources = Source.objects.filter(question=question)
-        contexts = []
+        vector_contexts = []
+        bm25_contexts = []
 
         for source in sources:
-            contexts.append(source.context)
+
+            if source.vector_distance_raw != 0:
+                vector_contexts.append(source.context)
+            if source.bm25_score_raw != 0:
+                bm25_contexts.append(source.context)
         
         if not no_context:
-            distances = get_answer_distance_by_context(answer_no_context_text, dataset_name, contexts, embedding_model)
+            distances = get_answer_distance_by_context(answer_no_context_text, dataset_name, vector_contexts, embedding_model)
             distances = [round(dist, 3) for dist in distances]
 
-            distances_a = get_answer_distance_by_context(answer_text, dataset_name, contexts, embedding_model)
+            distances_a = get_answer_distance_by_context(answer_text, dataset_name, vector_contexts, embedding_model)
             distances_a = [round(dist, 3) for dist in distances_a]
             mean_distance_a = round((sum(distances_a) / len(distances_a)), 3)
 
-            bm25_docs, bm25_scores = get_answer_distance_by_context_bm25(answer_text, contexts)
+            bm25_docs, bm25_scores = get_answer_distance_by_context_bm25(answer_text, bm25_contexts)
         else:
             mean_distance_a = 0
             relevance_score = 0

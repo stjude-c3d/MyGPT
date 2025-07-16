@@ -12,7 +12,7 @@ RUN pip install --upgrade setuptools wheel
 RUN apt install -y build-essential
 RUN apt install -y curl
 RUN apt install -y wkhtmltopdf
-RUN apt install -y libreoffice
+# RUN apt install -y libreoffice
 COPY requirements.txt /code/
 RUN pip install -r requirements.txt
 COPY . /code/

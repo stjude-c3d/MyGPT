@@ -183,7 +183,12 @@ class Source(models.Model):
 	source_doc = models.TextField(default='-')
 	source_pointer = models.IntegerField(default=0)
 	context = models.TextField(default='-')
-	distance = models.FloatField(default=0)
+	vector_distance_raw = models.FloatField(default=0)
+	vector_score = models.FloatField(default=0)
+	bm25_score_raw = models.FloatField(default=0)
+	bm25_score = models.FloatField(default=0)
+	rank = models.IntegerField(default=0)
+	secondary_rank = models.IntegerField(default=0)
 	chunk = models.ForeignKey(chunks, on_delete=models.CASCADE, null=True)
 	question = models.ForeignKey(Question, on_delete=models.CASCADE, null=True)
 

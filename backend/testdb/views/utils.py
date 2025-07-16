@@ -522,6 +522,8 @@ def add_to_chroma(dataset_name, embedding_model_request = 'all-MiniLM-L6-v2', di
                     line = line.strip()
                     #convert line to json
                     line_json = eval(line)
+                    # remove new lines and extra spaces
+                    line_json['content'] = re.sub(r'\s+', ' ', line_json['content']).strip()
                     documents.append(line_json['content'])
                     if chunking_method == 'structure_preserving':
                         metadatas.append({'filename': line_json['title'], 'page': line_json['page'], 'section': line_json['section'], 'type': line_json['type']})
@@ -1256,22 +1258,63 @@ def highlight_pdf(input_file, output_file, source_grp):
                     highlight = page.add_highlight_annot(inst)
                     highlight.set_colors()
                     highlight.update()
+
+                    if 'vector_score' in source and 'bm25_score' in source:
+                        if source['vector_score'] > 0.5 or source['bm25_score'] > 0.5:
+                           # highlight with green color rgb(120, 198, 121)
+                            highlight.set_colors(stroke=[0.486, 0.988, 0])
+                            highlight.update()
+                        elif source['vector_score'] > 0.3 or source['bm25_score'] > 0.3:
+                            # highlight with yellow color
+                            highlight.set_colors(stroke=[1, 1, 0])
+                            highlight.update()
+                        elif source['vector_score'] > 0.15 or source['bm25_score'] > 0.15:
+                            # highlight with light yellow color (247, 252, 185)
+                            highlight.set_colors(stroke=[0.97, 0.98, 0.72])
+                            highlight.update()
+                        else:
+                            # highlight gray (220,220,220)
+                            highlight.set_colors(stroke=[0.863, 0.863, 0.863])
+                            highlight.update()
+
+                    # check if source has distance key
+                    elif 'vector_distance_raw' in source:
+                        if source['vector_score'] > 0.5:
+                            # highlight with green color rgb(120, 198, 121)
+                            highlight.set_colors(stroke=[0.486, 0.988, 0])
+                            highlight.update()
+                        elif source['vector_score'] > 0.3:
+                            # highlight with yellow color
+                            highlight.set_colors(stroke=[1, 1, 0])
+                            highlight.update()
+                        elif source['vector_score'] > 0.15:
+                            # highlight with light yellow color (247, 252, 185)
+                            highlight.set_colors(stroke=[0.97, 0.98, 0.72])
+                            highlight.update()
+                        else:
+                            # highlight gray (220,220,220)
+                            highlight.set_colors(stroke=[0.863, 0.863, 0.863])
+                            highlight.update()
+
+                    # check if source has score key
+                    elif 'bm25_score_raw' in source:
+                        if source['bm25_score'] > 0.5:
+                            # highlight with green color rgb(120, 198, 121)
+                            highlight.set_colors(stroke=[0.486, 0.988, 0])
+                            highlight.update()
+                        elif source['bm25_score'] > 0.3:
+                            # highlight with yellow color
+                            highlight.set_colors(stroke=[1, 1, 0])
+                            highlight.update()
+                        elif source['bm25_score'] > 0.15:
+                            # highlight with light yellow color (247, 252, 185)
+                            highlight.set_colors(stroke=[0.97, 0.98, 0.72])
+                            highlight.update()
+                        else:
+                            # highlight gray (220,220,220)
+                            highlight.set_colors(stroke=[0.863, 0.863, 0.863])
+                            highlight.update()
                     
-                    if source['normalized_distance'] > 0.6:
-                        # highlight with green color rgb(120, 198, 121)
-                        highlight.set_colors(stroke=[0.486, 0.988, 0])
-                        highlight.update()
-                    elif source['normalized_distance'] >= 0.4 and source['normalized_distance'] < 0.6:
-                        # highlight with yellow color
-                        highlight.set_colors(stroke=[1, 1, 0])
-                        highlight.update()
-                    elif source['normalized_distance'] >= 0.2 and source['normalized_distance'] < 0.4:
-                        # highlight with light yellow color (247, 252, 185)
-                        highlight.set_colors(stroke=[0.97, 0.98, 0.72])
-                        highlight.update()
-                        # # highlight with red color (250,128,114)
-                        # highlight.set_colors(stroke=[0.98, 0.5, 0.45])
-                        # highlight.update()
                     else:
                         # highlight gray (220,220,220)
                         highlight.set_colors(stroke=[0.863, 0.863, 0.863])
@@ -1695,3 +1738,49 @@ def get_toc_from_grobid(pdf_path):
                 toc.pop(i)
     
     return toc
+
+def hybrid_source_combination(vector_sources, bm25_sources):
+    # find duplicates from both the list with same text
+    duplicates = []
+    combined_sources = []
+    for vector_source in vector_sources:
+        for bm25_source in bm25_sources:
+            if vector_source['vector_score'] < 0.1 and ['bm25_score'] < 0.1:
+                    continue
+            if vector_source['context'] == bm25_source['context'] and vector_source['page'] == bm25_source['page']:
+                # create a new source with the same text and distance from bm25
+                new_source = vector_source.copy()
+                new_source['bm25_score_raw'] = bm25_source['bm25_score_raw']
+                new_source['bm25_score'] = bm25_source['bm25_score']
+                new_source['bm25_rank'] = bm25_source['rank']
+                duplicates.append(new_source)
+                break
+
+    # add the vector sources to the combined sources not present in duplicates
+    for vector_source in vector_sources:
+        if vector_source['vector_score'] < 0.1:
+            continue
+        # check if the source is already in the combined sources
+        for duplicate in duplicates:
+            if vector_source['context'] == duplicate['context'] and vector_source['page'] == duplicate['page']:
+                break
+        else:
+            # add the vector source to the combined sources
+            combined_sources.append(vector_source)
+    
+    # add the duplicates to the combined sources
+    combined_sources.extend(duplicates)
+
+    # add the bm25 sources to the combined sources
+    for bm25_source in bm25_sources:
+        if  bm25_source['bm25_score'] < 0.1:
+            continue
+        # check if the source is already in the combined sources
+        for duplicate in duplicates:
+            if bm25_source['context'] == duplicate['context'] and bm25_source['page'] == duplicate['page']:
+                break
+        else:
+            # add the bm25 source to the combined sources
+            combined_sources.append(bm25_source)
+
+    return combined_sources
