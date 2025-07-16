@@ -32,6 +32,11 @@ from typing import cast
 import httpx
 from chromadb.api.types import Documents, EmbeddingFunction, Embeddings
 
+#libraries to import for keyword search
+import bm25s
+import Stemmer
+from pathlib import Path
+
 app_config = apps.get_app_config('testdb')
 con = duckdb.connect()
 
@@ -205,6 +210,7 @@ def add_dataset_from_upload(request):
     chunking_method = request.POST.get('chunking_method')
     chunk_size = request.POST.get('chunk_size')
     distance_function_r = request.POST.get('distance_function')
+    use_bm25 = request.POST.get('use_bm25')
 
     # Validate all inputs for code injection
     if not dataset_name_r or not re.match(r'^[a-zA-Z0-9_\-\s\w]+$', dataset_name_r):
@@ -261,6 +267,7 @@ def add_dataset_from_upload(request):
             chunksize=chunk_size,
             chunking_method=chunking_method,
             overlap=use_overlap,
+            use_bm25=use_bm25,
             distance_function=distance_function,
             user = user if len(user) else '-',
             user_email = user_email if len(user_email) else '-',
@@ -402,7 +409,7 @@ def add_dataset_from_upload(request):
                     for i, chunk in enumerate(raw_chunks):
                         chunks.append({
                             "chunk_id": i,
-                            "text": chunk.page_content,
+                            "text": chunk.page_content.strip(),
                             "metadata": {
                                 "source_pdf": pdf_name
                             }
@@ -517,6 +524,8 @@ def add_to_chroma(dataset_name, embedding_model_request = 'all-MiniLM-L6-v2', di
                     line = line.strip()
                     #convert line to json
                     line_json = eval(line)
+                    # remove new lines and extra spaces
+                    line_json['content'] = re.sub(r'\s+', ' ', line_json['content']).strip()
                     documents.append(line_json['content'])
                     if chunking_method == 'structure_preserving':
                         metadatas.append({'filename': line_json['title'], 'page': line_json['page'], 'section': line_json['section'], 'type': line_json['type']})
@@ -620,6 +629,11 @@ def add_demo_dataset(embedding_model_request = 'multi-qa-MiniLM-L6-cos-v1'):
         dataset = Dataset.objects.create(
             dataset_name=dataset_name,
             dataset_size=new_count,
+            chunksize=1000,
+            chunking_method='fixed_chunk_size',
+            overlap=False,
+            use_bm25=False,
+            distance_function='l2',
             dataset_date_time=make_aware(datetime.datetime.now())
         )
 
@@ -1056,6 +1070,33 @@ def get_answer_distance_by_context(text, dataset_name, contexts = [''], embeddin
     distances = results['distances'][0]
     return distances
 
+def get_answer_distance_by_context_bm25(text, contexts = ['']):
+
+    tokenizer_directory = Path('/code/data/bm25_tokenizer') / 'answers'
+    tokenizer_directory.mkdir(parents=True, exist_ok=True)
+
+    # default tokenizer
+    stemmer = Stemmer.Stemmer("english")
+    tokenizer = bm25s.tokenization.Tokenizer(stemmer=stemmer)
+    corpus_tokenized = tokenizer.tokenize(contexts, return_as='tuple')
+
+    retriever = bm25s.BM25(corpus=contexts)
+    retriever.index(corpus_tokenized)
+    retriever.save(tokenizer_directory)
+    tokenizer.save_vocab(tokenizer_directory)
+    tokenizer.save_stopwords(tokenizer_directory)
+
+     # Tokenize the queries
+    queriesTokenized = bm25s.tokenize([text], stemmer=stemmer)
+
+    retriever_loaded = bm25s.BM25.load(f"/code/data/bm25_tokenizer/answers", mmap=True, load_corpus=True)
+
+    # Get the top 10 results
+    results, scores = retriever_loaded.retrieve(queriesTokenized, k=len(contexts), return_as="tuple")
+
+    # returns ids of the chunks as a list
+    return results[0], scores[0]
+
 # def get_chunks_by_keyword(question_text, dataset_name, embedding_model='multi-qa-MiniLM-L6-cos-v1'):
 #     if embedding_model != 'all-MiniLM-L6-v2':
 #         embedding_model_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=embedding_model)
@@ -1224,22 +1265,63 @@ def highlight_pdf(input_file, output_file, source_grp):
                     highlight = page.add_highlight_annot(inst)
                     highlight.set_colors()
                     highlight.update()
+
+                    if 'vector_score' in source and 'bm25_score' in source:
+                        if source['vector_score'] > 0.5 or source['bm25_score'] > 0.5:
+                           # highlight with green color rgb(120, 198, 121)
+                            highlight.set_colors(stroke=[0.486, 0.988, 0])
+                            highlight.update()
+                        elif source['vector_score'] > 0.3 or source['bm25_score'] > 0.3:
+                            # highlight with yellow color
+                            highlight.set_colors(stroke=[1, 1, 0])
+                            highlight.update()
+                        elif source['vector_score'] > 0.15 or source['bm25_score'] > 0.15:
+                            # highlight with light yellow color (247, 252, 185)
+                            highlight.set_colors(stroke=[0.97, 0.98, 0.72])
+                            highlight.update()
+                        else:
+                            # highlight gray (220,220,220)
+                            highlight.set_colors(stroke=[0.863, 0.863, 0.863])
+                            highlight.update()
+
+                    # check if source has distance key
+                    elif 'vector_distance_raw' in source:
+                        if source['vector_score'] > 0.5:
+                            # highlight with green color rgb(120, 198, 121)
+                            highlight.set_colors(stroke=[0.486, 0.988, 0])
+                            highlight.update()
+                        elif source['vector_score'] > 0.3:
+                            # highlight with yellow color
+                            highlight.set_colors(stroke=[1, 1, 0])
+                            highlight.update()
+                        elif source['vector_score'] > 0.15:
+                            # highlight with light yellow color (247, 252, 185)
+                            highlight.set_colors(stroke=[0.97, 0.98, 0.72])
+                            highlight.update()
+                        else:
+                            # highlight gray (220,220,220)
+                            highlight.set_colors(stroke=[0.863, 0.863, 0.863])
+                            highlight.update()
+
+                    # check if source has score key
+                    elif 'bm25_score_raw' in source:
+                        if source['bm25_score'] > 0.5:
+                            # highlight with green color rgb(120, 198, 121)
+                            highlight.set_colors(stroke=[0.486, 0.988, 0])
+                            highlight.update()
+                        elif source['bm25_score'] > 0.3:
+                            # highlight with yellow color
+                            highlight.set_colors(stroke=[1, 1, 0])
+                            highlight.update()
+                        elif source['bm25_score'] > 0.15:
+                            # highlight with light yellow color (247, 252, 185)
+                            highlight.set_colors(stroke=[0.97, 0.98, 0.72])
+                            highlight.update()
+                        else:
+                            # highlight gray (220,220,220)
+                            highlight.set_colors(stroke=[0.863, 0.863, 0.863])
+                            highlight.update()
                     
-                    if source['normalized_distance'] > 0.6:
-                        # highlight with green color rgb(120, 198, 121)
-                        highlight.set_colors(stroke=[0.486, 0.988, 0])
-                        highlight.update()
-                    elif source['normalized_distance'] >= 0.4 and source['normalized_distance'] < 0.6:
-                        # highlight with yellow color
-                        highlight.set_colors(stroke=[1, 1, 0])
-                        highlight.update()
-                    elif source['normalized_distance'] >= 0.2 and source['normalized_distance'] < 0.4:
-                        # highlight with light yellow color (247, 252, 185)
-                        highlight.set_colors(stroke=[0.97, 0.98, 0.72])
-                        highlight.update()
-                        # # highlight with red color (250,128,114)
-                        # highlight.set_colors(stroke=[0.98, 0.5, 0.45])
-                        # highlight.update()
                     else:
                         # highlight gray (220,220,220)
                         highlight.set_colors(stroke=[0.863, 0.863, 0.863])
@@ -1566,6 +1648,49 @@ class OllamaEmbeddingFunction(EmbeddingFunction[Documents]):
             ],
         )
     
+#this method should be called as part of the upload document process just after adding chunks into the chromadb
+def index_document_by_bm25(dataset_name):
+    documents_directory = '/code/data/data_chunks' # some other directory can be initalized for storing indices for each document
+    # tokenizer_directory = '/code/data/bm25_tokenizer/' + dataset_name
+    tokenizer_directory = Path('/code/data/bm25_tokenizer') / dataset_name
+    tokenizer_directory.mkdir(parents=True, exist_ok=True)
+
+    documents = []
+
+    with open(f'{documents_directory}/{dataset_name}.txt', 'r') as file:
+        for line_number, line in enumerate(
+                tqdm((file.readlines()), desc=f'Reading {dataset_name}'), 100
+        ):
+            # Strip whitespace and append the line to the documents list
+            line = line.strip()
+            # convert line to json
+            line_json = eval(line)
+            documents.append('document ' + str(line_json['title']) +  '; page ' + str(line_json['page'])+ '; ' + line_json['content'].strip())
+
+    # default tokenizer
+    stemmer = Stemmer.Stemmer("english")
+    tokenizer = bm25s.tokenization.Tokenizer(stemmer=stemmer)
+    corpus_tokenized = tokenizer.tokenize(documents, return_as='tuple')
+
+    retriever = bm25s.BM25(corpus=documents)
+    retriever.index(corpus_tokenized)
+    retriever.save(tokenizer_directory)
+    tokenizer.save_vocab(tokenizer_directory)
+    tokenizer.save_stopwords(tokenizer_directory)
+
+def retrieve_chunks_by_bm25(queryText, dataset_name, chunk_count=10):
+
+    stemmer = Stemmer.Stemmer("english")
+
+     # Tokenize the queries
+    queriesTokenized = bm25s.tokenize([queryText], stemmer=stemmer)
+
+    retriever_loaded = bm25s.BM25.load(f"/code/data/bm25_tokenizer/{dataset_name}", mmap=True, load_corpus=True)
+    results, scores = retriever_loaded.retrieve(queriesTokenized, k=chunk_count, return_as="tuple")
+
+    # returns ids of the chunks as a list
+    return results[0], scores[0]
+
 def min_max_normalization(data, best_val, worst_val, reverse=False):
     """
     Normalize the data using min-max normalization.
@@ -1620,3 +1745,49 @@ def get_toc_from_grobid(pdf_path):
                 toc.pop(i)
     
     return toc
+
+def hybrid_source_combination(vector_sources, bm25_sources):
+    # find duplicates from both the list with same text
+    duplicates = []
+    combined_sources = []
+    for vector_source in vector_sources:
+        for bm25_source in bm25_sources:
+            if vector_source['vector_score'] < 0.1 and bm25_source['bm25_score'] < 0.1:
+                continue
+            if vector_source['context'] == bm25_source['context'] and vector_source['page'] == bm25_source['page']:
+                # create a new source with the same text and distance from bm25
+                new_source = vector_source.copy()
+                new_source['bm25_score_raw'] = bm25_source['bm25_score_raw']
+                new_source['bm25_score'] = bm25_source['bm25_score']
+                new_source['bm25_rank'] = bm25_source['rank']
+                duplicates.append(new_source)
+                break
+
+    # add the vector sources to the combined sources not present in duplicates
+    for vector_source in vector_sources:
+        if vector_source['vector_score'] < 0.1:
+            continue
+        # check if the source is already in the combined sources
+        for duplicate in duplicates:
+            if vector_source['context'] == duplicate['context'] and vector_source['page'] == duplicate['page']:
+                break
+        else:
+            # add the vector source to the combined sources
+            combined_sources.append(vector_source)
+    
+    # add the duplicates to the combined sources
+    combined_sources.extend(duplicates)
+
+    # add the bm25 sources to the combined sources
+    for bm25_source in bm25_sources:
+        if  bm25_source['bm25_score'] < 0.1:
+            continue
+        # check if the source is already in the combined sources
+        for duplicate in duplicates:
+            if bm25_source['context'] == duplicate['context'] and bm25_source['page'] == duplicate['page']:
+                break
+        else:
+            # add the bm25 source to the combined sources
+            combined_sources.append(bm25_source)
+
+    return combined_sources

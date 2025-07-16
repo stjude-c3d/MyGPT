@@ -32,7 +32,7 @@ class AnswerAdmin(admin.ModelAdmin):
     list_display = ['answer_text', 'model_type', 'relevance_score', 'hallucination_index', 'question', 'saved_date_time']
 
 class SourceAdmin(admin.ModelAdmin):
-    list_display = ['source_doc', 'source_pointer', 'context', 'distance', 'question']
+    list_display = ['source_doc', 'source_pointer', 'vector_score', 'bm25_score', 'rank', 'context', 'question']
 
 class FrontEndSettingsAdmin(admin.ModelAdmin):
     list_display = ['show_no_context_switch', 'azure_login', 'django_login', 'restriction_without_login', 'saved_date_time']
