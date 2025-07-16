@@ -1752,8 +1752,8 @@ def hybrid_source_combination(vector_sources, bm25_sources):
     combined_sources = []
     for vector_source in vector_sources:
         for bm25_source in bm25_sources:
-            if vector_source['vector_score'] < 0.1 and ['bm25_score'] < 0.1:
-                    continue
+            if vector_source['vector_score'] < 0.1 and bm25_source['bm25_score'] < 0.1:
+                continue
             if vector_source['context'] == bm25_source['context'] and vector_source['page'] == bm25_source['page']:
                 # create a new source with the same text and distance from bm25
                 new_source = vector_source.copy()
