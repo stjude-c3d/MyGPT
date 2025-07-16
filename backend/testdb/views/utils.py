@@ -1285,7 +1285,7 @@ def highlight_pdf(input_file, output_file, source_grp):
                             highlight.update()
 
                     # check if source has distance key
-                    elif 'vector_distance_raw' in source:
+                    elif 'vector_score' in source:
                         if source['vector_score'] > 0.5:
                             # highlight with green color rgb(120, 198, 121)
                             highlight.set_colors(stroke=[0.486, 0.988, 0])
@@ -1304,7 +1304,7 @@ def highlight_pdf(input_file, output_file, source_grp):
                             highlight.update()
 
                     # check if source has score key
-                    elif 'bm25_score_raw' in source:
+                    elif 'bm25_score' in source:
                         if source['bm25_score'] > 0.5:
                             # highlight with green color rgb(120, 198, 121)
                             highlight.set_colors(stroke=[0.486, 0.988, 0])
@@ -1750,6 +1750,10 @@ def hybrid_source_combination(vector_sources, bm25_sources):
     # find duplicates from both the list with same text
     duplicates = []
     combined_sources = []
+    if len(bm25_sources) == 0:
+        # if vector sources are empty, return bm25 sources
+        return vector_sources
+    
     for vector_source in vector_sources:
         for bm25_source in bm25_sources:
             if vector_source['vector_score'] < 0.1 and bm25_source['bm25_score'] < 0.1:

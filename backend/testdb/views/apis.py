@@ -443,10 +443,10 @@ def save_answer(request):
             distances_a = [round(dist, 3) for dist in distances_a]
             mean_distance_a = round((sum(distances_a) / len(distances_a)), 3)
 
-            if use_bm25:
-                bm25_docs, bm25_scores = get_answer_distance_by_context_bm25(answer_text, bm25_contexts)
-                extra_score = round((sum(bm25_scores) / len(bm25_scores)), 3)
-                mean_distance_a += extra_score
+            # if use_bm25:
+                # bm25_docs, bm25_scores = get_answer_distance_by_context_bm25(answer_text, bm25_contexts)
+                # extra_score = round((sum(bm25_scores) / len(bm25_scores)), 3)
+                # mean_distance_a += extra_score
         else:
             mean_distance_a = 0
             relevance_score = 0

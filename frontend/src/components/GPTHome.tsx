@@ -387,7 +387,7 @@ function GPTHome(props:{
 							setContext(data.context)
 							setSourcePapers((prevSourcePapers:any)=>[...prevSourcePapers, data.sources.map((s:any)=>s.document)])
 							setSourceContexts((prevSourceContexts:any)=>[...prevSourceContexts, data.sources.map((s:any)=>s.context)])
-							setSourceColorCodes((prevSourceColorCodes:any)=>[...prevSourceColorCodes, ...data.sources.map((s:any)=> s.color_code)]);
+							setSourceColorCodes((prevSourceColorCodes:any)=>[...prevSourceColorCodes, data.sources.map((s:any)=> s.color_code)]);
 							if (data.sources[0].page !== ''){
 								setSourcePages((prevSourcePages:any)=>[...prevSourcePages, data.sources.map((s:any)=>s.page)])
 								setSelectedPage(data.sources[0].page)
@@ -1116,7 +1116,7 @@ function GPTHome(props:{
 									}}
 								/> */}
 								{
-								showNullAnswerIndexes[query.length - i - 1] === false &&	questionRelevancescore[query.length-1] > 0 && sourcePapers.length && sourcePages.length && sourcePapers[query.length-i-1] && sourcePages[query.length-i-1] ?
+								showNullAnswerIndexes[query.length - i - 1] === false && questionRelevancescore[query.length-1] > 0 && sourcePapers.length && sourcePages.length && sourcePapers[query.length-i-1] && sourcePages[query.length-i-1] ?
 									<>
 										<div className='text-white text-sm font-bold pt-4'>
 											{sourcePapers[query.length-i-1].length > 1 ? 'Sources' : 'Source'}
