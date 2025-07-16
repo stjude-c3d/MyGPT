@@ -387,8 +387,7 @@ function GPTHome(props:{
 							setContext(data.context)
 							setSourcePapers((prevSourcePapers:any)=>[...prevSourcePapers, data.sources.map((s:any)=>s.document)])
 							setSourceContexts((prevSourceContexts:any)=>[...prevSourceContexts, data.sources.map((s:any)=>s.context)])
-							setSourceColorCodes((prevSourceColorCodes:any)=>[...prevSourceColorCodes, data.sources.map((s:any)=> s.color_code
-							)])
+							setSourceColorCodes((prevSourceColorCodes:any)=>[...prevSourceColorCodes, ...data.sources.map((s:any)=> s.color_code)]);
 							if (data.sources[0].page !== ''){
 								setSourcePages((prevSourcePages:any)=>[...prevSourcePages, data.sources.map((s:any)=>s.page)])
 								setSelectedPage(data.sources[0].page)
