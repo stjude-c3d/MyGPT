@@ -383,15 +383,17 @@ const AddLibrarySettings = (props: {
 							}}
 						/>
 					</div>
-					<DropdownField
-						label="Use BM25"
-						width="280px"
-						optionsList={['Yes', 'No']}
-						defaultOption="Yes"
-						dropDownCallback={(option: string) => {
-							setUseBM25(option === 'Yes' ? true : false)
-						}}
-					/>
+					<div className='flex justify-start m-2'>
+						<div className='text-nav dark:text-nav-dark p-1 w-48'>Use BM25</div>
+						<DropdownOptions
+							width={'280px'}
+							optionsList={['Yes', 'No']}
+							defaultOption={'Yes'}
+							dropDownCallback={(option:string)=>{
+								setUseBM25(option === 'Yes' ? true : false)
+							}}
+						/>
+					</div>
 					<div className='flex justify-start mx-2 my-1'>
 						<div className='text-nav dark:text-nav-dark p-1 w-48'>Distance Function</div>
 						<DropdownOptions
