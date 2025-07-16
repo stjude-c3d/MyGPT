@@ -607,7 +607,7 @@ def add_zotero_dataset(request):
         library_id_type_r = request.POST.get('library_id_type')
         collection_id_r = request.POST.get('collection_id')
         embedding_model_request = request.POST.get('embedding_model')
-        use_bm25 = request.POST.get('use_bm25', 'false').lower() == 'true'
+        use_bm25 = request.POST.get('use_bm25')
         user_r = request.POST.get('user')
         user_email_r = request.POST.get('user_email')
         user_group_r = request.POST.get('user_group')
@@ -663,7 +663,7 @@ def add_zotero_dataset(request):
         else:
             dataset_name = sanitize_filename(dataset_name)
 
-        if use_bm25:
+        if use_bm25 == 'Yes':
             index_document_by_bm25(dataset_name)
 
         # if dataset_name.error:
@@ -689,7 +689,7 @@ def upload_documents(request):
         chunking_method = request.POST.get('chunking_method')
         use_bm25 = request.POST.get('use_bm25')
 
-        if use_bm25 == True or use_bm25 == 'true':
+        if use_bm25 == 'Yes':
             index_document_by_bm25(dataset_name)
         
         # Validate embedding_model input

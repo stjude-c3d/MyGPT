@@ -267,7 +267,7 @@ def add_dataset_from_upload(request):
             chunksize=chunk_size,
             chunking_method=chunking_method,
             overlap=use_overlap,
-            use_bm25=use_bm25,
+            use_bm25= True if use_bm25 == 'Yes' else False,
             distance_function=distance_function,
             user = user if len(user) else '-',
             user_email = user_email if len(user_email) else '-',

@@ -40,7 +40,7 @@ const AddLibrarySettings = (props: {
   const [chunkSizeActive, setChunkSizeActive] = useState(true)
   const [useOverlap, setUseOverlap] = useState('Yes')
   const [chunkSize, setChunkSize] = useState('1000')
-  const [useBM25, setUseBM25] = useState(true)
+  const [useBM25, setUseBM25] = useState('Yes')
   const [distanceFn, setDistanceFn] = useState('l2')
 
 //   console.log(UploadLibraryName, uploadDocs)
@@ -57,7 +57,7 @@ const AddLibrarySettings = (props: {
 		formData.append('use_overlap', useOverlap)
 		formData.append('chunking_method', chunkingMethod)
 		formData.append('chunk_size', chunkSize)
-		formData.append('use_bm25', useBM25 ? 'True' : 'False')
+		formData.append('use_bm25', useBM25)
 		formData.append('distance_function', distanceFn)
 		formData.append('user', props.user ? props.user.user.replace(', ','_'): '-')
 		formData.append('user_email', props.user ? props.user.user_email : '-')
@@ -106,7 +106,7 @@ const AddLibrarySettings = (props: {
 			formData.append('chunking_method', chunkingMethod)
 			formData.append('use_overlap', useOverlap)
 			formData.append('chunk_size', chunkSize)
-			formData.append('use_bm25', useBM25 ? 'True' : 'False')
+			formData.append('use_bm25', useBM25)
 			formData.append('distance_function', distanceFn)
 
 			// show error if dataset name is empty
@@ -390,7 +390,7 @@ const AddLibrarySettings = (props: {
 							optionsList={['Yes', 'No']}
 							defaultOption={'Yes'}
 							dropDownCallback={(option:string)=>{
-								setUseBM25(option === 'Yes' ? true : false)
+								setUseBM25(option)
 							}}
 						/>
 					</div>
@@ -511,7 +511,7 @@ const AddLibrarySettings = (props: {
 							optionsList={['Yes', 'No']}
 							defaultOption={'Yes'}
 							dropDownCallback={(option:string)=>{
-								setUseBM25(option === 'Yes' ? true : false)
+								setUseBM25(option)
 							}}
 						/>
 					</div>
