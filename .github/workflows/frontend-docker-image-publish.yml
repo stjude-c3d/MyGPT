@@ -30,9 +30,9 @@ jobs:
      id: get_tag
      run: |
       VERSION="${{ github.ref_name }}"
-      echo "Version: $VERSION"
       VERSION=$(echo "$VERSION" | sed -e 's/^v//')  # Remove 'v' prefix if present
-      echo "Version (without prefix): $VERSION"
+      echo "Version: $VERSION"
+      echo "version=$VERSION" >> $GITHUB_OUTPUT
 
    - name: Build and push
      uses: docker/build-push-action@v5
@@ -43,4 +43,4 @@ jobs:
       push: true
       tags: |
        ghcr.io/stjude-c3d/mygpt-frontend:latest
-       ghcr.io/stjude-c3d/mygpt-frontend:${{ steps.get_tag.outputs.VERSION }}
+       ghcr.io/stjude-c3d/mygpt-frontend:${{ steps.get_tag.outputs.version }}
