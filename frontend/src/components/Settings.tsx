@@ -65,6 +65,8 @@ const Settings = (props:{
 							'direct_chat_without_docs': data.filter((d:any)=>d.dataset_name === dataset)[0].direct_chat_without_docs,
 							'user_group': data.filter((d:any)=>d.dataset_name === dataset)[0].user_group,
 							'details_open': false,
+							'chunking_method': data.filter((d:any)=>d.dataset_name === dataset)[0].chunking_method,
+							'use_bm25': data.filter((d:any)=>d.dataset_name === dataset)[0].use_bm25,
 							'chunksize': data.filter((d:any)=>d.dataset_name === dataset)[0].chunksize,
 							'overlap': data.filter((d:any)=>d.dataset_name === dataset)[0].overlap,
 							'distance_function': data.filter((d:any)=>d.dataset_name === dataset)[0].distance_function,
@@ -310,6 +312,9 @@ const Settings = (props:{
 																	<b>Embedding Model:</b> {dataset.embedding_model}
 																</div>
 																<div className='text-nav dark:text-nav-dark text-sm'>
+																	<b>Chunking method:</b> {dataset.chunking_method}
+																</div>
+																<div className='text-nav dark:text-nav-dark text-sm'>
 																	<b>Chunksize:</b> {dataset.chunksize}
 																</div>
 																<div className='text-nav dark:text-nav-dark text-sm'>
@@ -317,6 +322,9 @@ const Settings = (props:{
 																</div>
 																<div className='text-nav dark:text-nav-dark text-sm'>
 																	<b>Distance Function:</b> {dataset.distance_function}
+																</div>
+																<div className='text-nav dark:text-nav-dark text-sm'>
+																	<b>BM25:</b> {dataset.use_bm25 ? 'Yes' : 'No'}
 																</div>
 															</div> : <></>
 														}
