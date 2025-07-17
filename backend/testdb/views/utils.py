@@ -81,7 +81,7 @@ def extractPDFImages(path, title, data_list):
             data_list.append({'title': title, 'page': page_index, 'content': response, 'type': 'image'})
 
 # Collects chunks of text from PDFs stored in a Zotero collection.
-def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key, user='', user_email='', user_group=''):
+def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key, user='', user_email='', user_group='', use_bm25='Yes', chunking_method= 'fixed_chunk_size'):
     # example gorup id and collection id
     # group_id = 4982570
     # collection_id = 'YTPMLXYY'
@@ -106,6 +106,8 @@ def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key,
             user = user if len(user) else '-',
             user_email = user_email if len(user_email) else '-',
             user_group = user_group if len(user_group) else '-',
+            chunking_method=chunking_method,
+            use_bm25= True if use_bm25 == 'Yes' else False,
             dataset_date_time=make_aware(datetime.datetime.now())
         )
 

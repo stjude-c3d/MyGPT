@@ -614,6 +614,7 @@ def add_zotero_dataset(request):
         collection_id_r = request.POST.get('collection_id')
         embedding_model_request = request.POST.get('embedding_model')
         use_bm25 = request.POST.get('use_bm25')
+        chunking_method = request.POST.get('chunking_method')
         user_r = request.POST.get('user')
         user_email_r = request.POST.get('user_email')
         user_group_r = request.POST.get('user_group')
@@ -663,7 +664,7 @@ def add_zotero_dataset(request):
         else:
             user_group = user_group_r
 
-        dataset_name = get_zotero_chunks(library_id, library_id_type, collection_id, api_key, user, user_email, user_group)
+        dataset_name = get_zotero_chunks(library_id, library_id_type, collection_id, api_key, user, user_email, user_group, use_bm25, chunking_method)
         if dataset_name == False:
             return Response({'error':True}, content_type="application/json")
         else:
