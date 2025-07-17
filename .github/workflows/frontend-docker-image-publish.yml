@@ -3,6 +3,7 @@ name: Frontend Docker Image on publish
 on:
   release:
     types: [published]
+  workflow_dispatch:
  
 
 jobs:
