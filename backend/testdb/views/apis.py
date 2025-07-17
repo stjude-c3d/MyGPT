@@ -186,7 +186,7 @@ def get_context(request):
             questions = Question.objects.filter(question_text=question_text, model_type=model_type, question_dataset=dataset)
             question = questions[0]
             question.keywords = keywords
-            question.relevance_score = relevance_score
+            question.relevance_score = relevance_score if relevance_score <= 100 else 100
             question.save()
             conversation_id = question.conversation.id
             conversation = Conversation.objects.get(id=conversation_id)
@@ -209,7 +209,7 @@ def get_context(request):
                 conversation.save()
             question = Question.objects.create(
                 question_text=question_text,
-                relevance_score=relevance_score,
+                relevance_score=relevance_score if relevance_score <= 100 else 100,
                 model_type=model_type,
                 keywords=keywords,
                 question_dataset=dataset,
@@ -241,8 +241,11 @@ def get_context(request):
                 'bm25_rank': 0
             })
 
+        # combine vector_sources and bm25_sources
+        combined_sources = hybrid_source_combination(vector_sources, bm25_sources)
+
         sources_grouped = []
-        for source in vector_sources:
+        for source in combined_sources:
             if len(sources_grouped) == 0:
                 sources_grouped.append([source])
             else:
@@ -287,10 +290,6 @@ def get_context(request):
                         # paper.paper_attachment.save(dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf', File(f), save=True)
                         paper.highlighted_attachment.save(dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf', File(f), save=True)
         
-         # combine vector_sources and bm25_sources
-        combined_sources = hybrid_source_combination(vector_sources, bm25_sources)
-        
-        
         for source in combined_sources:
             chunk = chunks.objects.filter(chunk_text=source['context'], chunk_dataset=dataset)
             Source.objects.create(
@@ -322,7 +321,7 @@ def get_context(request):
             
         context_json = {
             'context': context,
-            'relevance_score': relevance_score,
+            'relevance_score': relevance_score if relevance_score <= 100 else 100,
             'sources': combined_sources if not no_context else []
         }
         
@@ -526,11 +525,18 @@ def save_answer(request):
         # add embeddings to answer
         if not no_context:
             add_embeddings_to_qna(answer_text, 'answer', embedding_model)
+            hallucination_index_final = 0
+            if hallucination_index < 0:
+                hallucination_index_final = 0
+            elif hallucination_index > 100:
+                hallucination_index_final = 100
+            else:
+                hallucination_index_final = hallucination_index
             return Response({
                 'saved':True, 
                 'mean_distance_a': mean_distance_a,
                 'relevance_score': relevance_score if question_relevance_score != 0 else 0,
-                'hallucination_index': hallucination_index if hallucination_index < 100 else 100
+                'hallucination_index': hallucination_index_final  
             }, content_type="application/json")
         else:
             return Response({'saved':True, 'relevance_score': relevance_score}, content_type="application/json")
