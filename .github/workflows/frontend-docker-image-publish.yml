@@ -1,4 +1,4 @@
-name: Frontend Docker Image
+name: Frontend Docker Image on publish
 
 on:
   release:
