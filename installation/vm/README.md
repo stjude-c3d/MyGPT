@@ -92,7 +92,15 @@ The server/VM should have the following requirements:
 	docker-compose build backend
 	```
 
-6. Edit nginx configuration
+6. Build Grobid server
+	To build the Grobid server, go to the backend folder and run the following command.
+
+	```bash
+	cd MyGPT
+	docker-compose build grobid
+	```
+
+7. Edit nginx configuration
 	Edit the `nginx.conf` file in the `nginx` folder and change `dafault.conf` file for following fields.
 
 	* server_name (line 9): `server_name <server-url>;`
@@ -101,7 +109,7 @@ The server/VM should have the following requirements:
 	* ssl_certificate (line 46): `ssl_certificate <path-to-.pem-file>;`
 	* ssl_certificate_key (line 47): `ssl_certificate_key <path-to-.key-file>;`
 
-7. Build nginx server
+8. Build nginx server
 	To build the nginx server, go to the backend folder and run the following command.
 
 	```bash
@@ -109,13 +117,14 @@ The server/VM should have the following requirements:
 	docker-compose build nginx
 	```
 
-8. Run the backend server
+9. Run the backend server
 	To run the backend server, go to the backend folder and run the following command.
 
 	```
 	cd MyGPT
 	docker-compose up -d db
 	docker-compose up -d backend
+	docker-compose up -d grobid
 	docker-compose up -d nginx
 	```
 

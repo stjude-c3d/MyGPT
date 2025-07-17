@@ -229,6 +229,61 @@ bash MyGPT/installation/linux/build_images/create_superuser.sh
 
 You can check backend database at http://localhost:8000/admin/ with username and password you created in above step.
 
+### Run MCP server
+To run MCP server, run following command if you are using pre-built docker images:
+
+```
+cd MyGPT/installation/linux/prebuilt_images/
+bash run_mcp_server.sh
+```
+Or run following command if you are building docker images:
+
+```
+bash MyGPT/installation/linux/build_images/run_mcp_server.sh
+```
+This will start the MCP server and you can access it at http://localhost:5001/sse/
+
+### Configure MCP Client in MyGPT
+
+To setup MCP client in MyGPT, you need to stop the frontend, and then update the environment variable in the `.env` file.
+To stop the frontend, run following command if you are using pre-built docker images:
+
+```cd MyGPT/installation/linux/prebuilt_images/
+bash stop_docker.sh
+```
+Or run following command if you are building docker images:
+
+```
+bash MyGPT/installation/linux/build_images/stop_docker.sh
+```
+
+Change following line in `.env` file:
+
+```
+REACT_APP_MCP_SERVER_URL = 'http://localhost:5001/sse'
+REACT_APP_MCP_SHOW_MCP_MENU=true
+```
+
+You can change MCP server URL to your custom MCP server URL if you are using a different server.
+
+Then, you can start the frontend again by running following command if you are using pre-built docker images:
+
+```cd MyGPT/installation/linux/prebuilt_images/
+bash run_docker.sh
+```	
+Or run following command if you are building docker images:
+
+```
+bash MyGPT/installation/linux/build_images/run_docker.sh
+```
+
+Once the frontend is running, you can access it at http://localhost:3000/ and you should see MCP menu in the settings page.
+Select the MCP tools you want to use from the customization page.
+
+Once you select the tools, go to the main page and select LLM with tool support and you should see the MCP tools in the chat interface.
+
+<img src="../../images/MyGPT_MCP_UI.png?raw=true" width="1000px">
+
 ### stop docker containers
 
 To stop docker containers, run following command if you are using pre-built docker images:
