@@ -675,7 +675,7 @@ def add_zotero_dataset(request):
 
         # if dataset_name.error:
         #     return Response({'error':True, 'error_message': dataset_name.error}, content_type="application/json")
-        message = add_to_chroma(dataset_name, embedding_model, distance_function)
+        message = add_to_chroma(dataset_name, embedding_model, distance_function, chunking_method)
 
         if message == False:
             return Response({'error':True}, content_type="application/json")
