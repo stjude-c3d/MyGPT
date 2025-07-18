@@ -9,7 +9,7 @@
 # RUN uv run mygpt_backend.py
 
 # Base Python image
-FROM python:3.13.5-slim-bookworm AS base
+FROM python:3.14-rc-alpine3.20 AS base
 # Stage to copy the uv binary from the external image
 FROM ghcr.io/astral-sh/uv:latest AS uv-binary
 # Builder stage: setup environment and install dependencies using uv
