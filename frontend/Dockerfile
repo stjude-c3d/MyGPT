@@ -1,4 +1,4 @@
-FROM node:20.16.0-slim
+FROM node:20.19.4-slim
 WORKDIR /app
 ENV PATH /app/node_modules/.bin:$PATH
 COPY package.json /app/package.json
