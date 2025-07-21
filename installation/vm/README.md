@@ -139,6 +139,19 @@ The server/VM should have the following requirements:
 
 To install Ollama on the server, follow the instructions in the [Ollama installation guide](https://github.com/ollama/ollama/blob/main/docs/linux.md).
 
+Pull the latest LLM models by running the following commands:
+
+```bash
+ollama pull llama3
+ollama pull llama3.1
+```
+
+Also, get the nomic embedding model, which is best performing embedding model for MyGPT pipeline, by running following command:
+
+```bash
+ollama pull nomic-embed-text
+```
+
 We also recommand to change envrironment variables in the `ollama` folder and set the following by following guide from Ollama
 
 [How do I configure Ollama server?](https://github.com/ollama/ollama/blob/main/docs/linux.md)

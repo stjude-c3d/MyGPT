@@ -88,6 +88,13 @@ Once you start Ollama, you have to pull Llama3 model by running following comman
 ollama pull llama3
 ```
 
+Also, get the nomic embedding model, which is best performing embedding model for MyGPT pipeline, by running following command:
+
+```
+ollama pull nomic-embed-text
+```
+
+
 ## MyGPT installation
 
 1. **Get MyGPT source code**
