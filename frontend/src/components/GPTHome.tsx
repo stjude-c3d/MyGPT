@@ -212,6 +212,8 @@ function GPTHome(props:{
 				setSourcePages([])
 				setSourceColorCodes([])
 				setSourceContexts([])
+				setFocusedPaper(null)
+				setFocusedSection(null)
 			}
 		}
 		postData()
@@ -801,6 +803,12 @@ function GPTHome(props:{
 		setSourcePages([])
 		setSourceContexts([])
 		setSourceColorCodes([])
+		setFocusedPaper(null)
+		setFocusedSection(null)
+		setselectedPaperIdx(0)
+		setSelectedPage(0)
+		setFileAttachmentType('paper_attachment')
+		setContext('')
 		setAnswer('')
 	}
 	return (
