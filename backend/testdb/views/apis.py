@@ -341,6 +341,10 @@ def get_conversations_by_dataset(request):
             conversation_json['conversation_id'] = conversation_id
             conversation_json['questions_answers'] = []
             for question in questions:
+                # if answewr count is 0, skip the question
+                answer_count = Answer.objects.filter(question=question).count()
+                if answer_count == 0:
+                    continue
                 # answers = Answer.objects.filter(question=question)
                 qna_json = {
                     'question_id': question.id,
@@ -382,6 +386,16 @@ def get_question_details(request):
                 'hallucination_index': answer.hallucination_index,
                 'answer_no_context': answer.answer_no_context_text,
             })
+        # Determine the color code based on distance or score
+        for source in sources_json: 
+            if (source['vector_score'] != 0 and source['vector_score'] > 0.5) or (source['bm25_score'] != 0 and source['bm25_score'] > 0.5):
+                source['color_code'] = 'green'
+            elif (source['vector_score'] != 0 and source['vector_score'] > 0.3) or (source['bm25_score'] != 0 and source['bm25_score'] > 0.3):
+                source['color_code'] = 'yellow'
+            elif (source['vector_score'] != 0 and source['vector_score'] > 0.15) or (source['bm25_score'] != 0 and source['bm25_score'] > 0.15):
+                source['color_code'] = 'red'
+            else:
+                source['color_code'] = 'gray'
         question_json = {
             'question': question.question_text,
             'relevance_score': question.relevance_score,

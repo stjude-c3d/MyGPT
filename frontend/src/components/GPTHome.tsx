@@ -1143,7 +1143,7 @@ function GPTHome(props:{
 												}}
 											>
 											<div className='border border-gray-400'></div>
-												<div className={'text-white text-sm p-2 font-normal italic ' + (sourceColorCodes[query.length-i-1][index] === 'green' ? 'bg-green-600' : sourceColorCodes[query.length-i-1][index] === 'yellow' ? 'bg-yellow-500' :  sourceColorCodes[query.length-i-1][index] === 'light_yellow' ? 'bg-amber-600' : '')}>{'Page ' + (sourcePages[query.length-i-1][index]) + ' of "' + paper + '"'}</div>
+												<div className={'text-white text-sm p-2 font-normal italic ' + (sourceColorCodes[query.length-i-1][index] === 'green' ? 'bg-green-600' : sourceColorCodes[query.length-i-1][index] === 'yellow' ? 'bg-yellow-600' :  sourceColorCodes[query.length-i-1][index] === 'red' ? 'bg-amber-600' : '')}>{'Page ' + (sourcePages[query.length-i-1][index]) + ' of "' + paper + '"'}</div>
 												{selectedPaperIdx === (papers.findIndex((p:any)=>p.paper_title===paper)) && selectedPage === sourcePages[query.length-i-1][index] ? 
 													<div className='text-white text-sm p-2 bg-slate-600 dark:bg-slate-700'>
 														<div className='text-white font-bold'>Context</div>
@@ -1227,7 +1227,7 @@ function GPTHome(props:{
 												}}
 											>
 												<div className='border border-gray-400'></div>
-												<div className={'text-white text-sm p-2 font-normal italic ' + (sourceColorCodes[query.length-i-1][index] === 'green' ? 'bg-green-600' : sourceColorCodes[query.length-i-1][index] === 'yellow' ? 'bg-yellow-500' :  sourceColorCodes[query.length-i-1][index] === 'light_yellow' ? 'bg-amber-600' : '')}>{'Page ' + (sourcePages[query.length-i-1][index]) + ' of "' + paper + '"'}</div>
+												<div className={'text-white text-sm p-2 font-normal italic ' + (sourceColorCodes[query.length-i-1][index] === 'green' ? 'bg-green-600' : sourceColorCodes[query.length-i-1][index] === 'yellow' ? 'bg-yellow-600' :  sourceColorCodes[query.length-i-1][index] === 'red' ? 'bg-amber-600' : '')}>{'Page ' + (sourcePages[query.length-i-1][index]) + ' of "' + paper + '"'}</div>
 											</div>
 										))}
 									</>:
