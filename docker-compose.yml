@@ -84,6 +84,7 @@ services:
       start_period: 30s
   mcp_server:
     build: ./MCP-server
+    # image: ghcr.io/stjude-c3d/mygpt-mcp-server:latest
     volumes:
       - ./MCP-server:/app
     ports:

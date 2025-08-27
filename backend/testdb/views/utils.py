@@ -46,8 +46,18 @@ con = duckdb.connect()
 
 # Extracts content from a given PDF file and returns it along with the number of pages.
 def getPDFContent(path):
-    reader = PdfReader(path)
-    return reader.pages
+    try:
+        reader = PdfReader(path, strict=False)
+        # check if the PDF has a root/catalog
+        if len(reader.pages) == 0:
+            print(f"PDF structure error: Pages are not of type list in {path}")
+            return []
+        for i, page in enumerate(reader.pages):
+            print(f"Page {i + 1}: {page.extract_text()}")
+        return reader.pages
+    except Exception as e:
+        print(f"Error reading PDF {path}: {e}")
+        return []
 
 def convert_to_pdf(input_file, output_dir):
     
@@ -365,6 +375,8 @@ def add_dataset_from_upload(request):
 
             if chunking_method == 'fixed_chunk_size':        
                 pages = getPDFContent(pdf_name)
+
+                # check if pages are not empty and contain text
 
                 for page_num, page in enumerate(pages):
                     text = page.extract_text()
@@ -1472,7 +1484,7 @@ def get_embedding_model_ef(embedding_model_request, add_distances = False):
                 answer = df['answer'][i]
                 answer_no_context = df['answer_without_context'][i]
                 chunks = df['context_chunks'][i].split(';')
-                distances_q, distances_a, distance_na  = get_embedding_cutoff_distance(embedding_model_ef, chunks, question, answer, answer_no_context)
+                distances_q, distances_a, distance_na = get_embedding_cutoff_distance(embedding_model_ef, chunks, question, answer, answer_no_context)
                 embedding_model.best_distance_q = np.round(distances_q, 3)
                 # best_distances_ans = best_distances_na - best_distances_a
                 embedding_model.best_distance_ac = np.round(distances_a, 3)

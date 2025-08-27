@@ -92,5 +92,131 @@ async def get_mygpt_documents(user_email: str, dataset: str) -> dict[str, Any] |
 async def main():
 	await mcp.run_async(transport="sse", middleware=custom_middleware)
 
+@mcp.tool()
+async def search_pdb(query: str) -> dict[str, Any]:
+    """
+    Search the RCSB Protein Data Bank (PDB) for entries matching the query and return details.
+    Uses the PDB Search API v2 for IDs and the Data API v1 for entry details.
+    
+    Args:
+        query: Search term (protein name, keyword, etc.)
+        
+    Returns:
+        A dictionary containing search results or error information.
+    """
+    search_url = "https://search.rcsb.org/rcsbsearch/v2/query"
+    data_url = "https://data.rcsb.org/rest/v1/core/entry"
+
+    # Search payload for PDB API
+    search_payload = {
+        "query": {
+            "type": "terminal",
+            "service": "full_text",
+            "parameters": {
+                "value": query
+            }
+        },
+        "return_type": "entry",
+        "request_options": {
+            "paginate": {
+                "start": 0,
+                "rows": 10
+            }
+        }
+    }
+    
+    headers = {"Content-Type": "application/json"}
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        try:
+            # Step 1: Search for PDB IDs
+            search_response = await client.post(search_url, json=search_payload, headers=headers)
+            search_response.raise_for_status()
+            search_data = search_response.json()
+            
+            # Extract PDB IDs from response
+            pdb_ids = []
+            if "result_set" in search_data:
+                pdb_ids = [result["identifier"] for result in search_data["result_set"]]
+            elif "results" in search_data:
+                pdb_ids = [result["identifier"] for result in search_data["results"]]
+
+            if not pdb_ids:
+                return {
+                    "success": True,
+                    "query": query,
+                    "total_found": 0,
+                    "results": [],
+                    "message": f"No PDB entries found for '{query}'"
+                }
+
+            # Step 2: Fetch details for each PDB ID
+            results = []
+            for pdb_id in pdb_ids:
+                entry_detail_url = f"{data_url}/{pdb_id}"
+                try:
+                    detail_response = await client.get(entry_detail_url)
+                    detail_response.raise_for_status()
+                    entry_data = detail_response.json()
+
+                    # Extract relevant information using safe dict access
+                    title = entry_data.get("struct", {}).get("title", "No title available")
+                    
+                    release_date = entry_data.get("rcsb_accession_info", {}).get("initial_release_date", "Unknown")
+                    if release_date != "Unknown" and "T" in release_date:
+                        release_date = release_date.split("T")[0]
+
+                    experimental_method = entry_data.get("exptl", [{}])[0].get("method", "Unknown")
+                    
+                    # Get authors
+                    authors = [author.get("name") for author in entry_data.get("audit_author", []) if author.get("name")]
+
+                    results.append({
+                        "pdb_id": pdb_id,
+                        "title": title,
+                        "release_date": release_date,
+                        "experimental_method": experimental_method,
+                        "authors": authors[:5]  # Limit to first 5 authors
+                    })
+                    
+                except httpx.HTTPStatusError as e:
+                    if e.response.status_code == 404:
+                        results.append({
+                            "pdb_id": pdb_id,
+                            "error": f"PDB ID '{pdb_id}' not found"
+                        })
+                    else:
+                        results.append({
+                            "pdb_id": pdb_id,
+                            "error": f"HTTP error {e.response.status_code} fetching details"
+                        })
+                except httpx.RequestError as e:
+                    results.append({
+                        "pdb_id": pdb_id,
+                        "error": f"Request error: {str(e)}"
+                    })
+                except Exception as e:
+                    results.append({
+                        "pdb_id": pdb_id,
+                        "error": f"Unexpected error: {str(e)}"
+                    })
+
+            return {
+                "success": True,
+                "query": query,
+                "total_found": len(results),
+                "results": results,
+                "message": f"Found {len(results)} PDB entries matching '{query}'"
+            }
+
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 404:
+                return {"error": f"Search API endpoint not found"}
+            return {"error": f"HTTP error occurred during search: {e.response.status_code}"}
+        except httpx.RequestError as e:
+            return {"error": f"Request to PDB search failed: {e}"}
+        except Exception as e:
+            return {"error": f"An unexpected error occurred: {e}"}
+        
 if __name__ == "__main__":
    asyncio.run(main())
