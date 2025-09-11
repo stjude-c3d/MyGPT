@@ -313,10 +313,10 @@ def add_dataset_from_upload(request):
 
         # Ensure the file extension is valid
         allowed_extensions = ['.pdf', '.doc', '.docx', '.txt', '.xlsx', '.xls', '.csv']  # Add other allowed extensions as needed
-        if doctype not in allowed_extensions:
+        if doctype.lower() not in allowed_extensions:
             raise ValueError("Invalid file extension")
 
-        if doctype in ['.xlsx', '.xls', '.csv']:
+        if doctype.lower() in ['.xlsx', '.xls', '.csv']:
             # sanitize base_name and doctype
             base_name = sanitize_filename(base_name)
             doctype = sanitize_filename(doctype)
@@ -367,7 +367,7 @@ def add_dataset_from_upload(request):
             with open(base_name + doctype, 'wb') as f:
                 f.write(attachment.read())
             
-            if doctype != '.pdf':
+            if doctype.lower() != '.pdf':
                 convert_to_pdf(base_name + doctype, base_name.removesuffix(f'/paper{str(idx+1)}'))
             
             with open(pdf_name, 'rb') as f:

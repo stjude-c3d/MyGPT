@@ -218,5 +218,53 @@ async def search_pdb(query: str) -> dict[str, Any]:
         except Exception as e:
             return {"error": f"An unexpected error occurred: {e}"}
         
+@mcp.tool()
+async def get_pdb_details(pdb_id: str):
+    """
+    Search the RCSB Protein Data Bank (PDB) for PDB ID and return details.
+
+    Args:
+        pdb_id: The PDB ID to search for.
+
+    Returns:
+        A dictionary containing PDB entry details or error information.
+    """
+    async with httpx.AsyncClient() as client:
+        data_url = "https://data.rcsb.org/rest/v1/core/entry"
+        try:
+            response = await client.get(f"{data_url}/{pdb_id}")
+            response.raise_for_status()
+            entry_data = response.json()
+
+            # Extract relevant information using safe dict access
+            title = entry_data.get("struct", {}).get("title", "No title available")
+            release_date = entry_data.get("rcsb_accession_info", {}).get("initial_release_date", "Unknown")
+            if release_date != "Unknown" and "T" in release_date:
+                release_date = release_date.split("T")[0]
+            experimental_method = entry_data.get("exptl", [{}])[0].get("method", "Unknown")
+            resolution = entry_data.get("rcsb_entry_info", {}).get("resolution_combined", ["Unknown"])
+
+            authors = [author.get("name") for author in entry_data.get("audit_author", []) if author.get("name")]
+
+            return {
+                "success": True,
+                "pdb_id": pdb_id,
+                "title": title,
+                "release_date": release_date,
+                "experimental_method": experimental_method,
+                "resolution": resolution,
+                "authors": authors[:5]  # Limit to first 5 authors
+            }
+
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 404:
+                return {"error": f"PDB ID '{pdb_id}' not found"}
+            else:
+                return {"error": f"HTTP error {e.response.status_code} fetching details"}
+        except httpx.RequestError as e:
+            return {"error": f"Request error: {str(e)}"}
+        except Exception as e:
+            return {"error": f"Unexpected error: {str(e)}"}
+
 if __name__ == "__main__":
    asyncio.run(main())
