@@ -544,11 +544,11 @@ const AddLibrarySettings = (props: {
 				<div className='flex flex-col mt-4'>
 					{ showSuccess ?
 						<div className='flex justify-start'>
-							<div className='text-nav dark:text-nav-dark p-1 text-lg bg-green-200 rounded-md'>Library uploaded successfully</div>
+							<div className='text-nav dark:text-nav-dark p-1 text-lg bg-green-200 dark:bg-green-700 rounded-md'>Library uploaded successfully</div>
 						</div> : 
 						videoLibrary && !showSuccess ?
 						<div className='flex justify-start'>
-							<div className='text-nav dark:text-nav-dark p-1 text-lg bg-orange-200 rounded-md'>Uploading documents...</div>
+							<div className='text-nav dark:text-nav-dark p-1 text-lg bg-orange-200 dark:bg-orange-700 rounded-md'>Uploading documents...</div>
 						</div> :
 						<></>
 					}
