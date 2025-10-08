@@ -790,6 +790,7 @@ function GPTHome(props:{
 		],
 		renderToolbar,
 	})
+	console.log(selectedDataset)
 
 	const resetStates = () => {
 		setQuery([])
@@ -826,13 +827,9 @@ function GPTHome(props:{
 									: "bg-nav text-white shadow-lg dark:bg-stjude")
 							}
 							onClick={() => {
-								if (answerWithoutContext) {
-								setAnswerWithoutContext(false)
-								setSelectedDataset(props.currentSettings.selectedLlm + '_direct_chat')
-								// resetStates()
-								// setSelectedDataset(props.currentSettings.selectedDataset)
-								// props.settingsCallback({...props.currentSettings, selectedDataset: props.currentSettings.selectedLlm + '_direct_chat', answerWithoutContext: true, fetchPapers: false})
-								}
+								setAnswerWithoutContext(true)
+								resetStates()
+								props.settingsCallback({...props.currentSettings, selectedDataset: selectedDataset, answerWithoutContext: false, fetchPapers: true})
 							}}
 						>
 							Chat with Documents
@@ -844,13 +841,11 @@ function GPTHome(props:{
 									? "bg-nav text-white shadow-lg dark:bg-stjude"
 									: "bg-gray-300 text-nav dark:bg-gray-500 dark:text-white")
 							}
-							onClick={() => {
-								if (!answerWithoutContext) {		
-								setAnswerWithoutContext(true)
-								// resetStates()
+							onClick={() => {	
+								setAnswerWithoutContext(false)
+								resetStates()
 								setSelectedDataset(props.currentSettings.selectedDataset)
-								// props.settingsCallback({...props.currentSettings, selectedDataset: selectedDataset, answerWithoutContext: false, fetchPapers: true})
-								}
+								props.settingsCallback({...props.currentSettings, selectedDataset: props.currentSettings.selectedLlm + '_direct_chat', answerWithoutContext: true, fetchPapers: false})
 							}}
 						>
 							Direct chat with GPTs
@@ -881,7 +876,7 @@ function GPTHome(props:{
 						onChange={(e) => {
 							if (answerWithoutContext){
 								let temp_dataset = e.target.value + '_direct_chat'
-								setSelectedDataset(temp_dataset)
+								// setSelectedDataset(temp_dataset)
 								props.settingsCallback({...props.currentSettings, selectedLlm: e.target.value, selectedDataset: temp_dataset})
 							} else
 							props.settingsCallback({...props.currentSettings, selectedLlm: e.target.value})
