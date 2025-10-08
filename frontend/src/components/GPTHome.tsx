@@ -790,7 +790,6 @@ function GPTHome(props:{
 		],
 		renderToolbar,
 	})
-	console.log(selectedDataset)
 
 	const resetStates = () => {
 		setQuery([])
