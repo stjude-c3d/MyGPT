@@ -364,12 +364,12 @@ def add_dataset_from_upload(request):
             doctype = sanitize_filename(doctype)
 
             pdf_name = base_name + '.pdf'
-            with open(base_name + doctype, 'wb') as f:
+            with open(base_name + doctype.lower(), 'wb') as f:
                 f.write(attachment.read())
             
             if doctype.lower() != '.pdf':
-                convert_to_pdf(base_name + doctype, base_name.removesuffix(f'/paper{str(idx+1)}'))
-            
+                convert_to_pdf(base_name + doctype.lower(), base_name.removesuffix(f'/paper{str(idx+1)}'))
+
             with open(pdf_name, 'rb') as f:
                 paper.paper_attachment.save(dataset_name + '/paper' + str(idx+1) + '.pdf', File(f), save=True)
 

@@ -815,8 +815,52 @@ function GPTHome(props:{
 		<div className='grid grid-cols-10 p-4 bg-gray-200 dark:bg-neutral-800 max-w-[2000px] mx-auto h-[94vh]'>
 			<div className={'mt-24 p-6 bg-panel3 dark:bg-panel2-dark rounded-lg max-h-[92vh] overflow-y-auto duration-300 ease-in-out peer-checked:bg-panel1 after:w-4 after:h-4 after:bg-white after:rounded-full after:shadow-md after:duration-300' + 
 				(answerWithoutContext ? ' col-span-12 max-w-full' : ' col-span-3 max-w-4xl mr-6') }>
+				{/* Toggle button for chat mode at the top */}
+				<div className="flex justify-center mb-8">
+					<div className="flex">
+						<button
+							className={
+								"px-6 py-3 rounded-l-full font-semibold text-lg " +
+								(answerWithoutContext
+									? "bg-gray-300 text-nav dark:bg-gray-500 dark:text-white"
+									: "bg-nav text-white shadow-lg dark:bg-stjude")
+							}
+							onClick={() => {
+								if (answerWithoutContext) {
+								setAnswerWithoutContext(false)
+								setSelectedDataset(props.currentSettings.selectedLlm + '_direct_chat')
+								// resetStates()
+								// setSelectedDataset(props.currentSettings.selectedDataset)
+								// props.settingsCallback({...props.currentSettings, selectedDataset: props.currentSettings.selectedLlm + '_direct_chat', answerWithoutContext: true, fetchPapers: false})
+								}
+							}}
+						>
+							Chat with Documents
+						</button>
+						<button
+							className={
+								"px-6 py-3 rounded-r-full font-semibold text-lg " +
+								(answerWithoutContext
+									? "bg-nav text-white shadow-lg dark:bg-stjude"
+									: "bg-gray-300 text-nav dark:bg-gray-500 dark:text-white")
+							}
+							onClick={() => {
+								if (!answerWithoutContext) {		
+								setAnswerWithoutContext(true)
+								// resetStates()
+								setSelectedDataset(props.currentSettings.selectedDataset)
+								// props.settingsCallback({...props.currentSettings, selectedDataset: selectedDataset, answerWithoutContext: false, fetchPapers: true})
+								}
+							}}
+						>
+							Direct chat with GPTs
+						</button>
+					</div>
+				</div>
 				<div className='text-2xl font-bold text-nav dark:text-nav-dark'>Ask a Question</div>
-				<div className='text-sm text-nav my-2 dark:text-nav-dark'>Ask a question about a paper or a topic from your publication library. We will try to answer it using the GPT models.</div>
+				<div className='text-sm text-nav my-2 dark:text-nav-dark'>
+					{ answerWithoutContext ? 'Ask any question to the selected LLM. The LLM will answer based on its pre-existing knowledge.' : 
+						'Ask a question about a paper or a topic from your publication library. We will try to answer it using the GPT models.'}</div>
 				{ answers.length && answers[answers.length-1].response ?
 					<div className='p-1 mx-4 flex justify-center'>
 						<button className={'px-2 py-1 mx-4 my-auto bg-white dark:bg-panel3-dark dark:text-nav-dark text-sm hover:bg-bsk_dark_blue text-bsk_dark_blue font-semibold hover:text-white hover:border-transparent rounded-full shadow-md hover:shadow-lg outline-none focus:outline-none' + (answers.length && answers[answers.length-1].response ? '':' opacity-50 cursor-not-allowed')} 
@@ -970,7 +1014,7 @@ function GPTHome(props:{
 					: <></>
 				}
 
-				{ props.frontendSettings && props.frontendSettings.show_no_context_switch ? 
+				{/* { props.frontendSettings && props.frontendSettings.show_no_context_switch ? 
 					<div className='p-1 mx-2 flex'>
 						<label className='relative flex justify-between items-center group p-2 text-md text-nav dark:text-nav-dark'>
 						<input 
@@ -1007,9 +1051,10 @@ function GPTHome(props:{
 						/>
 						<p className='inline-block mx-2 text-sm text-nav'>
 							Answer without context
-						</p> */}
+						</p>
 					</div>
-					 : null }
+					 : null } 
+					 */}
 				{
 					query.length ? 
 					<>{ query.map((_q:any, i:any)=>(
@@ -1322,7 +1367,7 @@ function GPTHome(props:{
 								(e) => {
 									if (e.target.value === 'None'){
 										setFocusedPaper(null)
-										setselectedPaperIdx(0)
+																			setselectedPaperIdx(0)
 									} else {
 										setFocusedPaper(e.target.value)
 										setselectedPaperIdx(papers.findIndex((p:any)=>p.paper_title===e.target.value))
