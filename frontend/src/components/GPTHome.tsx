@@ -820,11 +820,12 @@ function GPTHome(props:{
 					<div className="flex">
 						<button
 							className={
-								"px-6 py-3 rounded-l-full font-semibold text-lg " +
+								"px-6 py-3 rounded-l-lg font-semibold text-lg " +
 								(answerWithoutContext
 									? "bg-gray-300 text-nav dark:bg-gray-500 dark:text-white"
 									: "bg-nav text-white shadow-lg dark:bg-stjude")
 							}
+							disabled={!answerWithoutContext}
 							onClick={() => {
 								setAnswerWithoutContext(true)
 								resetStates()
@@ -835,12 +836,13 @@ function GPTHome(props:{
 						</button>
 						<button
 							className={
-								"px-6 py-3 rounded-r-full font-semibold text-lg " +
+								"px-6 py-3 rounded-r-lg font-semibold text-lg " +
 								(answerWithoutContext
 									? "bg-nav text-white shadow-lg dark:bg-stjude"
 									: "bg-gray-300 text-nav dark:bg-gray-500 dark:text-white")
 							}
-							onClick={() => {	
+							disabled={answerWithoutContext}
+							onClick={() => {
 								setAnswerWithoutContext(false)
 								resetStates()
 								setSelectedDataset(props.currentSettings.selectedDataset)

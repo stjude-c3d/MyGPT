@@ -84,6 +84,7 @@ export const graphConfig = {
 };
 
 export const appRoles = {
-    PubParserCurator: 'PubParserCurator',
-    BSKAdmin: 'BSKAdmin'
+    MyGPTUser: 'MyGPTUser',
+    MyGPTAdmin: 'MyGPTAdmin',
+    BMTCTuser: 'BMTCTuser'
 }
