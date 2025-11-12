@@ -1692,15 +1692,22 @@ def index_document_by_bm25(dataset_name):
     tokenizer.save_vocab(tokenizer_directory)
     tokenizer.save_stopwords(tokenizer_directory)
 
-def retrieve_chunks_by_bm25(queryText, dataset_name, chunk_count=10):
+def retrieve_chunks_by_bm25(queryText, dataset_name, document_title, chunk_count=10):
 
     stemmer = Stemmer.Stemmer("english")
 
      # Tokenize the queries
     queriesTokenized = bm25s.tokenize([queryText], stemmer=stemmer)
 
+    # if document_title is not empty, get the chunk file and create weight mask for the documents
+    if document_title != '':
+        chunk_file = f'/code/data/data_chunks/{dataset_name}.txt'
+        with open(chunk_file, 'r') as file:
+            chunk_lines = file.readlines()
+        weight_mask = np.array([1 if "'title': '" + str(document_title) + "'" in line else 0 for line in chunk_lines])
+
     retriever_loaded = bm25s.BM25.load(f"/code/data/bm25_tokenizer/{dataset_name}", mmap=True, load_corpus=True)
-    results, scores = retriever_loaded.retrieve(queriesTokenized, k=chunk_count, return_as="tuple")
+    results, scores = retriever_loaded.retrieve(queriesTokenized, k=chunk_count, return_as="tuple", weight_mask=weight_mask if document_title != '' else None)
 
     # returns ids of the chunks as a list
     return results[0], scores[0]

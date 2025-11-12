@@ -142,7 +142,7 @@ def get_context(request):
             bm25_sources = []
             if use_bm25:
                 # get similar chunks using BM25
-                results, scores = retrieve_chunks_by_bm25(question_text, dataset_name, 3)
+                results, scores = retrieve_chunks_by_bm25(question_text, dataset_name, document_title, 3)
                 normalized_scores = min_max_normalization(scores, best_bm25_score, worst_bm25_score, False)
                 for idx, result in enumerate(results):
                     cleaned_chunk = re.sub(r'\s+', ' ', str(result['text']))
