@@ -104,3 +104,30 @@ def hybrid_source_combination(vector_sources, bm25_sources):
             combined_sources.append(bm25_source)
 
     return combined_sources
+
+def get_answer_distance_by_context_bm25(text, contexts = ['']):
+
+    tokenizer_directory = Path('/code/data/bm25_tokenizer') / 'answers'
+    tokenizer_directory.mkdir(parents=True, exist_ok=True)
+
+    # default tokenizer
+    stemmer = Stemmer.Stemmer("english")
+    tokenizer = bm25s.tokenization.Tokenizer(stemmer=stemmer)
+    corpus_tokenized = tokenizer.tokenize(contexts, return_as='tuple')
+
+    retriever = bm25s.BM25(corpus=contexts)
+    retriever.index(corpus_tokenized)
+    retriever.save(tokenizer_directory)
+    tokenizer.save_vocab(tokenizer_directory)
+    tokenizer.save_stopwords(tokenizer_directory)
+
+     # Tokenize the queries
+    queriesTokenized = bm25s.tokenize([text], stemmer=stemmer)
+
+    retriever_loaded = bm25s.BM25.load(f"/code/data/bm25_tokenizer/answers", mmap=True, load_corpus=True)
+
+    # Get the top 10 results
+    results, scores = retriever_loaded.retrieve(queriesTokenized, k=len(contexts), return_as="tuple")
+
+    # returns ids of the chunks as a list
+    return results[0], scores[0]

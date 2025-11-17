@@ -25,10 +25,6 @@ from ..models import Papers, Videos, Dataset, chunks, Question, Answer, Source, 
 from .embedding_functions import HuggingFaceEmbeddingFunction, OllamaEmbeddingFunction, RayEmbeddingFunction
 import requests
 import xml.etree.ElementTree as ET
-
-#libraries to import for keyword search
-import bm25s
-import Stemmer
 from pathlib import Path
 
 app_config = apps.get_app_config('testdb')
@@ -1077,33 +1073,6 @@ def get_answer_distance_by_context(text, dataset_name, contexts = [''], embeddin
 
     distances = results['distances'][0]
     return distances
-
-def get_answer_distance_by_context_bm25(text, contexts = ['']):
-
-    tokenizer_directory = Path('/code/data/bm25_tokenizer') / 'answers'
-    tokenizer_directory.mkdir(parents=True, exist_ok=True)
-
-    # default tokenizer
-    stemmer = Stemmer.Stemmer("english")
-    tokenizer = bm25s.tokenization.Tokenizer(stemmer=stemmer)
-    corpus_tokenized = tokenizer.tokenize(contexts, return_as='tuple')
-
-    retriever = bm25s.BM25(corpus=contexts)
-    retriever.index(corpus_tokenized)
-    retriever.save(tokenizer_directory)
-    tokenizer.save_vocab(tokenizer_directory)
-    tokenizer.save_stopwords(tokenizer_directory)
-
-     # Tokenize the queries
-    queriesTokenized = bm25s.tokenize([text], stemmer=stemmer)
-
-    retriever_loaded = bm25s.BM25.load(f"/code/data/bm25_tokenizer/answers", mmap=True, load_corpus=True)
-
-    # Get the top 10 results
-    results, scores = retriever_loaded.retrieve(queriesTokenized, k=len(contexts), return_as="tuple")
-
-    # returns ids of the chunks as a list
-    return results[0], scores[0]
 
 # def get_chunks_by_keyword(question_text, dataset_name, embedding_model='multi-qa-MiniLM-L6-cos-v1'):
 #     if embedding_model != 'all-MiniLM-L6-v2':
