@@ -3,7 +3,6 @@ from django.apps import apps
 from django.utils.timezone import make_aware
 from pypdf import PdfReader
 from pyzotero import zotero
-from typing import cast
 import fitz
 import pymupdf
 from tqdm import tqdm
@@ -22,15 +21,10 @@ import pdfkit
 import base64
 from langchain_community.llms import Ollama
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from typing import Union, cast
 from ..models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, EmbeddingModel, PaperSections
+from .embedding_functions import HuggingFaceEmbeddingFunction, OllamaEmbeddingFunction, RayEmbeddingFunction
 import requests
 import xml.etree.ElementTree as ET
-
-# imports for embedding functions
-from typing import cast
-import httpx
-from chromadb.api.types import Documents, EmbeddingFunction, Embeddings
 
 #libraries to import for keyword search
 import bm25s
@@ -1569,149 +1563,6 @@ def get_embedding_cutoff_distance(embedding_model_ef, chunks, question, answer, 
 
     return distance_q, distance_a, distance_na
 
-class HuggingFaceEmbeddingFunction(EmbeddingFunction[Documents]):
-    """
-    This class is used to get embeddings for a list of texts using the HuggingFace API.
-    It requires an API key and a model name. The default model name is "sentence-transformers/all-MiniLM-L6-v2".
-    """
-
-    def __init__(
-        self, api_key: str, model_name: str = "sentence-transformers/all-MiniLM-L6-v2"
-    ):
-        """
-        Initialize the HuggingFaceEmbeddingFunction.
-
-        Args:
-            api_key (str): Your API key for the HuggingFace API.
-            model_name (str, optional): The name of the model to use for text embeddings. Defaults to "sentence-transformers/all-MiniLM-L6-v2".
-        """
-        self._api_url = f"https://api-inference.huggingface.co/pipeline/feature-extraction/{model_name}"
-        self._session = httpx.Client(timeout=None)
-        self._session.headers.update({"Authorization": f"Bearer {api_key}"})
-
-    def __call__(self, input: Documents) -> Embeddings:
-        """
-        Get the embeddings for a list of texts.
-
-        Args:
-            texts (Documents): A list of texts to get embeddings for.
-
-        Returns:
-            Embeddings: The embeddings for the texts.
-
-        Example:
-            >>> hugging_face = HuggingFaceEmbeddingFunction(api_key="your_api_key")
-            >>> texts = ["Hello, world!", "How are you?"]
-            >>> embeddings = hugging_face(texts)
-        """
-        # Call HuggingFace Embedding API for each document
-        return cast(
-            Embeddings,
-            self._session.post(
-                self._api_url,
-                json={"inputs": input, "options": {"wait_for_model": True}},
-            ).json(),
-        )
-    
-class OllamaEmbeddingFunction(EmbeddingFunction[Documents]):
-    """
-    This class is used to generate embeddings for a list of texts using the Ollama Embedding API (https://github.com/ollama/ollama/blob/main/docs/api.md#generate-embeddings).
-    """
-
-    def __init__(self, url: str, model_name: str) -> None:
-        """
-        Initialize the Ollama Embedding Function.
-
-        Args:
-            url (str): The URL of the Ollama Server.
-            model_name (str): The name of the model to use for text embeddings. E.g. "nomic-embed-text" (see https://ollama.com/library for available models).
-        """
-        self._api_url = f"{url}"
-        self._model_name = model_name
-        self._session = httpx.Client(timeout=None)
-
-    def __call__(self, input: Union[Documents, str]) -> Embeddings:
-        """
-        Get the embeddings for a list of texts.
-
-        Args:
-            input (Documents): A list of texts to get embeddings for.
-
-        Returns:
-            Embeddings: The embeddings for the texts.
-
-        Example:
-            >>> ollama_ef = OllamaEmbeddingFunction(url="http://localhost:11434/api/embeddings", model_name="nomic-embed-text")
-            >>> texts = ["Hello, world!", "How are you?"]
-            >>> embeddings = ollama_ef(texts)
-        """
-        # Call Ollama Server API for each document
-        texts = input if isinstance(input, list) else [input]
-        embeddings = [
-            self._session.post(
-                self._api_url, json={"model": self._model_name, "prompt": text}
-            ).json()
-            for text in texts
-        ]
-        return cast(
-            Embeddings,
-            [
-                embedding["embedding"]
-                for embedding in embeddings
-                if "embedding" in embedding
-            ],
-        )
-    
-#this method should be called as part of the upload document process just after adding chunks into the chromadb
-def index_document_by_bm25(dataset_name):
-    documents_directory = '/code/data/data_chunks' # some other directory can be initalized for storing indices for each document
-    # tokenizer_directory = '/code/data/bm25_tokenizer/' + dataset_name
-    tokenizer_directory = Path('/code/data/bm25_tokenizer') / dataset_name
-    tokenizer_directory.mkdir(parents=True, exist_ok=True)
-
-    documents = []
-
-    with open(f'{documents_directory}/{dataset_name}.txt', 'r') as file:
-        for line_number, line in enumerate(
-                tqdm((file.readlines()), desc=f'Reading {dataset_name}'), 100
-        ):
-            # Strip whitespace and append the line to the documents list
-            line = line.strip()
-            # convert line to json
-            line_json = eval(line)
-            documents.append('document ' + str(line_json['title']) +  '; page ' + str(line_json['page'])+ '; ' + line_json['content'].strip())
-
-    # default tokenizer
-    stemmer = Stemmer.Stemmer("english")
-    tokenizer = bm25s.tokenization.Tokenizer(stemmer=stemmer)
-    corpus_tokenized = tokenizer.tokenize(documents, return_as='tuple')
-
-    retriever = bm25s.BM25(corpus=documents)
-    retriever.index(corpus_tokenized)
-    retriever.save(tokenizer_directory)
-    tokenizer.save_vocab(tokenizer_directory)
-    tokenizer.save_stopwords(tokenizer_directory)
-
-def retrieve_chunks_by_bm25(queryText, dataset_name, document_title, chunk_count=10):
-
-    stemmer = Stemmer.Stemmer("english")
-
-     # Tokenize the queries
-    queriesTokenized = bm25s.tokenize([queryText], stemmer=stemmer)
-
-    # if document_title is not empty, get the chunk file and create weight mask for the documents
-    if document_title != '':
-        chunk_file = f'/code/data/data_chunks/{dataset_name}.txt'
-        with open(chunk_file, 'r') as file:
-            chunk_lines = file.readlines()
-        weight_mask = np.array([1 if "'title': '" + str(document_title) + "'" in line else 0 for line in chunk_lines])
-
-    retriever_loaded = bm25s.BM25.load(f"/code/data/bm25_tokenizer/{dataset_name}", mmap=True, load_corpus=True)
-    results, scores = retriever_loaded.retrieve(queriesTokenized, k=chunk_count, return_as="tuple", weight_mask=weight_mask if document_title != '' else None)
-
-    # returns ids of the chunks as a list
-    return results[0], scores[0]
-
 def min_max_normalization(data, best_val, worst_val, reverse=False):
     """
     Normalize the data using min-max normalization.
@@ -1766,53 +1617,3 @@ def get_toc_from_grobid(pdf_path):
                 toc.pop(i)
     
     return toc
-
-def hybrid_source_combination(vector_sources, bm25_sources):
-    # find duplicates from both the list with same text
-    duplicates = []
-    combined_sources = []
-    if len(bm25_sources) == 0:
-        # if vector sources are empty, return bm25 sources
-        return vector_sources
-    
-    for vector_source in vector_sources:
-        for bm25_source in bm25_sources:
-            if vector_source['vector_score'] < 0.1 and bm25_source['bm25_score'] < 0.1:
-                continue
-            if vector_source['context'] == bm25_source['context'] and vector_source['page'] == bm25_source['page']:
-                # create a new source with the same text and distance from bm25
-                new_source = vector_source.copy()
-                new_source['bm25_score_raw'] = bm25_source['bm25_score_raw']
-                new_source['bm25_score'] = bm25_source['bm25_score']
-                new_source['bm25_rank'] = bm25_source['rank']
-                duplicates.append(new_source)
-                break
-
-    # add the vector sources to the combined sources not present in duplicates
-    for vector_source in vector_sources:
-        if vector_source['vector_score'] < 0.1:
-            continue
-        # check if the source is already in the combined sources
-        for duplicate in duplicates:
-            if vector_source['context'] == duplicate['context'] and vector_source['page'] == duplicate['page']:
-                break
-        else:
-            # add the vector source to the combined sources
-            combined_sources.append(vector_source)
-    
-    # add the duplicates to the combined sources
-    combined_sources.extend(duplicates)
-
-    # add the bm25 sources to the combined sources
-    for bm25_source in bm25_sources:
-        if  bm25_source['bm25_score'] < 0.1:
-            continue
-        # check if the source is already in the combined sources
-        for duplicate in duplicates:
-            if bm25_source['context'] == duplicate['context'] and bm25_source['page'] == duplicate['page']:
-                break
-        else:
-            # add the bm25 source to the combined sources
-            combined_sources.append(bm25_source)
-
-    return combined_sources
