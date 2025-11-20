@@ -24,14 +24,24 @@
     │                                            │
     ▼                                            ▼
 ┌──────────────────┐                    ┌───────────────────┐
-│ embedding_utils  │                    │   analytics.py    │
+│ embedding_utils  │◄───────────────────│   analytics.py    │
 │                  │                    │                   │
 │ • get_model_ef   │                    │ • PCA             │
 │ • add_embeddings │                    │ • relevance       │
 │ • cutoff_dist    │                    │ • scoring         │
-└──────────────────┘                    └───────────────────┘
+└────────┬─────────┘                    └───────────────────┘
          │
-         ├──────────────────┬─────────────────────┐
+         │ uses
+         ▼
+┌──────────────────────┐
+│ embedding_functions  │
+│                      │
+│ • HuggingFace        │
+│ • Ollama             │
+│ • Ray                │
+└──────────────────────┘
+
+         ┌──────────────────┬─────────────────────┐
          │                  │                     │
          ▼                  ▼                     ▼
 ┌──────────────┐   ┌────────────────┐   ┌────────────────────┐
@@ -44,12 +54,13 @@
          │
          │
          ▼
-┌──────────────────┐
-│zotero_integration│
-│                  │
-│ • get_chunks     │
-│ • API client     │
-└──────────────────┘
+┌──────────────────┐      ┌──────────────────┐
+│zotero_integration│      │   bm25_utils     │
+│                  │      │                  │
+│ • get_chunks     │      │ • index_doc      │
+│ • API client     │      │ • retrieve       │
+└──────────────────┘      │ • hybrid_search  │
+                          └──────────────────┘
 ```
 
 ## For Developers: Where to Find Functions
@@ -124,6 +135,23 @@ from .dataset_management import add_dataset_from_upload, add_demo_dataset, get_c
 - `get_conversation_json(question_text)` - Get conversation history
 - `get_previous_qna_json(question_text)` - Get previous Q&A
 
+#### `bm25_utils.py` - BM25 Keyword Search
+```python
+from .bm25_utils import index_document_by_bm25, retrieve_chunks_by_bm25, hybrid_source_combination, get_answer_distance_by_context_bm25
+```
+- `index_document_by_bm25(dataset_name)` - Create BM25 index for keyword search
+- `retrieve_chunks_by_bm25(queryText, dataset_name, document_title, chunk_count)` - Retrieve chunks using BM25
+- `hybrid_source_combination(vector_sources, bm25_sources)` - Combine vector and BM25 search results
+- `get_answer_distance_by_context_bm25(text, contexts)` - Get BM25 distance by context
+
+#### `embedding_functions.py` - Custom Embedding Functions
+```python
+from .embedding_functions import HuggingFaceEmbeddingFunction, OllamaEmbeddingFunction, RayEmbeddingFunction
+```
+- `HuggingFaceEmbeddingFunction(api_key, model_name)` - HuggingFace API embeddings
+- `OllamaEmbeddingFunction(url, model_name)` - Ollama server embeddings
+- `RayEmbeddingFunction(url, model_name)` - Ray server embeddings
+
 
 ## Module Dependencies
 
@@ -145,9 +173,43 @@ apis.py
        ├─> zotero_integration.py
        │    ├─> document_processing.py
        │    └─> helpers.py
-       └─> dataset_management.py
-            ├─> document_processing.py
-            ├─> helpers.py
-            ├─> embedding_utils.py
-            └─> analytics.py
+       ├─> dataset_management.py
+       │    ├─> document_processing.py
+       │    ├─> helpers.py
+       │    ├─> embedding_utils.py
+       │    └─> analytics.py
+       └─> bm25_utils.py (keyword search, hybrid retrieval)
+	   
+```
+
+## Additional Utility Modules
+
+### `bm25_utils.py` - BM25 Keyword Search Engine
+**Purpose**: Provides keyword-based search using BM25 algorithm, complementing vector similarity search.
+
+**Key Features**:
+- Document indexing with stemming
+- Fast keyword retrieval
+- Hybrid search combining BM25 and vector results
+- Document-specific filtering
+
+**Use Cases**:
+- Keyword-based document retrieval
+- Hybrid search (combining with vector search)
+- Exact term matching
+- Fallback when vector search has low confidence
+
+### `embedding_functions.py` - Custom Embedding Implementations
+**Purpose**: Custom ChromaDB-compatible embedding functions for various providers.
+
+**Supported Providers**:
+1. **HuggingFace** - API-based embeddings from HuggingFace models
+2. **Ollama** - Local/self-hosted Ollama server embeddings
+3. **Ray** - Distributed Ray server embeddings
+
+**Use Cases**:
+- Using custom embedding models
+- Self-hosted embedding servers
+- Alternative embedding providers
+- Enterprise/private deployments
 ```

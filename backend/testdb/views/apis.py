@@ -17,7 +17,7 @@ import shutil
 import json
 import re
 from django.contrib.auth.models import User
-# from .bm25_utils import index_document_by_bm25, retrieve_chunks_by_bm25, hybrid_source_combination
+from .bm25_utils import index_document_by_bm25, retrieve_chunks_by_bm25, hybrid_source_combination
 
 # Import from specialized modules
 from .helpers import (
