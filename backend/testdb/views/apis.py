@@ -17,8 +17,60 @@ import shutil
 import json
 import re
 from django.contrib.auth.models import User
-from .utils import get_zotero_chunks, add_dataset_from_upload, add_to_chroma, nearestDataChroma, get_relevance_score, add_embeddings_to_qna, highlight_pdf, seconds_to_hhmmss, add_pca_to_qna_and_dataset, add_demo_dataset, get_youtube_transcript, add_video_to_chroma, get_embedding_model_ef, get_answer_distance, sanitize_filename, get_answer_distance_by_context, min_max_normalization
-from .bm25_utils import index_document_by_bm25, retrieve_chunks_by_bm25, hybrid_source_combination
+# from .bm25_utils import index_document_by_bm25, retrieve_chunks_by_bm25, hybrid_source_combination
+
+# Import from specialized modules
+from .helpers import (
+    sanitize_filename,
+    seconds_to_hhmmss,
+    min_max_normalization,
+    # find_cutoff_distance
+)
+
+from .document_processing import (
+    # getPDFContent,
+    # convert_to_pdf,
+    # extractPDFImages,
+    highlight_pdf,
+    # get_toc_from_grobid
+)
+
+from .embedding_utils import (
+    get_embedding_model_ef,
+    # get_embedding_cutoff_distance,
+    # add_embeddings_to_chunks,
+    add_embeddings_to_qna
+)
+
+from .vector_db import (
+    add_to_chroma,
+    nearestDataChroma,
+    get_answer_distance,
+    get_answer_distance_by_context
+)
+
+from .analytics import (
+    # add_pca_to_chunks,
+    add_pca_to_qna_and_dataset,
+    # save_chunks_pca_to_file,
+    get_relevance_score
+)
+
+from .video_processing import (
+    get_youtube_transcript,
+    add_video_to_chroma
+)
+
+from .zotero_integration import (
+    get_zotero_chunks
+)
+
+from .dataset_management import (
+    add_dataset_from_upload,
+    add_demo_dataset,
+    # get_conversation_json,
+    # get_previous_qna_json
+)
 from ..models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, Model, EmbeddingModel, FrontEndSettings, DisclaimerAgreement, PaperSections
 
 ####################
