@@ -1,4 +1,4 @@
-FROM --platform=linux/arm64 python:3.11-slim
+FROM --platform=linux/arm64 python:3.14-rc-alpine3.20
 ENV PYTHONDONTWRITEBYTECODE=1
 
 # Set environment variables

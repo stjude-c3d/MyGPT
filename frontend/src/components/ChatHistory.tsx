@@ -183,7 +183,8 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 									<div key={index}>
 										<div className='border border-gray-400'></div>
 										<div 
-											className={'text-white text-sm p-2 font-normal italic' + (selectedSource === index ? ' bg-nav' : '')}
+											// className={'text-white text-sm p-2 font-normal italic' + (selectedSource === index ? ' bg-nav' : '')}
+											className={'text-white text-sm p-2 font-normal italic cursor-pointer ' +  (source.color_code === 'green' ? 'bg-green-600' : source.color_code === 'yellow' ? 'bg-yellow-600' : source.color_code === 'red' ? 'bg-amber-600' : '')}
 											onClick={() => setSelectedSource(index)}
 										>
 												{'Page ' + (source.page) + ' of "' + source.paper + '"'}

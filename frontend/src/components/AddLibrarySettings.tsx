@@ -36,8 +36,11 @@ const AddLibrarySettings = (props: {
   const [videoPlaylistURL, setVideoPlaylistURL] = useState('')
   const [videoDocURLs, setVideoDocURLs] = useState([''])
 
+  const [chunkingMethod, setChunkingMethod] = useState('fixed_chunk_size') // ['fixed_chunk_size', 'structure_preserving']
+  const [chunkSizeActive, setChunkSizeActive] = useState(true)
   const [useOverlap, setUseOverlap] = useState('Yes')
   const [chunkSize, setChunkSize] = useState('1000')
+  const [useBM25, setUseBM25] = useState('Yes')
   const [distanceFn, setDistanceFn] = useState('l2')
 
 //   console.log(UploadLibraryName, uploadDocs)
@@ -52,7 +55,9 @@ const AddLibrarySettings = (props: {
 		formData.append('collection_id', collectionId)
 		formData.append('embedding_model', currentSettings.selectedEmbeddingModel)
 		formData.append('use_overlap', useOverlap)
+		formData.append('chunking_method', chunkingMethod)
 		formData.append('chunk_size', chunkSize)
+		formData.append('use_bm25', useBM25)
 		formData.append('distance_function', distanceFn)
 		formData.append('user', props.user ? props.user.user.replace(', ','_'): '-')
 		formData.append('user_email', props.user ? props.user.user_email : '-')
@@ -98,8 +103,10 @@ const AddLibrarySettings = (props: {
 			formData.append('user', props.user ? props.user.user.replace(', ','_'): '-')
 			formData.append('user_email', props.user ? props.user.user_email : '-')
 			formData.append('user_group', props.user && props.user.isAdmin ? 'admin' : 'user')
+			formData.append('chunking_method', chunkingMethod)
 			formData.append('use_overlap', useOverlap)
 			formData.append('chunk_size', chunkSize)
+			formData.append('use_bm25', useBM25)
 			formData.append('distance_function', distanceFn)
 
 			// show error if dataset name is empty
@@ -221,7 +228,7 @@ const AddLibrarySettings = (props: {
 			>
 				Upload documents
 			</div>
-			<div className={'inline-block px-4 py-1 shadow border-2 border-y-panel1 ' + 
+			<div className={'inline-block px-4 py-1 shadow rounded-r-lg border-2 border-panel1 ' + 
 				(zoteroPanel ? 'bg-panel1 dark:bg-panel3-dark text-white cursor-default ' : 'text-panel1 bg-white dark:bg-nav-dark dark:text-nav cursor-pointer')}
 				onClick={() => {
 					setZoteroPanel(true)
@@ -231,7 +238,7 @@ const AddLibrarySettings = (props: {
 			>
 				Add Zotero library
 			</div>
-			<div className={'inline-block px-4 py-1 shadow rounded-r-lg border-2 border-panel1 ' + 
+			{/* <div className={'inline-block px-4 py-1 shadow rounded-r-lg border-2 border-panel1 ' + 
 				(videoPanel ? 'bg-panel1 dark:bg-panel3-dark text-white cursor-default ' : 'text-panel1 bg-white dark:bg-nav-dark dark:text-nav cursor-pointer')}
 				onClick={() => {
 					setZoteroPanel(false)
@@ -240,7 +247,7 @@ const AddLibrarySettings = (props: {
 				}}
 			>
 				Youtube video library
-			</div>
+			</div> */}
 		</div>
 		{ zoteroPanel ?
 			<div className='flex justify-start'>
@@ -335,6 +342,37 @@ const AddLibrarySettings = (props: {
 						/>
 					</div>
 					<div className='flex justify-start mx-2 my-1'>
+						<div className='text-nav dark:text-nav-dark p-1 w-48'>Chunking Method</div>
+						<DropdownOptions
+							width={'280px'}
+							optionsList={['Fixed Chunk size', 'Structure preserving']}
+							defaultOption={'Fixed Chunk size'}
+							dropDownCallback={(option:string)=>{
+								setChunkingMethod(option)
+								if (option === 'Fixed Chunk size'){
+									setChunkingMethod('fixed_chunk_size')
+									setChunkSizeActive(true)
+									setChunkSize('500')
+								} else {
+									setChunkingMethod('structure_preserving')
+									setChunkSizeActive(false)
+								}
+							}}
+						/>
+					</div>
+					<div className='flex justify-start mx-6 my-1'>
+						<div className='text-nav dark:text-nav-dark p-1 w-48'>Chunk Size</div>
+						<DropdownOptions
+							width={'200px'}
+							disabled={!chunkSizeActive}
+							optionsList={['500', '750', '1000', '1200']}
+							defaultOption={'1000'}
+							dropDownCallback={(option:string)=>{
+								setChunkSize(option)
+							}}
+						/>
+					</div>
+					<div className='flex justify-start mx-2 my-1'>
 						<div className='text-nav dark:text-nav-dark p-1 w-48'>Use Overlap</div>
 						<DropdownOptions
 							width={'280px'}
@@ -345,14 +383,14 @@ const AddLibrarySettings = (props: {
 							}}
 						/>
 					</div>
-					<div className='flex justify-start mx-2 my-1'>
-						<div className='text-nav dark:text-nav-dark p-1 w-48'>Chunk Size</div>
+					<div className='flex justify-start m-2'>
+						<div className='text-nav dark:text-nav-dark p-1 w-48'>Use BM25</div>
 						<DropdownOptions
 							width={'280px'}
-							optionsList={['500', '750', '1000', '1200']}
-							defaultOption={'1000'}
+							optionsList={['Yes', 'No']}
+							defaultOption={'Yes'}
 							dropDownCallback={(option:string)=>{
-								setChunkSize(option)
+								setUseBM25(option)
 							}}
 						/>
 					</div>
@@ -424,6 +462,37 @@ const AddLibrarySettings = (props: {
 							}}
 						/>
 					</div>
+					<div className='flex justify-start mx-2 my-1'>
+						<div className='text-nav dark:text-nav-dark p-1 w-48'>Chunking Method</div>
+						<DropdownOptions
+							width={'270px'}
+							optionsList={['Fixed Chunk size', 'Structure preserving']}
+							defaultOption={'Fixed Chunk size'}
+							dropDownCallback={(option:string)=>{
+								setChunkingMethod(option)
+								if (option === 'Fixed Chunk size'){
+									setChunkingMethod('fixed_chunk_size')
+									setChunkSizeActive(true)
+									setChunkSize('500')
+								} else {
+									setChunkingMethod('structure_preserving')
+									setChunkSizeActive(false)
+								}
+							}}
+						/>
+					</div>
+					<div className='flex justify-start mx-6 my-1'>
+						<div className='text-nav dark:text-nav-dark p-1 w-48'>Chunk Size</div>
+						<DropdownOptions
+							width={'200px'}
+							disabled={!chunkSizeActive}
+							optionsList={['500', '750', '1000', '1200']}
+							defaultOption={'1000'}
+							dropDownCallback={(option:string)=>{
+								setChunkSize(option)
+							}}
+						/>
+					</div>
 					<div className='flex justify-start m-2'>
 						<div className='text-nav dark:text-nav-dark p-1 w-48'>Use Overlap</div>
 						<DropdownOptions
@@ -436,13 +505,13 @@ const AddLibrarySettings = (props: {
 						/>
 					</div>
 					<div className='flex justify-start m-2'>
-						<div className='text-nav dark:text-nav-dark p-1 w-48'>Chunk Size</div>
+						<div className='text-nav dark:text-nav-dark p-1 w-48'>Use BM25</div>
 						<DropdownOptions
 							width={'270px'}
-							optionsList={['500', '750', '1000', '1200']}
-							defaultOption={'1000'}
+							optionsList={['Yes', 'No']}
+							defaultOption={'Yes'}
 							dropDownCallback={(option:string)=>{
-								setChunkSize(option)
+								setUseBM25(option)
 							}}
 						/>
 					</div>
@@ -475,11 +544,11 @@ const AddLibrarySettings = (props: {
 				<div className='flex flex-col mt-4'>
 					{ showSuccess ?
 						<div className='flex justify-start'>
-							<div className='text-nav dark:text-nav-dark p-1 text-lg bg-green-200 rounded-md'>Library uploaded successfully</div>
+							<div className='text-nav dark:text-nav-dark p-1 text-lg bg-green-200 dark:bg-green-700 rounded-md'>Library uploaded successfully</div>
 						</div> : 
 						videoLibrary && !showSuccess ?
 						<div className='flex justify-start'>
-							<div className='text-nav dark:text-nav-dark p-1 text-lg bg-orange-200 rounded-md'>Uploading documents...</div>
+							<div className='text-nav dark:text-nav-dark p-1 text-lg bg-orange-200 dark:bg-orange-700 rounded-md'>Uploading documents...</div>
 						</div> :
 						<></>
 					}
@@ -554,9 +623,29 @@ const AddLibrarySettings = (props: {
 						/>
 					</div>
 					<div className='flex justify-start mx-2 my-1'>
+						<div className='text-nav dark:text-nav-dark p-1 w-48'>Chunking Method</div>
+						<DropdownOptions
+							width={'280px'}
+							optionsList={['Fixed Chunk size', 'Structure preserving']}
+							defaultOption={'Fixed Chunk size'}
+							dropDownCallback={(option:string)=>{
+								setChunkingMethod(option)
+								if (option === 'Fixed Chunk size'){
+									setChunkingMethod('fixed_chunk_size')
+									setChunkSizeActive(true)
+									setChunkSize('500')
+								} else {
+									setChunkingMethod('structure_preserving')
+									setChunkSizeActive(false)
+								}
+							}}
+						/>
+					</div>
+					<div className='flex justify-start mx-2 my-1'>
 						<div className='text-nav dark:text-nav-dark p-1 w-48'>Chunk Size</div>
 						<DropdownOptions
 							width={'280px'}
+							disabled={!chunkSizeActive}
 							optionsList={['500', '750', '1000', '1200']}
 							defaultOption={'1000'}
 							dropDownCallback={(option:string)=>{

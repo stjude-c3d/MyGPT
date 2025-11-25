@@ -5,7 +5,7 @@ import defaultSettings from '../utils/DefaultState'
 import '../__mocks__/intersectObserverMock'
 
 const default_frontend_settings = {
-  'show_no_context_switch': false,
+  'show_no_context_switch': true,
   'azure_login': false, 
   'django_login': false,
   'restriction_without_login': false,

@@ -1,0 +1,21 @@
+[project]
+name = "mygpt-backend"
+version = "0.1.0"
+description = "MCP server for MyGPT"
+readme = "README.md"
+tool.uv.package = true
+requires-python = ">=3.11"
+dependencies = [
+    "mcp[cli]>=1.10.1",
+    "fastmcp>=2.10.1",
+    "httpx>=0.28.1",
+    "asyncio>=3.4.3",
+	"anyio==4.9.0",
+	"httpcore['asyncio']>=1.0.9",
+	"fastapi>=0.116.0",
+    "pydantic>=2.11.7",
+    "pydantic-core>=2.16.3",
+]
+
+[project.scripts]
+mygpt = "mygpt_backend:main"

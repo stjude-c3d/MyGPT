@@ -1,4 +1,4 @@
-Django>=4.2.17
+Django>=5.0.14
 psycopg2-binary>=2.8
 requests>=2.32.2
 djangorestframework
@@ -9,7 +9,7 @@ sentence_transformers>=3.0.0
 pypdf
 pandas
 pyzotero
-pymupdf==1.22.5
+pymupdf==1.24.14
 numpy
 chromadb==0.5.7
 tqdm
@@ -22,7 +22,10 @@ ollama
 duckdb
 openpyxl
 langchain_community
+langchain==1.0.0a1
 pycryptodome==3.15.0
 sqlparse>=0.5.0 # not directly required, pinned by Snyk to avoid a vulnerability
 urllib3>=2.2.2 # not directly required, pinned by Snyk to avoid a vulnerability
 zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
+bm25s
+pystemmer

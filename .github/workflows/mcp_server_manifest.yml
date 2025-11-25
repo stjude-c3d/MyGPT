@@ -1,0 +1,23 @@
+name: MCP server create latest manifest
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Log in to GitHub Container Registry
+        run: echo ${{ secrets.GITHUB_TOKEN }} | docker	login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: create manifest 
+        uses: int128/docker-manifest-create-action@v2
+        with:
+          tags: |
+            ghcr.io/stjude-c3d/mygpt-mcp-server:latest
+          sources: |
+            ghcr.io/stjude-c3d/mygpt-mcp-server:latest-amd64
+            ghcr.io/stjude-c3d/mygpt-mcp-server:arm64

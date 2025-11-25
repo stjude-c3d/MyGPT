@@ -1,0 +1,1 @@
+docker compose up -d mcp_server

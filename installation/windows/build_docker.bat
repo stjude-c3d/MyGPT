@@ -6,3 +6,4 @@ copy frontend/env_example frontend/.env
 start docker compose build db
 start docker compose build backend
 start docker compose build frontend
+docker compose build grobid

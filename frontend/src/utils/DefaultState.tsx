@@ -10,6 +10,7 @@ const defaultSettings = {
 		{key:'llm_parameters', text:'Prompt and LLM parameters'},
 		{key:'embedding_models', text:'Embedding Models'},
 		{key:'relevance_score', text:'Relevance score parameters'},
+		{key: 'mcp', text: 'Model Context Protocol (MCP)'},
 ],
 	selectedPanel: 'datasets',
 	llms: [process.env.REACT_APP_DEFAULT_LLM || 'llama3:latest'],
@@ -20,8 +21,8 @@ const defaultSettings = {
     selectedDataset: 'None',
 	fetchDatasets: true,
 	datasetsUpdated: false,
-    defaultEmbeddingModel: 'multi-qa-MiniLM-L6-cos-v1',
-	selectedEmbeddingModel: 'multi-qa-MiniLM-L6-cos-v1',
+    defaultEmbeddingModel: 'nomic-embed-text:latest',
+	selectedEmbeddingModel: 'nomic-embed-text:latest',
 	embedding_models: [
 		'multi-qa-MiniLM-L6-cos-v1',
 		'all-MiniLM-L6-v2',
@@ -31,9 +32,13 @@ const defaultSettings = {
 		'paraphrase-albert-small-v2',
 		'snowflake-arctic-embed:latest',
 		'nomic-embed-text:latest',
+		'nomic-embed-text:v1.5',
 		// 'nomic-ai/nomic-embed-text-v1',
+		// 'hf.co/nomic-ai/nomic-embed-text-v2-moe-GGUF:Q4_K_M',
+		// 'hf.co/nomic-ai/nomic-embed-text-v1.5-GGUF:latest',
 		'bge-m3:latest',
-		'mxbai-embed-large:latest'
+		'mxbai-embed-large:latest',
+		'granite-embedding:latest'
 	],
     system_prompt: 'Use following information to answer the question in less than 200 words, try not to use anything else:',
 	direct_chat_system_prompt: 'Answer the question in less than 200 words.',
@@ -57,6 +62,7 @@ const defaultSettings = {
 	use_default_hi: true,
 	restriction_without_login: false,
 	answerWithoutContext: false,
+	MCP_tools: [],
 	papers: [
 		{
 			"paper_title": "Control of G protein-coupled receptor function via membrane-interacting intrinsically disordered C-terminal domains",

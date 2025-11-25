@@ -17,8 +17,61 @@ import shutil
 import json
 import re
 from django.contrib.auth.models import User
-from ..models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, Model, EmbeddingModel, FrontEndSettings, DisclaimerAgreement
-from .utils import get_zotero_chunks, add_dataset_from_upload, add_to_chroma, nearestDataChroma, get_relevance_score, add_embeddings_to_qna, highlight_pdf, seconds_to_hhmmss, add_pca_to_qna_and_dataset, add_demo_dataset, get_youtube_transcript, add_video_to_chroma, get_embedding_model_ef, get_answer_distance, sanitize_filename, get_answer_distance_by_context
+from .bm25_utils import index_document_by_bm25, retrieve_chunks_by_bm25, hybrid_source_combination
+
+# Import from specialized modules
+from .helpers import (
+    sanitize_filename,
+    seconds_to_hhmmss,
+    min_max_normalization,
+    # find_cutoff_distance
+)
+
+from .document_processing import (
+    # getPDFContent,
+    # convert_to_pdf,
+    # extractPDFImages,
+    highlight_pdf,
+    # get_toc_from_grobid
+)
+
+from .embedding_utils import (
+    get_embedding_model_ef,
+    # get_embedding_cutoff_distance,
+    # add_embeddings_to_chunks,
+    add_embeddings_to_qna
+)
+
+from .vector_db import (
+    add_to_chroma,
+    nearestDataChroma,
+    get_answer_distance,
+    get_answer_distance_by_context
+)
+
+from .analytics import (
+    # add_pca_to_chunks,
+    add_pca_to_qna_and_dataset,
+    # save_chunks_pca_to_file,
+    get_relevance_score
+)
+
+from .video_processing import (
+    get_youtube_transcript,
+    add_video_to_chroma
+)
+
+from .zotero_integration import (
+    get_zotero_chunks
+)
+
+from .dataset_management import (
+    add_dataset_from_upload,
+    add_demo_dataset,
+    # get_conversation_json,
+    # get_previous_qna_json
+)
+from ..models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, Model, EmbeddingModel, FrontEndSettings, DisclaimerAgreement, PaperSections
 
 ####################
 # APIs             #
@@ -99,12 +152,18 @@ def get_context(request):
             skip_highlight = False
         model_type = Model.objects.get(model_name=model)
         dataset_name = json_request['dataset']
-        document_title = json_request['document_title']
+        document_title = json_request['document_title'] if 'document_title' in json_request else ''
+        focused_section = json_request['focused_section'] if 'focused_section' in json_request else ''
         use_default_qrs = json_request['use_default_qrs']
         question_best_distance = json_request['question_best_distance']
         question_worst_distance = json_request['question_worst_distance']
         maximum_chunks_count = json_request['maximum_chunks_count']
         no_cutoff = json_request['no_cutoff']
+
+        # best and worst scores for BM25
+        best_bm25_score = 20
+        worst_bm25_score = 0
+
         # check if dataset exists or crate a new one
         dataset_exist = Dataset.objects.filter(dataset_name=dataset_name).exists()
         if not dataset_exist:
@@ -119,16 +178,43 @@ def get_context(request):
         new_conversation = json_request['new_conversation']
         previous_question = json_request['previous_query']
         no_context = json_request['no_context']
+        use_bm25 = dataset.use_bm25 if hasattr(dataset, 'use_bm25') else False
         keywords = json_request['keywords'] if 'keywords' in json_request else ''
         if no_context:    
             context, titles, pages, starts, stops, chunks_txt, distances = '', [], [], [], [], [], []
-            sources = []
+            vector_sources = []
+            bm25_sources = []
             relevance_score = 0
+            normalized_distances = []
         else:
-            context, titles, pages, starts, stops, chunks_txt, distances = nearestDataChroma(question_text, dataset_name, document_title, keywords, embedding_model, maximum_chunks_count, no_cutoff)
-            sources = []
+            context, titles, pages, starts, stops, chunks_txt, distances = nearestDataChroma(question_text, dataset_name, document_title, focused_section, keywords, embedding_model, maximum_chunks_count, no_cutoff)
+            vector_sources = []
             distances = [round(dist, 3) for dist in distances]
-            relevance_score = get_relevance_score(distances, embedding_model, True, use_default_qrs, question_best_distance, question_worst_distance)
+            relevance_score, normalized_distances = get_relevance_score(distances, embedding_model, True, use_default_qrs, question_best_distance, question_worst_distance)
+
+            bm25_sources = []
+            if use_bm25:
+                # get similar chunks using BM25
+                results, scores = retrieve_chunks_by_bm25(question_text, dataset_name, document_title, 3)
+                normalized_scores = min_max_normalization(scores, best_bm25_score, worst_bm25_score, False)
+                for idx, result in enumerate(results):
+                    cleaned_chunk = re.sub(r'\s+', ' ', str(result['text']))
+                    # remove all new lines
+                    cleaned_chunk = re.sub(r'\n+', ' ', cleaned_chunk)
+                    chunk_split = cleaned_chunk.split('; ', 2)
+                    document_title = chunk_split[0].replace('document ', '')
+                    page = chunk_split[1].replace('page ', '')
+                    chunk_txt = chunk_split[2]
+                    bm25_sources.append({
+                        'document': document_title,
+                        'page': int(page),
+                        'context': chunk_txt,
+                        'bm25_score_raw': round(float(scores[idx]),2),
+                        'bm25_score': round(normalized_scores[idx], 3),
+                        'vector_score': 0,
+                        'rank': idx + 1,
+                        'vector_distance_raw': 0,
+                    })
         library_type = 'papers' if len(pages) else 'videos'
 
         # if no_context is true, create or get dataset
@@ -147,12 +233,13 @@ def get_context(request):
         # save question to database
         current_date_time = make_aware(datetime.datetime.now())
         dataset = Dataset.objects.get(dataset_name=dataset_name)
+        question_text = question_text.split('<tool_response>')[0]
         quesiton_exist = Question.objects.filter(question_dataset=dataset).filter(question_text=question_text).filter(model_type=model_type).exists()
         if quesiton_exist:
             questions = Question.objects.filter(question_text=question_text, model_type=model_type, question_dataset=dataset)
             question = questions[0]
             question.keywords = keywords
-            question.relevance_score = relevance_score
+            question.relevance_score = relevance_score if relevance_score <= 100 else 100
             question.save()
             conversation_id = question.conversation.id
             conversation = Conversation.objects.get(id=conversation_id)
@@ -175,7 +262,7 @@ def get_context(request):
                 conversation.save()
             question = Question.objects.create(
                 question_text=question_text,
-                relevance_score=relevance_score,
+                relevance_score=relevance_score if relevance_score <= 100 else 100,
                 model_type=model_type,
                 keywords=keywords,
                 question_dataset=dataset,
@@ -189,29 +276,29 @@ def get_context(request):
         if not no_context:
             add_embeddings_to_qna(question_text, 'question', embedding_model)
 
-        question_sources = Source.objects.filter(question=question)
         for idx, title in enumerate(titles):
-            sources.append({
+            # filter distances if normalized_distances are less than 0.1
+            if normalized_distances[idx] < 0.1:
+                continue
+            vector_sources.append({
                 'document': title,
                 'page': pages[idx] if library_type == 'papers' else '',
                 'start': seconds_to_hhmmss(starts[idx]) if library_type == 'videos' else '',
                 'stop': seconds_to_hhmmss(stops[idx]) if library_type == 'videos' else '',
-                'context': chunks_txt[idx],
-                'distance': round(distances[idx],3) #round to 3 decimals
+                'context': str(chunks_txt[idx]),
+                'vector_distance_raw': round(distances[idx],3), #round to 3 decimals,
+                'vector_score': round(normalized_distances[idx],3),
+                'rank': idx + 1,
+                'bm25_score_raw': 0,
+                'bm25_score': 0,
+                'bm25_rank': 0
             })
-            if len(question_sources) == 0:
-                chunk = chunks.objects.filter(chunk_text=chunks_txt[idx], chunk_dataset=dataset)
-                Source.objects.create(
-                    source_doc=title,
-                    source_pointer=pages[idx] if library_type == 'papers' else starts[idx],
-                    context=chunks_txt[idx].replace("\x00", "\uFFFD"),
-                    distance=round(distances[idx],3),
-                    question=question,
-                    chunk=chunk[0] if chunk.count() else None
-                )
+
+        # combine vector_sources and bm25_sources
+        combined_sources = hybrid_source_combination(vector_sources, bm25_sources)
 
         sources_grouped = []
-        for source in sources:
+        for source in combined_sources:
             if len(sources_grouped) == 0:
                 sources_grouped.append([source])
             else:
@@ -253,12 +340,42 @@ def get_context(request):
                     # create highlighted paper object
                     paper = Papers.objects.filter(paper_dataset=dataset).filter(paper_title=source_grp[0]['document'])[0]
                     with open(highlighted_pdf_path, 'rb') as f:
+                        # paper.paper_attachment.save(dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf', File(f), save=True)
                         paper.highlighted_attachment.save(dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf', File(f), save=True)
+        
+        for source in combined_sources:
+            chunk = chunks.objects.filter(chunk_text=source['context'], chunk_dataset=dataset)
+            Source.objects.create(
+                source_doc=source['document'],
+                source_pointer=source['page'] if library_type == 'papers' else source['start'],
+                context=source['context'].replace("\x00", "\uFFFD"),
+                vector_distance_raw=source['vector_distance_raw'] if 'vector_distance_raw' in source else 0,
+                vector_score=source['vector_score'] if 'vector_score' in source else 0,
+                bm25_score_raw=source['bm25_score_raw'] if 'bm25_score_raw' in source else 0,
+                bm25_score=source['bm25_score'] if 'bm25_score' in source else 0,
+                rank=source['rank'],
+                secondary_rank=source['bm25_rank'] if 'bm25_rank' in source else 0,
+                question=question,
+                chunk=chunk[0] if chunk.count() else None
+            )
+            
+            # Determine the color code based on distance or score
+            if (source['vector_score'] != 0 and source['vector_score'] > 0.5) or (source['bm25_score'] != 0 and source['bm25_score'] > 0.5):
+                source['color_code'] = 'green'
+            elif (source['vector_score'] != 0 and source['vector_score'] > 0.3) or (source['bm25_score'] != 0 and source['bm25_score'] > 0.3):
+                source['color_code'] = 'yellow'
+            elif (source['vector_score'] != 0 and source['vector_score'] > 0.15) or (source['bm25_score'] != 0 and source['bm25_score'] > 0.15):
+                source['color_code'] = 'red'
+            else:
+                source['color_code'] = 'gray'
+
+        # combine the vector_scores and bm25_scores and sort them from high to low
+        combined_sources = sorted(combined_sources, key=lambda x: (x['vector_score'] if 'vector_score' in x else 0) + (x['bm25_score'] if 'bm25_score' in x else 0), reverse=True)
             
         context_json = {
             'context': context,
-            'relevance_score': relevance_score,
-            'sources': sources
+            'relevance_score': relevance_score if relevance_score <= 100 else 100,
+            'sources': combined_sources if not no_context else []
         }
         
         return Response(context_json, content_type="application/json")
@@ -277,6 +394,10 @@ def get_conversations_by_dataset(request):
             conversation_json['conversation_id'] = conversation_id
             conversation_json['questions_answers'] = []
             for question in questions:
+                # if answewr count is 0, skip the question
+                answer_count = Answer.objects.filter(question=question).count()
+                if answer_count == 0:
+                    continue
                 # answers = Answer.objects.filter(question=question)
                 qna_json = {
                     'question_id': question.id,
@@ -301,8 +422,15 @@ def get_question_details(request):
                 'paper': source.source_doc,
                 'page': source.source_pointer,
                 'context': source.context,
-                'distance': source.distance
+                'vector_distance_raw': source.vector_distance_raw,
+                'vector_score': source.vector_score,
+                'bm25_score_raw': source.bm25_score_raw,
+                'bm25_score': source.bm25_score,
+                'rank': source.rank,
+                'secondary_rank': source.secondary_rank,
             })
+        # sort sources by vector_score and bm25_score
+        sources_json = sorted(sources_json, key=lambda x: (x['vector_score'] if 'vector_score' in x else 0) + (x['bm25_score'] if 'bm25_score' in x else 0), reverse=True)
         answers_json = []
         for answer in answers:
             answers_json.append({
@@ -311,6 +439,16 @@ def get_question_details(request):
                 'hallucination_index': answer.hallucination_index,
                 'answer_no_context': answer.answer_no_context_text,
             })
+        # Determine the color code based on distance or score
+        for source in sources_json: 
+            if (source['vector_score'] != 0 and source['vector_score'] > 0.5) or (source['bm25_score'] != 0 and source['bm25_score'] > 0.5):
+                source['color_code'] = 'green'
+            elif (source['vector_score'] != 0 and source['vector_score'] > 0.3) or (source['bm25_score'] != 0 and source['bm25_score'] > 0.3):
+                source['color_code'] = 'yellow'
+            elif (source['vector_score'] != 0 and source['vector_score'] > 0.15) or (source['bm25_score'] != 0 and source['bm25_score'] > 0.15):
+                source['color_code'] = 'red'
+            else:
+                source['color_code'] = 'gray'
         question_json = {
             'question': question.question_text,
             'relevance_score': question.relevance_score,
@@ -334,6 +472,7 @@ def save_answer(request):
         model_type = Model.objects.get(model_name=model)
         dataset_name = json_request['dataset']
         dataset = Dataset.objects.get(dataset_name=dataset_name)
+        use_bm25 = dataset.use_bm25 if hasattr(dataset, 'use_bm25') else False
         question = Question.objects.get(question_text=question_text, model_type=model_type, question_dataset=dataset)
         embedding_model = dataset.embedding_model
         no_context = json_request['no_context']
@@ -352,18 +491,28 @@ def save_answer(request):
 
         # get context from sources
         sources = Source.objects.filter(question=question)
-        contexts = []
+        vector_contexts = []
+        bm25_contexts = []
 
         for source in sources:
-            contexts.append(source.context)
+
+            if source.vector_distance_raw != 0:
+                vector_contexts.append(source.context)
+            if source.bm25_score_raw != 0:
+                bm25_contexts.append(source.context)
         
         if not no_context:
-            distances = get_answer_distance_by_context(answer_no_context_text, dataset_name, contexts, embedding_model)
+            distances = get_answer_distance_by_context(answer_no_context_text, dataset_name, vector_contexts, embedding_model)
             distances = [round(dist, 3) for dist in distances]
 
-            distances_a = get_answer_distance_by_context(answer_text, dataset_name, contexts, embedding_model)
+            distances_a = get_answer_distance_by_context(answer_text, dataset_name, vector_contexts, embedding_model)
             distances_a = [round(dist, 3) for dist in distances_a]
             mean_distance_a = round((sum(distances_a) / len(distances_a)), 3)
+
+            # if use_bm25:
+                # bm25_docs, bm25_scores = get_answer_distance_by_context_bm25(answer_text, bm25_contexts)
+                # extra_score = round((sum(bm25_scores) / len(bm25_scores)), 3)
+                # mean_distance_a += extra_score
         else:
             mean_distance_a = 0
             relevance_score = 0
@@ -443,11 +592,18 @@ def save_answer(request):
         # add embeddings to answer
         if not no_context:
             add_embeddings_to_qna(answer_text, 'answer', embedding_model)
+            hallucination_index_final = 0
+            if hallucination_index < 0:
+                hallucination_index_final = 0
+            elif hallucination_index > 100:
+                hallucination_index_final = 100
+            else:
+                hallucination_index_final = hallucination_index
             return Response({
                 'saved':True, 
                 'mean_distance_a': mean_distance_a,
                 'relevance_score': relevance_score if question_relevance_score != 0 else 0,
-                'hallucination_index': hallucination_index if hallucination_index < 100 else 100,
+                'hallucination_index': hallucination_index_final  
             }, content_type="application/json")
         else:
             return Response({'saved':True, 'relevance_score': relevance_score}, content_type="application/json")
@@ -484,6 +640,27 @@ def delete_dataset(request):
         pdf_folder = 'data/pdfs/' + dataset_name
         if len(dataset_name) == 0:
             return Response({'error':True, 'error_message': 'Dataset name can\'t be empty'}, content_type="application/json")
+        #  delete /data/data_chunks/ + dataset_name + .txt
+        data_chunks_file = 'data/data_chunks/' + dataset_name + '.txt'
+        if os.path.exists(data_chunks_file):
+            try:
+                os.remove(data_chunks_file)
+            except:
+                return Response({'error':True, 'error_message': 'Could not delete data chunks file'}, content_type="application/json")
+            
+        # delete files from media folder
+        media_folder = 'media/papers/' + dataset_name
+        if os.path.exists(media_folder):
+            # remove all files with output_file name in thier name
+            files = [f for f in os.listdir(media_folder) if dataset_name in f]
+            # remove all files with output_file name in thier name
+            for f in files:
+                if f.endswith('.pdf') and os.path.exists(os.path.join(media_folder, f)):
+                    try:
+                        os.remove(os.path.join(media_folder, f))
+                    except:
+                        return Response({'error':True, 'error_message': 'Could not delete media folder'}, content_type="application/json")
+
         if os.path.exists(pdf_folder):
             # remove all files with output_file name in thier name
             # files = [f for f in os.listdir(pdf_folder) if dataset_name in f]
@@ -503,6 +680,8 @@ def add_zotero_dataset(request):
         library_id_type_r = request.POST.get('library_id_type')
         collection_id_r = request.POST.get('collection_id')
         embedding_model_request = request.POST.get('embedding_model')
+        use_bm25 = request.POST.get('use_bm25')
+        chunking_method = request.POST.get('chunking_method')
         user_r = request.POST.get('user')
         user_email_r = request.POST.get('user_email')
         user_group_r = request.POST.get('user_group')
@@ -552,15 +731,18 @@ def add_zotero_dataset(request):
         else:
             user_group = user_group_r
 
-        dataset_name = get_zotero_chunks(library_id, library_id_type, collection_id, api_key, user, user_email, user_group)
+        dataset_name = get_zotero_chunks(library_id, library_id_type, collection_id, api_key, user, user_email, user_group, use_bm25, chunking_method)
         if dataset_name == False:
             return Response({'error':True}, content_type="application/json")
         else:
             dataset_name = sanitize_filename(dataset_name)
 
+        if use_bm25 == 'Yes':
+            index_document_by_bm25(dataset_name)
+
         # if dataset_name.error:
         #     return Response({'error':True, 'error_message': dataset_name.error}, content_type="application/json")
-        message = add_to_chroma(dataset_name, embedding_model, distance_function)
+        message = add_to_chroma(dataset_name, embedding_model, distance_function, chunking_method)
 
         if message == False:
             return Response({'error':True}, content_type="application/json")
@@ -578,6 +760,11 @@ def upload_documents(request):
         #     return Response({'error': True, 'error_message': validation}, content_type="application/json")
         # else:
         dataset_name = add_dataset_from_upload(request)
+        chunking_method = request.POST.get('chunking_method')
+        use_bm25 = request.POST.get('use_bm25')
+
+        if use_bm25 == 'Yes':
+            index_document_by_bm25(dataset_name)
         
         # Validate embedding_model input
         embedding_model_request = request.POST.get('embedding_model')
@@ -587,7 +774,7 @@ def upload_documents(request):
         else:
             embedding_model = embedding_model_request
 
-        message = add_to_chroma(dataset_name, embedding_model, distance_function)
+        message = add_to_chroma(dataset_name, embedding_model, distance_function, chunking_method)
 
         if message == False:
             return Response({'error': True}, content_type="application/json")
@@ -827,6 +1014,22 @@ def get_embedding_model_details(request):
             'worst_distance_nac': embedding_model.worst_distance_nac,
         }
         return Response({'embedding_model': embedding_model_obj})
+    
+@api_view(['POST'])
+def get_dataset_sections(request):
+    if request.method == 'POST':
+        json_request = JSONParser().parse(request)
+        dataset_name = json_request['dataset_name']
+        dataset = Dataset.objects.get(dataset_name=dataset_name)
+        # order by count descending and then by alphanumeric order
+        sections = PaperSections.objects.filter(section_dataset=dataset).order_by('-section_count', 'section_title')
+        sections_json = []
+        for section in sections:
+            sections_json.append({
+                'section_title': section.section_title,
+                'section_count': section.section_count
+            })
+        return Response({'sections': sections_json}, content_type="application/json")
     
 # get username if access token is valid
 @api_view(['POST'])
