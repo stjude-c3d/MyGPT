@@ -14,6 +14,7 @@ import Markdown from 'react-markdown'
 // import Feedback from './Feedback'
 import { OllamaDirectChatStream, OllamaChatStreamWithToolSupport  } from '../utils/OllamaChat'
 import { OllamaDirectGenerateStream } from '../utils/OllamaGenerate'
+import { SJRayDirectGenerateStream } from '../utils/SJRayGenerate'
 
 
 function GPTHome(props:{
@@ -427,25 +428,31 @@ function GPTHome(props:{
 		const question =  query[query.length-1] && query[query.length-1].question ? query[query.length-1].question.replaceAll('"',"'") : ''
 		const systemPrompt = props.currentSettings.system_prompt + context
 		
-		const body_:any = {
-			'model': props.currentSettings.selectedLlm,
-			'prompt': question,
-			'stream': true,
-			'system': systemPrompt,
-			'options': {
-				'temperature': props.currentSettings.temperature,
-				'top_k': props.currentSettings.top_k,
-				'top_p': props.currentSettings.top_p,
-			}
-		}
+		let addToolsPromt: boolean = false
 		if (llmsWithToolSupport.includes(props.currentSettings.selectedLlm.split(':')[0]) && mcpOllamaTools.length > 0){
-			body_.prompt += '\n\n<tool_response>' + mcpResponse + '</tool_response>'
+			addToolsPromt = true
 		}
-		const body = JSON.stringify(body_)
 		
 		if(context.length > 1 && question.length > 1){
 			const postData = async () => {
-				let answerReceived = await OllamaDirectGenerateStream(body, setAnswer)
+				let answerReceived:any = null
+				if (props.currentSettings.LLM_server_API_specs === 'ollama'){
+					answerReceived = await OllamaDirectGenerateStream(
+						props.currentSettings.selectedLlm, 
+						question, systemPrompt, addToolsPromt, mcpResponse,
+						props.currentSettings.temperature, props.currentSettings.top_k, props.currentSettings.top_p, 
+						setAnswer
+					)
+				} else if (props.currentSettings.LLM_server_API_specs === 'sjray'){
+					answerReceived = await SJRayDirectGenerateStream(
+						props.currentSettings.selectedLlm, 
+						question, systemPrompt, addToolsPromt, mcpResponse,
+						props.currentSettings.temperature, props.currentSettings.top_k, props.currentSettings.top_p, 
+						setAnswer
+					)
+				} else if (props.currentSettings.LLM_server_API_specs === 'openai'){
+					
+				}
 				setAnswerReceived(answerReceived)
 			}
 			postData()
@@ -459,22 +466,25 @@ function GPTHome(props:{
 		const question =  query[query.length-1] && query[query.length-1].question ? query[query.length-1].question.replaceAll('"',"'") : ''
 		const systemPrompt = props.currentSettings.direct_chat_system_prompt
 		
-		const body:any = JSON.stringify({
-			'model': props.currentSettings.selectedLlm,
-			'prompt': question,
-			'stream': true,
-			'system': systemPrompt,
-			'options': {
-				'temperature': props.currentSettings.temperature,
-				'top_k': props.currentSettings.top_k,
-				'top_p': props.currentSettings.top_p,
-			}
-		})
-		
 		if(context.length > 1 && question.length > 1 && nullAnswer === ''){
 
 			const postData = async () => {
-				let nullAnswerReceived = await OllamaDirectGenerateStream(body, setNullAnswer)
+				let nullAnswerReceived:any = null
+				if (props.currentSettings.LLM_server_API_specs === 'ollama'){
+					nullAnswerReceived = await OllamaDirectGenerateStream(
+						props.currentSettings.selectedLlm, 
+						question, systemPrompt, false, '',
+						props.currentSettings.temperature, props.currentSettings.top_k, props.currentSettings.top_p, 
+						setNullAnswer
+					)
+				} else if (props.currentSettings.LLM_server_API_specs === 'sjray'){
+					nullAnswerReceived = await SJRayDirectGenerateStream(
+						props.currentSettings.selectedLlm, 
+						question, systemPrompt, false, '',
+						props.currentSettings.temperature, props.currentSettings.top_k, props.currentSettings.top_p, 
+						setNullAnswer
+					)
+				}
 				setNullAnswerReceived(nullAnswerReceived)
 			}
 			postData()

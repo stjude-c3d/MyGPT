@@ -57,6 +57,7 @@ const defaultSettings = {
 		HIb: 0.5,
 		HIc: 0.5,
 	},
+	LLM_server_API_specs: 'ollama', // 'openai', 'ollama', 'sjray'
 	use_default_qrs: true,
 	use_default_ars: true,
 	use_default_hi: true,

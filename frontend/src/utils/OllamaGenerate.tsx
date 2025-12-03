@@ -1,4 +1,21 @@
-export const  OllamaDirectGenerateStream = async (body:any, setAnswer:any) => {
+export const  OllamaDirectGenerateStream = async (
+	llm:string, 
+	question:string, systemPrompt:string, addToolsPromt:boolean, mcpResponse:string, 
+	temperature:number, top_k:number, top_p:number, 
+	setAnswer:any
+) => {
+	const body = JSON.stringify({
+		model: llm,
+		prompt: question + (addToolsPromt ? '\n\n<tool_response>' + mcpResponse + '</tool_response>' : ''),
+		system: systemPrompt,
+		stream: true,
+		options: {
+			temperature: temperature,
+			top_k: top_k,
+			top_p: top_p,
+		}
+	})
+	
 	let content = ''
 	let answerReceived = false
 	const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/generate`, {body, method: 'POST'})
