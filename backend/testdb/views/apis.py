@@ -17,7 +17,7 @@ import shutil
 import json
 import re
 from django.contrib.auth.models import User
-from .bm25_utils import index_document_by_bm25, retrieve_chunks_by_bm25, hybrid_source_combination
+from .bm25_utils import index_document_by_bm25, retrieve_chunks_by_bm25, hybrid_source_combination, rerank_sources
 
 # Import from specialized modules
 from .helpers import (
@@ -297,8 +297,11 @@ def get_context(request):
         # combine vector_sources and bm25_sources
         combined_sources = hybrid_source_combination(vector_sources, bm25_sources)
 
+        # reranked sources based on vector_score + bm25_score
+        reranked_sources = rerank_sources(combined_sources, question_text)
+
         sources_grouped = []
-        for source in combined_sources:
+        for source in reranked_sources:
             if len(sources_grouped) == 0:
                 sources_grouped.append([source])
             else:
@@ -343,39 +346,41 @@ def get_context(request):
                         # paper.paper_attachment.save(dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf', File(f), save=True)
                         paper.highlighted_attachment.save(dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf', File(f), save=True)
         
-        for source in combined_sources:
+        full_context = ''
+        for idx, source in enumerate(reranked_sources):
             chunk = chunks.objects.filter(chunk_text=source['context'], chunk_dataset=dataset)
             Source.objects.create(
                 source_doc=source['document'],
                 source_pointer=source['page'] if library_type == 'papers' else source['start'],
                 context=source['context'].replace("\x00", "\uFFFD"),
-                vector_distance_raw=source['vector_distance_raw'] if 'vector_distance_raw' in source else 0,
-                vector_score=source['vector_score'] if 'vector_score' in source else 0,
-                bm25_score_raw=source['bm25_score_raw'] if 'bm25_score_raw' in source else 0,
-                bm25_score=source['bm25_score'] if 'bm25_score' in source else 0,
-                rank=source['rank'],
-                secondary_rank=source['bm25_rank'] if 'bm25_rank' in source else 0,
+                vector_distance_raw=source.get('vector_distance_raw', 0),
+                vector_score=source.get('vector_score', 0),
+                bm25_score_raw=source.get('bm25_score_raw', 0),
+                bm25_score=source.get('bm25_score', 0),
+                rank=source.get('rank', 0),
+                rerank_score=source.get('reranked_score', 0),
+                secondary_rank=source.get('bm25_rank', 0),
                 question=question,
                 chunk=chunk[0] if chunk.count() else None
             )
-            
+            full_context += source['context'] + "\n\n"
             # Determine the color code based on distance or score
-            if (source['vector_score'] != 0 and source['vector_score'] > 0.5) or (source['bm25_score'] != 0 and source['bm25_score'] > 0.5):
+            if (source.get('vector_score', 0) > 0.5) or (source.get('bm25_score', 0) > 0.5):
                 source['color_code'] = 'green'
-            elif (source['vector_score'] != 0 and source['vector_score'] > 0.3) or (source['bm25_score'] != 0 and source['bm25_score'] > 0.3):
+            elif (source.get('vector_score', 0) > 0.3) or (source.get('bm25_score', 0) > 0.3):
                 source['color_code'] = 'yellow'
-            elif (source['vector_score'] != 0 and source['vector_score'] > 0.15) or (source['bm25_score'] != 0 and source['bm25_score'] > 0.15):
+            elif (source.get('vector_score', 0) > 0.15) or (source.get('bm25_score', 0) > 0.15):
                 source['color_code'] = 'red'
             else:
                 source['color_code'] = 'gray'
 
         # combine the vector_scores and bm25_scores and sort them from high to low
-        combined_sources = sorted(combined_sources, key=lambda x: (x['vector_score'] if 'vector_score' in x else 0) + (x['bm25_score'] if 'bm25_score' in x else 0), reverse=True)
+        # combined_sources = sorted(combined_sources, key=lambda x: (x['vector_score'] if 'vector_score' in x else 0) + (x['bm25_score'] if 'bm25_score' in x else 0), reverse=True)
             
         context_json = {
-            'context': context,
+            'context': full_context,
             'relevance_score': relevance_score if relevance_score <= 100 else 100,
-            'sources': combined_sources if not no_context else []
+            'sources': reranked_sources if not no_context else []
         }
         
         return Response(context_json, content_type="application/json")

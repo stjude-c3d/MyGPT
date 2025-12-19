@@ -33,7 +33,8 @@ export const  SJRayDirectGenerateStream = async (
 	let answerReceived = false
 	let header:any = {
 		'Content-Type': 'application/json',
-		'Accept': 'application/json'
+		'Accept': 'application/json',
+		'Access-Control-Allow-Origin': '*'
 	}
 	const response = await fetch(`/sjray/v2/models/ray_gateway_router/infer`, { body, method: 'POST', headers: header })
 	const reader:any = response.body?.getReader()

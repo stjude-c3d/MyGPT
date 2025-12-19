@@ -188,6 +188,7 @@ class Source(models.Model):
 	vector_score = models.FloatField(default=0)
 	bm25_score_raw = models.FloatField(default=0)
 	bm25_score = models.FloatField(default=0)
+	rerank_score = models.FloatField(default=0)
 	rank = models.IntegerField(default=0)
 	secondary_rank = models.IntegerField(default=0)
 	chunk = models.ForeignKey(chunks, on_delete=models.CASCADE, null=True)
