@@ -281,6 +281,18 @@ def get_answer_distance_by_context(text, dataset_name, contexts=[''], embedding_
     collection = client.get_collection(name=dataset_name, embedding_function=embedding_model_ef)
 
     context_count = len(contexts)
+
+    if context_count == 1:
+        results = collection.query(
+            query_texts=[text],
+            n_results=1,
+            where={'type': {"$ne": "spreadsheet_full"}},
+            where_document={'$contains': contexts[0]}
+        )
+
+        distances = results['distances'][0]
+        return distances
+
     documents_filter_wrapper = { "$or": [] }
     for i in range(context_count):
         documents_filter_wrapper["$or"].append({ "$contains": contexts[i] })
