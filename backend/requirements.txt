@@ -1,11 +1,12 @@
 Django>=5.0.14
 psycopg2-binary>=2.8
-requests==2.27.1
+requests>=2.32.5
 djangorestframework
 django-cors-headers
 djangorestframework-simplejwt>=5.3.1
 sacremoses
-sentence_transformers>=3.0.0
+transformers>=4.57.2
+sentence_transformers>=5.1.2
 pypdf
 pandas
 pyzotero
@@ -22,7 +23,8 @@ ollama
 duckdb
 openpyxl
 langchain_community
-langchain==1.0.0a1
+langchain>=1.0.0
+huggingface-hub>=0.36.0
 pycryptodome==3.15.0
 sqlparse>=0.5.0 # not directly required, pinned by Snyk to avoid a vulnerability
 bm25s
