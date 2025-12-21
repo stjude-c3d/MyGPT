@@ -508,11 +508,16 @@ def save_answer(request):
         
         if not no_context:
             distances = get_answer_distance_by_context(answer_no_context_text, dataset_name, vector_contexts, embedding_model)
-            distances = [round(dist, 3) for dist in distances]
 
-            distances_a = get_answer_distance_by_context(answer_text, dataset_name, vector_contexts, embedding_model)
-            distances_a = [round(dist, 3) for dist in distances_a]
-            mean_distance_a = round((sum(distances_a) / len(distances_a)), 3)
+            if distances is None or len(distances) == 0:
+                mean_distance_a = 0
+                relevance_score = 0
+            else:
+                distances = [round(dist, 3) for dist in distances]
+
+                distances_a = get_answer_distance_by_context(answer_text, dataset_name, vector_contexts, embedding_model)
+                distances_a = [round(dist, 3) for dist in distances_a]
+                mean_distance_a = round((sum(distances_a) / len(distances_a)), 3)
 
             # if use_bm25:
                 # bm25_docs, bm25_scores = get_answer_distance_by_context_bm25(answer_text, bm25_contexts)

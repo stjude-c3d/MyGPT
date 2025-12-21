@@ -282,6 +282,9 @@ def get_answer_distance_by_context(text, dataset_name, contexts=[''], embedding_
 
     context_count = len(contexts)
 
+    if context_count == 0:
+        return []
+
     if context_count == 1:
         results = collection.query(
             query_texts=[text],
