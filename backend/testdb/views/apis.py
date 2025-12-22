@@ -17,7 +17,16 @@ import shutil
 import json
 import re
 from django.contrib.auth.models import User
-from .bm25_utils import index_document_by_bm25, retrieve_chunks_by_bm25, hybrid_source_combination, rerank_sources
+
+from .bm25_utils import (
+    index_document_by_bm25, 
+    retrieve_chunks_by_bm25, 
+    hybrid_source_combination, 
+)
+
+from .rerank_utils import (
+    rerank_sources
+)
 
 # Import from specialized modules
 from .helpers import (
@@ -181,13 +190,13 @@ def get_context(request):
         use_bm25 = dataset.use_bm25 if hasattr(dataset, 'use_bm25') else False
         keywords = json_request['keywords'] if 'keywords' in json_request else ''
         if no_context:    
-            context, titles, pages, starts, stops, chunks_txt, distances = '', [], [], [], [], [], []
+            context, titles, pages, starts, stops, chunks_txt, distances, reranked_scores = [], [], [], [], [], [], [], []
             vector_sources = []
             bm25_sources = []
             relevance_score = 0
             normalized_distances = []
         else:
-            context, titles, pages, starts, stops, chunks_txt, distances = nearestDataChroma(question_text, dataset_name, document_title, focused_section, keywords, embedding_model, maximum_chunks_count, no_cutoff)
+            context, titles, pages, starts, stops, chunks_txt, distances, reranked_scores = nearestDataChroma(question_text, dataset_name, document_title, focused_section, keywords, embedding_model, maximum_chunks_count, no_cutoff)
             vector_sources = []
             distances = [round(dist, 3) for dist in distances]
             relevance_score, normalized_distances = get_relevance_score(distances, embedding_model, True, use_default_qrs, question_best_distance, question_worst_distance)
@@ -213,6 +222,7 @@ def get_context(request):
                         'bm25_score': round(normalized_scores[idx], 3),
                         'vector_score': 0,
                         'rank': idx + 1,
+                        'reranked_score': result.get('reranked_score', 0),
                         'vector_distance_raw': 0,
                     })
         library_type = 'papers' if len(pages) else 'videos'
@@ -289,16 +299,17 @@ def get_context(request):
                 'vector_distance_raw': round(distances[idx],3), #round to 3 decimals,
                 'vector_score': round(normalized_distances[idx],3),
                 'rank': idx + 1,
+                'reranked_score': reranked_scores[idx],
                 'bm25_score_raw': 0,
                 'bm25_score': 0,
                 'bm25_rank': 0
             })
 
         # combine vector_sources and bm25_sources
-        combined_sources = hybrid_source_combination(vector_sources, bm25_sources)
+        reranked_sources = hybrid_source_combination(vector_sources, bm25_sources)
 
         # reranked sources based on vector_score + bm25_score
-        reranked_sources = rerank_sources(combined_sources, question_text)
+        # reranked_sources = rerank_sources(combined_sources, question_text)
 
         sources_grouped = []
         for source in reranked_sources:

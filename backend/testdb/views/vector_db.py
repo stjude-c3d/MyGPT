@@ -14,6 +14,10 @@ from ..models import EmbeddingModel, Dataset
 from .helpers import find_cutoff_distance
 from .embedding_utils import get_embedding_model_ef
 
+from .rerank_utils import (
+    rerank_sources
+)
+
 
 # Initialize duckdb connection
 con = duckdb.connect()
@@ -166,41 +170,76 @@ def nearestDataChroma(text, dataset_name, document_title_str='', focused_section
     elif "start" in results['metadatas'][0][0]:
         library_type = 'videos'
 
-    if no_cutoff:
-        cutoff_distance = results['distances'][0][len(results['distances'][0])-1]
-    else:
-        cutoff_distance = find_cutoff_distance(results['distances'][0])
-    print('cutoff_distance: ', cutoff_distance)
-    titles, pages, starts, stops, chunks, distances = [], [], [], [], [], []
-    context = ''
+    use_rerank = True
+    if use_rerank:
+        # rerank the sources based on cross encoder
+        sources = []
+        for i in range(len(results['ids'][0])):
+            source = {
+                'context': results['documents'][0][i],
+                'filename': results['metadatas'][0][i]['filename'],
+                'vector_score': round(1 - results['distances'][0][i], 3)
+            }
+            if library_type == 'papers':
+                source['page'] = results['metadatas'][0][i]['page']
+            elif library_type == 'videos':
+                source['start'] = results['metadatas'][0][i]['start']
+                source['end'] = results['metadatas'][0][i]['end']
+            sources.append(source)
+        
+        reranked_sources = rerank_sources(sources, text)
+        
+        # reconstruct results from reranked sources
+        titles, pages, starts, stops, chunks, distances, reranked_scores = [], [], [], [], [], [], []
+        context = ''
+        for source in reranked_sources:
+            titles.append(source['filename'])
+            if library_type == 'papers':
+                pages.append(source['page'])
+            elif library_type == 'videos':
+                starts.append(source['start'])
+                stops.append(source['end'])
+            chunks.append(source['context'])
+            reranked_scores.append(source['reranked_score'])
+            distances.append(round(1 - source['vector_score'], 3))
+            context += re.sub(r'\s+', ' ', source['context'])
 
-    # Extract results within cutoff distance
-    for i in range(len(results['ids'][0])):
-        if (results['distances'][0][i] <= cutoff_distance):
-            titles.append(results['metadatas'][0][i]['filename'])
-            if (library_type == 'papers'): 
-                pages.append(results['metadatas'][0][i]['page'])
-            elif (library_type == 'videos'):
-                starts.append(results['metadatas'][0][i]['start'])
-                stops.append(results['metadatas'][0][i]['end'])
-            chunks.append(results['documents'][0][i])
-            distances.append(results['distances'][0][i])
-            context += re.sub(r'\s+', ' ', results['documents'][0][i])
-    
-    if len(keywords) > 0:
-        for i in range(len(keyword_results['ids'][0])):
-            if (keyword_results['distances'][0][i] <= 1.5):
-                # check if chunk array already contains the chunk
-                if keyword_results['documents'][0][i] not in chunks:
-                    titles.append(keyword_results['metadatas'][0][i]['filename'])
-                    if (library_type == 'papers'): 
-                        pages.append(keyword_results['metadatas'][0][i]['page'])
-                    elif (library_type == 'videos'):
-                        starts.append(keyword_results['metadatas'][0][i]['start'])
-                        stops.append(keyword_results['metadatas'][0][i]['end'])
-                    chunks.append(keyword_results['documents'][0][i])
-                    distances.append(keyword_results['distances'][0][i])
-                    context += re.sub(r'\s+', ' ', keyword_results['documents'][0][i])
+    else:
+        if no_cutoff:
+            cutoff_distance = results['distances'][0][len(results['distances'][0])-1]
+        else:
+            cutoff_distance = find_cutoff_distance(results['distances'][0])
+        print('cutoff_distance: ', cutoff_distance)
+        titles, pages, starts, stops, chunks, distances = [], [], [], [], [], []
+        context = ''
+
+        # Extract results within cutoff distance
+        for i in range(len(results['ids'][0])):
+            if (results['distances'][0][i] <= cutoff_distance):
+                titles.append(results['metadatas'][0][i]['filename'])
+                if (library_type == 'papers'): 
+                    pages.append(results['metadatas'][0][i]['page'])
+                elif (library_type == 'videos'):
+                    starts.append(results['metadatas'][0][i]['start'])
+                    stops.append(results['metadatas'][0][i]['end'])
+                chunks.append(results['documents'][0][i])
+                distances.append(results['distances'][0][i])
+                context += re.sub(r'\s+', ' ', results['documents'][0][i])
+        
+        if len(keywords) > 0:
+            for i in range(len(keyword_results['ids'][0])):
+                if (keyword_results['distances'][0][i] <= 1.5):
+                    # check if chunk array already contains the chunk
+                    if keyword_results['documents'][0][i] not in chunks:
+                        titles.append(keyword_results['metadatas'][0][i]['filename'])
+                        if (library_type == 'papers'): 
+                            pages.append(keyword_results['metadatas'][0][i]['page'])
+                        elif (library_type == 'videos'):
+                            starts.append(keyword_results['metadatas'][0][i]['start'])
+                            stops.append(keyword_results['metadatas'][0][i]['end'])
+                        chunks.append(keyword_results['documents'][0][i])
+                        distances.append(keyword_results['distances'][0][i])
+                        context += re.sub(r'\s+', ' ', keyword_results['documents'][0][i])
     
     if results['metadatas'][0][0]['type'] == 'spreadsheet_chunk':
         fulltext_results = collection.query(
@@ -233,10 +272,10 @@ def nearestDataChroma(text, dataset_name, document_title_str='', focused_section
             file.write(final_table)
         context = f"SQL query: {response}; SQL parsing results: {final_table}"
     
-    with open("chroma_context.txt", "w") as file:
-        file.write(context)
+    # with open("chroma_context.txt", "w") as file:
+    #     file.write(context)
 
-    ret = (context, titles, pages, starts, stops, chunks, distances)
+    ret = (context, titles, pages, starts, stops, chunks, distances, reranked_scores) if use_rerank else (context, titles, pages, starts, stops, chunks, distances)
     return ret
 
 

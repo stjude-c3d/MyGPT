@@ -4,7 +4,10 @@ import Stemmer
 from pathlib import Path
 from tqdm import tqdm
 import numpy as np
-from sentence_transformers import CrossEncoder
+import re
+from .rerank_utils import (
+    rerank_sources
+)
 
 #this method should be called as part of the upload document process just after adding chunks into the chromadb
 def index_document_by_bm25(dataset_name):
@@ -53,8 +56,28 @@ def retrieve_chunks_by_bm25(queryText, dataset_name, document_title, chunk_count
     retriever_loaded = bm25s.BM25.load(f"/code/data/bm25_tokenizer/{dataset_name}", mmap=True, load_corpus=True)
     results, scores = retriever_loaded.retrieve(queriesTokenized, k=chunk_count, return_as="tuple", weight_mask=weight_mask if document_title != '' else None)
 
+    use_rerank = True
+    if use_rerank:
+        # rerank the sources based on cross encoder
+        prererank_results = []
+        reranked_results = []
+        prereranked_bm25_scores = []
+        for idx, result in enumerate(results[0]):
+            prereranked_bm25_scores.append(scores[0][idx])
+            prererank_results.append({
+                'context': result['text'],
+                'bm25_score_raw': scores[0][idx],
+            })
+        reranked_results = rerank_sources(prererank_results, queryText)
+        results = []
+        for reranked_result in reranked_results:
+            results.append({
+                'text': reranked_result['context'],
+                'reranked_score': reranked_result['reranked_score'],
+            })
+        scores = [[i['bm25_score_raw'] for i in reranked_results]]
     # returns ids of the chunks as a list
-    return results[0], scores[0]
+    return results, scores[0]
 
 def hybrid_source_combination(vector_sources, bm25_sources):
     # find duplicates from both the list with same text
@@ -105,30 +128,6 @@ def hybrid_source_combination(vector_sources, bm25_sources):
             combined_sources.append(bm25_source)
 
     return combined_sources
-
-def rerank_sources(sources, question_text):
-    # rerank the sources based on vector score + bm25 score using cross encoder
-    # cross_encoder = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
-    cross_encoder = CrossEncoder('cross-encoder/qnli-electra-base')
-
-    reranked_sources = []
-    for source in sources:
-        source_text = source['context']
-        score = cross_encoder.predict([[question_text, source_text]])[0]
-        score_rounded = round(float(score), 3)
-        source['reranked_score'] = score_rounded
-        if score_rounded > 0.1:
-            reranked_sources.append(source)
-    
-    # sort the sources based on the cross encoder score and combined score
-    reranked_sources.sort(key=lambda x: x['reranked_score'], reverse=True)
-
-    # add rank to each source
-    for idx, source in enumerate(reranked_sources):
-        source['rank'] = idx + 1
-
-    # return the reranked sources
-    return reranked_sources
 
 def get_answer_distance_by_context_bm25(text, contexts = ['']):
 
