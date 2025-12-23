@@ -17,7 +17,16 @@ import shutil
 import json
 import re
 from django.contrib.auth.models import User
-from .bm25_utils import index_document_by_bm25, retrieve_chunks_by_bm25, hybrid_source_combination
+
+from .bm25_utils import (
+    index_document_by_bm25, 
+    retrieve_chunks_by_bm25, 
+    hybrid_source_combination, 
+)
+
+from .rerank_utils import (
+    rerank_sources
+)
 
 # Import from specialized modules
 from .helpers import (
@@ -179,15 +188,16 @@ def get_context(request):
         previous_question = json_request['previous_query']
         no_context = json_request['no_context']
         use_bm25 = dataset.use_bm25 if hasattr(dataset, 'use_bm25') else False
+        use_reranker = dataset.use_reranker if hasattr(dataset, 'use_reranker') else False
         keywords = json_request['keywords'] if 'keywords' in json_request else ''
         if no_context:    
-            context, titles, pages, starts, stops, chunks_txt, distances = '', [], [], [], [], [], []
+            context, titles, pages, starts, stops, chunks_txt, distances, reranked_scores = [], [], [], [], [], [], [], []
             vector_sources = []
             bm25_sources = []
             relevance_score = 0
             normalized_distances = []
         else:
-            context, titles, pages, starts, stops, chunks_txt, distances = nearestDataChroma(question_text, dataset_name, document_title, focused_section, keywords, embedding_model, maximum_chunks_count, no_cutoff)
+            context, titles, pages, starts, stops, chunks_txt, distances, reranked_scores = nearestDataChroma(question_text, dataset_name, document_title, focused_section, keywords, embedding_model, maximum_chunks_count, no_cutoff, use_reranker)
             vector_sources = []
             distances = [round(dist, 3) for dist in distances]
             relevance_score, normalized_distances = get_relevance_score(distances, embedding_model, True, use_default_qrs, question_best_distance, question_worst_distance)
@@ -195,7 +205,7 @@ def get_context(request):
             bm25_sources = []
             if use_bm25:
                 # get similar chunks using BM25
-                results, scores = retrieve_chunks_by_bm25(question_text, dataset_name, document_title, 3)
+                results, scores = retrieve_chunks_by_bm25(question_text, dataset_name, document_title, 3, use_reranker)
                 normalized_scores = min_max_normalization(scores, best_bm25_score, worst_bm25_score, False)
                 for idx, result in enumerate(results):
                     cleaned_chunk = re.sub(r'\s+', ' ', str(result['text']))
@@ -213,6 +223,7 @@ def get_context(request):
                         'bm25_score': round(normalized_scores[idx], 3),
                         'vector_score': 0,
                         'rank': idx + 1,
+                        'reranked_score': result.get('reranked_score', 0),
                         'vector_distance_raw': 0,
                     })
         library_type = 'papers' if len(pages) else 'videos'
@@ -289,16 +300,20 @@ def get_context(request):
                 'vector_distance_raw': round(distances[idx],3), #round to 3 decimals,
                 'vector_score': round(normalized_distances[idx],3),
                 'rank': idx + 1,
+                'reranked_score': reranked_scores[idx] if use_reranker else 0,
                 'bm25_score_raw': 0,
                 'bm25_score': 0,
                 'bm25_rank': 0
             })
 
         # combine vector_sources and bm25_sources
-        combined_sources = hybrid_source_combination(vector_sources, bm25_sources)
+        reranked_sources = hybrid_source_combination(vector_sources, bm25_sources)
+
+        # reranked sources based on vector_score + bm25_score
+        # reranked_sources = rerank_sources(combined_sources, question_text)
 
         sources_grouped = []
-        for source in combined_sources:
+        for source in reranked_sources:
             if len(sources_grouped) == 0:
                 sources_grouped.append([source])
             else:
@@ -343,39 +358,41 @@ def get_context(request):
                         # paper.paper_attachment.save(dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf', File(f), save=True)
                         paper.highlighted_attachment.save(dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf', File(f), save=True)
         
-        for source in combined_sources:
+        full_context = ''
+        for idx, source in enumerate(reranked_sources):
             chunk = chunks.objects.filter(chunk_text=source['context'], chunk_dataset=dataset)
             Source.objects.create(
                 source_doc=source['document'],
                 source_pointer=source['page'] if library_type == 'papers' else source['start'],
                 context=source['context'].replace("\x00", "\uFFFD"),
-                vector_distance_raw=source['vector_distance_raw'] if 'vector_distance_raw' in source else 0,
-                vector_score=source['vector_score'] if 'vector_score' in source else 0,
-                bm25_score_raw=source['bm25_score_raw'] if 'bm25_score_raw' in source else 0,
-                bm25_score=source['bm25_score'] if 'bm25_score' in source else 0,
-                rank=source['rank'],
-                secondary_rank=source['bm25_rank'] if 'bm25_rank' in source else 0,
+                vector_distance_raw=source.get('vector_distance_raw', 0),
+                vector_score=source.get('vector_score', 0),
+                bm25_score_raw=source.get('bm25_score_raw', 0),
+                bm25_score=source.get('bm25_score', 0),
+                rank=source.get('rank', 0),
+                rerank_score=source.get('reranked_score', 0),
+                secondary_rank=source.get('bm25_rank', 0),
                 question=question,
                 chunk=chunk[0] if chunk.count() else None
             )
-            
+            full_context += source['context'] + "\n\n"
             # Determine the color code based on distance or score
-            if (source['vector_score'] != 0 and source['vector_score'] > 0.5) or (source['bm25_score'] != 0 and source['bm25_score'] > 0.5):
+            if (source.get('vector_score', 0) > 0.5) or (source.get('bm25_score', 0) > 0.5):
                 source['color_code'] = 'green'
-            elif (source['vector_score'] != 0 and source['vector_score'] > 0.3) or (source['bm25_score'] != 0 and source['bm25_score'] > 0.3):
+            elif (source.get('vector_score', 0) > 0.3) or (source.get('bm25_score', 0) > 0.3):
                 source['color_code'] = 'yellow'
-            elif (source['vector_score'] != 0 and source['vector_score'] > 0.15) or (source['bm25_score'] != 0 and source['bm25_score'] > 0.15):
+            elif (source.get('vector_score', 0) > 0.15) or (source.get('bm25_score', 0) > 0.15):
                 source['color_code'] = 'red'
             else:
                 source['color_code'] = 'gray'
 
         # combine the vector_scores and bm25_scores and sort them from high to low
-        combined_sources = sorted(combined_sources, key=lambda x: (x['vector_score'] if 'vector_score' in x else 0) + (x['bm25_score'] if 'bm25_score' in x else 0), reverse=True)
+        # combined_sources = sorted(combined_sources, key=lambda x: (x['vector_score'] if 'vector_score' in x else 0) + (x['bm25_score'] if 'bm25_score' in x else 0), reverse=True)
             
         context_json = {
-            'context': context,
+            'context': full_context,
             'relevance_score': relevance_score if relevance_score <= 100 else 100,
-            'sources': combined_sources if not no_context else []
+            'sources': reranked_sources if not no_context else []
         }
         
         return Response(context_json, content_type="application/json")
@@ -503,11 +520,16 @@ def save_answer(request):
         
         if not no_context:
             distances = get_answer_distance_by_context(answer_no_context_text, dataset_name, vector_contexts, embedding_model)
-            distances = [round(dist, 3) for dist in distances]
 
-            distances_a = get_answer_distance_by_context(answer_text, dataset_name, vector_contexts, embedding_model)
-            distances_a = [round(dist, 3) for dist in distances_a]
-            mean_distance_a = round((sum(distances_a) / len(distances_a)), 3)
+            if distances is None or len(distances) == 0:
+                mean_distance_a = 0
+                relevance_score = 0
+            else:
+                distances = [round(dist, 3) for dist in distances]
+
+                distances_a = get_answer_distance_by_context(answer_text, dataset_name, vector_contexts, embedding_model)
+                distances_a = [round(dist, 3) for dist in distances_a]
+                mean_distance_a = round((sum(distances_a) / len(distances_a)), 3)
 
             # if use_bm25:
                 # bm25_docs, bm25_scores = get_answer_distance_by_context_bm25(answer_text, bm25_contexts)
@@ -762,6 +784,7 @@ def upload_documents(request):
         dataset_name = add_dataset_from_upload(request)
         chunking_method = request.POST.get('chunking_method')
         use_bm25 = request.POST.get('use_bm25')
+        use_reranker = request.POST.get('use_reranker')
 
         if use_bm25 == 'Yes':
             index_document_by_bm25(dataset_name)
@@ -774,7 +797,7 @@ def upload_documents(request):
         else:
             embedding_model = embedding_model_request
 
-        message = add_to_chroma(dataset_name, embedding_model, distance_function, chunking_method)
+        message = add_to_chroma(dataset_name, embedding_model, distance_function, chunking_method, use_reranker)
 
         if message == False:
             return Response({'error': True}, content_type="application/json")

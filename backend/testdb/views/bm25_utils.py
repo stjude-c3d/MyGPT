@@ -4,6 +4,10 @@ import Stemmer
 from pathlib import Path
 from tqdm import tqdm
 import numpy as np
+import re
+from .rerank_utils import (
+    rerank_sources
+)
 
 #this method should be called as part of the upload document process just after adding chunks into the chromadb
 def index_document_by_bm25(dataset_name):
@@ -35,7 +39,7 @@ def index_document_by_bm25(dataset_name):
     tokenizer.save_vocab(tokenizer_directory)
     tokenizer.save_stopwords(tokenizer_directory)
 
-def retrieve_chunks_by_bm25(queryText, dataset_name, document_title, chunk_count=10):
+def retrieve_chunks_by_bm25(queryText, dataset_name, document_title, chunk_count=10, use_reranker=False):
 
     stemmer = Stemmer.Stemmer("english")
 
@@ -52,6 +56,26 @@ def retrieve_chunks_by_bm25(queryText, dataset_name, document_title, chunk_count
     retriever_loaded = bm25s.BM25.load(f"/code/data/bm25_tokenizer/{dataset_name}", mmap=True, load_corpus=True)
     results, scores = retriever_loaded.retrieve(queriesTokenized, k=chunk_count, return_as="tuple", weight_mask=weight_mask if document_title != '' else None)
 
+    if use_reranker:
+        # rerank the sources based on cross encoder
+        prererank_results = []
+        reranked_results = []
+        prereranked_bm25_scores = []
+        for idx, result in enumerate(results[0]):
+            prereranked_bm25_scores.append(scores[0][idx])
+            prererank_results.append({
+                'context': result['text'],
+                'bm25_score_raw': scores[0][idx],
+            })
+        reranked_results = rerank_sources(prererank_results, queryText)
+        results_ = []
+        for reranked_result in reranked_results:
+            results_.append({
+                'text': reranked_result['context'],
+                'reranked_score': reranked_result['reranked_score'],
+            })
+        results = [results_]
+        scores = [[i['bm25_score_raw'] for i in reranked_results]]
     # returns ids of the chunks as a list
     return results[0], scores[0]
 

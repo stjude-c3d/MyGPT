@@ -285,7 +285,7 @@ def add_dataset_from_upload(request):
                         count = section_obj[0].section_count
                         section_obj = section_obj[0]
                         section_obj.section_count += count
-                        section_obj.save()
+                        # section_obj.save()
                     else:
                         PaperSections.objects.create(
                             section_title=section_title,
