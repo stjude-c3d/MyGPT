@@ -84,7 +84,7 @@ def add_to_chroma(dataset_name, embedding_model_request='all-MiniLM-L6-v2', dist
         dataset = Dataset.objects.get(dataset_name=dataset_name)
         dataset.dataset_size = new_count
         dataset.embedding_model = embedding_model
-        dataset.use_reranker = use_reranker
+        dataset.use_reranker = True if use_reranker == 'Yes' else False
         dataset.save()
 
         print(f'Added {new_count - count} documents')
@@ -275,7 +275,7 @@ def nearestDataChroma(text, dataset_name, document_title_str='', focused_section
     # with open("chroma_context.txt", "w") as file:
     #     file.write(context)
 
-    ret = (context, titles, pages, starts, stops, chunks, distances, reranked_scores) if use_reranker else (context, titles, pages, starts, stops, chunks, distances)
+    ret = (context, titles, pages, starts, stops, chunks, distances, reranked_scores) if use_reranker else (context, titles, pages, starts, stops, chunks, distances, [])
     return ret
 
 

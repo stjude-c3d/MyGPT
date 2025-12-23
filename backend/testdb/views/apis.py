@@ -300,7 +300,7 @@ def get_context(request):
                 'vector_distance_raw': round(distances[idx],3), #round to 3 decimals,
                 'vector_score': round(normalized_distances[idx],3),
                 'rank': idx + 1,
-                'reranked_score': reranked_scores[idx],
+                'reranked_score': reranked_scores[idx] if use_reranker else 0,
                 'bm25_score_raw': 0,
                 'bm25_score': 0,
                 'bm25_rank': 0
