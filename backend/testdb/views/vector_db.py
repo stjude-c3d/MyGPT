@@ -23,7 +23,7 @@ from .rerank_utils import (
 con = duckdb.connect()
 
 
-def add_to_chroma(dataset_name, embedding_model_request='all-MiniLM-L6-v2', distance_function='l2', chunking_method='fixed_chunk_size'):
+def add_to_chroma(dataset_name, embedding_model_request='all-MiniLM-L6-v2', distance_function='l2', chunking_method='fixed_chunk_size', use_reranker=False):
     """Add dataset to ChromaDB vector database"""
     documents_directory = '/code/data/data_chunks'
     documents = []
@@ -84,13 +84,14 @@ def add_to_chroma(dataset_name, embedding_model_request='all-MiniLM-L6-v2', dist
         dataset = Dataset.objects.get(dataset_name=dataset_name)
         dataset.dataset_size = new_count
         dataset.embedding_model = embedding_model
+        dataset.use_reranker = use_reranker
         dataset.save()
 
         print(f'Added {new_count - count} documents')
         return True
 
 
-def nearestDataChroma(text, dataset_name, document_title_str='', focused_section_str='', keywords_str='', embedding_model_request='multi-qa-MiniLM-L6-cos-v1', maximum_chunks_count=15, no_cutoff=False):
+def nearestDataChroma(text, dataset_name, document_title_str='', focused_section_str='', keywords_str='', embedding_model_request='multi-qa-MiniLM-L6-cos-v1', maximum_chunks_count=15, no_cutoff=False, use_reranker=False):
     """Query ChromaDB for nearest documents"""
     embedding_model_ef = get_embedding_model_ef(embedding_model_request)
 
@@ -170,8 +171,7 @@ def nearestDataChroma(text, dataset_name, document_title_str='', focused_section
     elif "start" in results['metadatas'][0][0]:
         library_type = 'videos'
 
-    use_rerank = True
-    if use_rerank:
+    if use_reranker:
         # rerank the sources based on cross encoder
         sources = []
         for i in range(len(results['ids'][0])):
@@ -275,7 +275,7 @@ def nearestDataChroma(text, dataset_name, document_title_str='', focused_section
     # with open("chroma_context.txt", "w") as file:
     #     file.write(context)
 
-    ret = (context, titles, pages, starts, stops, chunks, distances, reranked_scores) if use_rerank else (context, titles, pages, starts, stops, chunks, distances)
+    ret = (context, titles, pages, starts, stops, chunks, distances, reranked_scores) if use_reranker else (context, titles, pages, starts, stops, chunks, distances)
     return ret
 
 
