@@ -191,13 +191,13 @@ def get_context(request):
         use_reranker = dataset.use_reranker if hasattr(dataset, 'use_reranker') else False
         keywords = json_request['keywords'] if 'keywords' in json_request else ''
         if no_context:    
-            context, titles, pages, starts, stops, chunks_txt, distances, reranked_scores = [], [], [], [], [], [], [], []
+            titles, pages, starts, stops, chunks_txt, distances, reranked_scores = [], [], [], [], [], [], []
             vector_sources = []
             bm25_sources = []
             relevance_score = 0
             normalized_distances = []
         else:
-            context, titles, pages, starts, stops, chunks_txt, distances, reranked_scores = nearestDataChroma(question_text, dataset_name, document_title, focused_section, keywords, embedding_model, maximum_chunks_count, no_cutoff, use_reranker)
+            titles, pages, starts, stops, chunks_txt, distances, reranked_scores = nearestDataChroma(question_text, dataset_name, document_title, focused_section, keywords, embedding_model, maximum_chunks_count, no_cutoff, use_reranker)
             vector_sources = []
             distances = [round(dist, 3) for dist in distances]
             relevance_score, normalized_distances = get_relevance_score(distances, embedding_model, True, use_default_qrs, question_best_distance, question_worst_distance)

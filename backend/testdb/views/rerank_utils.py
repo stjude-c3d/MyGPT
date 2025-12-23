@@ -4,6 +4,7 @@ def rerank_sources(sources, question_text):
     # rerank the sources based on vector score + bm25 score using cross encoder
     # cross_encoder = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
     cross_encoder = CrossEncoder('cross-encoder/qnli-electra-base')
+    RERANK_SCORE_THRESHOLD = 0.1
 
     reranked_sources = []
     for source in sources:
@@ -11,7 +12,7 @@ def rerank_sources(sources, question_text):
         score = cross_encoder.predict([[question_text, source_text]])[0]
         score_rounded = round(float(score), 3)
         source['reranked_score'] = score_rounded
-        if score_rounded > 0.1:
+        if score_rounded > RERANK_SCORE_THRESHOLD:
             reranked_sources.append(source)
     
     # sort the sources based on the cross encoder score and combined score

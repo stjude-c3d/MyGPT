@@ -275,7 +275,7 @@ def nearestDataChroma(text, dataset_name, document_title_str='', focused_section
     # with open("chroma_context.txt", "w") as file:
     #     file.write(context)
 
-    ret = (context, titles, pages, starts, stops, chunks, distances, reranked_scores) if use_reranker else (context, titles, pages, starts, stops, chunks, distances, [])
+    ret = (titles, pages, starts, stops, chunks, distances, reranked_scores) if use_reranker else (titles, pages, starts, stops, chunks, distances, [])
     return ret
 
 
