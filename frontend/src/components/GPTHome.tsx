@@ -33,11 +33,17 @@ function GPTHome(props:{
 	const [context, setContext] = useState<any>('')
 	const [relatedQuery, setRelatedQuery] = useState<any>(false)
 	const [answer, setAnswer] = useState<any>('')
+	const [thinkAllowed, setThinkAllowed] = useState<any>(false)
+	const [thought, setThought] = useState<any>('')
 	const [answerReceived, setAnswerReceived] = useState<any>(false)
+	const [minimizedThinking, setMinimizedThinking] = useState(false)
 	const [nullAnswer, setNullAnswer] = useState<any>('')
+	const [nullThought, setNullThought] = useState<any>('')
 	const [nullAnswerReceived, setNullAnswerReceived] = useState<any>(false)
 	const [answers, setAnswers] = useState<any[]>([])
+	const [thoughts, setThoughts] = useState<any[]>([])
 	const [nullAnswers, setNullAnswers] = useState<any[]>([])
+	const [nullThoughts, setNullThoughts] = useState<any[]>([])
 	const [showNullAnswerIndexes, setShowNullAnswerIndexes] = useState<any>([])
 	const [papers, setPapers] = useState<any[]>([])
 	const [focusedPaper, setFocusedPaper] = useState<any>(null)
@@ -71,6 +77,10 @@ function GPTHome(props:{
 
 	const llmsWithToolSupport = [
 		'llama3.1', 'llama3.2', 'llama3.3' 
+	]
+
+	const llmswithThinkStepSupport = [
+		'gpt-oss', 'qwen3',
 	]
 
 	// get llms from backend
@@ -204,6 +214,7 @@ function GPTHome(props:{
 			if (props.currentSettings.fetchPapers === true){
 				setQuery([])
 				setAnswers([])
+				setThoughts([])
 				setNullAnswers([])
 				setShowNullAnswerIndexes([])
 				setselectedPaperIdx(0)
@@ -410,14 +421,20 @@ function GPTHome(props:{
 				}
 
 			if(query.length && query.length !== answers.length){
-			// setSelectedPage(0)
-			// setselectedPaperIdx(0)
-			if (llmsWithToolSupport.includes(props.currentSettings.selectedLlm.split(':')[0]) && mcpOllamaTools.length > 0){
-				postDataWithTools()
-			}
-			else{
-				getContext()
-			}
+				// setSelectedPage(0)
+				// setselectedPaperIdx(0)
+				if (llmsWithToolSupport.includes(props.currentSettings.selectedLlm.split(':')[0]) && mcpOllamaTools.length > 0){
+					postDataWithTools()
+				}
+				else{
+					getContext()
+				}
+
+				if (llmswithThinkStepSupport.includes(props.currentSettings.selectedLlm.split(':')[0])){
+					setThinkAllowed(true)
+				} else {
+					setThinkAllowed(false)
+				}
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[query])
@@ -441,7 +458,7 @@ function GPTHome(props:{
 						props.currentSettings.selectedLlm, 
 						question, systemPrompt, addToolsPromt, mcpResponse,
 						props.currentSettings.temperature, props.currentSettings.top_k, props.currentSettings.top_p, 
-						setAnswer
+						setAnswer, thinkAllowed ? setThought : null
 					)
 				} else if (props.currentSettings.LLM_server_API_specs === 'sjray'){
 					answerReceived = await SJRayDirectGenerateStream(
@@ -475,7 +492,7 @@ function GPTHome(props:{
 						props.currentSettings.selectedLlm, 
 						question, systemPrompt, false, '',
 						props.currentSettings.temperature, props.currentSettings.top_k, props.currentSettings.top_p, 
-						setNullAnswer
+						setNullAnswer, thinkAllowed ? setNullThought : null
 					)
 				} else if (props.currentSettings.LLM_server_API_specs === 'sjray'){
 					nullAnswerReceived = await SJRayDirectGenerateStream(
@@ -495,6 +512,7 @@ function GPTHome(props:{
 	useEffect(()=>{
 		if (answerReceived && answer.length !== 0){
 			setAnswers((prevAnswers:any)=>[...prevAnswers, {'response': answer, 'source': props.currentSettings.selectedLlm}])
+			setThoughts((prevThoughts:any)=>[...prevThoughts, thought])
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[answer, props.currentSettings.selectedLlm, answerReceived])
@@ -502,6 +520,7 @@ function GPTHome(props:{
 	useEffect(()=>{
 		if (nullAnswerReceived && nullAnswer.length !== 0){
 			setNullAnswers((prevNullAnswers:any)=>[...prevNullAnswers, nullAnswer])
+			setNullThoughts((prevNullThoughts:any)=>[...prevNullThoughts, nullThought])
 			setShowNullAnswerIndexes((prevShowNullAnswerIndexes:any)=>[...prevShowNullAnswerIndexes, false])
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -706,6 +725,13 @@ function GPTHome(props:{
     // eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [props.currentSettings.MCP_tools])
 
+	// Collapse thinking section after answer is generated
+	useEffect(() => {
+		if (answers && answers.length && answers[answers.length-1]?.response?.length > 0) {
+			setMinimizedThinking(true);
+		}
+	}, [answers]);
+
 	const renderToolbar = (Toolbar: (props: ToolbarProps) => ReactElement) => (
 		<Toolbar>
 			{(slots: ToolbarSlot) => {
@@ -804,7 +830,9 @@ function GPTHome(props:{
 	const resetStates = () => {
 		setQuery([])
 		setAnswers([])
+		setThoughts([])
 		setNullAnswers([])
+		setNullThoughts([])
 		setShowNullAnswerIndexes([])
 		setQuestionRelevancescore([])
 		setAnswerRelevancescore([])
@@ -820,6 +848,8 @@ function GPTHome(props:{
 		setFileAttachmentType('paper_attachment')
 		setContext('')
 		setAnswer('')
+		setThought('')
+		setNullAnswer('')
 	}
 	return (
 		<div className='grid grid-cols-10 p-4 bg-gray-200 dark:bg-neutral-800 max-w-[2000px] mx-auto h-[94vh]'>
@@ -1146,6 +1176,31 @@ function GPTHome(props:{
 									</div>
 								</div>
 								<div className='text-white whitespace-pre-wrap answer-div'>
+									{thoughts.length > 0 && (
+										<div 
+											className={'my-2 bg-slate-700 dark:bg-slate-800 rounded-lg border-l-4 border-slate-900 transition-all duration-300 ' + (minimizedThinking ? 'max-h-12 overflow-hidden p-4 opacity-60' : 'max-h-96 p-4')}
+											style={{ maxHeight: minimizedThinking ? '3.5rem' : '24rem', overflow: 'hidden' }}
+										>
+											<div className='flex items-center justify-between mb-2'>
+												<div className='text-slate-300 text-sm font-semibold'>💭 Thinking</div>
+												<button
+													className='text-xs text-slate-200 bg-slate-900 rounded px-2 py-1 ml-2 focus:outline-none border border-slate-400'
+													onClick={e => { e.stopPropagation(); setMinimizedThinking(!minimizedThinking); }}
+												>
+													{minimizedThinking ? 'Expand' : 'Minimize'}
+												</button>
+											</div>
+											<div className={'transition-all duration-300 ' + (minimizedThinking ? 'opacity-0 h-0' : 'opacity-100 h-auto')}
+												style={{ height: minimizedThinking ? 0 : 'auto', overflow: minimizedThinking ? 'hidden' : 'visible' }}
+											>
+												<div className='text-gray-300 text-sm whitespace-pre-wrap overflow-y-auto max-h-48'>
+													<Markdown>
+														{showNullAnswerIndexes[query.length-i-1] === true? nullThoughts[query.length-i-1] : thoughts[thoughts.length-1]}
+													</Markdown>
+												</div>
+											</div>
+										</div>
+									)}
 									<Markdown>
 										{showNullAnswerIndexes[query.length-i-1] === true? nullAnswers[query.length-i-1] : answers[query.length-i-1].response}
 									</Markdown>
@@ -1252,6 +1307,16 @@ function GPTHome(props:{
 											:(<div className='text-white dark:text-nav-dark text-sm py-2'>{props.currentSettings.selectedLlm}</div>)
 										} 
 									</div>
+									{thought.length > 0 && (
+										<div className='mb-4 p-4 bg-slate-700 dark:bg-slate-800 rounded-lg border-l-4 border-blue-500'>
+											<div className='text-blue-300 text-sm font-semibold mb-2'>💭 Thinking...</div>
+											<div className='text-gray-300 text-sm whitespace-pre-wrap'>
+												<Markdown>
+													{thought}
+												</Markdown>
+											</div>
+										</div>
+									)}
 									<div className='text-white whitespace-pre-wrap answer-div'>
 										<Markdown>
 											{answer.length ? answer: 'Generating answer...'}

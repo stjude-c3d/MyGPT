@@ -2,13 +2,14 @@ export const  OllamaDirectGenerateStream = async (
 	llm:string, 
 	question:string, systemPrompt:string, addToolsPromt:boolean, mcpResponse:string, 
 	temperature:number, top_k:number, top_p:number, 
-	setAnswer:any
+	setAnswer:any, setThought:any
 ) => {
 	const body = JSON.stringify({
 		model: llm,
 		prompt: question + (addToolsPromt ? '\n\n<tool_response>' + mcpResponse + '</tool_response>' : ''),
 		system: systemPrompt,
 		stream: true,
+		think: setThought ? true : false,
 		options: {
 			temperature: temperature,
 			top_k: top_k,
@@ -17,6 +18,7 @@ export const  OllamaDirectGenerateStream = async (
 	})
 	
 	let content = ''
+	let thought = ''
 	let answerReceived = false
 	const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/generate`, {body, method: 'POST'})
 	const reader:any = response.body?.getReader()
@@ -50,6 +52,12 @@ export const  OllamaDirectGenerateStream = async (
 			const json = JSON.parse(j)
 			if (json.done === false) {
 				content += json.response
+				if (setThought){
+					if(json.thinking && json.thinking.length){
+						thought += json.thinking
+						setThought(thought)
+					}					
+				}
 			}else{
 				answerReceived = true
 			}
