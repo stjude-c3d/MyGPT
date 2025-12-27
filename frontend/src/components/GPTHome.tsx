@@ -12,7 +12,7 @@ import { PaperAirplaneIcon, Cog6ToothIcon, PaperClipIcon, XMarkIcon } from '@her
 import { scaleSequential, interpolateRdYlGn } from 'd3'
 import Markdown from 'react-markdown'
 // import Feedback from './Feedback'
-import { OllamaDirectChatStream, OllamaChatStreamWithToolSupport  } from '../utils/OllamaChat'
+import { OllamaDirectChatStream, OllamaChatStreamWithToolSupport } from '../utils/OllamaChat'
 import { OllamaDirectGenerateStream } from '../utils/OllamaGenerate'
 import { SJRayDirectGenerateStream } from '../utils/SJRayGenerate'
 
@@ -617,7 +617,7 @@ function GPTHome(props:{
 		if(messages.length > 0 && answer === '' && !answerReceived && !llmsWithToolSupport.includes(props.currentSettings.selectedLlm.split(':')[0])){
 			// fetch using async await
 			const postData = async () => {
-				const data = await OllamaDirectChatStream(body, setAnswer)
+				const data = await OllamaDirectChatStream(body, setAnswer, thinkAllowed ? setThought : null)
 				let answerReceived = data.answerReceived
 				setAnswerReceived(answerReceived)
 			}
@@ -1176,7 +1176,7 @@ function GPTHome(props:{
 									</div>
 								</div>
 								<div className='text-white whitespace-pre-wrap answer-div'>
-									{thoughts.length > 0 && (
+									{thinkAllowed && thoughts.length > 0 && (
 										<div 
 											className={'my-2 bg-slate-700 dark:bg-slate-800 rounded-lg border-l-4 border-slate-900 transition-all duration-300 ' + (minimizedThinking ? 'max-h-12 overflow-hidden p-4 opacity-60' : 'max-h-96 p-4')}
 											style={{ maxHeight: minimizedThinking ? '3.5rem' : '24rem', overflow: 'hidden' }}

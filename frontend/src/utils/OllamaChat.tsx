@@ -1,5 +1,6 @@
-export const  OllamaDirectChatStream = async (body:any, setAnswer:any) => {
+export const  OllamaDirectChatStream = async (body:any, setAnswer:any, setThought:any) => {
 	let content = ''
+	let thought = ''
 	let answerReceived = false
 	const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/chat`, {body, method: 'POST'})
 	const reader:any = response.body?.getReader()
@@ -33,19 +34,25 @@ export const  OllamaDirectChatStream = async (body:any, setAnswer:any) => {
 			const json = JSON.parse(j)
 			if (json.done === false) {
 				content += json.message.content
-			}
-			else {
-				setAnswer(content)
+				if (setThought){
+					if(json.message.thinking && json.message.thinking.length){
+						thought += json.message.thinking
+						setThought(thought)
+					}					
+				}
+			} else {
 				answerReceived = true
 			}
 		}
 		setAnswer(content)
+		if (setThought && thought.length) setThought(thought)
 	}
-	return {content, answerReceived}
+	return {content, answerReceived, thought}
 }
 
-const OllamaDirectChatNoStream = async (body:any, setAnswer:any) => {
+const OllamaDirectChatNoStream = async (body:any, setAnswer:any, setThought:any) => {
 	let content = ''
+	let thought = ''
 	let answerReceived = false
 	const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/chat`, {body, method: 'POST'})
 	const data = await response.json()
@@ -54,7 +61,11 @@ const OllamaDirectChatNoStream = async (body:any, setAnswer:any) => {
 		setAnswer(content)
 		answerReceived = true
 	}
-	return {content, answerReceived}
+	if (setThought && data.message && data.message.thinking){
+		thought = data.message.thinking
+		setThought(thought)
+	}
+	return {content, answerReceived, thought}
 }
 
 export const OllamaChatStreamWithToolSupport = async (body:any, setAnswer:any, MCPTools:any, MCPClient:any, stream:boolean, returnToolResponse:boolean) => {
@@ -91,11 +102,11 @@ export const OllamaChatStreamWithToolSupport = async (body:any, setAnswer:any, M
 			answerReceived = true
 		}
 		else if (!returnToolResponse && stream){
-			const data = await OllamaDirectChatStream(JSON.stringify(body_2), setAnswer)
+			const data = await OllamaDirectChatStream(JSON.stringify(body_2), setAnswer, ()=>{})
 			answerReceived = data.answerReceived
 			content = data.content
 		} else {
-			const data = await OllamaDirectChatNoStream(JSON.stringify(body_2), setAnswer)
+			const data = await OllamaDirectChatNoStream(JSON.stringify(body_2), setAnswer, ()=>{})
 			console.log('data_2', data)
 			answerReceived = data.answerReceived
 			content = data.content
