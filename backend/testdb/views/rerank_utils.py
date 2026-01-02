@@ -24,3 +24,18 @@ def rerank_sources(sources, question_text):
 
     # return the reranked sources
     return reranked_sources
+
+def rerank_answer_sources(sources, answer_text):
+    # rerank the sources based on vector score + bm25 score using cross encoder
+    cross_encoder = CrossEncoder('cross-encoder/nli-deberta-v3-base')
+
+    reranked_scores = []
+    for source in sources:
+        scores = cross_encoder.predict([(answer_text, source)])
+        label_mapping = ['contradiction', 'entailment', 'neutral']
+        label = [label_mapping[i] for i in scores.argmax(axis=1)]
+        # score_rounded = round(float(score), 3)
+        reranked_scores.append(label)
+
+    # return the reranked sources
+    return reranked_scores

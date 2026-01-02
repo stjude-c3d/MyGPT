@@ -21,11 +21,8 @@ from django.contrib.auth.models import User
 from .bm25_utils import (
     index_document_by_bm25, 
     retrieve_chunks_by_bm25, 
-    hybrid_source_combination, 
-)
-
-from .rerank_utils import (
-    rerank_sources
+    hybrid_source_combination,
+    get_answer_distance_by_context_bm25 
 )
 
 # Import from specialized modules
@@ -80,6 +77,11 @@ from .dataset_management import (
     # get_conversation_json,
     # get_previous_qna_json
 )
+
+from .rerank_utils import (
+    rerank_answer_sources
+)
+
 from ..models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, Model, EmbeddingModel, FrontEndSettings, DisclaimerAgreement, PaperSections
 
 ####################
@@ -509,7 +511,12 @@ def save_answer(request):
         # get context from sources
         sources = Source.objects.filter(question=question)
         vector_contexts = []
+        vector_distances = []
+        vector_scores = []
         bm25_contexts = []
+        bm25_scores = []
+        vector_rerank_scores = []
+        bm25_rerank_scores = []
 
         for source in sources:
 
@@ -526,13 +533,25 @@ def save_answer(request):
                 relevance_score = 0
             else:
                 distances = [round(dist, 3) for dist in distances]
-
                 distances_a = get_answer_distance_by_context(answer_text, dataset_name, vector_contexts, embedding_model)
                 distances_a = [round(dist, 3) for dist in distances_a]
+                vector_distances = distances_a
+
                 mean_distance_a = round((sum(distances_a) / len(distances_a)), 3)
 
-            # if use_bm25:
-                # bm25_docs, bm25_scores = get_answer_distance_by_context_bm25(answer_text, bm25_contexts)
+            vector_rerank_scores = rerank_answer_sources(vector_contexts, answer_text)
+
+            if use_bm25:
+                try:
+                    bm25_docs, bm25_scores = get_answer_distance_by_context_bm25(answer_text, bm25_contexts)
+                    # round bm25_scores to 3 decimals
+                    bm25_scores = [round(float(score), 3) for score in bm25_scores]
+                except Exception as e:
+                    print('Error in BM25 answer distance: ', e)
+                    bm25_scores = []
+
+                bm25_rerank_scores = rerank_answer_sources(bm25_contexts, answer_text)
+                    
                 # extra_score = round((sum(bm25_scores) / len(bm25_scores)), 3)
                 # mean_distance_a += extra_score
         else:
@@ -567,6 +586,10 @@ def save_answer(request):
         # else:
         #     best_distance_a = -1
         #     worst_distance_a = 1.4
+
+        vector_scores = min_max_normalization(vector_distances, best_distance_a, worst_distance_a, False)
+        # round to 3 decimals
+        vector_scores = [round(score, 3) for score in vector_scores]
 
         relevance_score = round(((1 - ((mean_distance_a - best_distance_a) / (worst_distance_a - best_distance_a))) * 100),0)
         if relevance_score < 0:
@@ -625,7 +648,12 @@ def save_answer(request):
                 'saved':True, 
                 'mean_distance_a': mean_distance_a,
                 'relevance_score': relevance_score if question_relevance_score != 0 else 0,
-                'hallucination_index': hallucination_index_final  
+                'hallucination_index': hallucination_index_final,
+                'vector_distances': vector_distances,
+                'vector_scores': vector_scores,
+                'bm25_scores': bm25_scores,
+                'vector_rerank_scores': vector_rerank_scores,
+                'bm25_rerank_scores': bm25_rerank_scores
             }, content_type="application/json")
         else:
             return Response({'saved':True, 'relevance_score': relevance_score}, content_type="application/json")
