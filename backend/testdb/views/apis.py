@@ -247,8 +247,8 @@ def get_context(request):
         current_date_time = make_aware(datetime.datetime.now())
         dataset = Dataset.objects.get(dataset_name=dataset_name)
         question_text = question_text.split('<tool_response>')[0]
-        quesiton_exist = Question.objects.filter(question_dataset=dataset).filter(question_text=question_text).filter(model_type=model_type).exists()
-        if quesiton_exist:
+        question_exist = Question.objects.filter(question_dataset=dataset).filter(question_text=question_text).filter(model_type=model_type).exists()
+        if question_exist:
             questions = Question.objects.filter(question_text=question_text, model_type=model_type, question_dataset=dataset)
             question = questions[0]
             question.keywords = keywords
@@ -361,7 +361,7 @@ def get_context(request):
                         paper.highlighted_attachment.save(dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf', File(f), save=True)
         
         full_context = ''
-        if quesiton_exist:
+        if question_exist:
             # delete previous sources
             Source.objects.filter(question=question).delete()
         for idx, source in enumerate(reranked_sources):
