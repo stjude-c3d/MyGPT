@@ -631,7 +631,7 @@ def save_answer(request):
             new_source.answer_vector_distance_raw = vector_distances[idx] if len(vector_distances) > idx else 0
             new_source.answer_vector_score = vector_scores[idx] if len(vector_scores) > idx else 0
             new_source.answer_bm25_score = bm25_scores[idx] if len(bm25_scores) > idx else 0
-            new_source.rerank_sentiment = rerank_sentiments[idx][0] if len(rerank_sentiments) > idx else 0
+            new_source.rerank_sentiment = rerank_sentiments[idx][0] if len(rerank_sentiments) > idx else "unknown"
             new_sources.append(new_source)
             # convert to json serializable format
         new_sources_json = []
