@@ -21,11 +21,8 @@ from django.contrib.auth.models import User
 from .bm25_utils import (
     index_document_by_bm25, 
     retrieve_chunks_by_bm25, 
-    hybrid_source_combination, 
-)
-
-from .rerank_utils import (
-    rerank_sources
+    hybrid_source_combination,
+    get_answer_distance_by_context_bm25 
 )
 
 # Import from specialized modules
@@ -80,6 +77,11 @@ from .dataset_management import (
     # get_conversation_json,
     # get_previous_qna_json
 )
+
+from .rerank_utils import (
+    rerank_answer_sources
+)
+
 from ..models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, Model, EmbeddingModel, FrontEndSettings, DisclaimerAgreement, PaperSections
 
 ####################
@@ -245,8 +247,8 @@ def get_context(request):
         current_date_time = make_aware(datetime.datetime.now())
         dataset = Dataset.objects.get(dataset_name=dataset_name)
         question_text = question_text.split('<tool_response>')[0]
-        quesiton_exist = Question.objects.filter(question_dataset=dataset).filter(question_text=question_text).filter(model_type=model_type).exists()
-        if quesiton_exist:
+        question_exist = Question.objects.filter(question_dataset=dataset).filter(question_text=question_text).filter(model_type=model_type).exists()
+        if question_exist:
             questions = Question.objects.filter(question_text=question_text, model_type=model_type, question_dataset=dataset)
             question = questions[0]
             question.keywords = keywords
@@ -359,6 +361,9 @@ def get_context(request):
                         paper.highlighted_attachment.save(dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf', File(f), save=True)
         
         full_context = ''
+        if question_exist:
+            # delete previous sources
+            Source.objects.filter(question=question).delete()
         for idx, source in enumerate(reranked_sources):
             chunk = chunks.objects.filter(chunk_text=source['context'], chunk_dataset=dataset)
             Source.objects.create(
@@ -443,6 +448,7 @@ def get_question_details(request):
                 'vector_score': source.vector_score,
                 'bm25_score_raw': source.bm25_score_raw,
                 'bm25_score': source.bm25_score,
+                'rerank_score': source.rerank_score,
                 'rank': source.rank,
                 'secondary_rank': source.secondary_rank,
             })
@@ -508,31 +514,50 @@ def save_answer(request):
 
         # get context from sources
         sources = Source.objects.filter(question=question)
-        vector_contexts = []
-        bm25_contexts = []
+        all_contexts = [source.context for source in sources]
+        sources_ranks = [source.rank for source in sources]
+        # vector_contexts = []
+        vector_distances = []
+        vector_scores = []
+        # bm25_contexts = []
+        bm25_scores = []
+        rerank_sentiments = []
+        # bm25_rerank_scores = []
 
-        for source in sources:
+        # for source in sources:
 
-            if source.vector_distance_raw != 0:
-                vector_contexts.append(source.context)
-            if source.bm25_score_raw != 0:
-                bm25_contexts.append(source.context)
+            # if source.vector_distance_raw != 0:
+            #     vector_contexts.append(source.context)
+            # if source.bm25_score_raw != 0:
+            #     bm25_contexts.append(source.context)
         
         if not no_context:
-            distances = get_answer_distance_by_context(answer_no_context_text, dataset_name, vector_contexts, embedding_model)
+            distances = get_answer_distance_by_context(answer_no_context_text, dataset_name, all_contexts, embedding_model)
 
             if distances is None or len(distances) == 0:
                 mean_distance_a = 0
                 relevance_score = 0
             else:
                 distances = [round(dist, 3) for dist in distances]
-
-                distances_a = get_answer_distance_by_context(answer_text, dataset_name, vector_contexts, embedding_model)
+                distances_a = get_answer_distance_by_context(answer_text, dataset_name, all_contexts, embedding_model)
                 distances_a = [round(dist, 3) for dist in distances_a]
+                vector_distances = distances_a
+
                 mean_distance_a = round((sum(distances_a) / len(distances_a)), 3)
 
-            # if use_bm25:
-                # bm25_docs, bm25_scores = get_answer_distance_by_context_bm25(answer_text, bm25_contexts)
+            rerank_sentiments = rerank_answer_sources(all_contexts, answer_text)
+
+            if use_bm25:
+                try:
+                    bm25_docs, bm25_scores = get_answer_distance_by_context_bm25(answer_text, all_contexts)
+                    # round bm25_scores to 3 decimals
+                    bm25_scores = [round(float(score), 3) for score in bm25_scores]
+                except Exception as e:
+                    print('Error in BM25 answer distance: ', e)
+                    bm25_scores = []
+
+                # bm25_rerank_scores = rerank_answer_sources(all_contexts, answer_text)
+                    
                 # extra_score = round((sum(bm25_scores) / len(bm25_scores)), 3)
                 # mean_distance_a += extra_score
         else:
@@ -568,6 +593,10 @@ def save_answer(request):
         #     best_distance_a = -1
         #     worst_distance_a = 1.4
 
+        vector_scores = min_max_normalization(vector_distances, best_distance_a, worst_distance_a, False)
+        # round to 3 decimals
+        vector_scores = [round(score, 3) for score in vector_scores]
+
         relevance_score = round(((1 - ((mean_distance_a - best_distance_a) / (worst_distance_a - best_distance_a))) * 100),0)
         if relevance_score < 0:
             relevance_score = 0
@@ -594,6 +623,35 @@ def save_answer(request):
             hallucination_index_raw = a_HI - (b_HI * question_relevance_score/100) - (c_HI * relevance_score/100)
             hallucination_index = round((hallucination_index_raw - minHI)/(maxHI - minHI) * 100, 0)
 
+        # create new sources array with vector_distances and vector_scores
+        new_sources = []
+        for rank in sources_ranks:
+            new_source = sources.filter(rank=rank).last()
+            idx = sources_ranks.index(rank)
+            new_source.answer_vector_distance_raw = vector_distances[idx] if len(vector_distances) > idx else 0
+            new_source.answer_vector_score = vector_scores[idx] if len(vector_scores) > idx else 0
+            new_source.answer_bm25_score = bm25_scores[idx] if len(bm25_scores) > idx else 0
+            new_source.rerank_sentiment = rerank_sentiments[idx][0] if len(rerank_sentiments) > idx else "unknown"
+            new_sources.append(new_source)
+            # convert to json serializable format
+        new_sources_json = []
+        for source in new_sources:
+            new_sources_json.append({
+                'paper': source.source_doc,
+                'page': source.source_pointer,
+                'context': source.context,
+                'vector_distance_raw': source.vector_distance_raw,
+                'vector_score': source.vector_score,
+                'answer_vector_distance_raw': source.answer_vector_distance_raw,
+                'answer_vector_score': source.answer_vector_score,
+                'bm25_score_raw': source.bm25_score_raw,
+                'bm25_score': source.bm25_score,
+                'rerank_score': source.rerank_score,
+                'rank': source.rank,
+                'secondary_rank': source.secondary_rank,
+                'answer_bm25_score': source.answer_bm25_score,
+                'rerank_sentiment': source.rerank_sentiment
+            })
 
         Answer.objects.create(
             answer_text=answer_text,
@@ -625,7 +683,8 @@ def save_answer(request):
                 'saved':True, 
                 'mean_distance_a': mean_distance_a,
                 'relevance_score': relevance_score if question_relevance_score != 0 else 0,
-                'hallucination_index': hallucination_index_final  
+                'hallucination_index': hallucination_index_final,
+                'sources': new_sources_json,
             }, content_type="application/json")
         else:
             return Response({'saved':True, 'relevance_score': relevance_score}, content_type="application/json")

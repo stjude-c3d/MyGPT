@@ -165,10 +165,10 @@ def nearestDataChroma(text, dataset_name, document_title_str='', focused_section
         )
 
     print('distances: ', results['distances'][0])
-    library_type = ''
-    if "page" in results['metadatas'][0][0]:
+    library_type = 'papers'
+    if len(results['metadatas'][0]) > 0 and "page" in results['metadatas'][0][0]:
         library_type = 'papers'
-    elif "start" in results['metadatas'][0][0]:
+    elif len(results['metadatas'][0]) > 0 and "start" in results['metadatas'][0][0]:
         library_type = 'videos'
 
     if use_reranker:
@@ -241,7 +241,7 @@ def nearestDataChroma(text, dataset_name, document_title_str='', focused_section
                         distances.append(keyword_results['distances'][0][i])
                         context += re.sub(r'\s+', ' ', keyword_results['documents'][0][i])
     
-    if results['metadatas'][0][0]['type'] == 'spreadsheet_chunk':
+    if len(results['metadatas'][0]) > 0 and results['metadatas'][0][0]['type'] == 'spreadsheet_chunk':
         fulltext_results = collection.query(
             query_texts=[text],
             n_results=3,
