@@ -33,7 +33,8 @@ def rerank_answer_sources(sources, answer_text):
     for source in sources:
         scores = cross_encoder.predict([(answer_text, source)])
         label_mapping = ['contradiction', 'entailment', 'neutral']
-        label = [label_mapping[i] for i in scores.argmax(axis=1)]
+        max_index = int(scores.argmax())
+        label = [label_mapping[max_index]]
         # score_rounded = round(float(score), 3)
         reranked_scores.append(label)
 
