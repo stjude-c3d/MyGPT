@@ -4,7 +4,7 @@ import Stemmer
 from pathlib import Path
 from tqdm import tqdm
 import numpy as np
-import re
+import shutil
 from .rerank_utils import (
     rerank_sources
 )
@@ -152,6 +152,9 @@ def get_answer_distance_by_context_bm25(text, contexts = ['']):
 
     # Get the top 10 results
     results, scores = retriever_loaded.retrieve(queriesTokenized, k=len(contexts), return_as="tuple")
+
+    # delete the tokenizer directory after use
+    shutil.rmtree(tokenizer_directory)
 
     # returns ids of the chunks as a list
     return results[0], scores[0]
