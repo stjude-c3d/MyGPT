@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react'
 import { scaleSequential, interpolateRdYlGn } from 'd3'
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
 import Markdown from 'react-markdown'
+import remarkMath from 'remark-math'
+import rehypeKatex from 'rehype-katex'
+import 'katex/dist/katex.min.css'
 
 interface ChatHistoryProps {
 	dataset: string,
@@ -109,7 +112,12 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 												setShowNullAnswer(false)
 											}}
 										>
-											{message.question}
+											<Markdown
+												remarkPlugins={[remarkMath as any]}
+												rehypePlugins={[rehypeKatex as any]}
+											>
+												{message.question}
+											</Markdown>
 										</div>
 									)
 								})
@@ -131,7 +139,14 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 										</span>
 									</div>
 								</div>
-								<div className='text-nav dark:text-nav-dark'>{questionDetails.question}</div>
+								<div className='text-nav dark:text-nav-dark'>
+										<Markdown
+											remarkPlugins={[remarkMath as any]}
+											rehypePlugins={[rehypeKatex as any]}
+										>
+											{questionDetails.question}
+										</Markdown>
+									</div>
 							</div>
 							<div className={'py-4 px-6 m-4 bg-panel1 dark:bg-panel4-dark rounded-lg shadow-md box2' + (props.darkMode ? ' llm-chat-dark' : ' llm-chat')}>
 							{ questionDetails.answers && questionDetails.answers.length >= 0 ?
@@ -172,7 +187,10 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 										</div>
 									</div>
 									<div className='text-white whitespace-pre-wrap answer-div'>
-										<Markdown>
+										<Markdown
+											remarkPlugins={[remarkMath as any]}
+											rehypePlugins={[rehypeKatex as any]}
+										>
 											{showNullAnswer ? questionDetails.answers[0].answer_no_context : questionDetails.answers[0].answer}
 										</Markdown>
 									</div>
