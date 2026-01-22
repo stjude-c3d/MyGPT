@@ -228,7 +228,8 @@ def get_context(request):
                         'reranked_score': result.get('reranked_score', 0),
                         'vector_distance_raw': 0,
                     })
-        library_type = 'papers' if len(pages) else 'videos'
+        # library_type = 'papers' if len(pages) else 'videos'
+        library_type = 'papers'
 
         # if no_context is true, create or get dataset
         if no_context:
