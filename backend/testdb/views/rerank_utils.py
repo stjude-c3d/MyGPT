@@ -3,8 +3,25 @@ from sentence_transformers import CrossEncoder
 def rerank_sources(sources, question_text):
     # rerank the sources based on vector score + bm25 score using cross encoder
     # cross_encoder = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
-    cross_encoder = CrossEncoder('cross-encoder/qnli-electra-base')
+
+    # check if model is available locally. if not, download and save it
+    cross_encoder_path = '/code/data/reranker/cross_encoder_qnli_electra_base'
+    try:
+        cross_encoder = CrossEncoder(cross_encoder_path)
+    except:
+        cross_encoder = CrossEncoder('cross-encoder/qnli-electra-base')
+        cross_encoder.save_pretrained('/code/data/reranker/cross_encoder_qnli_electra_base')
+
     RERANK_SCORE_THRESHOLD = 0.1
+
+    # cross_encoder_path = '/code/data/reranker/zerank_2'
+    # try:
+    #     cross_encoder = CrossEncoder(cross_encoder_path)
+    # except:
+    #     cross_encoder = CrossEncoder('zeroentropy/zerank-2', trust_remote_code=True)
+    #     cross_encoder.save_pretrained('/code/data/reranker/zerank_2')
+
+    # RERANK_SCORE_THRESHOLD = 0.3
 
     reranked_sources = []
     for source in sources:
@@ -27,7 +44,14 @@ def rerank_sources(sources, question_text):
 
 def rerank_answer_sources(sources, answer_text):
     # rerank the sources based on vector score + bm25 score using cross encoder
-    cross_encoder = CrossEncoder('cross-encoder/nli-deberta-v3-base')
+
+    # check if model is available locally. if not, download and save it
+    cross_encoder_path = '/code/data/reranker/cross_encoder_nli_deberta_v3_base'
+    try:
+        cross_encoder = CrossEncoder(cross_encoder_path)
+    except:
+        cross_encoder = CrossEncoder('cross-encoder/nli-deberta-v3-base')
+        cross_encoder.save_pretrained('/code/data/reranker/cross_encoder_nli_deberta_v3_base')
 
     reranked_scores = []
     for source in sources:

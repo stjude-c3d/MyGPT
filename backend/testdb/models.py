@@ -192,6 +192,11 @@ class Source(models.Model):
 	rerank_score = models.FloatField(default=0)
 	rank = models.IntegerField(default=0)
 	secondary_rank = models.IntegerField(default=0)
+	vector_distance_answer_raw = models.FloatField(default=0)
+	vector_score_answer = models.FloatField(default=0)
+	bm25_score_raw_answer = models.FloatField(default=0)
+	bm25_score_answer = models.FloatField(default=0)
+	rerank_entailment = models.TextField(default='-')
 	chunk = models.ForeignKey(chunks, on_delete=models.CASCADE, null=True)
 	question = models.ForeignKey(Question, on_delete=models.CASCADE, null=True)
 

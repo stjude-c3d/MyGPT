@@ -207,7 +207,8 @@ def get_context(request):
             bm25_sources = []
             if use_bm25:
                 # get similar chunks using BM25
-                results, scores = retrieve_chunks_by_bm25(question_text, dataset_name, document_title, 3, use_reranker)
+                results, scores = retrieve_chunks_by_bm25(question_text, dataset_name, document_title, maximum_chunks_count, use_reranker)
+                # results, scores = retrieve_chunks_by_bm25(question_text, dataset_name, document_title, 3, use_reranker)
                 normalized_scores = min_max_normalization(scores, best_bm25_score, worst_bm25_score, False)
                 for idx, result in enumerate(results):
                     cleaned_chunk = re.sub(r'\s+', ' ', str(result['text']))
@@ -521,9 +522,14 @@ def save_answer(request):
         vector_distances = []
         vector_scores = []
         # bm25_contexts = []
+        bm25_scores_raw = []
         bm25_scores = []
         rerank_sentiments = []
         # bm25_rerank_scores = []
+
+        # best and worst scores for BM25
+        best_bm25_score = 20
+        worst_bm25_score = 0
 
         # for source in sources:
 
@@ -550,9 +556,12 @@ def save_answer(request):
 
             if use_bm25:
                 try:
-                    bm25_docs, bm25_scores = get_answer_distance_by_context_bm25(answer_text, all_contexts)
+                    bm25_docs, bm25_scores_raw = get_answer_distance_by_context_bm25(answer_text, all_contexts)
                     # round bm25_scores to 3 decimals
-                    bm25_scores = [round(float(score), 3) for score in bm25_scores]
+                    bm25_scores_raw = [round(float(score), 3) for score in bm25_scores_raw]
+                    bm25_scores = min_max_normalization(bm25_scores_raw, best_bm25_score, worst_bm25_score, False)
+                    # round to 3 decimals
+                    bm25_scores = [round(score, 3) for score in bm25_scores]
                 except Exception as e:
                     print('Error in BM25 answer distance: ', e)
                     bm25_scores = []
@@ -629,10 +638,12 @@ def save_answer(request):
         for rank in sources_ranks:
             new_source = sources.filter(rank=rank).last()
             idx = sources_ranks.index(rank)
-            new_source.answer_vector_distance_raw = vector_distances[idx] if len(vector_distances) > idx else 0
-            new_source.answer_vector_score = vector_scores[idx] if len(vector_scores) > idx else 0
-            new_source.answer_bm25_score = bm25_scores[idx] if len(bm25_scores) > idx else 0
-            new_source.rerank_sentiment = rerank_sentiments[idx][0] if len(rerank_sentiments) > idx else "unknown"
+            new_source.vector_distance_answer_raw = vector_distances[idx] if len(vector_distances) > idx else 0
+            new_source.vector_score_answer = vector_scores[idx] if len(vector_scores) > idx else 0
+            new_source.bm25_score_raw_answer = bm25_scores_raw[idx] if len(bm25_scores_raw) > idx else 0
+            new_source.bm25_score_answer = bm25_scores[idx] if len(bm25_scores) > idx else 0
+            new_source.rerank_entailment = rerank_sentiments[idx][0] if len(rerank_sentiments) > idx else "unknown"
+            new_source.save()
             new_sources.append(new_source)
             # convert to json serializable format
         new_sources_json = []
@@ -643,15 +654,15 @@ def save_answer(request):
                 'context': source.context,
                 'vector_distance_raw': source.vector_distance_raw,
                 'vector_score': source.vector_score,
-                'answer_vector_distance_raw': source.answer_vector_distance_raw,
-                'answer_vector_score': source.answer_vector_score,
+                'answer_vector_distance_raw': source.vector_distance_answer_raw,
+                'answer_vector_score': source.vector_score_answer,
                 'bm25_score_raw': source.bm25_score_raw,
                 'bm25_score': source.bm25_score,
                 'rerank_score': source.rerank_score,
                 'rank': source.rank,
                 'secondary_rank': source.secondary_rank,
-                'answer_bm25_score': source.answer_bm25_score,
-                'rerank_sentiment': source.rerank_sentiment
+                'answer_bm25_score': source.bm25_score_answer,
+                'rerank_sentiment': source.rerank_entailment
             })
 
         Answer.objects.create(
