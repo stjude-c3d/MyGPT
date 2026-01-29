@@ -41,7 +41,7 @@ const AddLibrarySettings = (props: {
   const [useOverlap, setUseOverlap] = useState('Yes')
   const [chunkSize, setChunkSize] = useState('1000')
   const [useBM25, setUseBM25] = useState('Yes')
-  const [useReranker, setUseReranker] = useState('Yes')
+  const [Reranker, setReranker] = useState('qnli-electra-base (default)')
   const [distanceFn, setDistanceFn] = useState('l2')
 
 //   console.log(UploadLibraryName, uploadDocs)
@@ -59,7 +59,7 @@ const AddLibrarySettings = (props: {
 		formData.append('chunking_method', chunkingMethod)
 		formData.append('chunk_size', chunkSize)
 		formData.append('use_bm25', useBM25)
-		formData.append('use_reranker', useReranker)
+		formData.append('use_reranker', Reranker)
 		formData.append('distance_function', distanceFn)
 		formData.append('user', props.user ? props.user.user.replace(', ','_'): '-')
 		formData.append('user_email', props.user ? props.user.user_email : '-')
@@ -109,7 +109,7 @@ const AddLibrarySettings = (props: {
 			formData.append('use_overlap', useOverlap)
 			formData.append('chunk_size', chunkSize)
 			formData.append('use_bm25', useBM25)
-			formData.append('use_reranker', useReranker)
+			formData.append('reranker', Reranker)
 			formData.append('distance_function', distanceFn)
 
 			// show error if dataset name is empty
@@ -398,13 +398,13 @@ const AddLibrarySettings = (props: {
 						/>
 					</div>
 					<div className='flex justify-start m-2'>
-						<div className='text-nav dark:text-nav-dark p-1 w-48'>Use Reranker</div>
+						<div className='text-nav dark:text-nav-dark p-1 w-48'>Reranker</div>
 						<DropdownOptions
 							width={'280px'}
-							optionsList={['Yes', 'No']}
-							defaultOption={'Yes'}
+							optionsList={['qnli-electra-base (default)', 'zerank-2','None']}
+							defaultOption={'qnli-electra-base (default)'}
 							dropDownCallback={(option:string)=>{
-								setUseReranker(option)
+								setReranker(option)
 							}}
 						/>
 					</div>
@@ -530,13 +530,13 @@ const AddLibrarySettings = (props: {
 						/>
 					</div>
 					<div className='flex justify-start m-2'>
-						<div className='text-nav dark:text-nav-dark p-1 w-48'>Use Reranker</div>
+						<div className='text-nav dark:text-nav-dark p-1 w-48'>Reranker</div>
 						<DropdownOptions
 							width={'270px'}
-							optionsList={['Yes', 'No']}
-							defaultOption={'Yes'}
+							optionsList={['qnli-electra-base (default)', 'zerank-2','None']}
+							defaultOption={'qnli-electra-base (default)'}
 							dropDownCallback={(option:string)=>{
-								setUseReranker(option)
+								setReranker(option)
 							}}
 						/>
 					</div>

@@ -190,7 +190,8 @@ def get_context(request):
         previous_question = json_request['previous_query']
         no_context = json_request['no_context']
         use_bm25 = dataset.use_bm25 if hasattr(dataset, 'use_bm25') else False
-        use_reranker = dataset.use_reranker if hasattr(dataset, 'use_reranker') else False
+        reranker = dataset.reranker if hasattr(dataset, 'reranker') else 'None'
+        use_reranker = False if reranker == 'None' else True
         keywords = json_request['keywords'] if 'keywords' in json_request else ''
         if no_context:    
             titles, pages, starts, stops, chunks_txt, distances, reranked_scores = [], [], [], [], [], [], []
@@ -199,7 +200,7 @@ def get_context(request):
             relevance_score = 0
             normalized_distances = []
         else:
-            titles, pages, starts, stops, chunks_txt, distances, reranked_scores = nearestDataChroma(question_text, dataset_name, document_title, focused_section, keywords, embedding_model, maximum_chunks_count, no_cutoff, use_reranker)
+            titles, pages, starts, stops, chunks_txt, distances, reranked_scores = nearestDataChroma(question_text, dataset_name, document_title, focused_section, keywords, embedding_model, maximum_chunks_count, no_cutoff, reranker)
             vector_sources = []
             distances = [round(dist, 3) for dist in distances]
             relevance_score, normalized_distances = get_relevance_score(distances, embedding_model, True, use_default_qrs, question_best_distance, question_worst_distance)
@@ -207,8 +208,8 @@ def get_context(request):
             bm25_sources = []
             if use_bm25:
                 # get similar chunks using BM25
-                results, scores = retrieve_chunks_by_bm25(question_text, dataset_name, document_title, maximum_chunks_count, use_reranker)
-                # results, scores = retrieve_chunks_by_bm25(question_text, dataset_name, document_title, 3, use_reranker)
+                results, scores = retrieve_chunks_by_bm25(question_text, dataset_name, document_title, maximum_chunks_count, reranker)
+                # results, scores = retrieve_chunks_by_bm25(question_text, dataset_name, document_title, 3, reranker)
                 normalized_scores = min_max_normalization(scores, best_bm25_score, worst_bm25_score, False)
                 for idx, result in enumerate(results):
                     cleaned_chunk = re.sub(r'\s+', ' ', str(result['text']))
@@ -855,7 +856,7 @@ def upload_documents(request):
         dataset_name = add_dataset_from_upload(request)
         chunking_method = request.POST.get('chunking_method')
         use_bm25 = request.POST.get('use_bm25')
-        use_reranker = request.POST.get('use_reranker')
+        reranker = request.POST.get('reranker')
 
         if use_bm25 == 'Yes':
             index_document_by_bm25(dataset_name)
@@ -868,7 +869,7 @@ def upload_documents(request):
         else:
             embedding_model = embedding_model_request
 
-        message = add_to_chroma(dataset_name, embedding_model, distance_function, chunking_method, use_reranker)
+        message = add_to_chroma(dataset_name, embedding_model, distance_function, chunking_method, reranker)
 
         if message == False:
             return Response({'error': True}, content_type="application/json")

@@ -23,7 +23,7 @@ from .rerank_utils import (
 con = duckdb.connect()
 
 
-def add_to_chroma(dataset_name, embedding_model_request='all-MiniLM-L6-v2', distance_function='l2', chunking_method='fixed_chunk_size', use_reranker=False):
+def add_to_chroma(dataset_name, embedding_model_request='all-MiniLM-L6-v2', distance_function='l2', chunking_method='fixed_chunk_size', reranker='None'):
     """Add dataset to ChromaDB vector database"""
     documents_directory = '/code/data/data_chunks'
     documents = []
@@ -84,14 +84,15 @@ def add_to_chroma(dataset_name, embedding_model_request='all-MiniLM-L6-v2', dist
         dataset = Dataset.objects.get(dataset_name=dataset_name)
         dataset.dataset_size = new_count
         dataset.embedding_model = embedding_model
-        dataset.use_reranker = True if use_reranker == 'Yes' else False
+        dataset.use_reranker = False if reranker == 'None' else True
+        dataset.reranker = reranker
         dataset.save()
 
         print(f'Added {new_count - count} documents')
         return True
 
 
-def nearestDataChroma(text, dataset_name, document_title_str='', focused_section_str='', keywords_str='', embedding_model_request='multi-qa-MiniLM-L6-cos-v1', maximum_chunks_count=15, no_cutoff=False, use_reranker=False):
+def nearestDataChroma(text, dataset_name, document_title_str='', focused_section_str='', keywords_str='', embedding_model_request='multi-qa-MiniLM-L6-cos-v1', maximum_chunks_count=15, no_cutoff=False, reranker='None'):
     """Query ChromaDB for nearest documents"""
     embedding_model_ef = get_embedding_model_ef(embedding_model_request)
 
@@ -171,7 +172,7 @@ def nearestDataChroma(text, dataset_name, document_title_str='', focused_section
     elif len(results['metadatas'][0]) > 0 and "start" in results['metadatas'][0][0]:
         library_type = 'videos'
 
-    if use_reranker:
+    if reranker != 'None':
         # rerank the sources based on cross encoder
         sources = []
         for i in range(len(results['ids'][0])):
@@ -187,7 +188,7 @@ def nearestDataChroma(text, dataset_name, document_title_str='', focused_section
                 source['end'] = results['metadatas'][0][i]['end']
             sources.append(source)
         
-        reranked_sources = rerank_sources(sources, text)
+        reranked_sources = rerank_sources(sources, text, reranker)
         
         # reconstruct results from reranked sources
         titles, pages, starts, stops, chunks, distances, reranked_scores = [], [], [], [], [], [], []
@@ -275,7 +276,7 @@ def nearestDataChroma(text, dataset_name, document_title_str='', focused_section
     # with open("chroma_context.txt", "w") as file:
     #     file.write(context)
 
-    ret = (titles, pages, starts, stops, chunks, distances, reranked_scores) if use_reranker else (titles, pages, starts, stops, chunks, distances, [])
+    ret = (titles, pages, starts, stops, chunks, distances, reranked_scores) if reranker != 'None' else (titles, pages, starts, stops, chunks, distances, [])
     return ret
 
 

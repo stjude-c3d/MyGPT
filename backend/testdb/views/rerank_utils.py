@@ -1,18 +1,36 @@
 from sentence_transformers import CrossEncoder
+from ..models import RerankerModel
 
-def rerank_sources(sources, question_text):
+def rerank_sources(sources, question_text, reranker):
+
+    if reranker == 'default':
+        reranker = 'cross-encoder/qnli-electra-base'
+    reranker_model = RerankerModel.objects.filter(model_name__contains=reranker).first()
+    if not reranker_model:
+        # default to cross-encoder/qnli-electra-base
+        reranker_model = RerankerModel.objects.filter(model_name='cross-encoder/qnli-electra-base').first()
+        if not reranker_model:
+            # create the default reranker model
+            reranker_model = RerankerModel(
+                model_name='cross-encoder/qnli-electra-base',
+                cutoff_score=0.1
+            )
+            reranker_model.save()
+    
     # rerank the sources based on vector score + bm25 score using cross encoder
     # cross_encoder = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
 
     # check if model is available locally. if not, download and save it
-    cross_encoder_path = '/code/data/reranker/cross_encoder_qnli_electra_base'
+    reranker_name = reranker_model.model_name.split('/')[-1]
+    reranker_full_name = reranker_model.model_name
+    cross_encoder_path = f'/code/data/reranker/{reranker_name}'
     try:
         cross_encoder = CrossEncoder(cross_encoder_path)
     except:
-        cross_encoder = CrossEncoder('cross-encoder/qnli-electra-base')
-        cross_encoder.save_pretrained('/code/data/reranker/cross_encoder_qnli_electra_base')
+        cross_encoder = CrossEncoder(reranker_full_name)
+        cross_encoder.save_pretrained(f'/code/data/reranker/{reranker_name}')
 
-    RERANK_SCORE_THRESHOLD = 0.1
+    RERANK_SCORE_THRESHOLD = reranker_model.cutoff_score
 
     # cross_encoder_path = '/code/data/reranker/zerank_2'
     # try:

@@ -33,6 +33,8 @@ def add_dataset_from_upload(request):
     chunk_size = request.POST.get('chunk_size')
     distance_function_r = request.POST.get('distance_function')
     use_bm25 = request.POST.get('use_bm25')
+    reranker_r = request.POST.get('reranker')
+    use_reranker = False if reranker_r == 'None' else True
 
     # Validate all inputs for code injection
     if not dataset_name_r or not re.match(r'^[a-zA-Z0-9_\-\s\w]+$', dataset_name_r):
@@ -87,6 +89,8 @@ def add_dataset_from_upload(request):
             chunking_method=chunking_method,
             overlap=use_overlap,
             use_bm25= True if use_bm25 == 'Yes' else False,
+            use_reranker=use_reranker,
+            reranker=reranker_r,
             distance_function=distance_function,
             user = user if len(user) else '-',
             user_email = user_email if len(user_email) else '-',

@@ -55,6 +55,7 @@ class Dataset(models.Model):
 	overlap = models.BooleanField(default=False)
 	use_bm25 = models.BooleanField(default=False)
 	use_reranker = models.BooleanField(default=False)
+	reranker = models.CharField(max_length=100, default='-')
 	distance_function = models.CharField(max_length=40, default='l2')
 	direct_chat_without_docs = models.BooleanField(default=False)
 	dataset_date_time = models.DateTimeField(default=timezone.now, null=True)
@@ -220,6 +221,13 @@ class EmbeddingModel(models.Model):
 	worst_distance_ac = models.FloatField(default=0)
 	best_distance_nac = models.FloatField(default=0)
 	worst_distance_nac = models.FloatField(default=0)
+
+	def __str__(self):
+		return self.model_name
+	
+class RerankerModel(models.Model):
+	model_name = models.CharField(max_length=200, default='-')
+	cutoff_score = models.FloatField(default=0)
 
 	def __str__(self):
 		return self.model_name

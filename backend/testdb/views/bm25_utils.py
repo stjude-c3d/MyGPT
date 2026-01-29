@@ -5,6 +5,7 @@ from pathlib import Path
 from tqdm import tqdm
 import numpy as np
 import shutil
+# from nltk.stem.snowball import SnowballStemmer
 from .rerank_utils import (
     rerank_sources
 )
@@ -39,12 +40,14 @@ def index_document_by_bm25(dataset_name):
     tokenizer.save_vocab(tokenizer_directory)
     tokenizer.save_stopwords(tokenizer_directory)
 
-def retrieve_chunks_by_bm25(queryText, dataset_name, document_title, chunk_count=10, use_reranker=False):
+def retrieve_chunks_by_bm25(queryText, dataset_name, document_title, chunk_count=10, reranker='None'):
 
     stemmer = Stemmer.Stemmer("english")
+    # french_stemmer = SnowballStemmer("french")
 
      # Tokenize the queries
     queriesTokenized = bm25s.tokenize([queryText], stemmer=stemmer)
+    # queriesTokenized = bm25s.tokenize([queryText], stemmer=french_stemmer)
 
     # if document_title is not empty, get the chunk file and create weight mask for the documents
     if document_title != '':
@@ -56,7 +59,7 @@ def retrieve_chunks_by_bm25(queryText, dataset_name, document_title, chunk_count
     retriever_loaded = bm25s.BM25.load(f"/code/data/bm25_tokenizer/{dataset_name}", mmap=True, load_corpus=True)
     results, scores = retriever_loaded.retrieve(queriesTokenized, k=chunk_count, return_as="tuple", weight_mask=weight_mask if document_title != '' else None)
 
-    if use_reranker:
+    if reranker != 'None':
         # rerank the sources based on cross encoder
         prererank_results = []
         reranked_results = []
@@ -67,7 +70,7 @@ def retrieve_chunks_by_bm25(queryText, dataset_name, document_title, chunk_count
                 'context': result['text'],
                 'bm25_score_raw': scores[0][idx],
             })
-        reranked_results = rerank_sources(prererank_results, queryText)
+        reranked_results = rerank_sources(prererank_results, queryText, reranker)
         results_ = []
         for reranked_result in reranked_results:
             results_.append({
