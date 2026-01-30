@@ -26,6 +26,7 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 	const [selectedSource, setSelectedSource] = useState(0)
 	const [showNullAnswer, setShowNullAnswer] = useState(false)
 	const [selectedDataset, setSelectedDataset] = useState(props.dataset)
+	const [searchQuery, setSearchQuery] = useState('')
 
 	useEffect(() => {
 		// fetch chat history from API
@@ -50,6 +51,11 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 			}
 		})
 	}, [selectedDataset])
+
+	// filter chat history based on search query
+	const filteredChatHistory:any = chatHistory.filter((message: any) => 
+		message.question.toLowerCase().includes(searchQuery.toLowerCase())
+	)
 
 	// fetch answers and sources for selected question
 	useEffect(() => {
@@ -96,18 +102,33 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 								})}
 							</select>
 							</div>
+							<div className='py-2 px-4'>
+								<input
+									type='text'
+									placeholder='Search questions...'
+									value={searchQuery}
+									onChange={(e) => {
+										setSearchQuery(e.target.value)
+										setActiveQuestion(filteredChatHistory.length > 0 ? chatHistory.findIndex((item: any) => item.question_id === filteredChatHistory[0].question_id) : 0)
+										setActiveQuestionID(filteredChatHistory.length > 0 ? filteredChatHistory[0].question_id : 0)
+										}
+									}
+									className='w-full px-3 py-2 text-sm text-nav dark:text-nav-dark bg-white dark:bg-stjude rounded-md border border-slate-400 focus:outline-none focus:border-blue-500'
+								/>
+							</div>
 							<div className='text-white text-lg font-bold py-2 px-4'>Questions</div>
 							{
 								chatHistory && chatHistory.length === 0 ? 
 									<div className='text-lg text-white px-4 mx-2'>No chat history available</div> :
-									chatHistory.map((message:any, index:number) => {
+								filteredChatHistory.map((message:any) => {
+									const originalIndex = chatHistory.findIndex((item: any) => item.question_id === message.question_id)
 									return (
 										<div 
-											key={index} 
+											key={message.question_id} 
 											className={`text-white text-md cursor-pointer py-2 px-4 overflow-y-auto 
-												${activeQuestion === index ? 'font-normal bg-nav' : 'font-light bg-panel1 dark:bg-panel4-dark'}`}
+												${activeQuestion === originalIndex ? 'font-normal bg-nav' : 'font-light bg-panel1 dark:bg-panel4-dark'}`}
 											onClick={() => {
-												setActiveQuestion(index)
+												setActiveQuestion(originalIndex)
 												setActiveQuestionID(message.question_id)
 												setShowNullAnswer(false)
 											}}
