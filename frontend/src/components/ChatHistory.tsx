@@ -73,19 +73,114 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 			})
 	}, [activeQuestionID])
 
+	// Function to export chat history with answers as CSV
+	const exportToCsv = async () => {
+		if (chatHistory.length === 0) {
+			alert('No chat history to export')
+			return
+		}
+
+		try {
+			// Show loading state
+			const originalText = 'Export CSV'
+			const button = document.querySelector('[data-export-btn]') as HTMLButtonElement
+			if (button) {
+				button.textContent = 'Exporting...'
+				button.disabled = true
+			}
+
+			// Fetch all question details
+			const questionDetails = await Promise.all(
+				chatHistory.map(async (item: any) => {
+					const response = await fetch(`${process.env.REACT_APP_BACKEND_API}api/get_question_details/?question_id=${item.question_id}`, {
+						method: 'GET',
+						headers: {
+							'Content-Type': 'application/json',
+							'Authorization': `${localStorage.getItem('access') ? 'Bearer ' + localStorage.getItem('access') : ''}`
+						}
+					})
+					const data = await response.json()
+					return { ...item, details: data }
+				})
+			)
+
+			// Create CSV headers
+			const headers = [
+				'Question ID',
+				'Question',
+				'Answer',
+				'Answer (No Context)',
+				'LLM Model',
+				'Question Relevance Score',
+				'Answer Relevance Score',
+				'Hallucination Index',
+				'Dataset',
+				'Number of Sources',
+				'Timestamp'
+			]
+
+			// Create CSV rows
+			const csvData = questionDetails.map((item: any) => [
+				item.question_id,
+				`"${item.question.replace(/"/g, '""')}"`,
+				`"${item.details.answers && item.details.answers[0] ? item.details.answers[0].answer.replace(/"/g, '""') : 'N/A'}"`,
+				`"${item.details.answers && item.details.answers[0] ? item.details.answers[0].answer_no_context.replace(/"/g, '""') : 'N/A'}"`,
+				item.details.llm || 'N/A',
+				item.details.relevance_score || 'N/A',
+				item.details.answers && item.details.answers[0] ? item.details.answers[0].relevance_score : 'N/A',
+				item.details.answers && item.details.answers[0] ? item.details.answers[0].hallucination_index : 'N/A',
+				selectedDataset,
+				item.details.sources ? item.details.sources.length : 0,
+				new Date(item.created_at || Date.now()).toLocaleString()
+			])
+
+			// Combine headers and data
+			const csvContent = [headers, ...csvData]
+				.map(row => row.join(','))
+				.join('\n')
+
+			// Create and download the CSV file
+			const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+			const link = document.createElement('a')
+			const url = URL.createObjectURL(blob)
+			link.setAttribute('href', url)
+			link.setAttribute('download', `chat-history-complete-${selectedDataset}-${new Date().toISOString().split('T')[0]}.csv`)
+			link.style.visibility = 'hidden'
+			document.body.appendChild(link)
+			link.click()
+			document.body.removeChild(link)
+
+			// Reset button state
+			if (button) {
+				button.textContent = originalText
+				button.disabled = false
+			}
+		} catch (error) {
+			console.error('Error exporting chat history:', error)
+			alert('Error exporting chat history. Please try again.')
+
+			// Reset button state on error
+			const button = document.querySelector('[data-export-btn]') as HTMLButtonElement
+			if (button) {
+				button.textContent = 'Export CSV'
+				button.disabled = false
+			}
+		}
+	}
+
 	return (
 		// create floating panel with opque background
 		<div className='fixed inset-0 z-50 bg-black bg-opacity-70 flex items-center justify-center'>
 			<div className={'bg-panel1 dark:bg-panel4-dark w-3/4 max-w-[1200px] rounded-lg ' + (window.screen.availHeight < 1000 ? 'h-[95vh] max-h-[95vh]' : 'h-[70vh] max-h-[70vh]')}>
 				<div className='flex justify-between'>
 					<div className='text-2xl font-bold text-white mt-8 mx-8'>Chat History</div>
-					<div className='text-2xl font-bold text-white mt-8 mr-8 cursor-pointer' onClick={props.closeChatHistory}>x</div>
+					<div className='text-2xl font-bold text-white mt-8 mr-8 cursor-pointer' onClick={props.closeChatHistory}>×</div>
 				</div>
 				<div className={'flex justify-between my-6 '+ (window.screen.availHeight < 1000 ? 'h-[78vh]' : 'h-[62vh]')}>
 					{/* create left side panel for questions */}
 					<div className={'w-1/3 border-slate-400 border-y-2 overflow-y-auto ' + (window.screen.availHeight < 1000 ? 'h-[80vh]' : 'h-[62vh]')}>
 						<div className='grid grid-cols-1 divide-y'>
-							<div className='text-white py-2 px-4'>
+							<div className='text-white py-2 px-4 mx-auto'>
 								<div className='text-lg font-bold inline-block'>
 									Library
 								</div>
@@ -101,6 +196,16 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 									)
 								})}
 							</select>
+							<div className='flex justify-center'>
+								<button
+									onClick={exportToCsv}
+									data-export-btn
+									className='bg-green-800 hover:bg-green-600 text-white font-bold py-1 px-4 mx-2 mt-2 rounded text-sm'
+									disabled={chatHistory.length === 0}
+								>
+									Export CSV
+								</button>
+							</div>
 							</div>
 							<div className='py-2 px-4'>
 								<input
