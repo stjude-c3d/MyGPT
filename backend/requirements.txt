@@ -29,3 +29,4 @@ pycryptodome==3.15.0
 sqlparse>=0.5.0 # not directly required, pinned by Snyk to avoid a vulnerability
 bm25s
 pystemmer
+zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
