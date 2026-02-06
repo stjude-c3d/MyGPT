@@ -43,6 +43,7 @@ const AddLibrarySettings = (props: {
   const [useBM25, setUseBM25] = useState('Yes')
   const [Reranker, setReranker] = useState('qnli-electra-base (default)')
   const [distanceFn, setDistanceFn] = useState('l2')
+  const [languageOfDocs, setLanguageOfDocs] = useState('English')
 
 //   console.log(UploadLibraryName, uploadDocs)
 
@@ -64,6 +65,7 @@ const AddLibrarySettings = (props: {
 		formData.append('user', props.user ? props.user.user.replace(', ','_'): '-')
 		formData.append('user_email', props.user ? props.user.user_email : '-')
 		formData.append('user_group', props.user && props.user.isAdmin ? 'admin' : 'user')
+		formData.append('documents_language', languageOfDocs)
 
 		const requestOptions = {
 			method: 'POST',
@@ -111,6 +113,7 @@ const AddLibrarySettings = (props: {
 			formData.append('use_bm25', useBM25)
 			formData.append('reranker', Reranker)
 			formData.append('distance_function', distanceFn)
+			formData.append('documents_language', languageOfDocs)
 
 			// show error if dataset name is empty
 			if (UploadLibraryName === ''){
@@ -182,6 +185,7 @@ const AddLibrarySettings = (props: {
 			formData.append('user', props.user ? props.user.user: '')
 			formData.append('user_email', props.user ? props.user.user_email : '')
 			formData.append('user_group', props.user && props.user.isAdmin ? 'admin' : 'user')
+			formData.append('documents_language', languageOfDocs)
 
 			formData.append('video_urls', videoDocURLs.join(',') )
 			formData.append('playlist_url', videoPlaylistURL)
@@ -401,7 +405,7 @@ const AddLibrarySettings = (props: {
 						<div className='text-nav dark:text-nav-dark p-1 w-48'>Reranker</div>
 						<DropdownOptions
 							width={'280px'}
-							optionsList={['qnli-electra-base (default)', 'zerank-2','None']}
+							optionsList={['qnli-electra-base (default)', 'zerank-2', 'gte-multilingual-reranker', 'None']}
 							defaultOption={'qnli-electra-base (default)'}
 							dropDownCallback={(option:string)=>{
 								setReranker(option)
@@ -419,6 +423,17 @@ const AddLibrarySettings = (props: {
 									option === 'Inner product' ? 'inner' : 
 									'l2'
 								setDistanceFn(request_option)
+							}}
+						/>
+					</div>
+					<div className='flex justify-start mx-2 my-1'>
+						<div className='text-nav dark:text-nav-dark p-1 w-48'>Language of Documents</div>
+						<DropdownOptions
+							width={'280px'}
+							optionsList={['English', 'French', 'Spanish', 'Portuguese', 'Unknown']}
+							defaultOption={'English'}
+							dropDownCallback={(option:string)=>{
+								setLanguageOfDocs(option)
 							}}
 						/>
 					</div>
@@ -533,7 +548,7 @@ const AddLibrarySettings = (props: {
 						<div className='text-nav dark:text-nav-dark p-1 w-48'>Reranker</div>
 						<DropdownOptions
 							width={'270px'}
-							optionsList={['qnli-electra-base (default)', 'zerank-2','None']}
+							optionsList={['qnli-electra-base (default)', 'zerank-2', 'gte-multilingual-reranker', 'None']}
 							defaultOption={'qnli-electra-base (default)'}
 							dropDownCallback={(option:string)=>{
 								setReranker(option)
@@ -551,6 +566,17 @@ const AddLibrarySettings = (props: {
 									option === 'Inner product' ? 'inner' : 
 									'l2'
 								setDistanceFn(request_option)
+							}}
+						/>
+					</div>
+					<div className='flex justify-start mx-2 my-1'>
+						<div className='text-nav dark:text-nav-dark p-1 w-48'>Language of Documents</div>
+						<DropdownOptions
+							width={'270px'}
+							optionsList={['English', 'French', 'Spanish', 'Portuguese', 'Unknown']}
+							defaultOption={'English'}
+							dropDownCallback={(option:string)=>{
+								setLanguageOfDocs(option)
 							}}
 						/>
 					</div>

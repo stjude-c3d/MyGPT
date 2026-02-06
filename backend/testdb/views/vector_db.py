@@ -92,7 +92,7 @@ def add_to_chroma(dataset_name, embedding_model_request='all-MiniLM-L6-v2', dist
         return True
 
 
-def nearestDataChroma(text, dataset_name, document_title_str='', focused_section_str='', keywords_str='', embedding_model_request='multi-qa-MiniLM-L6-cos-v1', maximum_chunks_count=15, no_cutoff=False, reranker='None'):
+def nearestDataChroma(text, dataset_name, document_title_str='', focused_section_str='', keywords_str='', embedding_model_request='multi-qa-MiniLM-L6-cos-v1', maximum_chunks_count=15, no_cutoff=False, reranker='None', language_of_docs='english'):
     """Query ChromaDB for nearest documents"""
     embedding_model_ef = get_embedding_model_ef(embedding_model_request)
 
@@ -172,7 +172,7 @@ def nearestDataChroma(text, dataset_name, document_title_str='', focused_section
     elif len(results['metadatas'][0]) > 0 and "start" in results['metadatas'][0][0]:
         library_type = 'videos'
 
-    if reranker != 'None':
+    if reranker != 'None' and language_of_docs == 'english':
         # rerank the sources based on cross encoder
         sources = []
         for i in range(len(results['ids'][0])):

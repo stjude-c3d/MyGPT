@@ -192,6 +192,7 @@ def get_context(request):
         use_bm25 = dataset.use_bm25 if hasattr(dataset, 'use_bm25') else False
         reranker = dataset.reranker if hasattr(dataset, 'reranker') else 'None'
         use_reranker = False if reranker == 'None' else True
+        language_of_docs = dataset.documents_language if hasattr(dataset, 'documents_language') else 'english'
         keywords = json_request['keywords'] if 'keywords' in json_request else ''
         if no_context:    
             titles, pages, starts, stops, chunks_txt, distances, reranked_scores = [], [], [], [], [], [], []
@@ -200,7 +201,7 @@ def get_context(request):
             relevance_score = 0
             normalized_distances = []
         else:
-            titles, pages, starts, stops, chunks_txt, distances, reranked_scores = nearestDataChroma(question_text, dataset_name, document_title, focused_section, keywords, embedding_model, maximum_chunks_count, no_cutoff, reranker)
+            titles, pages, starts, stops, chunks_txt, distances, reranked_scores = nearestDataChroma(question_text, dataset_name, document_title, focused_section, keywords, embedding_model, maximum_chunks_count, no_cutoff, reranker, language_of_docs)
             vector_sources = []
             distances = [round(dist, 3) for dist in distances]
             relevance_score, normalized_distances = get_relevance_score(distances, embedding_model, True, use_default_qrs, question_best_distance, question_worst_distance)
@@ -208,7 +209,7 @@ def get_context(request):
             bm25_sources = []
             if use_bm25:
                 # get similar chunks using BM25
-                results, scores = retrieve_chunks_by_bm25(question_text, dataset_name, document_title, maximum_chunks_count, reranker)
+                results, scores = retrieve_chunks_by_bm25(question_text, dataset_name, document_title, maximum_chunks_count, reranker, language_of_docs)
                 # results, scores = retrieve_chunks_by_bm25(question_text, dataset_name, document_title, 3, reranker)
                 normalized_scores = min_max_normalization(scores, best_bm25_score, worst_bm25_score, False)
                 for idx, result in enumerate(results):
@@ -499,6 +500,7 @@ def save_answer(request):
         dataset_name = json_request['dataset']
         dataset = Dataset.objects.get(dataset_name=dataset_name)
         use_bm25 = dataset.use_bm25 if hasattr(dataset, 'use_bm25') else False
+        language_of_docs = dataset.documents_language if hasattr(dataset, 'documents_language') else 'english'
         question = Question.objects.get(question_text=question_text, model_type=model_type, question_dataset=dataset)
         embedding_model = dataset.embedding_model
         no_context = json_request['no_context']
@@ -557,7 +559,7 @@ def save_answer(request):
 
             if use_bm25:
                 try:
-                    bm25_docs, bm25_scores_raw = get_answer_distance_by_context_bm25(answer_text, all_contexts)
+                    bm25_docs, bm25_scores_raw = get_answer_distance_by_context_bm25(answer_text, all_contexts, language_of_docs)
                     # round bm25_scores to 3 decimals
                     bm25_scores_raw = [round(float(score), 3) for score in bm25_scores_raw]
                     bm25_scores = min_max_normalization(bm25_scores_raw, best_bm25_score, worst_bm25_score, False)
@@ -832,7 +834,7 @@ def add_zotero_dataset(request):
             dataset_name = sanitize_filename(dataset_name)
 
         if use_bm25 == 'Yes':
-            index_document_by_bm25(dataset_name)
+            index_document_by_bm25(dataset_name, language_of_docs='english')
 
         # if dataset_name.error:
         #     return Response({'error':True, 'error_message': dataset_name.error}, content_type="application/json")
@@ -857,9 +859,10 @@ def upload_documents(request):
         chunking_method = request.POST.get('chunking_method')
         use_bm25 = request.POST.get('use_bm25')
         reranker = request.POST.get('reranker')
+        language_of_docs = request.POST.get('documents_language').lower()
 
         if use_bm25 == 'Yes':
-            index_document_by_bm25(dataset_name)
+            index_document_by_bm25(dataset_name, language_of_docs)
         
         # Validate embedding_model input
         embedding_model_request = request.POST.get('embedding_model')

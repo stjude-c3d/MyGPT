@@ -218,7 +218,7 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 										setActiveQuestionID(filteredChatHistory.length > 0 ? filteredChatHistory[0].question_id : 0)
 										}
 									}
-									className='w-full px-3 py-2 text-sm text-nav dark:text-nav-dark bg-white dark:bg-stjude rounded-md border border-slate-400 focus:outline-none focus:border-blue-500'
+									className='w-full px-3 py-2 text-sm text-nav dark:text-nav-dark bg-white dark:bg-gray-500 rounded-md border border-slate-400 focus:outline-none focus:border-blue-500'
 								/>
 							</div>
 							<div className='text-white text-lg font-bold py-2 px-4'>Questions</div>

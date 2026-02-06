@@ -41,6 +41,14 @@ chunking_methods_choice = (
 	('-', '-')
 )
 
+document_languages = (
+	('english', 'english'),
+	('french', 'french'),
+	('spanish', 'spanish'),
+	('portuguese', 'portuguese'),
+	('unknown', 'unknown'),
+)
+
 class Dataset(models.Model):
 	dataset_name = models.CharField(max_length=200, default='-')
 	zotero_id = models.CharField(max_length=40, default='-')
@@ -56,6 +64,7 @@ class Dataset(models.Model):
 	use_bm25 = models.BooleanField(default=False)
 	use_reranker = models.BooleanField(default=False)
 	reranker = models.CharField(max_length=100, default='-')
+	documents_language = models.CharField(max_length=40, choices=document_languages, default='-')
 	distance_function = models.CharField(max_length=40, default='l2')
 	direct_chat_without_docs = models.BooleanField(default=False)
 	dataset_date_time = models.DateTimeField(default=timezone.now, null=True)

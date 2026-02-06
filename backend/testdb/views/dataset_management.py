@@ -34,6 +34,7 @@ def add_dataset_from_upload(request):
     distance_function_r = request.POST.get('distance_function')
     use_bm25 = request.POST.get('use_bm25')
     reranker_r = request.POST.get('reranker')
+    language_of_docs_r = request.POST.get('documents_language')
     use_reranker = False if reranker_r == 'None' else True
 
     # Validate all inputs for code injection
@@ -68,6 +69,12 @@ def add_dataset_from_upload(request):
     else:
         distance_function = distance_function_r
 
+    # Validate language_of_docs input
+    if not language_of_docs_r or not re.match(r'^[a-zA-Z]+$', language_of_docs_r):
+        return False
+    else:
+        language_of_docs = language_of_docs_r.lower()
+
     use_overlap = True if use_overlap == 'Yes' else False
     chunk_size = int(chunk_size)
 
@@ -91,6 +98,7 @@ def add_dataset_from_upload(request):
             use_bm25= True if use_bm25 == 'Yes' else False,
             use_reranker=use_reranker,
             reranker=reranker_r,
+            documents_language=language_of_docs,
             distance_function=distance_function,
             user = user if len(user) else '-',
             user_email = user_email if len(user_email) else '-',

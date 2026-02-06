@@ -11,7 +11,7 @@ from .rerank_utils import (
 )
 
 #this method should be called as part of the upload document process just after adding chunks into the chromadb
-def index_document_by_bm25(dataset_name):
+def index_document_by_bm25(dataset_name, language_of_docs='english'):
     documents_directory = '/code/data/data_chunks' # some other directory can be initalized for storing indices for each document
     # tokenizer_directory = '/code/data/bm25_tokenizer/' + dataset_name
     tokenizer_directory = Path('/code/data/bm25_tokenizer') / dataset_name
@@ -30,7 +30,7 @@ def index_document_by_bm25(dataset_name):
             documents.append('document ' + str(line_json['title']) +  '; page ' + str(line_json['page'])+ '; ' + line_json['content'].strip())
 
     # default tokenizer
-    stemmer = Stemmer.Stemmer("english")
+    stemmer = Stemmer.Stemmer(language_of_docs.lower())
     tokenizer = bm25s.tokenization.Tokenizer(stemmer=stemmer)
     corpus_tokenized = tokenizer.tokenize(documents, return_as='tuple')
 
@@ -40,9 +40,9 @@ def index_document_by_bm25(dataset_name):
     tokenizer.save_vocab(tokenizer_directory)
     tokenizer.save_stopwords(tokenizer_directory)
 
-def retrieve_chunks_by_bm25(queryText, dataset_name, document_title, chunk_count=10, reranker='None'):
+def retrieve_chunks_by_bm25(queryText, dataset_name, document_title, chunk_count=10, reranker='None', language_of_docs='english'):
 
-    stemmer = Stemmer.Stemmer("english")
+    stemmer = Stemmer.Stemmer(language_of_docs.lower())
     # french_stemmer = SnowballStemmer("french")
 
      # Tokenize the queries
@@ -59,7 +59,7 @@ def retrieve_chunks_by_bm25(queryText, dataset_name, document_title, chunk_count
     retriever_loaded = bm25s.BM25.load(f"/code/data/bm25_tokenizer/{dataset_name}", mmap=True, load_corpus=True)
     results, scores = retriever_loaded.retrieve(queriesTokenized, k=chunk_count, return_as="tuple", weight_mask=weight_mask if document_title != '' else None)
 
-    if reranker != 'None':
+    if reranker != 'None' and language_of_docs == 'english':
         # rerank the sources based on cross encoder
         prererank_results = []
         reranked_results = []
@@ -132,13 +132,13 @@ def hybrid_source_combination(vector_sources, bm25_sources):
 
     return combined_sources
 
-def get_answer_distance_by_context_bm25(text, contexts = ['']):
+def get_answer_distance_by_context_bm25(text, contexts = [''], language_of_docs='english'):
 
     tokenizer_directory = Path('/code/data/bm25_tokenizer') / 'answers'
     tokenizer_directory.mkdir(parents=True, exist_ok=True)
 
     # default tokenizer
-    stemmer = Stemmer.Stemmer("english")
+    stemmer = Stemmer.Stemmer(language_of_docs.lower())
     tokenizer = bm25s.tokenization.Tokenizer(stemmer=stemmer)
     corpus_tokenized = tokenizer.tokenize(contexts, return_as='tuple')
 

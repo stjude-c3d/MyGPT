@@ -24,7 +24,9 @@ def home(request):
     defaul_rerankers = [
         {'model_name': 'cross-encoder/qnli-electra-base', 'cutoff_score': 0.1},
         {'model_name': 'cross-encoder/nli-deberta-v3-base', 'cutoff_score': 0.0},
-        {'model_name': 'zeroentropy/zerank-2', 'cutoff_score': 0.3 },
+        {'model_name': 'zeroentropy/zerank-2', 'cutoff_score': 0.3},
+        {'model_name': 'Alibaba-NLP/gte-multilingual-reranker-base', 'cutoff_score': 0.1},
+        {'model_name': 'jinaai/jina-reranker-v2-base-multilingual', 'cutoff_score': 0.1},
     ]
 
     for reranker in defaul_rerankers:
