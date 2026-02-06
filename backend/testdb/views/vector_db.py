@@ -172,6 +172,8 @@ def nearestDataChroma(text, dataset_name, document_title_str='', focused_section
     elif len(results['metadatas'][0]) > 0 and "start" in results['metadatas'][0][0]:
         library_type = 'videos'
 
+    reranked_scores = []
+
     if reranker != 'None' and language_of_docs == 'english':
         # rerank the sources based on cross encoder
         sources = []
@@ -191,7 +193,7 @@ def nearestDataChroma(text, dataset_name, document_title_str='', focused_section
         reranked_sources = rerank_sources(sources, text, reranker)
         
         # reconstruct results from reranked sources
-        titles, pages, starts, stops, chunks, distances, reranked_scores = [], [], [], [], [], [], []
+        titles, pages, starts, stops, chunks, distances = [], [], [], [], [], []
         context = ''
         for source in reranked_sources:
             titles.append(source['filename'])
