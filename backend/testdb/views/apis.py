@@ -555,7 +555,9 @@ def save_answer(request):
 
                 mean_distance_a = round((sum(distances_a) / len(distances_a)), 3)
 
-            rerank_sentiments = rerank_answer_sources(all_contexts, answer_text)
+            rerank_sentiments = []
+            if language_of_docs == 'english':
+                rerank_sentiments = rerank_answer_sources(all_contexts, answer_text)
 
             if use_bm25:
                 try:

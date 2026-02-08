@@ -1,19 +1,28 @@
 from sentence_transformers import CrossEncoder
 from ..models import RerankerModel
+import os
 
-def rerank_sources(sources, question_text, reranker):
+def rerank_sources(sources, question_text, reranker, language_of_docs='english'):
 
-    if reranker == 'default':
+    if reranker == 'default' and language_of_docs == 'english':
         reranker = 'cross-encoder/qnli-electra-base'
+    elif reranker == 'default' and language_of_docs != 'english':
+        reranker = 'cross-encoder/mmarco-mMiniLMv2-L12-H384-v1'
     reranker_model = RerankerModel.objects.filter(model_name__contains=reranker).first()
     if not reranker_model:
+        if language_of_docs == 'english':
+            reranker_model_name = 'cross-encoder/qnli-electra-base'
+            cutoff_score = 0.1
+        else:
+            reranker_model_name = 'cross-encoder/mmarco-mMiniLMv2-L12-H384-v1'
+            cutoff_score = 0.05
         # default to cross-encoder/qnli-electra-base
-        reranker_model = RerankerModel.objects.filter(model_name='cross-encoder/qnli-electra-base').first()
+        reranker_model = RerankerModel.objects.filter(model_name=reranker_model_name).first()
         if not reranker_model:
             # create the default reranker model
             reranker_model = RerankerModel(
-                model_name='cross-encoder/qnli-electra-base',
-                cutoff_score=0.1
+                model_name=reranker_model_name,
+                cutoff_score=cutoff_score
             )
             reranker_model.save()
     
@@ -25,7 +34,11 @@ def rerank_sources(sources, question_text, reranker):
     reranker_full_name = reranker_model.model_name
     cross_encoder_path = f'/code/data/reranker/{reranker_name}'
     try:
-        cross_encoder = CrossEncoder(cross_encoder_path)
+        # check if path exists
+        if not os.path.exists(cross_encoder_path):
+            raise FileNotFoundError
+        else:
+            cross_encoder = CrossEncoder(cross_encoder_path)
     except:
         cross_encoder = CrossEncoder(reranker_full_name)
         cross_encoder.save_pretrained(f'/code/data/reranker/{reranker_name}')

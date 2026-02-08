@@ -33,6 +33,8 @@ const defaultSettings = {
 		'snowflake-arctic-embed:latest',
 		'nomic-embed-text:latest',
 		'nomic-embed-text:v1.5',
+		'qwen3-embedding:latest',
+		'nomic-embed-text-v2-moe:latest',
 		// 'nomic-ai/nomic-embed-text-v1',
 		// 'hf.co/nomic-ai/nomic-embed-text-v2-moe-GGUF:Q4_K_M',
 		// 'hf.co/nomic-ai/nomic-embed-text-v1.5-GGUF:latest',

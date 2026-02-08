@@ -59,7 +59,7 @@ def retrieve_chunks_by_bm25(queryText, dataset_name, document_title, chunk_count
     retriever_loaded = bm25s.BM25.load(f"/code/data/bm25_tokenizer/{dataset_name}", mmap=True, load_corpus=True)
     results, scores = retriever_loaded.retrieve(queriesTokenized, k=chunk_count, return_as="tuple", weight_mask=weight_mask if document_title != '' else None)
 
-    if reranker != 'None' and language_of_docs == 'english':
+    if reranker != 'None':
         # rerank the sources based on cross encoder
         prererank_results = []
         reranked_results = []
@@ -70,7 +70,7 @@ def retrieve_chunks_by_bm25(queryText, dataset_name, document_title, chunk_count
                 'context': result['text'],
                 'bm25_score_raw': scores[0][idx],
             })
-        reranked_results = rerank_sources(prererank_results, queryText, reranker)
+        reranked_results = rerank_sources(prererank_results, queryText, reranker, language_of_docs)
         results_ = []
         for reranked_result in reranked_results:
             results_.append({

@@ -338,6 +338,17 @@ const AddLibrarySettings = (props: {
 					
 					</div>
 					<div className='flex justify-start mx-2 my-1'>
+						<div className='text-nav dark:text-nav-dark p-1 w-48'>Language of Documents</div>
+						<DropdownOptions
+							width={'280px'}
+							optionsList={['English', 'French', 'Spanish', 'Portuguese', 'Unknown']}
+							defaultOption={'English'}
+							dropDownCallback={(option:string)=>{
+								setLanguageOfDocs(option)
+							}}
+						/>
+					</div>
+					<div className='flex justify-start mx-2 my-1'>
 						<div className='text-nav dark:text-nav-dark w-48 p-1'>Embedding Model*</div>
 						<DropdownOptions
 							width={'280px'}
@@ -405,7 +416,7 @@ const AddLibrarySettings = (props: {
 						<div className='text-nav dark:text-nav-dark p-1 w-48'>Reranker</div>
 						<DropdownOptions
 							width={'280px'}
-							optionsList={['qnli-electra-base (default)', 'zerank-2', 'gte-multilingual-reranker', 'None']}
+							optionsList={['qnli-electra-base (default)', 'zerank-2', 'gte-multilingual-reranker', 'mmarco-mMiniLMv2-L12-H384-v1', 'None']}
 							defaultOption={'qnli-electra-base (default)'}
 							dropDownCallback={(option:string)=>{
 								setReranker(option)
@@ -423,17 +434,6 @@ const AddLibrarySettings = (props: {
 									option === 'Inner product' ? 'inner' : 
 									'l2'
 								setDistanceFn(request_option)
-							}}
-						/>
-					</div>
-					<div className='flex justify-start mx-2 my-1'>
-						<div className='text-nav dark:text-nav-dark p-1 w-48'>Language of Documents</div>
-						<DropdownOptions
-							width={'280px'}
-							optionsList={['English', 'French', 'Spanish', 'Portuguese', 'Unknown']}
-							defaultOption={'English'}
-							dropDownCallback={(option:string)=>{
-								setLanguageOfDocs(option)
 							}}
 						/>
 					</div>
@@ -479,6 +479,17 @@ const AddLibrarySettings = (props: {
 								setUploadDocs(docs)
 							}
 						}}/>
+					</div>
+					<div className='flex justify-start mx-2 my-1'>
+						<div className='text-nav dark:text-nav-dark p-1 w-48'>Language of Documents</div>
+						<DropdownOptions
+							width={'270px'}
+							optionsList={['English', 'French', 'Spanish', 'Portuguese', 'Unknown']}
+							defaultOption={'English'}
+							dropDownCallback={(option:string)=>{
+								setLanguageOfDocs(option)
+							}}
+						/>
 					</div>
 					<div className='flex justify-start m-2'>
 						<div className='text-nav dark:text-nav-dark p-1 w-48'>Embedding model</div>
@@ -548,7 +559,7 @@ const AddLibrarySettings = (props: {
 						<div className='text-nav dark:text-nav-dark p-1 w-48'>Reranker</div>
 						<DropdownOptions
 							width={'270px'}
-							optionsList={['qnli-electra-base (default)', 'zerank-2', 'gte-multilingual-reranker', 'None']}
+							optionsList={['qnli-electra-base (default)', 'zerank-2', 'gte-multilingual-reranker', 'mmarco-mMiniLMv2-L12-H384-v1', 'None']}
 							defaultOption={'qnli-electra-base (default)'}
 							dropDownCallback={(option:string)=>{
 								setReranker(option)
@@ -566,17 +577,6 @@ const AddLibrarySettings = (props: {
 									option === 'Inner product' ? 'inner' : 
 									'l2'
 								setDistanceFn(request_option)
-							}}
-						/>
-					</div>
-					<div className='flex justify-start mx-2 my-1'>
-						<div className='text-nav dark:text-nav-dark p-1 w-48'>Language of Documents</div>
-						<DropdownOptions
-							width={'270px'}
-							optionsList={['English', 'French', 'Spanish', 'Portuguese', 'Unknown']}
-							defaultOption={'English'}
-							dropDownCallback={(option:string)=>{
-								setLanguageOfDocs(option)
 							}}
 						/>
 					</div>

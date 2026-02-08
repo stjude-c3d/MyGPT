@@ -139,32 +139,3 @@ services:
     depends_on:
       backend:
         condition: service_healthy
-
-  infinity:
-    image: michaelf34/infinity:latest
-    ports:
-      - "7997:7997"
-    volumes:
-      - ./data:/app/.cache
-    command: >
-      v2
-      --engine optimum
-      --model-id Alibaba-NLP/gte-multilingual-reranker-base
-      --port 7997
-
-  text_embeddings_inference:
-    image: ghcr.io/huggingface/text-embeddings-inference:1.8
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
-    ports:
-      - "7997:7997"
-    volumes:
-      - ./data:/data
-    command: >
-      --model-id Alibaba-NLP/gte-multilingual-reranker-base
-    pull_policy: always
