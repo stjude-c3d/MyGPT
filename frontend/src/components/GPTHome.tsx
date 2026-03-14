@@ -83,6 +83,8 @@ function GPTHome(props:{
 		'gpt-oss', 'qwen3',
 	]
 
+	const isThinkStepSupported = llmswithThinkStepSupport.includes(props.currentSettings.selectedLlm.split(':')[0])
+
 	// get llms from backend
 	useEffect(()=>{
 
@@ -458,7 +460,7 @@ function GPTHome(props:{
 						props.currentSettings.selectedLlm, 
 						question, systemPrompt, addToolsPromt, mcpResponse,
 						props.currentSettings.temperature, props.currentSettings.top_k, props.currentSettings.top_p, 
-						setAnswer, thinkAllowed ? setThought : null
+						setAnswer, isThinkStepSupported ? setThought : null
 					)
 				} else if (props.currentSettings.LLM_server_API_specs === 'sjray'){
 					answerReceived = await SJRayDirectGenerateStream(
@@ -492,7 +494,7 @@ function GPTHome(props:{
 						props.currentSettings.selectedLlm, 
 						question, systemPrompt, false, '',
 						props.currentSettings.temperature, props.currentSettings.top_k, props.currentSettings.top_p, 
-						setNullAnswer, thinkAllowed ? setNullThought : null
+						setNullAnswer, isThinkStepSupported ? setNullThought : null
 					)
 				} else if (props.currentSettings.LLM_server_API_specs === 'sjray'){
 					nullAnswerReceived = await SJRayDirectGenerateStream(
@@ -513,6 +515,7 @@ function GPTHome(props:{
 		if (answerReceived && answer.length !== 0){
 			setAnswers((prevAnswers:any)=>[...prevAnswers, {'response': answer, 'source': props.currentSettings.selectedLlm}])
 			setThoughts((prevThoughts:any)=>[...prevThoughts, thought])
+			setThought('')
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[answer, props.currentSettings.selectedLlm, answerReceived])
@@ -521,6 +524,7 @@ function GPTHome(props:{
 		if (nullAnswerReceived && nullAnswer.length !== 0){
 			setNullAnswers((prevNullAnswers:any)=>[...prevNullAnswers, nullAnswer])
 			setNullThoughts((prevNullThoughts:any)=>[...prevNullThoughts, nullThought])
+			setNullThought('')
 			setShowNullAnswerIndexes((prevShowNullAnswerIndexes:any)=>[...prevShowNullAnswerIndexes, false])
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -617,7 +621,7 @@ function GPTHome(props:{
 		if(messages.length > 0 && answer === '' && !answerReceived && !llmsWithToolSupport.includes(props.currentSettings.selectedLlm.split(':')[0])){
 			// fetch using async await
 			const postData = async () => {
-				const data = await OllamaDirectChatStream(body, setAnswer, thinkAllowed ? setThought : null)
+				const data = await OllamaDirectChatStream(body, setAnswer, isThinkStepSupported ? setThought : null)
 				let answerReceived = data.answerReceived
 				setAnswerReceived(answerReceived)
 			}
@@ -951,6 +955,8 @@ function GPTHome(props:{
 							onKeyUp={
 								(e:any)=>{
 									if (e.keyCode === 13){
+										setThought('')
+										setNullThought('')
 										setQuery((prevQuery:any)=>[...prevQuery, 
 											{'question':searchTerm, 'related': relatedQuery}
 										])
@@ -964,6 +970,8 @@ function GPTHome(props:{
 						className='p-4 mx-2 my-auto bg-white hover:bg-bsk_dark_blue dark:bg-stjude dark:text-white text-bsk_dark_blue font-semibold hover:text-white py-2 px-3 hover:border-transparent rounded-full shadow-md hover:shadow-lg outline-none focus:outline-none h-12'
 						disabled={props.frontendSettings && props.frontendSettings.disable_chat_without_login && !props.currentSettings.loggedin}
 						onClick={() => {
+							setThought('')
+							setNullThought('')
 							setQuery((prevQuery:any)=>[...prevQuery, 
 									{'question':searchTerm, 'related': relatedQuery}
 								])
@@ -1195,7 +1203,7 @@ function GPTHome(props:{
 											>
 												<div className='text-gray-300 text-sm whitespace-pre-wrap overflow-y-auto max-h-48'>
 													<Markdown>
-														{showNullAnswerIndexes[query.length-i-1] === true? nullThoughts[query.length-i-1] : thoughts[thoughts.length-1]}
+														{showNullAnswerIndexes[query.length-i-1] === true? nullThoughts[query.length-i-1] : thoughts[query.length-i-1]}
 													</Markdown>
 												</div>
 											</div>
