@@ -163,7 +163,8 @@ def get_context(request):
             skip_highlight = False
         model_type = Model.objects.get(model_name=model)
         dataset_name = json_request['dataset']
-        document_title = json_request['document_title'] if 'document_title' in json_request else ''
+        # document_title = json_request['document_title'] if 'document_title' in json_request else ''
+        focused_document_titles = json_request['focused_document_titles'] if 'focused_document_titles' in json_request else []
         focused_section = json_request['focused_section'] if 'focused_section' in json_request else ''
         use_default_qrs = json_request['use_default_qrs']
         question_best_distance = json_request['question_best_distance']
@@ -201,7 +202,7 @@ def get_context(request):
             relevance_score = 0
             normalized_distances = []
         else:
-            titles, pages, starts, stops, chunks_txt, distances, reranked_scores = nearestDataChroma(question_text, dataset_name, document_title, focused_section, keywords, embedding_model, maximum_chunks_count, no_cutoff, reranker, language_of_docs)
+            titles, pages, starts, stops, chunks_txt, distances, reranked_scores = nearestDataChroma(question_text, dataset_name, focused_document_titles, focused_section, keywords, embedding_model, maximum_chunks_count, no_cutoff, reranker, language_of_docs)
             vector_sources = []
             distances = [round(dist, 3) for dist in distances]
             relevance_score, normalized_distances = get_relevance_score(distances, embedding_model, True, use_default_qrs, question_best_distance, question_worst_distance)
@@ -209,7 +210,7 @@ def get_context(request):
             bm25_sources = []
             if use_bm25:
                 # get similar chunks using BM25
-                results, scores = retrieve_chunks_by_bm25(question_text, dataset_name, document_title, maximum_chunks_count, reranker, language_of_docs)
+                results, scores = retrieve_chunks_by_bm25(question_text, dataset_name, focused_document_titles, maximum_chunks_count, reranker, language_of_docs)
                 # results, scores = retrieve_chunks_by_bm25(question_text, dataset_name, document_title, 3, reranker)
                 normalized_scores = min_max_normalization(scores, best_bm25_score, worst_bm25_score, False)
                 for idx, result in enumerate(results):

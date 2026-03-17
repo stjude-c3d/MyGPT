@@ -8,13 +8,14 @@ import '@react-pdf-viewer/bookmark/lib/styles/index.css';
 import type { RenderBookmarkItemProps } from '@react-pdf-viewer/bookmark'
 import { pageNavigationPlugin } from '@react-pdf-viewer/page-navigation'
 import '@react-pdf-viewer/default-layout/lib/styles/index.css'
-import { PaperAirplaneIcon, Cog6ToothIcon, PaperClipIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { PaperAirplaneIcon, Cog6ToothIcon, PaperClipIcon, XMarkIcon, CheckIcon } from '@heroicons/react/24/outline'
 import { scaleSequential, interpolateRdYlGn } from 'd3'
 import Markdown from 'react-markdown'
 // import Feedback from './Feedback'
 import { OllamaDirectChatStream, OllamaChatStreamWithToolSupport } from '../utils/OllamaChat'
 import { OllamaDirectGenerateStream } from '../utils/OllamaGenerate'
 import { SJRayDirectGenerateStream } from '../utils/SJRayGenerate'
+import FocusOnDocumentSelect from './DocumentFocusSelect'
 
 
 function GPTHome(props:{
@@ -46,7 +47,7 @@ function GPTHome(props:{
 	const [nullThoughts, setNullThoughts] = useState<any[]>([])
 	const [showNullAnswerIndexes, setShowNullAnswerIndexes] = useState<any>([])
 	const [papers, setPapers] = useState<any[]>([])
-	const [focusedPaper, setFocusedPaper] = useState<any>(null)
+	const [focusedPapers, setFocusedPapers] = useState<string[]>([])
 	const [sections, setSections] = useState<any[]>([])
 	const [focusedSection, setFocusedSection] = useState<any>(null)
 	const [videos, setVideos] = useState<any[]>([])
@@ -81,6 +82,12 @@ function GPTHome(props:{
 
 	const llmswithThinkStepSupport = [
 		'gpt-oss', 'qwen3',
+	]
+
+	const chatModeOptions = [
+		{ value: 'chat_with_documents', label: 'Chat with Documents' },
+		// { value: 'workflow_for_documents', label: 'Workflow for Documents' },
+		{ value: 'direct_chat', label: 'Direct chat with GPTs' },
 	]
 
 	const isThinkStepSupported = llmswithThinkStepSupport.includes(props.currentSettings.selectedLlm.split(':')[0])
@@ -226,7 +233,7 @@ function GPTHome(props:{
 				setSourcePages([])
 				setSourceColorCodes([])
 				setSourceContexts([])
-				setFocusedPaper(null)
+				setFocusedPapers([])
 				setFocusedSection(null)
 			}
 		}
@@ -328,7 +335,7 @@ function GPTHome(props:{
 				model_type: props.currentSettings.selectedLlm,
 				dataset: props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset,
 				new_conversation: query.length === 1 ? true : false,
-				document_title: focusedPaper ? focusedPaper : '',
+				focused_document_titles: focusedPapers,
 				focused_section: focusedSection ? focusedSection.split(' (')[0] : '',
 				maximum_chunks_count: props.currentSettings.maximum_chunks_count,
 				no_cutoff: props.currentSettings.no_chunk_cutoff,
@@ -845,7 +852,6 @@ function GPTHome(props:{
 		setSourcePages([])
 		setSourceContexts([])
 		setSourceColorCodes([])
-		setFocusedPaper(null)
 		setFocusedSection(null)
 		setselectedPaperIdx(0)
 		setSelectedPage(0)
@@ -855,47 +861,48 @@ function GPTHome(props:{
 		setThought('')
 		setNullAnswer('')
 	}
+
+	const selectedChatMode = answerWithoutContext ? 'direct_chat' : 'with_documents'
+
+	const onChatModeChange = (mode: string) => {
+		if (mode === 'chat_with_documents') {
+			setAnswerWithoutContext(true)
+			resetStates()
+			props.settingsCallback({ ...props.currentSettings, selectedDataset: selectedDataset, answerWithoutContext: false, fetchPapers: true })
+			return
+		} else if (mode === 'direct_chat') {
+			setAnswerWithoutContext(false)
+			resetStates()
+			setSelectedDataset(props.currentSettings.selectedDataset)
+			props.settingsCallback({ ...props.currentSettings, selectedDataset: props.currentSettings.selectedLlm + '_direct_chat', answerWithoutContext: true, fetchPapers: false })
+			return
+		}
+		// else if (mode === 'workflow_for_documents') {
+		// 	setAnswerWithoutContext(true)
+		// 	resetStates()
+		// 	props.settingsCallback({ ...props.currentSettings, selectedDataset: selectedDataset, answerWithoutContext: false, fetchPapers: true })
+		// 	return
+		// }
+	}
+
+	const hasFocusedDocuments = focusedPapers.length > 0
+	const isFocusedDocument = (title: string) => focusedPapers.includes(title)
+
 	return (
 		<div className='grid grid-cols-10 p-4 bg-gray-200 dark:bg-neutral-800 max-w-[2000px] mx-auto h-[94vh]'>
 			<div className={'mt-24 p-6 bg-panel3 dark:bg-panel2-dark rounded-lg max-h-[92vh] overflow-y-auto duration-300 ease-in-out peer-checked:bg-panel1 after:w-4 after:h-4 after:bg-white after:rounded-full after:shadow-md after:duration-300' + 
 				(answerWithoutContext ? ' col-span-12 max-w-full' : ' col-span-3 max-w-4xl mr-6') }>
-				{/* Toggle button for chat mode at the top */}
+				{/* Chat mode dropdown at the top */}
 				<div className="flex justify-center mb-8">
-					<div className="flex">
-						<button
-							className={
-								"px-6 py-3 rounded-l-lg font-semibold text-lg " +
-								(answerWithoutContext
-									? "bg-gray-300 text-nav dark:bg-gray-500 dark:text-white"
-									: "bg-nav text-white shadow-lg dark:bg-stjude")
-							}
-							disabled={!answerWithoutContext}
-							onClick={() => {
-								setAnswerWithoutContext(true)
-								resetStates()
-								props.settingsCallback({...props.currentSettings, selectedDataset: selectedDataset, answerWithoutContext: false, fetchPapers: true})
-							}}
-						>
-							Chat with Documents
-						</button>
-						<button
-							className={
-								"px-6 py-3 rounded-r-lg font-semibold text-lg " +
-								(answerWithoutContext
-									? "bg-nav text-white shadow-lg dark:bg-stjude"
-									: "bg-gray-300 text-nav dark:bg-gray-500 dark:text-white")
-							}
-							disabled={answerWithoutContext}
-							onClick={() => {
-								setAnswerWithoutContext(false)
-								resetStates()
-								setSelectedDataset(props.currentSettings.selectedDataset)
-								props.settingsCallback({...props.currentSettings, selectedDataset: props.currentSettings.selectedLlm + '_direct_chat', answerWithoutContext: true, fetchPapers: false})
-							}}
-						>
-							Direct chat with GPTs
-						</button>
-					</div>
+					<select
+						className='px-4 py-3 rounded-lg font-semibold text-lg text-white bg-nav dark:bg-gray-500 dark:text-white shadow-md w-72'
+						value={selectedChatMode}
+						onChange={(e) => onChatModeChange(e.target.value)}
+					>
+						{chatModeOptions.map((option) => (
+							<option key={option.value} value={option.value}>{option.label}</option>
+						))}
+					</select>
 				</div>
 				<div className='text-2xl font-bold text-nav dark:text-nav-dark'>Ask a Question</div>
 				<div className='text-sm text-nav my-2 dark:text-nav-dark'>
@@ -1437,37 +1444,13 @@ function GPTHome(props:{
 				</div>
 				{/* add filter column for documents */}
 				{ papers.length > 1 ?
-					<div className='p-2 text-sm border-slate-400 border-b'>
-						<div className='text-white inline-block px-2 w-40'> Focus on document </div>
-						<select 
-							className={'text-md text-nav dark:bg-stjude dark:text-white py-1 px-2 mx-1 rounded-md w-40 inline-block' + (focusedPaper !== null ? ' bg-panel3' : ' bg-panel2 dark:bg-panel4-dark')}
-							value={focusedPaper}
-							onChange={
-								(e) => {
-									if (e.target.value === 'None'){
-										setFocusedPaper(null)
-																			setselectedPaperIdx(0)
-									} else {
-										setFocusedPaper(e.target.value)
-										setselectedPaperIdx(papers.findIndex((p:any)=>p.paper_title===e.target.value))
-								}}
-							}
-						>
-							<option value={'None'}>None</option>
-							{papers.length ?
-								papers.map((p:any, index:number) => {
-									return (
-										<option key={index} value={p['paper_title']}>{p['paper_title']}</option>
-									)
-								}) :
-								videos.map((v:any, index:number) => {
-									return (
-										<option key={index} value={v['video_title']}>{v['video_title']}</option>
-									)
-								})
-							}
-						</select>
-					</div>	: <></>
+					<FocusOnDocumentSelect
+						papers={papers}
+						videos={videos}
+						focusedPapers={focusedPapers}
+						setFocusedPapers={setFocusedPapers}
+						setSelectedPaperIdx={setselectedPaperIdx}
+					/>	: <></>
 				}
 				{ sections.length ?
 					<div className='p-2 text-sm border-slate-400 border-b'>
@@ -1500,40 +1483,36 @@ function GPTHome(props:{
 				
 				<div className='mb-4 divide-y'>
 					{/* list all the papers */}
-					{ papers.length && focusedPaper === null ?
+					{ papers.length ?
 						papers.map((p:any, index:number)=>
-							<div key={index} className={'p-2 ' + (selectedPaperIdx === index ? ' bg-nav cursor-default': ' bg-panel1 dark:bg-panel4-dark cursor-pointer')}>
-								<div className='text-white text-sm '
+							<div key={index} className={'p-2 ' + (selectedPaperIdx === index ? ' bg-nav': ' bg-panel1 dark:bg-panel4-dark') + (hasFocusedDocuments && !isFocusedDocument(p['paper_title']) ? ' opacity-40 cursor-not-allowed' : selectedPaperIdx === index ? ' cursor-default' : ' cursor-pointer')}>
+								<div className='text-white text-sm flex items-center gap-1'
 									onClick={()=> {
+										if (hasFocusedDocuments && !isFocusedDocument(p['paper_title'])) return
 										setselectedPaperIdx(index)
 										setSelectedPage(0)
 										setFileAttachmentType('paper_attachment')
 									}}	
-								>{p['paper_title']}</div>
-							</div>
-						) :
-						focusedPaper !== null && papers.length ?
-							papers.filter((p:any)=>p['paper_title'] === focusedPaper).map((p:any, index:number)=>
-								<div key={index} className={'p-2 ' + (selectedPaperIdx === papers.findIndex((p:any)=>p.paper_title===focusedPaper) ? ' bg-nav cursor-default': ' bg-panel1 dark:bg-panel4-dark cursor-pointer')}>
-									<div className='text-white text-sm '
-										onClick={()=> {
-											setselectedPaperIdx(index)
-											setSelectedPage(0)
-											setFileAttachmentType('paper_attachment')
-										}}	
-									>{p['paper_title']}</div>
+								>
+									{hasFocusedDocuments && isFocusedDocument(p['paper_title']) ? <CheckIcon className='w-4 h-4 text-green-300 flex-shrink-0' /> : null}
+									{p['paper_title']}
 								</div>
+							</div>
 						) :
 						videos.length ?
 						videos.map((v:any, index:number)=>
-							<div key={index} className={'p-2 ' + (selectedPaperIdx === index ? ' bg-nav cursor-default': ' bg-panel1 dark:bg-panel4-dark cursor-pointer')}>
-								<div className='text-white text-sm '
+							<div key={index} className={'p-2 ' + (selectedPaperIdx === index ? ' bg-nav': ' bg-panel1 dark:bg-panel4-dark') + (hasFocusedDocuments && !isFocusedDocument(v['video_title']) ? ' opacity-40 cursor-not-allowed' : selectedPaperIdx === index ? ' cursor-default' : ' cursor-pointer')}>
+								<div className='text-white text-sm flex items-center gap-1'
 									onClick={()=> {
+										if (hasFocusedDocuments && !isFocusedDocument(v['video_title'])) return
 										setselectedPaperIdx(index)
 										setSelectedPage(0)
 										setFileAttachmentType('paper_attachment')
 									}}	
-								>{v['video_title']}</div>
+								>
+									{hasFocusedDocuments && isFocusedDocument(v['video_title']) ? <CheckIcon className='w-4 h-4 text-green-300 flex-shrink-0' /> : null}
+									{v['video_title']}
+								</div>
 							</div>
 						) : <></>
 					}

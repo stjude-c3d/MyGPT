@@ -40,7 +40,7 @@ def index_document_by_bm25(dataset_name, language_of_docs='english'):
     tokenizer.save_vocab(tokenizer_directory)
     tokenizer.save_stopwords(tokenizer_directory)
 
-def retrieve_chunks_by_bm25(queryText, dataset_name, document_title, chunk_count=10, reranker='None', language_of_docs='english'):
+def retrieve_chunks_by_bm25(queryText, dataset_name, focused_document_titles=[], chunk_count=10, reranker='None', language_of_docs='english'):
 
     stemmer = Stemmer.Stemmer(language_of_docs.lower())
     # french_stemmer = SnowballStemmer("french")
@@ -49,15 +49,23 @@ def retrieve_chunks_by_bm25(queryText, dataset_name, document_title, chunk_count
     queriesTokenized = bm25s.tokenize([queryText], stemmer=stemmer)
     # queriesTokenized = bm25s.tokenize([queryText], stemmer=french_stemmer)
 
-    # if document_title is not empty, get the chunk file and create weight mask for the documents
-    if document_title != '':
+    results = []
+    scores = []
+    # if focused_document_titles is not empty, get the chunk file and create weight mask for the documents
+    if focused_document_titles != []:
         chunk_file = f'/code/data/data_chunks/{dataset_name}.txt'
         with open(chunk_file, 'r') as file:
             chunk_lines = file.readlines()
-        weight_mask = np.array([1 if "'title': '" + str(document_title) + "'" in line else 0 for line in chunk_lines])
+        for document_title in focused_document_titles:
+            weight_mask = np.array([1 if "'title': '" + str(document_title) + "'" in line else 0 for line in chunk_lines])
 
-    retriever_loaded = bm25s.BM25.load(f"/code/data/bm25_tokenizer/{dataset_name}", mmap=True, load_corpus=True)
-    results, scores = retriever_loaded.retrieve(queriesTokenized, k=chunk_count, return_as="tuple", weight_mask=weight_mask if document_title != '' else None)
+            retriever_loaded = bm25s.BM25.load(f"/code/data/bm25_tokenizer/{dataset_name}", mmap=True, load_corpus=True)
+            results_temp, scores_temp = retriever_loaded.retrieve(queriesTokenized, k=chunk_count, return_as="tuple", weight_mask=weight_mask if document_title != '' else None)
+            results.extend(results_temp)
+            scores.extend(scores_temp)
+    else:
+        retriever_loaded = bm25s.BM25.load(f"/code/data/bm25_tokenizer/{dataset_name}", mmap=True, load_corpus=True)
+        results, scores = retriever_loaded.retrieve(queriesTokenized, k=chunk_count, return_as="tuple")
 
     if reranker != 'None':
         # rerank the sources based on cross encoder

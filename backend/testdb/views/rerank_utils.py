@@ -1,6 +1,21 @@
 from sentence_transformers import CrossEncoder
 from ..models import RerankerModel
 import os
+import torch
+
+
+def _load_cross_encoder(model_name_or_path, trust_remote_code=False):
+    """Load CrossEncoder while applying tokenizer regex fix for affected Mistral tokenizers."""
+    try:
+        return CrossEncoder(
+            model_name_or_path,
+            trust_remote_code=trust_remote_code,
+            tokenizer_args={"fix_mistral_regex": True},
+            activation_fn=torch.nn.Sigmoid()
+        )
+    except TypeError:
+        # Backward compatibility for sentence-transformers versions without tokenizer_args.
+        return CrossEncoder(model_name_or_path, trust_remote_code=trust_remote_code)
 
 def rerank_sources(sources, question_text, reranker, language_of_docs='english'):
 
@@ -38,9 +53,9 @@ def rerank_sources(sources, question_text, reranker, language_of_docs='english')
         if not os.path.exists(cross_encoder_path):
             raise FileNotFoundError
         else:
-            cross_encoder = CrossEncoder(cross_encoder_path)
+            cross_encoder = _load_cross_encoder(cross_encoder_path)
     except:
-        cross_encoder = CrossEncoder(reranker_full_name)
+        cross_encoder = _load_cross_encoder(reranker_full_name)
         cross_encoder.save_pretrained(f'/code/data/reranker/{reranker_name}')
 
     RERANK_SCORE_THRESHOLD = reranker_model.cutoff_score
@@ -79,9 +94,9 @@ def rerank_answer_sources(sources, answer_text):
     # check if model is available locally. if not, download and save it
     cross_encoder_path = '/code/data/reranker/cross_encoder_nli_deberta_v3_base'
     try:
-        cross_encoder = CrossEncoder(cross_encoder_path)
+        cross_encoder = _load_cross_encoder(cross_encoder_path)
     except:
-        cross_encoder = CrossEncoder('cross-encoder/nli-deberta-v3-base')
+        cross_encoder = _load_cross_encoder('cross-encoder/nli-deberta-v3-base')
         cross_encoder.save_pretrained('/code/data/reranker/cross_encoder_nli_deberta_v3_base')
 
     reranked_scores = []
