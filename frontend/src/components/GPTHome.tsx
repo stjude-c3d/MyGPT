@@ -335,7 +335,7 @@ function GPTHome(props:{
 				model_type: props.currentSettings.selectedLlm,
 				dataset: props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset,
 				new_conversation: query.length === 1 ? true : false,
-				focused_document_titles: focusedPapers,
+				focused_document_titles: focusedPapers.length ? focusedPapers : [],
 				focused_section: focusedSection ? focusedSection.split(' (')[0] : '',
 				maximum_chunks_count: props.currentSettings.maximum_chunks_count,
 				no_cutoff: props.currentSettings.no_chunk_cutoff,
