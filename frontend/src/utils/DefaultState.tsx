@@ -1,11 +1,12 @@
 const defaultSettings = {
 	showSettings: false,
+	showUpload: false,
 	showLogin: false,
 	loggedin: false,
 	darkMode: false,
 	showFAQ: false,
 	settingsPanels: [ 
-		{key:'datasets', text:'Publication libraries'},
+		{key:'datasets', text:'Document libraries'},
 		{key:'llms', text:'LLMs'},
 		{key:'llm_parameters', text:'Prompt and LLM parameters'},
 		{key:'embedding_models', text:'Embedding Models'},

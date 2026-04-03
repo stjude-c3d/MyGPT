@@ -1,15 +1,19 @@
 import {useState, useEffect} from 'react'
-import Workflow from './Workflow'
+// import Workflow from './Workflow'
 // import { DropdownOptions } from './DropDownMenu'
-import AddLibrarySettings from './AddLibrarySettings'
 import LLMSettings from './LLMSettings'
 import EmbeddingSettings from './EmbeddingSettings'
 import RelevanceScoreSettings from './RelevanceScoresSettings'
-import { MagnifyingGlassMinusIcon, MagnifyingGlassPlusIcon, ChevronUpIcon, ChevronDownIcon, InformationCircleIcon } from '@heroicons/react/24/outline'
+import { 
+	// MagnifyingGlassMinusIcon, MagnifyingGlassPlusIcon, ChevronUpIcon, ChevronDownIcon, 
+	InformationCircleIcon,
+	ArrowTopRightOnSquareIcon
+} from '@heroicons/react/24/outline'
 import MCPClient from './MCPClient'
 
 const Settings = (props:{
 	closeSettings:any,
+	openUpload?:any,
 	defaultSettings:any,
 	currentSettings:any,
 	settingsCallback:any,
@@ -17,8 +21,8 @@ const Settings = (props:{
 	djangoLogin?:any
 }) => {
 	const [activeTab, setActiveTab] = useState(props.currentSettings.selectedPanel || props.defaultSettings.selectedPanel)
-	const [workflowZoomedIn, setWorkflowZoomedIn] = useState(false)
-	const [workflowCollapsed, setWorkflowCollapsed] = useState(false)
+	// const [workflowZoomedIn, setWorkflowZoomedIn] = useState(false)
+	// const [workflowCollapsed, setWorkflowCollapsed] = useState(false)
 
 	const currentSettings = JSON.parse(JSON.stringify(props.currentSettings || props.defaultSettings))
 	const [datasets, setDatasets]:[any, any] = useState([])
@@ -193,7 +197,7 @@ const Settings = (props:{
 		<div className='fixed inset-0 z-50 bg-black bg-opacity-70 flex items-center justify-center'>
 			<div className={'bg-panel1 dark:bg-panel4-dark w-3/4 max-h-[1100px] max-w-[1200px] rounded-lg ' + (window.screen.availHeight < 1000 ? 'h-[95vh]' : 'h-[85vh]')}>
 				<div className='flex justify-between'>
-					<div className='text-2xl font-bold text-white mt-8 mx-8'>Customizations</div>
+					<div className='text-2xl font-bold text-white mt-8 mx-8'>Settings</div>
 					<div className='text-2xl font-bold text-white mt-8 mr-8 cursor-pointer' onClick={props.closeSettings}>x</div>
 				</div>
 				<div className={'flex justify-between my-6 '+ (window.screen.availHeight < 1000 ? 'h-[78vh]' : 'h-[55vh]')}>
@@ -222,7 +226,7 @@ const Settings = (props:{
 					</div>
 					{/* create right side list of settings */}
 					<div className={'w-3/4 bg-panel2 dark:bg-panel2-dark overflow-y-auto ' + (window.screen.availHeight < 1000 ? 'h-[80vh]' : 'h-[55vh]')}>
-						<div className={'mx-4 my-4 px-4 bg-gray-300 rounded-md ' + (workflowZoomedIn ? 'h-[45vh]' : workflowCollapsed ? 'h-8' : 'h-[29vh]')}>
+						{/* <div className={'mx-4 my-4 px-4 bg-gray-300 rounded-md ' + (workflowZoomedIn ? 'h-[45vh]' : workflowCollapsed ? 'h-8' : 'h-[29vh]')}>
 							<div className='flex justify-between m-1'>
 								<div className='text-panel1 text-lg font-bold'>MyGPT Workflow</div>
 								<div className='flex flex-row justify-between'>
@@ -241,16 +245,22 @@ const Settings = (props:{
 								</div>
 							</div>
 							<Workflow focusComponent={activeTab} zoomedIn={workflowZoomedIn} collapsed={workflowCollapsed}/>
-						</div>
+						</div> */}
 						{ activeTab === 'datasets' ?
-							<div className={'px-8 py-2 flex flex-col divide-y ' + (workflowCollapsed ? ' h-[60vh] max-h-[770px]' : ' h-[40vh] max-h-[470px]')}>
-								{/* add new library */}
-								<AddLibrarySettings
-									currentSettings={currentSettings}
-									settingsCallback={props.settingsCallback}
-									user={props.user}
-									djangoLogin={props.djangoLogin}
-								/>
+							// <div className={'px-8 py-2 flex flex-col divide-y ' + (workflowCollapsed ? ' h-[60vh] max-h-[770px]' : ' h-[40vh] max-h-[470px]')}>
+							<div className={'px-8 py-2 flex flex-col divide-y h-[40vh] max-h-[470px]'}>
+								{/* new library button */}
+								{ props.openUpload &&
+								<div className='flex justify-start items-center gap-2 py-3'>
+									<button
+										className='flex items-center gap-2 bg-panel1 dark:bg-panel3-dark text-white text-sm px-4 py-2 rounded-md hover:bg-nav transition ease-in-out'
+										onClick={() => { props.closeSettings(); props.openUpload(); }}
+									>
+										Add New Library
+										<ArrowTopRightOnSquareIcon className='h-4 w-4'/>
+									</button>
+									</div>
+								}
 								{/* list of available libraries */}
 								<div className='flex flex-col justify-start mb-8'>
 									<div className='text-nav dark:text-nav-dark px-2 flex justify-start mt-2 text-lg font-semibold'> Available libraries </div>

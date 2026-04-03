@@ -4,6 +4,7 @@ import { NavBar } from './NavBar'
 import useAuthenticateUser from '../hooks/useAuthenticateUser'
 
 function TopNav(props:{
+  setShowUpload:any,
   setShowSettings:any,
   setShowChatHistory:any,
   setPlotButton:any,
@@ -89,6 +90,8 @@ function TopNav(props:{
             // appLogoLink = {'/'}
             showPlotButton = {false}
             plotButtonCallback = {() => {props.setPlotButton(true)}}
+            showUploadButton = {props.restrictions && (djangoAuthenticated || userAuthenticated) ? true : !props.restrictions ? true : false}
+            uploadButtonCallback = {() => {props.setShowUpload(true)}}
             // showHistoryButton = {props.restrictions && (djangoAuthenticated || userAuthenticated) ? true : !props.restrictions ? true : false}
             showHistoryButton = {true}
             historyButtonCallback = {() => {props.setShowChatHistory(true)}}

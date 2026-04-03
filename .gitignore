@@ -40,3 +40,4 @@ frontend/.env.azure
 backend/data/bm25_tokenizer/*
 label_studio/data/*
 backend/data/reranker/*
+scripts/data/*

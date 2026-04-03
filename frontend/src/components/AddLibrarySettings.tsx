@@ -29,6 +29,7 @@ const AddLibrarySettings = (props: {
   const emptyUploadDocs = Array.from(Array(40).keys()).map((x:any) => {return {title: '', file: null}})
   const [uploadDocs, setUploadDocs] = useState(emptyUploadDocs)
   const [uploadLibrary, setUploadLibrary] = useState(false)
+	const [uploadSettingsMode, setUploadSettingsMode] = useState('Default settings')
   const currentSettings = JSON.parse(JSON.stringify(props.currentSettings))
 
   const [videoLibraryName, setVideoLibraryName] = useState('')
@@ -231,6 +232,7 @@ const AddLibrarySettings = (props: {
 					setZoteroPanel(false)
 					setUploadPanel(true)
 					setVideoPanel(false)
+					setUploadSettingsMode('Default settings')
 				}}
 			>
 				Upload documents
@@ -241,6 +243,7 @@ const AddLibrarySettings = (props: {
 					setZoteroPanel(true)
 					setUploadPanel(false)
 					setVideoPanel(false)
+					setUploadSettingsMode('Default settings')
 				}}
 			>
 				Add Zotero library
@@ -480,108 +483,125 @@ const AddLibrarySettings = (props: {
 							}
 						}}/>
 					</div>
+
 					<div className='flex justify-start mx-2 my-1'>
-						<div className='text-nav dark:text-nav-dark p-1 w-48'>Language of Documents</div>
+						<div className='text-nav dark:text-nav-dark p-1 w-48'>Settings Mode</div>
 						<DropdownOptions
 							width={'270px'}
-							optionsList={['English', 'French', 'Spanish', 'Portuguese', 'Unknown']}
-							defaultOption={'English'}
+							optionsList={['Default settings', 'Advanced settings']}
+							defaultOption={'Default settings'}
 							dropDownCallback={(option:string)=>{
-								setLanguageOfDocs(option)
-							}}
-						/>
-					</div>
-					<div className='flex justify-start m-2'>
-						<div className='text-nav dark:text-nav-dark p-1 w-48'>Embedding model</div>
-						<DropdownOptions
-							width={'270px'}
-							optionsList={props.currentSettings.embedding_models}
-							defaultOption={currentSettings.selectedEmbeddingModel}
-							dropDownCallback={(option:string)=>{
-								props.settingsCallback({...currentSettings, selectedEmbeddingModel: option})
-							}}
-						/>
-					</div>
-					<div className='flex justify-start mx-2 my-1'>
-						<div className='text-nav dark:text-nav-dark p-1 w-48'>Chunking Method</div>
-						<DropdownOptions
-							width={'270px'}
-							optionsList={['Fixed Chunk size', 'Structure preserving']}
-							defaultOption={'Fixed Chunk size'}
-							dropDownCallback={(option:string)=>{
-								setChunkingMethod(option)
-								if (option === 'Fixed Chunk size'){
-									setChunkingMethod('fixed_chunk_size')
-									setChunkSizeActive(true)
-									setChunkSize('500')
-								} else {
-									setChunkingMethod('structure_preserving')
-									setChunkSizeActive(false)
-								}
-							}}
-						/>
-					</div>
-					<div className='flex justify-start mx-6 my-1'>
-						<div className='text-nav dark:text-nav-dark p-1 w-48'>Chunk Size</div>
-						<DropdownOptions
-							width={'200px'}
-							disabled={!chunkSizeActive}
-							optionsList={['500', '750', '1000', '1200']}
-							defaultOption={'1000'}
-							dropDownCallback={(option:string)=>{
-								setChunkSize(option)
-							}}
-						/>
-					</div>
-					<div className='flex justify-start m-2'>
-						<div className='text-nav dark:text-nav-dark p-1 w-48'>Use Overlap</div>
-						<DropdownOptions
-							width={'270px'}
-							optionsList={['Yes', 'No']}
-							defaultOption={'Yes'}
-							dropDownCallback={(option:string)=>{
-								setUseOverlap(option)
-							}}
-						/>
-					</div>
-					<div className='flex justify-start m-2'>
-						<div className='text-nav dark:text-nav-dark p-1 w-48'>Use BM25</div>
-						<DropdownOptions
-							width={'270px'}
-							optionsList={['Yes', 'No']}
-							defaultOption={'Yes'}
-							dropDownCallback={(option:string)=>{
-								setUseBM25(option)
-							}}
-						/>
-					</div>
-					<div className='flex justify-start m-2'>
-						<div className='text-nav dark:text-nav-dark p-1 w-48'>Reranker</div>
-						<DropdownOptions
-							width={'270px'}
-							optionsList={['qnli-electra-base (default)', 'zerank-2', 'gte-multilingual-reranker', 'mmarco-mMiniLMv2-L12-H384-v1', 'None']}
-							defaultOption={'qnli-electra-base (default)'}
-							dropDownCallback={(option:string)=>{
-								setReranker(option)
-							}}
-						/>
-					</div>
-					<div className='flex justify-start m-2'>
-						<div className='text-nav dark:text-nav-dark p-1 w-48'>Distance Function</div>
-						<DropdownOptions
-							width={'270px'}
-							optionsList={['Squared L2', 'Cosine similarity', 'Inner product']}
-							defaultOption={'Squared L2'}
-							dropDownCallback={(option:string)=>{
-								let request_option = option === 'Cosine similarity' ? 'cosine' : 
-									option === 'Inner product' ? 'inner' : 
-									'l2'
-								setDistanceFn(request_option)
+								setUploadSettingsMode(option)
 							}}
 						/>
 					</div>
 
-					<div className='flex justify-center'>
+					{uploadSettingsMode === 'Advanced settings' ?
+						<div className='mt-3 pt-2 border-t border-panel1'>
+							<div className='flex justify-start mx-2 my-1'>
+								<div className='text-nav dark:text-nav-dark p-1 w-48'>Language of Documents</div>
+								<DropdownOptions
+									width={'270px'}
+									optionsList={['English', 'French', 'Spanish', 'Portuguese', 'Unknown']}
+									defaultOption={'English'}
+									dropDownCallback={(option:string)=>{
+										setLanguageOfDocs(option)
+									}}
+								/>
+							</div>
+							<div className='flex justify-start m-2'>
+								<div className='text-nav dark:text-nav-dark p-1 w-48'>Embedding model</div>
+								<DropdownOptions
+									width={'270px'}
+									optionsList={props.currentSettings.embedding_models}
+									defaultOption={currentSettings.selectedEmbeddingModel}
+									dropDownCallback={(option:string)=>{
+										props.settingsCallback({...currentSettings, selectedEmbeddingModel: option})
+									}}
+								/>
+							</div>
+							<div className='flex justify-start mx-2 my-1'>
+								<div className='text-nav dark:text-nav-dark p-1 w-48'>Chunking Method</div>
+								<DropdownOptions
+									width={'270px'}
+									optionsList={['Fixed Chunk size', 'Structure preserving']}
+									defaultOption={'Fixed Chunk size'}
+									dropDownCallback={(option:string)=>{
+										setChunkingMethod(option)
+										if (option === 'Fixed Chunk size'){
+											setChunkingMethod('fixed_chunk_size')
+											setChunkSizeActive(true)
+											setChunkSize('500')
+										} else {
+											setChunkingMethod('structure_preserving')
+											setChunkSizeActive(false)
+										}
+									}}
+								/>
+							</div>
+							<div className='flex justify-start mx-6 my-1'>
+								<div className='text-nav dark:text-nav-dark p-1 w-48'>Chunk Size</div>
+								<DropdownOptions
+									width={'200px'}
+									disabled={!chunkSizeActive}
+									optionsList={['500', '750', '1000', '1200']}
+									defaultOption={'1000'}
+									dropDownCallback={(option:string)=>{
+										setChunkSize(option)
+									}}
+								/>
+							</div>
+							<div className='flex justify-start m-2'>
+								<div className='text-nav dark:text-nav-dark p-1 w-48'>Use Overlap</div>
+								<DropdownOptions
+									width={'270px'}
+									optionsList={['Yes', 'No']}
+									defaultOption={'Yes'}
+									dropDownCallback={(option:string)=>{
+										setUseOverlap(option)
+									}}
+								/>
+							</div>
+							<div className='flex justify-start m-2'>
+								<div className='text-nav dark:text-nav-dark p-1 w-48'>Use BM25</div>
+								<DropdownOptions
+									width={'270px'}
+									optionsList={['Yes', 'No']}
+									defaultOption={'Yes'}
+									dropDownCallback={(option:string)=>{
+										setUseBM25(option)
+									}}
+								/>
+							</div>
+							<div className='flex justify-start m-2'>
+								<div className='text-nav dark:text-nav-dark p-1 w-48'>Reranker</div>
+								<DropdownOptions
+									width={'270px'}
+									optionsList={['qnli-electra-base (default)', 'zerank-2', 'gte-multilingual-reranker', 'mmarco-mMiniLMv2-L12-H384-v1', 'None']}
+									defaultOption={'qnli-electra-base (default)'}
+									dropDownCallback={(option:string)=>{
+										setReranker(option)
+									}}
+								/>
+							</div>
+							<div className='flex justify-start m-2'>
+								<div className='text-nav dark:text-nav-dark p-1 w-48'>Distance Function</div>
+								<DropdownOptions
+									width={'270px'}
+									optionsList={['Squared L2', 'Cosine similarity', 'Inner product']}
+									defaultOption={'Squared L2'}
+									dropDownCallback={(option:string)=>{
+										let request_option = option === 'Cosine similarity' ? 'cosine' :
+											option === 'Inner product' ? 'inner' :
+											'l2'
+										setDistanceFn(request_option)
+									}}
+								/>
+							</div>
+						</div>
+					: <></>}
+
+					<div className='flex justify-center mt-2'>
 						<button className='bg-panel1 dark:bg-panel3-dark text-white px-4 py-2 rounded-md m-2'
 							onClick={() => setUploadLibrary(true)}
 						>Upload documents</button>

@@ -1,8 +1,9 @@
-import '../src/App.css'
+import './App.css'
 import { useState, useEffect } from 'react'
 import TopNav from './components/TopNav'
 import GPTHome from './components/GPTHome'
 import Settings from './components/Settings'
+import UploadMenu from './components/UploadMenu'
 import defaultSettings from './utils/DefaultState'
 import ChatHistory from './components/ChatHistory'
 import Disclaimer from './components/Disclaimer'
@@ -25,6 +26,7 @@ const default_frontend_settings = {
 function App() {  
   const [currentSettings, setCurrentSettings] = useState(defaultSettings)
   const [showSettings, setShowSettings] = useState(currentSettings.showSettings || defaultSettings.showSettings)
+  const [showUpload, setShowUpload] = useState(currentSettings.showUpload || defaultSettings.showUpload)
 
   const [showDisclaimer, setShowDisclaimer] = useState(false)
   const [forceopenDisclaimer, setForceOpenDisclaimer] = useState(false)
@@ -141,7 +143,8 @@ function App() {
     { frontendSettings.azure_login ?
       <MsalProvider instance={msalInstance}>
         <div className='bg-gray-200 dark:bg-zinc-800'>
-        <TopNav 
+        <TopNav
+          setShowUpload={setShowUpload}
           setShowSettings={setShowSettings} 
           setShowChatHistory={setShowChatHistory} 
           setPlotButton={setShowPlotButton}
@@ -151,9 +154,20 @@ function App() {
           darkMode={darkMode}
           darkModeCallback={DarkModeCallback}
         />
+        {showUpload ?
+          <UploadMenu
+            closeUpload={() => setShowUpload(false)}
+            openSettings={() => setShowSettings(true)}
+            currentSettings={currentSettings}
+            settingsCallback={settingsCallback}
+            user={user}
+            djangoLogin={frontendSettings.django_login}
+          /> : <></>
+        }
         {showSettings ?
           <Settings 
-            closeSettings={() => setShowSettings(false)} 
+            closeSettings={() => setShowSettings(false)}
+            openUpload={() => { setShowSettings(false); setShowUpload(true); }}
             defaultSettings={defaultSettings} 
             currentSettings={currentSettings}
             settingsCallback={settingsCallback}
@@ -191,6 +205,7 @@ function App() {
     frontendSettings.django_login ?
     <div className='bg-gray-200'>
       <TopNav 
+        setShowUpload={setShowUpload}
         setShowSettings={setShowSettings} 
         setShowChatHistory={setShowChatHistory} 
         setPlotButton={setShowPlotButton}
@@ -199,9 +214,20 @@ function App() {
         loginCallback={loginCallback}
         darkModeCallback={DarkModeCallback}
       />
+      {showUpload ?
+        <UploadMenu
+          closeUpload={() => setShowUpload(false)}
+          openSettings={() => setShowSettings(true)}
+          currentSettings={currentSettings}
+          settingsCallback={settingsCallback}
+          user={user}
+          djangoLogin={frontendSettings.django_login}
+        /> : <></>
+      }
       {showSettings ?
         <Settings 
-          closeSettings={() => setShowSettings(false)} 
+          closeSettings={() => setShowSettings(false)}
+          openUpload={() => { setShowSettings(false); setShowUpload(true); }}
           defaultSettings={defaultSettings} 
           currentSettings={currentSettings}
           settingsCallback={settingsCallback}
@@ -247,6 +273,7 @@ function App() {
     :
     <div className='bg-gray-200'>
       <TopNav 
+        setShowUpload={setShowUpload}
         setShowSettings={setShowSettings}
         setPlotButton={setShowPlotButton} 
         setShowChatHistory={setShowChatHistory} 
@@ -254,9 +281,20 @@ function App() {
         loginCallback={()=>{}}
         darkModeCallback={DarkModeCallback}
       />
+      {showUpload ?
+        <UploadMenu
+          closeUpload={() => setShowUpload(false)}
+          openSettings={() => setShowSettings(true)}
+          currentSettings={currentSettings}
+          settingsCallback={settingsCallback}
+          user={user}
+          djangoLogin={frontendSettings.django_login}
+        /> : <></>
+      }
       {showSettings ?
         <Settings 
-          closeSettings={() => setShowSettings(false)} 
+          closeSettings={() => setShowSettings(false)}
+          openUpload={() => { setShowSettings(false); setShowUpload(true); }}
           defaultSettings={defaultSettings} 
           currentSettings={currentSettings}
           settingsCallback={settingsCallback}
