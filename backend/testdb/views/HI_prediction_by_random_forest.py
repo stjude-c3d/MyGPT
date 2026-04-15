@@ -88,4 +88,4 @@ def predict_hallucination_index(vector_scores, bm25_scores, sources, rerank_sent
     model = artifact['model']
     X_new = np.array([rf_features], dtype=float)
     proba = model.predict_proba(X_new)[:, 1]
-    return round(float(proba[0]), 2)*100 if len(proba) else 0
+    return round(float(proba[0])*100, 0) if len(proba) else 0

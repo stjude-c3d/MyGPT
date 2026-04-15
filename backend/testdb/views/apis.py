@@ -178,6 +178,16 @@ def get_context(request):
         best_bm25_score = 20
         worst_bm25_score = 0
 
+        semantic_score = 0
+        keyword_score = 0
+        rerank_score = 0
+        relevance_score = 0
+        weight_a = 4 
+        weight_b = -4
+        weight_c = -1
+        relevance_score_min = -5.5
+        relevance_score_max = 3.03
+
         # check if dataset exists or crate a new one
         dataset_exist = Dataset.objects.filter(dataset_name=dataset_name).exists()
         if not dataset_exist:
@@ -202,12 +212,15 @@ def get_context(request):
             vector_sources = []
             bm25_sources = []
             relevance_score = 0
+            semantic_score = 0
+            keyword_score = 0
+            rerank_score = 0
             normalized_distances = []
         else:
             titles, pages, starts, stops, chunks_txt, distances, reranked_scores = nearestDataChroma(question_text, dataset_name, focused_document_titles, focused_section, keywords, embedding_model, maximum_chunks_count, no_cutoff, reranker, language_of_docs)
             vector_sources = []
             distances = [round(dist, 3) for dist in distances]
-            relevance_score, normalized_distances = get_relevance_score(distances, embedding_model, True, use_default_qrs, question_best_distance, question_worst_distance)
+            semantic_score, normalized_distances = get_relevance_score(distances, embedding_model, True, use_default_qrs, question_best_distance, question_worst_distance)
 
             bm25_sources = []
             if use_bm25:
@@ -234,6 +247,8 @@ def get_context(request):
                         'reranked_score': result.get('reranked_score', 0),
                         'vector_distance_raw': 0,
                     })
+                # get average BM25 score for sources
+                keyword_score = round(sum([source['bm25_score'] for source in bm25_sources]) / len(bm25_sources) if bm25_sources else 0, 2)
         # library_type = 'papers' if len(pages) else 'videos'
         library_type = 'papers'
 
@@ -259,7 +274,7 @@ def get_context(request):
             questions = Question.objects.filter(question_text=question_text, model_type=model_type, question_dataset=dataset)
             question = questions[0]
             question.keywords = keywords
-            question.relevance_score = relevance_score if relevance_score <= 100 else 100
+            question.relevance_score = semantic_score if semantic_score <= 100 else 100
             question.save()
             conversation_id = question.conversation.id
             conversation = Conversation.objects.get(id=conversation_id)
@@ -282,7 +297,7 @@ def get_context(request):
                 conversation.save()
             question = Question.objects.create(
                 question_text=question_text,
-                relevance_score=relevance_score if relevance_score <= 100 else 100,
+                relevance_score=semantic_score if semantic_score <= 100 else 100,
                 model_type=model_type,
                 keywords=keywords,
                 question_dataset=dataset,
@@ -317,6 +332,14 @@ def get_context(request):
 
         # combine vector_sources and bm25_sources
         reranked_sources = hybrid_source_combination(vector_sources, bm25_sources)
+        
+        # get average reranked score for sources
+        rerank_score = round(sum([source['reranked_score'] for source in reranked_sources]) / len(reranked_sources) if reranked_sources else 0, 2)
+
+        # calcuate relevance score based on semantic_score, keyword_score and rerank_score with weights determined by sensitivity analysis
+        relevance_score_raw = round((semantic_score/100 * weight_a) + (keyword_score * weight_b) + (rerank_score * weight_c), 2)
+        # normalize relevance score to be between 0 and 100 with min-max normalization using relevance_score_min and relevance_score_max
+        relevance_score = round(min_max_normalization([relevance_score_raw], relevance_score_max, relevance_score_min, False)[0] * 100, 0)
 
         # reranked sources based on vector_score + bm25_score
         # reranked_sources = rerank_sources(combined_sources, question_text)
@@ -401,10 +424,16 @@ def get_context(request):
 
         # combine the vector_scores and bm25_scores and sort them from high to low
         # combined_sources = sorted(combined_sources, key=lambda x: (x['vector_score'] if 'vector_score' in x else 0) + (x['bm25_score'] if 'bm25_score' in x else 0), reverse=True)
-            
+
+        # sort reranked sources by vector_score, then by bm25_score
+        reranked_sources = sorted(reranked_sources, key=lambda x: (x['vector_score'] if 'vector_score' in x else 0) + (x['bm25_score'] if 'bm25_score' in x else 0), reverse=True)
+         
         context_json = {
             'context': full_context,
             'relevance_score': relevance_score if relevance_score <= 100 else 100,
+            'semantic_score': semantic_score if semantic_score <= 100 else 100,
+            'keyword_score': keyword_score*100,
+            'rerank_score': rerank_score*100,
             'sources': reranked_sources if not no_context else []
         }
         
@@ -460,8 +489,11 @@ def get_question_details(request):
                 'rank': source.rank,
                 'secondary_rank': source.secondary_rank,
             })
-        # sort sources by vector_score and bm25_score
-        sources_json = sorted(sources_json, key=lambda x: (x['vector_score'] if 'vector_score' in x else 0) + (x['bm25_score'] if 'bm25_score' in x else 0), reverse=True)
+        # check if sources has rank, if yes, sort by rank or sort sources by vector_score and bm25_score
+        if (sources_json[0]['rank'] != 0):
+            sources_json = sorted(sources_json, key=lambda x: x['rank'])
+        else:
+            sources_json = sorted(sources_json, key=lambda x: (x['vector_score'] if 'vector_score' in x else 0) + (x['bm25_score'] if 'bm25_score' in x else 0), reverse=True)
         answers_json = []
         for answer in answers:
             answers_json.append({
@@ -539,6 +571,17 @@ def save_answer(request):
         best_bm25_score = 20
         worst_bm25_score = 0
 
+        relevance_score_min = -6.42
+        relevance_score_max = 3.65
+        weight_x = 5
+        weight_y = -2
+        weight_z = 0
+
+        semantic_score = 0
+        keyword_score = 0
+        rerank_score = 0
+        relevance_score = 0
+
         # for source in sources:
 
             # if source.vector_distance_raw != 0:
@@ -551,7 +594,7 @@ def save_answer(request):
 
             if distances is None or len(distances) == 0:
                 mean_distance_a = 0
-                relevance_score = 0
+                semantic_score = 0
             else:
                 distances = [round(dist, 3) for dist in distances]
                 distances_a = get_answer_distance_by_context(answer_text, dataset_name, all_contexts, embedding_model)
@@ -572,6 +615,7 @@ def save_answer(request):
                     bm25_scores = min_max_normalization(bm25_scores_raw, best_bm25_score, worst_bm25_score, False)
                     # round to 3 decimals
                     bm25_scores = [round(score, 3) for score in bm25_scores]
+                    keyword_score = round(sum(bm25_scores) / len(bm25_scores) * 100, 2) if bm25_scores else 0
                 except Exception as e:
                     print('Error in BM25 answer distance: ', e)
                     bm25_scores = []
@@ -582,7 +626,7 @@ def save_answer(request):
                 # mean_distance_a += extra_score
         else:
             mean_distance_a = 0
-            relevance_score = 0
+            semantic_score = 0
 
         #  calculate answer relevance score
         if use_default_ars and not no_context:
@@ -616,8 +660,13 @@ def save_answer(request):
         vector_scores = min_max_normalization(vector_distances, best_distance_a, worst_distance_a, False)
         # round to 3 decimals
         vector_scores = [round(score, 3) for score in vector_scores]
+        semantic_score = round(sum(vector_scores) / len(vector_scores) * 100, 2) if vector_scores else 0
 
-        relevance_score = round(((1 - ((mean_distance_a - best_distance_a) / (worst_distance_a - best_distance_a))) * 100),0)
+        # relevance_score = round(((1 - ((mean_distance_a - best_distance_a) / (worst_distance_a - best_distance_a))) * 100),0)
+
+        # get relevance score based on semantic_score, keyword_score and rerank_score with weights determined by sensitivity analysis
+        relevance_score_raw = round((semantic_score/100 * weight_x) + (keyword_score/100 * weight_y) + (rerank_score/100 * weight_z), 2)
+        relevance_score = round(min_max_normalization([relevance_score_raw], relevance_score_max, relevance_score_min, False)[0] * 100, 0)
         if relevance_score < 0:
             relevance_score = 0
         elif relevance_score > 100:
@@ -712,6 +761,8 @@ def save_answer(request):
                 'saved':True, 
                 'mean_distance_a': mean_distance_a,
                 'relevance_score': relevance_score if question_relevance_score != 0 else 0,
+                'semantic_score': semantic_score,
+                'keyword_score': keyword_score,
                 'hallucination_index_by_equation': hallucination_index_by_equation_final,
                 'hallucination_index_by_ml': hallucination_index_by_ml,
                 'sources': new_sources_json,
