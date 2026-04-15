@@ -82,6 +82,8 @@ from .rerank_utils import (
     rerank_answer_sources
 )
 
+from .HI_prediction_by_random_forest import predict_hallucination_index
+
 from ..models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, Model, EmbeddingModel, FrontEndSettings, DisclaimerAgreement, PaperSections
 
 ####################
@@ -370,11 +372,12 @@ def get_context(request):
             # delete previous sources
             Source.objects.filter(question=question).delete()
         for idx, source in enumerate(reranked_sources):
-            chunk = chunks.objects.filter(chunk_text=source['context'], chunk_dataset=dataset)
+            sanitized_context = str(source.get('context', '')).replace("\x00", "\uFFFD")
+            chunk = chunks.objects.filter(chunk_text=sanitized_context, chunk_dataset=dataset)
             Source.objects.create(
                 source_doc=source['document'],
                 source_pointer=source['page'] if library_type == 'papers' else source['start'],
-                context=source['context'].replace("\x00", "\uFFFD"),
+                context=sanitized_context,
                 vector_distance_raw=source.get('vector_distance_raw', 0),
                 vector_score=source.get('vector_score', 0),
                 bm25_score_raw=source.get('bm25_score_raw', 0),
@@ -385,7 +388,7 @@ def get_context(request):
                 question=question,
                 chunk=chunk[0] if chunk.count() else None
             )
-            full_context += source['context'] + "\n\n"
+            full_context += sanitized_context + "\n\n"
             # Determine the color code based on distance or score
             if (source.get('vector_score', 0) > 0.5) or (source.get('bm25_score', 0) > 0.5):
                 source['color_code'] = 'green'
@@ -464,7 +467,8 @@ def get_question_details(request):
             answers_json.append({
                 'answer': answer.answer_text,
                 'relevance_score': answer.relevance_score,
-                'hallucination_index': answer.hallucination_index,
+                'hallucination_index_by_equation': answer.hallucination_index_by_equation,
+                'hallucination_index_by_ml': answer.hallucination_index_by_ml,
                 'answer_no_context': answer.answer_no_context_text,
             })
         # Determine the color code based on distance or score
@@ -633,11 +637,11 @@ def save_answer(request):
         minHI = 0.2
 
         if(question_relevance_score == 0):
-            hallucination_index_raw = a_HI
-            hallucination_index = round((hallucination_index_raw - minHI)/(maxHI - minHI) * 100, 0)
+            hallucination_index_by_equation_raw = a_HI
+            hallucination_index_by_equation = round((hallucination_index_by_equation_raw - minHI)/(maxHI - minHI) * 100, 0)
         else:
-            hallucination_index_raw = a_HI - (b_HI * question_relevance_score/100) - (c_HI * relevance_score/100)
-            hallucination_index = round((hallucination_index_raw - minHI)/(maxHI - minHI) * 100, 0)
+            hallucination_index_by_equation_raw = a_HI - (b_HI * question_relevance_score/100) - (c_HI * relevance_score/100)
+            hallucination_index_by_equation = round((hallucination_index_by_equation_raw - minHI)/(maxHI - minHI) * 100, 0)
 
         # create new sources array with vector_distances and vector_scores
         new_sources = []
@@ -671,11 +675,18 @@ def save_answer(request):
                 'rerank_sentiment': source.rerank_entailment
             })
 
+        hallucination_index_by_ml = 0
+        try:
+            hallucination_index_by_ml = predict_hallucination_index(vector_scores, bm25_scores, sources, rerank_sentiments)
+        except Exception as e:
+            print('Error calculating random forest hallucination probability:', e)
+        
         Answer.objects.create(
             answer_text=answer_text,
             answer_no_context_text=answer_no_context_text,
             relevance_score=relevance_score if question_relevance_score != 0 else 0, 
-            hallucination_index=hallucination_index if hallucination_index < 100 else 100,
+            hallucination_index_by_equation=hallucination_index_by_equation if hallucination_index_by_equation < 100 else 100,
+            hallucination_index_by_ml=hallucination_index_by_ml if hallucination_index_by_ml < 100 else 100,
             ars_lower_range=best_distance_a,
             ars_upper_range=worst_distance_a,
             a_hi=a_HI,
@@ -690,18 +701,19 @@ def save_answer(request):
         # add embeddings to answer
         if not no_context:
             add_embeddings_to_qna(answer_text, 'answer', embedding_model)
-            hallucination_index_final = 0
-            if hallucination_index < 0:
-                hallucination_index_final = 0
-            elif hallucination_index > 100:
-                hallucination_index_final = 100
+            hallucination_index_by_equation_final = 0
+            if hallucination_index_by_equation < 0:
+                hallucination_index_by_equation_final = 0
+            elif hallucination_index_by_equation > 100:
+                hallucination_index_by_equation_final = 100
             else:
-                hallucination_index_final = hallucination_index
+                hallucination_index_by_equation_final = hallucination_index_by_equation
             return Response({
                 'saved':True, 
                 'mean_distance_a': mean_distance_a,
                 'relevance_score': relevance_score if question_relevance_score != 0 else 0,
-                'hallucination_index': hallucination_index_final,
+                'hallucination_index_by_equation': hallucination_index_by_equation_final,
+                'hallucination_index_by_ml': hallucination_index_by_ml,
                 'sources': new_sources_json,
             }, content_type="application/json")
         else:

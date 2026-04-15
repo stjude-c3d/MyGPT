@@ -32,7 +32,7 @@ class QuestionAdmin(admin.ModelAdmin):
     list_display = ['question_text', 'question_dataset', 'relevance_score' ,'conversation', 'saved_date_time']
 
 class AnswerAdmin(admin.ModelAdmin):
-    list_display = ['answer_text', 'model_type', 'relevance_score', 'hallucination_index', 'question', 'saved_date_time']
+    list_display = ['answer_text', 'model_type', 'relevance_score', 'hallucination_index_by_equation', 'hallucination_index_by_ml', 'question', 'saved_date_time']
 
 class SourceAdmin(admin.ModelAdmin):
     list_display = ['source_doc', 'source_pointer', 'vector_score', 'bm25_score', 'rank', 'context', 'question']

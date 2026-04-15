@@ -27,6 +27,16 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 	const [showNullAnswer, setShowNullAnswer] = useState(false)
 	const [selectedDataset, setSelectedDataset] = useState(props.dataset)
 	const [searchQuery, setSearchQuery] = useState('')
+	const [hallucionationIndex, setHallucionationIndex] = useState(0)
+
+	useEffect(() => {
+		if (questionDetails.answers && questionDetails.answers[0]) {
+			const hi = questionDetails.answers[0].hallucination_index_by_ml !== 0 ? questionDetails.answers[0].hallucination_index_by_ml : questionDetails.answers[0].hallucination_index_by_equation
+			setHallucionationIndex(hi)
+		} else {
+			setHallucionationIndex(0)
+		}
+	}, [questionDetails])
 
 	useEffect(() => {
 		// fetch chat history from API
@@ -113,7 +123,8 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 				'LLM Model',
 				'Question Relevance Score',
 				'Answer Relevance Score',
-				'Hallucination Index',
+				'Hallucination Index by equation',
+				'Hallucination Index by ML',
 				'Dataset',
 				'Number of Sources',
 				'Timestamp'
@@ -128,7 +139,8 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 				item.details.llm || 'N/A',
 				item.details.relevance_score || 'N/A',
 				item.details.answers && item.details.answers[0] ? item.details.answers[0].relevance_score : 'N/A',
-				item.details.answers && item.details.answers[0] ? item.details.answers[0].hallucination_index : 'N/A',
+				item.details.answers && item.details.answers[0] ? item.details.answers[0].hallucination_index_by_equation : 'N/A',
+				item.details.answers && item.details.answers[0] ? item.details.answers[0].hallucination_index_by_ml : 'N/A',
 				selectedDataset,
 				item.details.sources ? item.details.sources.length : 0,
 				new Date(item.created_at || Date.now()).toLocaleString()
@@ -305,9 +317,9 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 											</div>
 											<div className='text-white rounded-full text-xs py-1 mt-1'>
 												Hallucination
-												<span style={{ backgroundColor: ConfidenceScoreColor(100 - questionDetails.answers[0].hallucination_index)}} 
-													className= {'py-1 px-2 m-1 rounded-full' + (questionDetails.answers[0].hallucination_index > 80 || questionDetails.answers[0].hallucination_index < 20 ? ' text-white' : ' text-nav')}>
-													{questionDetails.answers[0].hallucination_index + '%'}
+												<span style={{ backgroundColor: ConfidenceScoreColor(100 - hallucionationIndex)}} 
+													className= {'py-1 px-2 m-1 rounded-full' + (hallucionationIndex > 80 || hallucionationIndex < 20 ? ' text-white' : ' text-nav')}>
+													{hallucionationIndex + '%'}
 												</span>
 											</div>
 										</div>

@@ -576,7 +576,7 @@ function GPTHome(props:{
 				.then(data => {
 					console.log(data)
 					setAnswerRelevancescore((prevAnswerRelevancescore:any)=>[...prevAnswerRelevancescore, data.relevance_score])
-					setHallucinationIndex((prevHallucinationIndex:any)=>[...prevHallucinationIndex, data.hallucination_index])
+					setHallucinationIndex((prevHallucinationIndex:any)=>[...prevHallucinationIndex, data.hallucination_index_by_ml])
 					setContext('')
 					setAnswer('')
 					setNullAnswer('')
@@ -688,7 +688,7 @@ function GPTHome(props:{
 				.then(data => {
 					console.log(data)
 					setAnswerRelevancescore((prevAnswerRelevancescore:any)=>[...prevAnswerRelevancescore, data.relevance_score])
-					setHallucinationIndex((prevHallucinationIndex:any)=>[...prevHallucinationIndex, data.hallucination_index])
+					setHallucinationIndex((prevHallucinationIndex:any)=>[...prevHallucinationIndex, data.hallucination_index_by_ml])
 					setAnswer('')
 					setAnswerReceived(false)
 				})
@@ -1520,7 +1520,7 @@ function GPTHome(props:{
 			</div>
 			<div className='col-span-5 mt-24 p-6 max-w-5xl w-full bg-panel2 dark:bg-panel3-dark rounded-r-lg overflow-y-auto max-h-[92vh]'>
 					<div className='overflow-x-auto h-full w-full pt-4 '>
-						<Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.js">
+						<Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
 						<div  className='h-[76vh]'>
 							{papers.length ?
 								<Viewer
