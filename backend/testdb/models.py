@@ -153,6 +153,9 @@ class Conversation(models.Model):
 
 class Question(models.Model):
 	question_text = models.TextField(default='-')
+	semantic_score = models.FloatField(default=0)
+	keyword_score = models.FloatField(default=0)
+	rerank_score = models.FloatField(default=0)
 	relevance_score = models.FloatField(default=0)
 	model_type =  models.ForeignKey('Model', on_delete=models.SET_DEFAULT, default=2)
 	question_type = models.CharField(max_length=40, choices=question_types, default='other')
@@ -175,6 +178,9 @@ class Answer(models.Model):
 	temperature = models.FloatField(default=0.4)
 	top_k = models.IntegerField(default=20)
 	top_p = models.FloatField(default=0.7)
+	semantic_score = models.FloatField(default=0)
+	keyword_score = models.FloatField(default=0)
+	rerank_score = models.FloatField(default=0)
 	relevance_score = models.FloatField(default=0)
 	hallucination_index_by_equation = models.FloatField(default=0)
 	hallucination_index_by_ml = models.FloatField(default=0)

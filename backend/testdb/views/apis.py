@@ -427,7 +427,13 @@ def get_context(request):
 
         # sort reranked sources by vector_score, then by bm25_score
         reranked_sources = sorted(reranked_sources, key=lambda x: (x['vector_score'] if 'vector_score' in x else 0) + (x['bm25_score'] if 'bm25_score' in x else 0), reverse=True)
-         
+
+        question.semantic_score = semantic_score if semantic_score <= 100 else 100
+        question.keyword_score = keyword_score*100 if keyword_score <= 1 else 100
+        question.rerank_score = rerank_score*100 if rerank_score <= 1 else 100
+        question.relevance_score = relevance_score if relevance_score <= 100 else 100
+        question.save()
+
         context_json = {
             'context': full_context,
             'relevance_score': relevance_score if relevance_score <= 100 else 100,
@@ -733,6 +739,9 @@ def save_answer(request):
         Answer.objects.create(
             answer_text=answer_text,
             answer_no_context_text=answer_no_context_text,
+            semantic_score=semantic_score if semantic_score <= 100 else 100,
+            keyword_score=keyword_score if keyword_score <= 100 else 100,
+            rerank_score=rerank_score if rerank_score <= 100 else 100,
             relevance_score=relevance_score if question_relevance_score != 0 else 0, 
             hallucination_index_by_equation=hallucination_index_by_equation if hallucination_index_by_equation < 100 else 100,
             hallucination_index_by_ml=hallucination_index_by_ml if hallucination_index_by_ml < 100 else 100,
