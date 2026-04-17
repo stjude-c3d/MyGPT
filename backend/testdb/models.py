@@ -153,6 +153,7 @@ class Conversation(models.Model):
 
 class Question(models.Model):
 	question_text = models.TextField(default='-')
+	translated_question_text = models.TextField(default='-')
 	semantic_score = models.FloatField(default=0)
 	keyword_score = models.FloatField(default=0)
 	rerank_score = models.FloatField(default=0)
@@ -173,6 +174,7 @@ class Question(models.Model):
 
 class Answer(models.Model):
 	answer_text = models.TextField(default='-')
+	translated_answer_text = models.TextField(default='-')
 	answer_no_context_text = models.TextField(default='-')
 	model_type =  models.ForeignKey('Model', on_delete=models.SET_DEFAULT, default=2)
 	temperature = models.FloatField(default=0.4)

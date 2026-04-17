@@ -74,5 +74,40 @@ export const  OllamaDirectGenerateStream = async (
 	return answerReceived
 }
 
+export const OllamaDirectGenerateNoStream = async (
+	llm:string, 
+	question:string, systemPrompt:string, addToolsPromt:boolean, mcpResponse:string, 
+	temperature:number, top_k:number, top_p:number, 
+	setAnswer:any, setThought:any
+) => {
+	const body = JSON.stringify({
+		model: llm,
+		prompt: question + (addToolsPromt ? '\n\n<tool_response>' + mcpResponse + '</tool_response>' : ''),
+		system: systemPrompt,
+		stream: false,
+		think: setThought ? true : false,
+		options: {
+			temperature: temperature,
+			top_k: top_k,
+			top_p: top_p,
+		}
+	})
+	
+	let content = ''
+	let thought = ''
+	let answerReceived = false
+	const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/generate`, {body, method: 'POST'})
+	const data = await response.json()
+	if (data.response) {
+		content = data.response
+		answerReceived = true
+	}
+	if (setThought && data.thinking){
+		setThought(data.thinking)
+	}
+	setAnswer(content)
+	return answerReceived
+}
+
 
 // Which are the top 3 kinases curated from Kinase curation project. Is there any information about them in this paper? If yes, then list all the mutations that were used in the substrate phosphorylation assay, activity assay or catalytic activity assay.

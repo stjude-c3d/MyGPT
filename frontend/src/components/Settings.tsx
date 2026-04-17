@@ -65,15 +65,17 @@ const Settings = (props:{
 						const dataset_detail = {
 							'dataset': dataset, 
 							'embedding_model': data.filter((d:any)=>d.dataset_name === dataset)[0].embedding_model,
-							'embedding_added': data.filter((d:any)=>d.dataset_name === dataset)[0].embedding_added, 
+							'embedding_added': data.filter((d:any)=>d.dataset_name === dataset)[0].embedding_added,
+							'documents_language': data.filter((d:any)=>d.dataset_name === dataset)[0].documents_language,
 							'direct_chat_without_docs': data.filter((d:any)=>d.dataset_name === dataset)[0].direct_chat_without_docs,
 							'user_group': data.filter((d:any)=>d.dataset_name === dataset)[0].user_group,
 							'details_open': false,
 							'chunking_method': data.filter((d:any)=>d.dataset_name === dataset)[0].chunking_method,
-							'use_bm25': data.filter((d:any)=>d.dataset_name === dataset)[0].use_bm25,
 							'chunksize': data.filter((d:any)=>d.dataset_name === dataset)[0].chunksize,
 							'overlap': data.filter((d:any)=>d.dataset_name === dataset)[0].overlap,
 							'distance_function': data.filter((d:any)=>d.dataset_name === dataset)[0].distance_function,
+							'use_bm25': data.filter((d:any)=>d.dataset_name === dataset)[0].use_bm25,
+							'reranker': data.filter((d:any)=>d.dataset_name === dataset)[0].reranker,
 						}
 						dataset_details.push(dataset_detail)
 					})
@@ -291,6 +293,7 @@ const Settings = (props:{
 																			selectedDataset: dataset.dataset, 
 																			answerWithoutContext: dataset.direct_chat_without_docs,  
 																			fetchPapers: !dataset.direct_chat_without_docs,
+																			DatasetLanguage: dataset.documents_language,
 																			use_default_qrs: true,
 																			use_default_ars: true,
 																			use_default_hi: true,
@@ -319,6 +322,9 @@ const Settings = (props:{
 														{ dataset.details_open ?
 															<div className='flex flex-col rounded-md bg-gray-300 dark:bg-panel3-dark p-2'>
 																<div className='text-nav dark:text-nav-dark text-sm'>
+																	<b>Documents Language:</b> {dataset.documents_language}
+																</div>
+																<div className='text-nav dark:text-nav-dark text-sm'>
 																	<b>Embedding Model:</b> {dataset.embedding_model}
 																</div>
 																<div className='text-nav dark:text-nav-dark text-sm'>
@@ -335,6 +341,9 @@ const Settings = (props:{
 																</div>
 																<div className='text-nav dark:text-nav-dark text-sm'>
 																	<b>BM25:</b> {dataset.use_bm25 ? 'Yes' : 'No'}
+																</div>
+																<div className='text-nav dark:text-nav-dark text-sm'>
+																	<b>Reranker:</b> {dataset.reranker? dataset.reranker : 'None'}
 																</div>
 															</div> : <></>
 														}

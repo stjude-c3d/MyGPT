@@ -20,6 +20,7 @@ const defaultSettings = {
     datasets: ['None'],
 	defaultDataset: 'None',
     selectedDataset: 'None',
+	DatasetLanguage: 'English',
 	fetchDatasets: true,
 	datasetsUpdated: false,
     defaultEmbeddingModel: 'nomic-embed-text:latest',
@@ -43,7 +44,7 @@ const defaultSettings = {
 		'mxbai-embed-large:latest',
 		'granite-embedding:latest'
 	],
-    system_prompt: 'Use following information to answer the question in less than 200 words, try not to use anything else:',
+    system_prompt: '###INSTUCTIONS#### Use following information to answer the question in less than 200 words, try not to use any other information other than provided context. if the information is not in the context, then tell user that information is not found in the documents. ### CONTEXT ####',
 	direct_chat_system_prompt: 'Answer the question in less than 200 words.',
 	maximum_chunks_count: 15,
 	no_chunk_cutoff: false,

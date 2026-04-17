@@ -114,6 +114,30 @@ def get_datasets(request):
         datasets = sorted(datasets, key=lambda x: x['dataset_name'])
         return Response(datasets)
 
+def resolve_dataset_for_user(dataset_name, user_email, user_group):
+    if user_email == '':
+        return Dataset.objects.get(dataset_name=dataset_name, user_email='-')
+
+    dataset_count = Dataset.objects.filter(dataset_name=dataset_name, user_email=user_email).count()
+    if dataset_count == 0 and user_group != '' and user_group != 'user':
+        return Dataset.objects.get(dataset_name=dataset_name, user_group=user_group)
+
+    return Dataset.objects.get(dataset_name=dataset_name, user_email=user_email)
+
+
+@api_view(['POST'])
+def get_dataset_details(request):
+    if request.method == 'POST':
+        json_request = JSONParser().parse(request)
+        dataset_name = json_request['dataset']
+        user_email = json_request['user_email']
+        user_group = json_request['user_group']
+
+        dataset = resolve_dataset_for_user(dataset_name, user_email, user_group)
+        dataset_json = serializers.serialize('json', [dataset])
+        dataset_fields = json.loads(dataset_json)[0]['fields']
+        return Response(dataset_fields)
+
 @api_view(['POST'])
 def get_documents(request):
     if request.method == 'POST':
@@ -121,16 +145,7 @@ def get_documents(request):
         dataset_name = json_request['dataset']
         user_email = json_request['user_email']
         user_group = json_request['user_group']
-        if user_email == '':
-            dataset = Dataset.objects.get(dataset_name=dataset_name, user_email='-')
-        elif user_email != '' or user_email != '-':
-            dataset_count = Dataset.objects.filter(dataset_name=dataset_name, user_email=user_email).count()
-            if dataset_count == 0 and user_group != '' and user_group != 'user':
-                dataset = Dataset.objects.get(dataset_name=dataset_name, user_group=user_group)
-            else:
-                dataset = Dataset.objects.get(dataset_name=dataset_name, user_email=user_email)
-        elif user_group != '' and user_group != 'user':
-            dataset = Dataset.objects.get(dataset_name=dataset_name, user_group=user_group)
+        dataset = resolve_dataset_for_user(dataset_name, user_email, user_group)
 
         papers = Papers.objects.filter(paper_dataset=dataset).order_by('paper_date_time')
         if papers.count() > 0:
@@ -207,6 +222,8 @@ def get_context(request):
         use_reranker = False if reranker == 'None' else True
         language_of_docs = dataset.documents_language if hasattr(dataset, 'documents_language') else 'english'
         keywords = json_request['keywords'] if 'keywords' in json_request else ''
+        translated_text = json_request['translated_text'] if language_of_docs != 'english' and 'translated_text' in json_request else None
+
         if no_context:    
             titles, pages, starts, stops, chunks_txt, distances, reranked_scores = [], [], [], [], [], [], []
             vector_sources = []
@@ -217,7 +234,7 @@ def get_context(request):
             rerank_score = 0
             normalized_distances = []
         else:
-            titles, pages, starts, stops, chunks_txt, distances, reranked_scores = nearestDataChroma(question_text, dataset_name, focused_document_titles, focused_section, keywords, embedding_model, maximum_chunks_count, no_cutoff, reranker, language_of_docs)
+            titles, pages, starts, stops, chunks_txt, distances, reranked_scores = nearestDataChroma(translated_text if translated_text else question_text, dataset_name, focused_document_titles, focused_section, keywords, embedding_model, maximum_chunks_count, no_cutoff, reranker, language_of_docs)
             vector_sources = []
             distances = [round(dist, 3) for dist in distances]
             semantic_score, normalized_distances = get_relevance_score(distances, embedding_model, True, use_default_qrs, question_best_distance, question_worst_distance)
@@ -225,7 +242,7 @@ def get_context(request):
             bm25_sources = []
             if use_bm25:
                 # get similar chunks using BM25
-                results, scores = retrieve_chunks_by_bm25(question_text, dataset_name, focused_document_titles, maximum_chunks_count, reranker, language_of_docs)
+                results, scores = retrieve_chunks_by_bm25(translated_text if translated_text else question_text, dataset_name, focused_document_titles, maximum_chunks_count, reranker, language_of_docs)
                 # results, scores = retrieve_chunks_by_bm25(question_text, dataset_name, document_title, 3, reranker)
                 normalized_scores = min_max_normalization(scores, best_bm25_score, worst_bm25_score, False)
                 for idx, result in enumerate(results):
@@ -297,6 +314,7 @@ def get_context(request):
                 conversation.save()
             question = Question.objects.create(
                 question_text=question_text,
+                translated_question_text=translated_text if translated_text else '',
                 relevance_score=semantic_score if semantic_score <= 100 else 100,
                 model_type=model_type,
                 keywords=keywords,
@@ -537,6 +555,7 @@ def save_answer(request):
         json_request = JSONParser().parse(request)
         question_text = json_request['question_text']
         answer_text = json_request['answer_text']
+        translated_answer_text = json_request['translated_answer_text'] if 'translated_answer_text' in json_request else None
         answer_no_context_text = json_request['answer_no_context_text']
         model = json_request['model_type']
         model_type = Model.objects.get(model_name=model)
@@ -603,7 +622,7 @@ def save_answer(request):
                 semantic_score = 0
             else:
                 distances = [round(dist, 3) for dist in distances]
-                distances_a = get_answer_distance_by_context(answer_text, dataset_name, all_contexts, embedding_model)
+                distances_a = get_answer_distance_by_context(translated_answer_text if translated_answer_text else answer_text, dataset_name, all_contexts, embedding_model)
                 distances_a = [round(dist, 3) for dist in distances_a]
                 vector_distances = distances_a
 
@@ -611,11 +630,11 @@ def save_answer(request):
 
             rerank_sentiments = []
             if language_of_docs == 'english':
-                rerank_sentiments = rerank_answer_sources(all_contexts, answer_text)
+                rerank_sentiments = rerank_answer_sources(all_contexts, translated_answer_text if translated_answer_text else answer_text)
 
             if use_bm25:
                 try:
-                    bm25_docs, bm25_scores_raw = get_answer_distance_by_context_bm25(answer_text, all_contexts, language_of_docs)
+                    bm25_docs, bm25_scores_raw = get_answer_distance_by_context_bm25(translated_answer_text if translated_answer_text else answer_text, all_contexts, language_of_docs)
                     # round bm25_scores to 3 decimals
                     bm25_scores_raw = [round(float(score), 3) for score in bm25_scores_raw]
                     bm25_scores = min_max_normalization(bm25_scores_raw, best_bm25_score, worst_bm25_score, False)
@@ -738,6 +757,7 @@ def save_answer(request):
         
         Answer.objects.create(
             answer_text=answer_text,
+            translated_answer_text=translated_answer_text if translated_answer_text else None,
             answer_no_context_text=answer_no_context_text,
             semantic_score=semantic_score if semantic_score <= 100 else 100,
             keyword_score=keyword_score if keyword_score <= 100 else 100,

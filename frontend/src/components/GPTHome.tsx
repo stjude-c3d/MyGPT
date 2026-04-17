@@ -13,7 +13,7 @@ import { scaleSequential, interpolateRdYlGn } from 'd3'
 import Markdown from 'react-markdown'
 // import Feedback from './Feedback'
 import { OllamaDirectChatStream, OllamaChatStreamWithToolSupport } from '../utils/OllamaChat'
-import { OllamaDirectGenerateStream } from '../utils/OllamaGenerate'
+import { OllamaDirectGenerateStream, OllamaDirectGenerateNoStream } from '../utils/OllamaGenerate'
 import { SJRayDirectGenerateStream } from '../utils/SJRayGenerate'
 import FocusOnDocumentSelect from './DocumentFocusSelect'
 
@@ -26,6 +26,9 @@ function GPTHome(props:{
 }){
 	const [llms, setLlms] = useState<any[]>([])
 	const [selectedDataset, setSelectedDataset] = useState(props.currentSettings.selectedDataset)
+	const [DatasetLanguage, setDatasetLanguage] = useState(props.currentSettings.DatasetLanguage)
+	const [translatedQuery, setTranslatedQuery] = useState('')
+	const [translatedQueryReceived, setTranslatedQueryReceived] = useState(false)
 	const [searchTerm, setSearchTerm] = useState<any>('')
 	const [query, setQuery] = useState<any[]>([])
 	const [questionRelevancescore, setQuestionRelevancescore] = useState<any[]>([])
@@ -42,6 +45,8 @@ function GPTHome(props:{
 	const [nullThought, setNullThought] = useState<any>('')
 	const [nullAnswerReceived, setNullAnswerReceived] = useState<any>(false)
 	const [answers, setAnswers] = useState<any[]>([])
+	const [translatedAnswer, setTranslatedAnswer] = useState('')
+	const [translatedAnswerReceived, setTranslatedAnswerReceived] = useState(false)
 	const [thoughts, setThoughts] = useState<any[]>([])
 	const [nullAnswers, setNullAnswers] = useState<any[]>([])
 	const [nullThoughts, setNullThoughts] = useState<any[]>([])
@@ -89,6 +94,12 @@ function GPTHome(props:{
 		// { value: 'workflow_for_documents', label: 'Workflow for Documents' },
 		{ value: 'direct_chat', label: 'Direct chat with GPTs' },
 	]
+
+	const supportedDatasetLanguages: any = {
+		spanish: { language_to_full: 'Spanish', language_to: 'es' },
+		french: { language_to_full: 'French', language_to: 'fr' },
+		portugese: { language_to_full: 'Portuguese', language_to: 'pt' },
+	}
 
 	const isThinkStepSupported = llmswithThinkStepSupport.includes(props.currentSettings.selectedLlm.split(':')[0])
 
@@ -178,6 +189,41 @@ function GPTHome(props:{
 		}
 		postData()
 	},[props.frontendSettings, props.frontendSettings.django_login])
+
+	// keep dataset language synced with the selected dataset
+	useEffect(() => {
+
+		const requestOptions = {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `${
+					props.frontendSettings && props.frontendSettings.django_login
+						? 'Bearer ' + localStorage.getItem('access')
+						: process.env.NODE_ENV === 'production'
+							? process.env.REACT_APP_AUTH_TOKEN_PROD
+							: process.env.REACT_APP_AUTH_TOKEN_DEV}`
+			},
+			body: JSON.stringify({
+				'dataset': props.currentSettings.selectedDataset,
+				'user_email': props.user && props.user.user_email ? props.user.user_email : '',
+				'user_group': props.user && props.user.otherRoles && props.user.otherRoles.length ? props.user.otherRoles[0] : ''
+			})
+		}
+
+		fetch(`${process.env.REACT_APP_BACKEND_API}api/get_dataset_details/?format=json`, requestOptions)
+			.then(response => response.json())
+			.then(data => {
+				if (data && data.documents_language && props.currentSettings.DatasetLanguage !== data.documents_language) {
+					props.settingsCallback({
+						...props.currentSettings,
+						DatasetLanguage: data.documents_language
+					})
+					setDatasetLanguage(data.documents_language)
+				}
+			})
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [props.currentSettings.selectedDataset])
 	
 	useEffect(()=>{
 		const postData = async () => {
@@ -240,8 +286,6 @@ function GPTHome(props:{
 		postData()
 	// eslint-disable-next-line react-hooks/exhaustive-deps	
 	},[papers, query, props.currentSettings.defaultDataset, props.currentSettings.selectedDataset, props.currentSettings.fetchPapers, props.currentSettings.selectedDataset])
-	
-	// console.log(props.currentSettings.selectedDataset, props.currentSettings.defaultDataset)
 
 	// set section by getting form this api/get_sections/ and dataset_name
 	useEffect(()=>{
@@ -332,6 +376,8 @@ function GPTHome(props:{
 			setTimeout: 10000,
 			body: JSON.stringify({ 
 				text: query[query.length-1] && query[query.length-1].question ? query[query.length-1].question.replaceAll('"',"'") : '',
+				translated_text: translatedQuery ? translatedQuery.replaceAll('"',"'") : '',
+				language_of_docs: DatasetLanguage,
 				model_type: props.currentSettings.selectedLlm,
 				dataset: props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset,
 				new_conversation: query.length === 1 ? true : false,
@@ -405,6 +451,7 @@ function GPTHome(props:{
 								setSourceStops((prevSourceStops:any)=>[...prevSourceStops, []])
 							}
 							setAnswerReceived(false)
+							setTranslatedAnswerReceived(false)
 						}else{
 							setQuestionRelevancescore((prevQuestionRelevancescore:any)=>[...prevQuestionRelevancescore, data.relevance_score])
 							setContext(data.context)
@@ -425,6 +472,7 @@ function GPTHome(props:{
 								setselectedPaperIdx(videoIndex)
 							}
 							setAnswerReceived(false)
+							setTranslatedAnswerReceived(false)
 						}
 					})
 				}
@@ -435,8 +483,12 @@ function GPTHome(props:{
 				if (llmsWithToolSupport.includes(props.currentSettings.selectedLlm.split(':')[0]) && mcpOllamaTools.length > 0){
 					postDataWithTools()
 				}
-				else{
-					getContext()
+				else {
+					if (DatasetLanguage !== 'english' && translatedQueryReceived){
+						getContext()
+					} else if (DatasetLanguage === 'english'){
+						getContext()
+					}
 				}
 
 				if (llmswithThinkStepSupport.includes(props.currentSettings.selectedLlm.split(':')[0])){
@@ -446,7 +498,7 @@ function GPTHome(props:{
 				}
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	},[query])
+	},[query, translatedQueryReceived])
 
 	// get answer from the ollama
 	useEffect(()=>{
@@ -518,6 +570,65 @@ function GPTHome(props:{
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[query, context, props.currentSettings.selectedLlm, nullAnswer])
 
+	// get translated query if dataset language is different than english
+	useEffect(()=>{
+		if (DatasetLanguage === 'english' || DatasetLanguage === '') {
+			setTranslatedQuery('')
+			return
+		}
+		const postData = async () => {
+			if (props.currentSettings.LLM_server_API_specs === 'ollama'){
+				let language_from_full = 'English'
+				let language_from = 'en'
+				let language_to_full = DatasetLanguage != '-' ? supportedDatasetLanguages[DatasetLanguage].language_to_full : ''
+				let language_to = DatasetLanguage != '-' ? supportedDatasetLanguages[DatasetLanguage].language_to : ''
+				let systemPrompt = `You are a professional ${language_from_full} (${language_from}) to ${language_to_full} (${language_to}) translator. Your goal is to accurately convey the meaning and nuances of the original ${language_from_full} text while adhering to ${language_to_full} grammar, vocabulary, and cultural sensitivities. Produce only the ${language_to_full} translation, without any additional explanations or commentary. Please translate the following ${language_from_full} text into ${language_to_full}: `
+				const translatedQueryReceived = await OllamaDirectGenerateNoStream(
+					'translategemma:latest', 
+					query[query.length-1] && query[query.length-1].question ? query[query.length-1].question.replaceAll('"',"'") : '',
+					systemPrompt,
+					false,
+					'',
+					props.currentSettings.temperature, props.currentSettings.top_k, props.currentSettings.top_p, 
+					setTranslatedQuery, false
+				)
+				setTranslatedQueryReceived(translatedQueryReceived)
+			}
+		}
+		postData()
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	},[query, DatasetLanguage])
+
+	// get translated answer if dataset language is different than english
+	useEffect(()=>{
+		if (!answerReceived || answer.length === 0) return
+		if (DatasetLanguage === 'english' || DatasetLanguage === '') {
+			setTranslatedAnswer('')
+			return
+		}
+		const postData = async () => {
+			if (props.currentSettings.LLM_server_API_specs === 'ollama'){
+				let language_from_full = 'English'
+				let language_from = 'en'
+				let language_to_full = supportedDatasetLanguages[DatasetLanguage].language_to_full
+				let language_to = supportedDatasetLanguages[DatasetLanguage].language_to
+				let systemPrompt = `You are a professional ${language_from_full} (${language_from}) to ${language_to_full} (${language_to}) translator. Your goal is to accurately convey the meaning and nuances of the original ${language_from_full} text while adhering to ${language_to_full} grammar, vocabulary, and cultural sensitivities. Produce only the ${language_to_full} translation, without any additional explanations or commentary. Please translate the following ${language_from_full} text into ${language_to_full}: `
+				const translatedAnswerReceived = await OllamaDirectGenerateNoStream(
+					'translategemma:latest', 
+					answer,
+					systemPrompt,
+					false,
+					'',
+					props.currentSettings.temperature, props.currentSettings.top_k, props.currentSettings.top_p, 
+					setTranslatedAnswer, false
+				)
+				setTranslatedAnswerReceived(translatedAnswerReceived)
+			}
+		}
+		postData()
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	},[answer, answerReceived, DatasetLanguage])
+
 	useEffect(()=>{
 		if (answerReceived && answer.length !== 0){
 			setAnswers((prevAnswers:any)=>[...prevAnswers, {'response': answer, 'source': props.currentSettings.selectedLlm}])
@@ -540,6 +651,7 @@ function GPTHome(props:{
 	// save answer to backend database
 	useEffect(()=>{
 		if(answers.length && query.length && nullAnswer.length && nullAnswerReceived && answerReceived && query.length === answers.length){
+			if (DatasetLanguage !== 'english' && !translatedAnswerReceived) return
 			const requestOptions = {
 				method: 'POST',
 				headers: { 
@@ -554,6 +666,7 @@ function GPTHome(props:{
 				body: JSON.stringify({ 
 					question_text: query[query.length-1].question.replaceAll('"',"'"),
 					answer_text: answers[answers.length-1].response.replaceAll('"',"'"),
+					translated_answer_text: translatedAnswer.replaceAll('"',"'"),
 					answer_no_context_text: nullAnswer.replaceAll('"',"'"),
 					model_type: answers[answers.length-1].source,
 					dataset: props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset,
@@ -582,10 +695,12 @@ function GPTHome(props:{
 					setNullAnswer('')
 					setNullAnswerReceived(false)
 					setAnswerReceived(false)
+					setTranslatedAnswer('')
+					setTranslatedAnswerReceived(false)
 				})
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	},[answers, nullAnswer, nullAnswerReceived, query, props.currentSettings.selectedDataset, props.currentSettings.defaultDataset, props.currentSettings.selected_sentence_transformer, answerWithoutContext])
+	},[answers, nullAnswer, nullAnswerReceived, translatedAnswerReceived, query, props.currentSettings.selectedDataset, props.currentSettings.defaultDataset, props.currentSettings.selected_sentence_transformer, answerWithoutContext])
 
 	// get answer from ollama without context while chatting to LLM without documents
 	useEffect(()=>{
