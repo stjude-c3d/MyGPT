@@ -1,6 +1,7 @@
 import {useState, useEffect} from 'react'
 // import Workflow from './Workflow'
 // import { DropdownOptions } from './DropDownMenu'
+import { fetchDatasets, deleteDatasetRequest, addEmbeddingForDatasetRequest, fetchAndRegisterOllamaModels } from '../utils/SettingsAPI'
 import LLMSettings from './LLMSettings'
 import EmbeddingSettings from './EmbeddingSettings'
 import RelevanceScoreSettings from './RelevanceScoresSettings'
@@ -36,29 +37,12 @@ const Settings = (props:{
 
 	const [editPrompt, setEditPrompt] = useState(false)
 	useEffect(()=>{
-		const requestOptions = {
-			method: 'POST',
-			headers: { 
-				'Content-Type': 'application/json',
-				'Authorization': `${
-					props.user && props.djangoLogin ?
-					'Bearer ' + localStorage.getItem('access') :
-					process.env.NODE_ENV === 'production' ? 
-					process.env.REACT_APP_AUTH_TOKEN_PROD 
-					: process.env.REACT_APP_AUTH_TOKEN_DEV}`
-			},
-			body: JSON.stringify(props.djangoLogin ? props.user : props.user ? {
-				'user_email': props.user.user_email, 
-				'user_group': props.user.otherRoles && props.user.otherRoles.length ? props.user.otherRoles[0] : ''
-			} : {
-				'user_email': '', 
-				'user_group': ''
-			})
-		}
+		let isMounted = true
+		const controller = new AbortController()
 		if(!datasets.length || props.currentSettings.fetchDatasets)
-			fetch(`${process.env.REACT_APP_BACKEND_API}api/get_datasets/`, requestOptions)
-				.then(response => response.json())
+			fetchDatasets(props.user, props.djangoLogin, controller.signal)
 				.then(data => {
+					if (!isMounted) return
 					const dataset_names = data.map((d:any)=>d.dataset_name)
 					const dataset_details:any = []
 					dataset_names.forEach((dataset:string) => {
@@ -88,6 +72,8 @@ const Settings = (props:{
 					}
 					setDatasets(dataset_details)
 				})
+				.catch((error) => { if (error?.name !== 'AbortError') console.error(error) })
+		return () => { isMounted = false; controller.abort() }
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[datasets.length, props.currentSettings.fetchDatasets])
 
@@ -96,44 +82,31 @@ const Settings = (props:{
 	},[selectedDataset, currentSettings])
 
 	useEffect(()=>{
+		let isMounted = true
+		const controller = new AbortController()
 		if(deleteDataset){
 			const email = props.user ? props.user.user_email : '-'
-			const requestOptions = {
-				method: 'GET',
-				headers: { 
-					'Content-Type': 'application/json',
-					'Authorization': `${
-						props.user && props.djangoLogin ?
-						'Bearer ' + localStorage.getItem('access') :
-						process.env.NODE_ENV === 'production' ? 
-						process.env.REACT_APP_AUTH_TOKEN_PROD 
-						: process.env.REACT_APP_AUTH_TOKEN_DEV}`
-					}
-			}
-			fetch(`${process.env.REACT_APP_BACKEND_API}api/delete_dataset/?dataset=${deleteDataset}&user_email=${email}`, requestOptions)
-				.then(response => response.json())
+			deleteDatasetRequest(deleteDataset, email, props.user, props.djangoLogin, controller.signal)
 				.then(data => {
+					if (!isMounted) return
 					console.log(data)
 					setDeleteDataset('')
 					const dataset_names = currentSettings.datasets.filter((d:string)=>d !== deleteDataset)
 					props.settingsCallback({...currentSettings, datasets: dataset_names, selectedDataset: dataset_names[0], fetchDatasets: true})
-				
 				})
+				.catch((error) => { if (error?.name !== 'AbortError') console.error(error) })
 		}
+		return () => { isMounted = false; controller.abort() }
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [deleteDataset, currentSettings])
 
 	useEffect(()=>{
+		let isMounted = true
+		const controller = new AbortController()
 		if(addEmbeddingForDataset){
-			const requestOptions = {
-				method: 'GET',
-				headers: { 
-					'Content-Type': 'application/json'
-				}
-			}
-			fetch(`${process.env.REACT_APP_BACKEND_API}api/add_dataset_embeddings/?dataset=${addEmbeddingForDataset}`, requestOptions)
-				.then(response => response.json())
+			addEmbeddingForDatasetRequest(addEmbeddingForDataset, controller.signal)
 				.then(data => {
+					if (!isMounted) return
 					console.log(data)
 					setAddEmbeddingForDataset('')
 					const dataset_details = datasets.map((dataset:any) => {
@@ -142,56 +115,23 @@ const Settings = (props:{
 					})
 					setDatasets(dataset_details)
 				})
+				.catch((error) => { if (error?.name !== 'AbortError') console.error(error) })
 		}
+		return () => { isMounted = false; controller.abort() }
 	}, [addEmbeddingForDataset, datasets])
 
 	// get llms from backend
 	useEffect(()=>{
-
-		const postData = async () => {
-			const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/tags`, {method: 'GET'})
-			const data = await response.json()
-
-			// set models
-			const llms:any = data.models
-				.filter((model:any) => model.details.quantization_level !== 'F16')
-				.map((model:any) => model.name)
-			const llm:any = llms[0]
-			setLlms(llms)
-			setLlm(llm)
-
-			// add new model to backend API
-			let llms_object:any = []
-			data.models.forEach((model:any) => {
-				// let llm_name = model.name.split(':')[0]
-				let llm_name = model.name
-				let llm_size = model.size* 1e-9
-				let llm_size_gb = llm_size.toFixed(2)
-				llms_object.push({name: llm_name, size: llm_size_gb})
+		let isMounted = true
+		const controller = new AbortController()
+		fetchAndRegisterOllamaModels(props.user, props.djangoLogin, controller.signal)
+			.then(({ llms: fetchedLlms, llm: fetchedLlm }) => {
+				if (!isMounted) return
+				setLlms(fetchedLlms)
+				setLlm(fetchedLlm)
 			})
-			
-			const requestOptions = {
-				method: 'POST',
-				headers: { 
-					'Content-Type': 'application/json',
-					'Authorization': `${
-				props.user && props.djangoLogin ?
-				'Bearer ' + localStorage.getItem('access') :
-					process.env.NODE_ENV === 'production' ? 
-					process.env.REACT_APP_AUTH_TOKEN_PROD 
-					: process.env.REACT_APP_AUTH_TOKEN_DEV}`
-				},
-			setConnection: 'keep-alive',
-			keepalive: true,
-			setTimeout: 10000,
-			body: JSON.stringify({'llms': llms_object})
-			}
-			const response2 = await fetch(`${process.env.REACT_APP_BACKEND_API}api/add_ollama_models/`, requestOptions)
-			const data2 = await response2.json()
-			console.log(data2)
-
-		}
-		postData()
+			.catch((error) => { if (error?.name !== 'AbortError') console.error(error) })
+		return () => { isMounted = false; controller.abort() }
 	},[props.user, props.djangoLogin])
 
 	return (

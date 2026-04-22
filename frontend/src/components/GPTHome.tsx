@@ -15,6 +15,7 @@ import Markdown from 'react-markdown'
 import { OllamaDirectChatStream, OllamaChatStreamWithToolSupport } from '../utils/OllamaChat'
 import { OllamaDirectGenerateStream, OllamaDirectGenerateNoStream } from '../utils/OllamaGenerate'
 import { SJRayDirectGenerateStream } from '../utils/SJRayGenerate'
+import { fetchAndRegisterOllamaModels, fetchDatasetDetails, fetchDocuments, fetchSections, addDemoLibraryRequest, fetchContext, saveAnswer } from '../utils/GPTHomeAPI'
 import FocusOnDocumentSelect from './DocumentFocusSelect'
 
 
@@ -106,145 +107,36 @@ function GPTHome(props:{
 
 	// get llms from backend
 	useEffect(()=>{
-
-		const postData = async () => {
-			const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/tags`, {method: 'GET'})
-				const data = await response.json()
-
-				// set models
-				const llms = data.models
-					.filter((model:any) => model.details.quantization_level !== 'F16')
-					.map((model:any) => model.name)
-				setLlms(llms)
-
-				// add new model to backend API
-				let llms_object:any = []
-				data.models.forEach((model:any) => {
-					// let llm_name = model.name.split(':')[0]
-					let llm_name = model.name
-					let llm_size = model.size* 1e-9
-					let llm_size_gb = llm_size.toFixed(2)
-					llms_object.push({name: llm_name, size: llm_size_gb})
-				})
-				
-				const requestOptions = {
-					method: 'POST',
-					headers: { 
-						'Content-Type': 'application/json',
-						'Authorization': `${
-							props.frontendSettings && props.frontendSettings.django_login ?
-							'Bearer ' + localStorage.getItem('access') :
-							process.env.NODE_ENV === 'production' ? 
-							process.env.REACT_APP_AUTH_TOKEN_PROD 
-							: process.env.REACT_APP_AUTH_TOKEN_DEV}`
-					},
-				setConnection: 'keep-alive',
-				keepalive: true,
-				setTimeout: 10000,
-				body: JSON.stringify({'llms': llms_object})
-				}
-				if (props.frontendSettings && props.frontendSettings.django_login && localStorage.getItem('access')?.length){
-					const response2 = await fetch(`${process.env.REACT_APP_BACKEND_API}api/add_ollama_models/`, requestOptions)
-					if (response2.ok){
-						const data2 = await response2.json()
-						console.log(data2)
-					}
-				}
-
-				// add embedding models to backend API
-				const embedding_models = data.models.filter((model:any) => 
-					(model.details.quantization_level === 'F16' && model.details.family.includes('bert')) || (model.details.family.includes('nomic-bert')))
-				
-				let embedding_models_object:any = []
-				embedding_models.forEach((model:any) => {
-					let model_name = model.name
-					let model_size = model.size* 1e-9
-					let model_size_gb = model_size.toFixed(2)
-					embedding_models_object.push({name: model_name, size: model_size_gb, source: 'ollama'})
-				})
-
-				const requestOptions2 = {
-					method: 'POST',
-					headers: { 
-						'Content-Type': 'application/json',
-						'Authorization': `${
-							props.frontendSettings && props.frontendSettings.django_login ?
-							'Bearer ' + localStorage.getItem('access') :
-							process.env.NODE_ENV === 'production' ? 
-							process.env.REACT_APP_AUTH_TOKEN_PROD 
-							: process.env.REACT_APP_AUTH_TOKEN_DEV}`
-					},
-					setConnection: 'keep-alive',
-					keepalive: true,
-					setTimeout: 10000,
-					body: JSON.stringify({'embedding_models': embedding_models_object})
-				}
-				if (props.frontendSettings){
-					const response3 = await fetch(`${process.env.REACT_APP_BACKEND_API}api/add_embedding_models/`, requestOptions2)
-					if (response3.ok){
-						const data3 = await response3.json()
-						console.log(data3)
-					}
-				}
-
-		}
-		postData()
+		let isMounted = true
+		const controller = new AbortController()
+		fetchAndRegisterOllamaModels(props.frontendSettings, controller.signal)
+			.then(llms => { if (isMounted) setLlms(llms) })
+			.catch((error) => { if (error?.name !== 'AbortError') console.error(error) })
+		return () => { isMounted = false; controller.abort() }
 	},[props.frontendSettings, props.frontendSettings.django_login])
 
 	// keep dataset language synced with the selected dataset
 	useEffect(() => {
-
-		const requestOptions = {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'Authorization': `${
-					props.frontendSettings && props.frontendSettings.django_login
-						? 'Bearer ' + localStorage.getItem('access')
-						: process.env.NODE_ENV === 'production'
-							? process.env.REACT_APP_AUTH_TOKEN_PROD
-							: process.env.REACT_APP_AUTH_TOKEN_DEV}`
-			},
-			body: JSON.stringify({
-				'dataset': props.currentSettings.selectedDataset,
-				'user_email': props.user && props.user.user_email ? props.user.user_email : '',
-				'user_group': props.user && props.user.otherRoles && props.user.otherRoles.length ? props.user.otherRoles[0] : ''
-			})
-		}
-
-		fetch(`${process.env.REACT_APP_BACKEND_API}api/get_dataset_details/?format=json`, requestOptions)
-			.then(response => response.json())
+		let isMounted = true
+		const controller = new AbortController()
+		fetchDatasetDetails(props.currentSettings.selectedDataset, props.user, props.frontendSettings, controller.signal)
 			.then(data => {
+				if (!isMounted) return
 				if (data && data.documents_language && props.currentSettings.DatasetLanguage !== data.documents_language) {
-					props.settingsCallback({
-						...props.currentSettings,
-						DatasetLanguage: data.documents_language
-					})
+					props.settingsCallback({ ...props.currentSettings, DatasetLanguage: data.documents_language })
 					setDatasetLanguage(data.documents_language)
 				}
 			})
+			.catch((error) => { if (error?.name !== 'AbortError') console.error(error) })
+		return () => { isMounted = false; controller.abort() }
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [props.currentSettings.selectedDataset])
 	
 	useEffect(()=>{
 		const postData = async () => {
-			const requestOptions = {
-				method: 'POST',
-				headers: { 
-					'Content-Type': 'application/json',
-					'Authorization': `${
-						props.frontendSettings && props.frontendSettings.django
-						? 'Bearer ' + localStorage.getItem('access')
-						: process.env.NODE_ENV === 'production' ?
-						process.env.REACT_APP_AUTH_TOKEN_PROD
-						: process.env.REACT_APP_AUTH_TOKEN_DEV}`
-				},
-				body: JSON.stringify({
-					'dataset': props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset,
-					'user_email': props.user && props.user.user_email ? props.user.user_email : '',
-					'user_group': props.user && props.user.otherRoles && props.user.otherRoles.length ? props.user.otherRoles[0] : ''
-				  })
-			}
+			const dataset = props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset
+				? props.currentSettings.selectedDataset
+				: props.currentSettings.defaultDataset
 
 			if (props.currentSettings.defaultDataset === props.currentSettings.selectedDataset && props.currentSettings.defaultDataset === 'None'){
 				return
@@ -252,8 +144,7 @@ function GPTHome(props:{
 
 			if((!props.currentSettings.answerWithoutContext && !papers.length && !videos.length) || (props.currentSettings.fetchPapers === true) ){
 				setTimeout(async () => {
-					const response = await fetch(`${process.env.REACT_APP_BACKEND_API}api/get_documents/?format=json`, requestOptions)
-					const data = await response.json()
+					const data = await fetchDocuments(dataset, props.user, props.frontendSettings)
 					if (data.dataset_type === 'papers'){ 
 						setPapers(data.documents)
 						setVideos([])
@@ -263,7 +154,6 @@ function GPTHome(props:{
 						setPapers([])
 					}
 				}, 500)
-				
 			}
 			props.settingsCallback({...props.currentSettings, showSettings: false, fetchPapers: false})
 
@@ -290,36 +180,23 @@ function GPTHome(props:{
 
 	// set section by getting form this api/get_sections/ and dataset_name
 	useEffect(()=>{
-		const requestOptions = {
-			method: 'POST',
-			headers: { 
-				'Content-Type': 'application/json',
-				'Authorization': `${
-					props.frontendSettings && props.frontendSettings.django_login ?
-					'Bearer ' + localStorage.getItem('access') :
-					process.env.NODE_ENV === 'production' ?
-					process.env.REACT_APP_AUTH_TOKEN_PROD
-					: process.env.REACT_APP_AUTH_TOKEN_DEV}`
-			},
-			body: JSON.stringify({
-				dataset_name: props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset
-			})
-		}
+		let isMounted = true
+		const controller = new AbortController()
+		const datasetName = props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset
+			? props.currentSettings.selectedDataset
+			: props.currentSettings.defaultDataset
 
 		if (props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset && props.currentSettings.selectedDataset !== 'None'){
-			fetch(`${process.env.REACT_APP_BACKEND_API}api/get_sections/?format=json`, requestOptions)
-				.then(response => response.json())
+			fetchSections(datasetName, props.frontendSettings, controller.signal)
 				.then(data => {
-					if (data.sections && data.sections.length){
-						setSections(data.sections)
-					}else{
-						setSections([])
-					}
+					if (!isMounted) return
+					setSections(data.sections && data.sections.length ? data.sections : [])
 				})
-		}
-		else{
+				.catch((error) => { if (error?.name !== 'AbortError') console.error(error) })
+		} else {
 			setSections([])
 		}
+		return () => { isMounted = false; controller.abort() }
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[props.currentSettings.selectedDataset, props.currentSettings.defaultDataset])
 
@@ -330,30 +207,19 @@ function GPTHome(props:{
 
 	// add demo library
 	useEffect(()=>{
+		let isMounted = true
+		const controller = new AbortController()
 		if(addDemoLibrary){
-			const requestOptions = {
-				method: 'GET',
-				headers: { 
-					'Content-Type': 'application/json',
-					'Authorization': `${
-						props.frontendSettings && props.frontendSettings.django_login ?
-						'Bearer ' + localStorage.getItem('access') :
-						process.env.NODE_ENV === 'production' ? 
-						process.env.REACT_APP_AUTH_TOKEN_PROD 
-						: process.env.REACT_APP_AUTH_TOKEN_DEV}`
-				},
-				body: JSON.stringify({
-					sentence_transformer: props.currentSettings.selected_sentence_transformer
-				})
-			}
-			fetch(`${process.env.REACT_APP_BACKEND_API}api/add_demo_library/?format=json`, requestOptions)
-				.then(response => response.json())
+			addDemoLibraryRequest(props.currentSettings.selected_sentence_transformer, props.frontendSettings, controller.signal)
 				.then(data => {
+					if (!isMounted) return
 					console.log(data)
 					setAddDemoLibrary(false)
-					props.settingsCallback({...props.currentSettings, selectedDataset: 'GPCR' , showSettings: false, fetchPapers: true})
+					props.settingsCallback({...props.currentSettings, selectedDataset: 'GPCR', showSettings: false, fetchPapers: true})
 				})
+				.catch((error) => { if (error?.name !== 'AbortError') console.error(error) })
 		}
+		return () => { isMounted = false; controller.abort() }
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[addDemoLibrary])
 	
@@ -361,39 +227,24 @@ function GPTHome(props:{
 	useEffect(()=>{
 		// setAnswers([])
 		// setSourceReceived(false)
-		const requestOptions = {
-			method: 'POST',
-			headers: { 
-				'Content-Type': 'application/json',
-				'Authorization': `${
-					props.frontendSettings && props.frontendSettings.django_login ?
-					'Bearer ' + localStorage.getItem('access') :
-					process.env.NODE_ENV === 'production' ? 
-					process.env.REACT_APP_AUTH_TOKEN_PROD 
-					: process.env.REACT_APP_AUTH_TOKEN_DEV}`
-			},
-			setConnection: 'keep-alive',
-			keepalive: true,
-			setTimeout: 10000,
-			body: JSON.stringify({ 
-				text: query[query.length-1] && query[query.length-1].question ? query[query.length-1].question.replaceAll('"',"'") : '',
-				translated_text: translatedQuery ? translatedQuery.replaceAll('"',"'") : '',
-				language_of_docs: DatasetLanguage,
-				model_type: props.currentSettings.selectedLlm,
-				dataset: props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset,
-				new_conversation: query.length === 1 ? true : false,
-				focused_document_titles: focusedPapers.length ? focusedPapers : [],
-				focused_section: focusedSection ? focusedSection.split(' (')[0] : '',
-				maximum_chunks_count: props.currentSettings.maximum_chunks_count,
-				no_cutoff: props.currentSettings.no_chunk_cutoff,
-				related_query: relatedQuery,
-				previous_query: query.length > 1 ? query[query.length-2].question.replaceAll('"',"'") : '',
-				no_context: answerWithoutContext,
-				sentence_transformer: props.currentSettings.selected_sentence_transformer,
-				use_default_qrs: props.currentSettings.use_default_qrs,
-				question_best_distance: props.currentSettings.relevance_score_cutoff.question_best,
-				question_worst_distance: props.currentSettings.relevance_score_cutoff.question_worst,
-			})
+		const contextRequestBody = { 
+			text: query[query.length-1] && query[query.length-1].question ? query[query.length-1].question.replaceAll('"',"'") : '',
+			translated_text: translatedQuery ? translatedQuery.replaceAll('"',"'") : '',
+			language_of_docs: DatasetLanguage,
+			model_type: props.currentSettings.selectedLlm,
+			dataset: props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset,
+			new_conversation: query.length === 1 ? true : false,
+			focused_document_titles: focusedPapers.length ? focusedPapers : [],
+			focused_section: focusedSection ? focusedSection.split(' (')[0] : '',
+			maximum_chunks_count: props.currentSettings.maximum_chunks_count,
+			no_cutoff: props.currentSettings.no_chunk_cutoff,
+			related_query: relatedQuery,
+			previous_query: query.length > 1 ? query[query.length-2].question.replaceAll('"',"'") : '',
+			no_context: answerWithoutContext,
+			sentence_transformer: props.currentSettings.selected_sentence_transformer,
+			use_default_qrs: props.currentSettings.use_default_qrs,
+			question_best_distance: props.currentSettings.relevance_score_cutoff.question_best,
+			question_worst_distance: props.currentSettings.relevance_score_cutoff.question_worst,
 		}
 		const postDataWithTools = async () => {
 			const toolsBody:any = {
@@ -424,20 +275,15 @@ function GPTHome(props:{
 			if (ollamaData && ollamaData.answerReceived) {
 				setAnswerReceived(ollamaData.answerReceived)
 				let answer = ollamaData.content;
-				let requestOptionsBody: any = JSON.parse(requestOptions.body);
-				requestOptionsBody['text'] = requestOptionsBody['text'] + '<tool_response>' + answer + '</tool_response>';
+				contextRequestBody['text'] = contextRequestBody['text'] + '<tool_response>' + answer + '</tool_response>';
 				setMcpResponse(answer)
-				// requestOptionsBody['text'] = answer + '
-				requestOptions.body = JSON.stringify(requestOptionsBody);
 				getContext();
 			}
 		}
 
 		const getContext = () => {
 			setRelatedQuery(false)
-			let llm_endpoint = 'get_context'
-				fetch(`${process.env.REACT_APP_BACKEND_API}api/${llm_endpoint}/?format=json`, requestOptions)
-					.then(response => response.json())
+				fetchContext(contextRequestBody, props.frontendSettings)
 					.then((data:any) => {
 						if (data.relevance_score === 0){
 							setQuestionRelevancescore((prevQuestionRelevancescore:any)=>[...prevQuestionRelevancescore, data.relevance_score])
@@ -476,6 +322,7 @@ function GPTHome(props:{
 							setTranslatedAnswerReceived(false)
 						}
 					})
+					.catch((error) => { console.error(error) })
 				}
 
 			if(query.length && query.length !== answers.length){
@@ -653,40 +500,27 @@ function GPTHome(props:{
 	useEffect(()=>{
 		if(answers.length && query.length && nullAnswer.length && nullAnswerReceived && answerReceived && query.length === answers.length){
 			if (DatasetLanguage !== 'english' && !translatedAnswerReceived) return
-			const requestOptions = {
-				method: 'POST',
-				headers: { 
-					'Content-Type': 'application/json',
-					'Authorization': `${
-						props.frontendSettings && props.frontendSettings.django_login ?
-						'Bearer ' + localStorage.getItem('access') :
-						process.env.NODE_ENV === 'production' ? 
-						process.env.REACT_APP_AUTH_TOKEN_PROD 
-						: process.env.REACT_APP_AUTH_TOKEN_DEV}`
-				},
-				body: JSON.stringify({ 
-					question_text: query[query.length-1].question.replaceAll('"',"'"),
-					answer_text: answers[answers.length-1].response.replaceAll('"',"'"),
-					translated_answer_text: translatedAnswer.replaceAll('"',"'"),
-					answer_no_context_text: nullAnswer.replaceAll('"',"'"),
-					model_type: answers[answers.length-1].source,
-					dataset: props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset,
-					sentence_transformer: props.currentSettings.selected_sentence_transformer,
-					no_context: answerWithoutContext,
-					use_default_ars: props.currentSettings.use_default_ars,
-					answer_best_distance: props.currentSettings.relevance_score_cutoff.answer_best,
-					answer_worst_distance: props.currentSettings.relevance_score_cutoff.answer_worst,
-					use_default_hi: props.currentSettings.use_default_hi,
-					a_hi: props.currentSettings.relevance_score_cutoff.HIa,
-					b_hi: props.currentSettings.relevance_score_cutoff.HIb,
-					c_hi: props.currentSettings.relevance_score_cutoff.HIc,
-					temperature: props.currentSettings.temperature,
-					top_k: props.currentSettings.top_k,
-					top_p: props.currentSettings.top_p,
-				})
+			const body = { 
+				question_text: query[query.length-1].question.replaceAll('"',"'"),
+				answer_text: answers[answers.length-1].response.replaceAll('"',"'"),
+				translated_answer_text: translatedAnswer.replaceAll('"',"'"),
+				answer_no_context_text: nullAnswer.replaceAll('"',"'"),
+				model_type: answers[answers.length-1].source,
+				dataset: props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset,
+				sentence_transformer: props.currentSettings.selected_sentence_transformer,
+				no_context: answerWithoutContext,
+				use_default_ars: props.currentSettings.use_default_ars,
+				answer_best_distance: props.currentSettings.relevance_score_cutoff.answer_best,
+				answer_worst_distance: props.currentSettings.relevance_score_cutoff.answer_worst,
+				use_default_hi: props.currentSettings.use_default_hi,
+				a_hi: props.currentSettings.relevance_score_cutoff.HIa,
+				b_hi: props.currentSettings.relevance_score_cutoff.HIb,
+				c_hi: props.currentSettings.relevance_score_cutoff.HIc,
+				temperature: props.currentSettings.temperature,
+				top_k: props.currentSettings.top_k,
+				top_p: props.currentSettings.top_p,
 			}
-			fetch(`${process.env.REACT_APP_BACKEND_API}api/save_answer/?format=json`, requestOptions)
-				.then(response => response.json())
+			saveAnswer(body, props.frontendSettings)
 				.then(data => {
 					console.log(data)
 					setAnswerRelevancescore((prevAnswerRelevancescore:any)=>[...prevAnswerRelevancescore, data.relevance_score])
@@ -699,6 +533,7 @@ function GPTHome(props:{
 					setTranslatedAnswer('')
 					setTranslatedAnswerReceived(false)
 				})
+				.catch((error) => console.error(error))
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[answers, nullAnswer, nullAnswerReceived, translatedAnswerReceived, query, props.currentSettings.selectedDataset, props.currentSettings.defaultDataset, props.currentSettings.selected_sentence_transformer, answerWithoutContext])
@@ -768,39 +603,26 @@ function GPTHome(props:{
 	// save answer to backend database without context
 	useEffect(()=>{
 		if(answers.length && query.length && answer.length !== 0 && answerReceived && query.length === answers.length && answerWithoutContext){
-			const requestOptions = {
-				method: 'POST',
-				headers: { 
-					'Content-Type': 'application/json',
-					'Authorization': `${
-						props.frontendSettings && props.frontendSettings.django_login ?
-						'Bearer ' + localStorage.getItem('access') :
-						process.env.NODE_ENV === 'production' ?
-						process.env.REACT_APP_AUTH_TOKEN_PROD
-						: process.env.REACT_APP_AUTH_TOKEN_DEV}`
-				},
-				body: JSON.stringify({ 
-					question_text: query[query.length-1].question.replaceAll('"',"'"),
-					answer_text: answer.replaceAll('"',"'"),
-					answer_no_context_text: '',
-					model_type: props.currentSettings.selectedLlm,
-					dataset: props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset,
-					sentence_transformer: props.currentSettings.selected_sentence_transformer,
-					no_context: answerWithoutContext,
-					use_default_ars: props.currentSettings.use_default_ars,
-					answer_best_distance: props.currentSettings.relevance_score_cutoff.answer_best,
-					answer_worst_distance: props.currentSettings.relevance_score_cutoff.answer_worst,
-					use_default_hi: props.currentSettings.use_default_hi,
-					a_hi: props.currentSettings.relevance_score_cutoff.HIa,
-					b_hi: props.currentSettings.relevance_score_cutoff.HIb,
-					c_hi: props.currentSettings.relevance_score_cutoff.HIc,
-					temperature: props.currentSettings.temperature,
-					top_k: props.currentSettings.top_k,
-					top_p: props.currentSettings.top_p,
-				})
+			const body = { 
+				question_text: query[query.length-1].question.replaceAll('"',"'"),
+				answer_text: answer.replaceAll('"',"'"),
+				answer_no_context_text: '',
+				model_type: props.currentSettings.selectedLlm,
+				dataset: props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset,
+				sentence_transformer: props.currentSettings.selected_sentence_transformer,
+				no_context: answerWithoutContext,
+				use_default_ars: props.currentSettings.use_default_ars,
+				answer_best_distance: props.currentSettings.relevance_score_cutoff.answer_best,
+				answer_worst_distance: props.currentSettings.relevance_score_cutoff.answer_worst,
+				use_default_hi: props.currentSettings.use_default_hi,
+				a_hi: props.currentSettings.relevance_score_cutoff.HIa,
+				b_hi: props.currentSettings.relevance_score_cutoff.HIb,
+				c_hi: props.currentSettings.relevance_score_cutoff.HIc,
+				temperature: props.currentSettings.temperature,
+				top_k: props.currentSettings.top_k,
+				top_p: props.currentSettings.top_p,
 			}
-			fetch(`${process.env.REACT_APP_BACKEND_API}api/save_answer/?format=json`, requestOptions)
-				.then(response => response.json())
+			saveAnswer(body, props.frontendSettings)
 				.then(data => {
 					console.log(data)
 					setAnswerRelevancescore((prevAnswerRelevancescore:any)=>[...prevAnswerRelevancescore, data.relevance_score])
@@ -808,6 +630,7 @@ function GPTHome(props:{
 					setAnswer('')
 					setAnswerReceived(false)
 				})
+				.catch((error) => console.error(error))
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[answers, query, answerWithoutContext, answerReceived, answer])
