@@ -580,8 +580,8 @@ function GPTHome(props:{
 			if (props.currentSettings.LLM_server_API_specs === 'ollama'){
 				let language_from_full = 'English'
 				let language_from = 'en'
-				let language_to_full = DatasetLanguage != '-' ? supportedDatasetLanguages[DatasetLanguage].language_to_full : ''
-				let language_to = DatasetLanguage != '-' ? supportedDatasetLanguages[DatasetLanguage].language_to : ''
+				let language_to_full = DatasetLanguage !== '-' ? supportedDatasetLanguages[DatasetLanguage].language_to_full : ''
+				let language_to = DatasetLanguage !== '-' ? supportedDatasetLanguages[DatasetLanguage].language_to : ''
 				let systemPrompt = `You are a professional ${language_from_full} (${language_from}) to ${language_to_full} (${language_to}) translator. Your goal is to accurately convey the meaning and nuances of the original ${language_from_full} text while adhering to ${language_to_full} grammar, vocabulary, and cultural sensitivities. Produce only the ${language_to_full} translation, without any additional explanations or commentary. Please translate the following ${language_from_full} text into ${language_to_full}: `
 				const translatedQueryReceived = await OllamaDirectGenerateNoStream(
 					'translategemma:latest', 
