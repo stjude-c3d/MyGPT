@@ -94,7 +94,7 @@ export const OllamaDirectGenerateNoStream = async (
 	})
 	
 	let content = ''
-	let thought = ''
+	// let thought = ''
 	let answerReceived = false
 	const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/generate`, {body, method: 'POST'})
 	const data = await response.json()
