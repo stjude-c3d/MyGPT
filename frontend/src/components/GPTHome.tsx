@@ -96,6 +96,7 @@ function GPTHome(props:{
 	]
 
 	const supportedDatasetLanguages: any = {
+		english: { language_to_full: 'English', language_to: 'en' },
 		spanish: { language_to_full: 'Spanish', language_to: 'es' },
 		french: { language_to_full: 'French', language_to: 'fr' },
 		portugese: { language_to_full: 'Portuguese', language_to: 'pt' },

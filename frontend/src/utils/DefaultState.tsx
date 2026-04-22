@@ -20,7 +20,7 @@ const defaultSettings = {
     datasets: ['None'],
 	defaultDataset: 'None',
     selectedDataset: 'None',
-	DatasetLanguage: 'English',
+	DatasetLanguage: 'english',
 	fetchDatasets: true,
 	datasetsUpdated: false,
     defaultEmbeddingModel: 'nomic-embed-text:latest',

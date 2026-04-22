@@ -150,45 +150,45 @@ const Settings = (props:{
 
 		const postData = async () => {
 			const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/tags`, {method: 'GET'})
-				const data = await response.json()
+			const data = await response.json()
 
-				// set models
-				const llms = data.models
-					.filter((model:any) => model.details.quantization_level !== 'F16')
-					.map((model:any) => model.name)
-				const llm = llms[0]
-				setLlms(llms)
-				setLlm(llm)
+			// set models
+			const llms:any = data.models
+				.filter((model:any) => model.details.quantization_level !== 'F16')
+				.map((model:any) => model.name)
+			const llm:any = llms[0]
+			setLlms(llms)
+			setLlm(llm)
 
-				// add new model to backend API
-				let llms_object:any = []
-				data.models.forEach((model:any) => {
-					// let llm_name = model.name.split(':')[0]
-					let llm_name = model.name
-					let llm_size = model.size* 1e-9
-					let llm_size_gb = llm_size.toFixed(2)
-					llms_object.push({name: llm_name, size: llm_size_gb})
-				})
-				
-				const requestOptions = {
-					method: 'POST',
-					headers: { 
-						'Content-Type': 'application/json',
-						'Authorization': `${
-					props.user && props.djangoLogin ?
-					'Bearer ' + localStorage.getItem('access') :
-						process.env.NODE_ENV === 'production' ? 
-						process.env.REACT_APP_AUTH_TOKEN_PROD 
-						: process.env.REACT_APP_AUTH_TOKEN_DEV}`
-					},
-				setConnection: 'keep-alive',
-				keepalive: true,
-				setTimeout: 10000,
-				body: JSON.stringify({'llms': llms_object})
-				}
-				const response2 = await fetch(`${process.env.REACT_APP_BACKEND_API}api/add_ollama_models/`, requestOptions)
-				const data2 = await response2.json()
-				console.log(data2)
+			// add new model to backend API
+			let llms_object:any = []
+			data.models.forEach((model:any) => {
+				// let llm_name = model.name.split(':')[0]
+				let llm_name = model.name
+				let llm_size = model.size* 1e-9
+				let llm_size_gb = llm_size.toFixed(2)
+				llms_object.push({name: llm_name, size: llm_size_gb})
+			})
+			
+			const requestOptions = {
+				method: 'POST',
+				headers: { 
+					'Content-Type': 'application/json',
+					'Authorization': `${
+				props.user && props.djangoLogin ?
+				'Bearer ' + localStorage.getItem('access') :
+					process.env.NODE_ENV === 'production' ? 
+					process.env.REACT_APP_AUTH_TOKEN_PROD 
+					: process.env.REACT_APP_AUTH_TOKEN_DEV}`
+				},
+			setConnection: 'keep-alive',
+			keepalive: true,
+			setTimeout: 10000,
+			body: JSON.stringify({'llms': llms_object})
+			}
+			const response2 = await fetch(`${process.env.REACT_APP_BACKEND_API}api/add_ollama_models/`, requestOptions)
+			const data2 = await response2.json()
+			console.log(data2)
 
 		}
 		postData()
