@@ -367,6 +367,8 @@ const FlowUpload = (props: {
             nds.map((node) => ({ ...node, data: { ...node.data, currentSettings: props.currentSettings, user: props.user, formValidation: formValidation } }))
         );
 
+        console.log('props.currentSettings.useBM25', props.currentSettings.useBM25) // IGNORE
+
         const isDisabled = props.currentSettings.useBM25 === false;
         const nextStyle = isDisabled ? dashedEdgeStyle : defaultEdgeStyle;
 
@@ -400,10 +402,12 @@ const FlowUpload = (props: {
                             target: embeddingBm25TargetNode,
                             style: {
                                 ...(e.style ?? {}),
-                                ...nextStyle,
+                                ...defaultEdgeStyle,
                             },
                         }
-                    } else if (e.source === 'bm25') {
+                    } else 
+                        
+                        if (e.source === 'bm25') {
                         return {
                             ...e,
                             target: embeddingBm25TargetNode,
@@ -431,7 +435,7 @@ const FlowUpload = (props: {
                                     type: 'arrowclosed',
                                     color: '#333',
                                 },
-                                style: nextStyle,
+                                style: defaultEdgeStyle,
                             });
                         }
                         if (!prevEds.find((edge) => edge.id === 'bm25-to-uploadButton')) {
@@ -476,14 +480,13 @@ const FlowUpload = (props: {
             );
             // otherwise normal flow where embedding model and bm25 both connect to reranker and then reranker connects to upload button
             setEdges((eds) => eds.map((e) => {
-                console.log('edge', e.id) // IGNORE
                 if (e.source === 'embeddingModel') {
                     return {
                         ...e,
                         target: 'reranker',
                         style: {
                             ...(e.style ?? {}),
-                            ...nextStyle,
+                            ...defaultEdgeStyle,
                         },
                     }
                 } else if (e.source === 'bm25') {
