@@ -113,7 +113,6 @@ const Settings = (props: {
 			fetch(`${process.env.REACT_APP_BACKEND_API}api/delete_dataset/?dataset=${deleteDataset}&user_email=${email}`, requestOptions)
 				.then(response => response.json())
 				.then(data => {
-					console.log(data)
 					setDeleteDataset('')
 					const dataset_names = currentSettings.datasets.filter((d: string) => d !== deleteDataset)
 					props.settingsCallback({ ...currentSettings, datasets: dataset_names, selectedDataset: dataset_names[0], fetchDatasets: true })
@@ -134,7 +133,6 @@ const Settings = (props: {
 			fetch(`${process.env.REACT_APP_BACKEND_API}api/add_dataset_embeddings/?dataset=${addEmbeddingForDataset}`, requestOptions)
 				.then(response => response.json())
 				.then(data => {
-					console.log(data)
 					setAddEmbeddingForDataset('')
 					const dataset_details = datasets.map((dataset: any) => {
 						if (dataset.dataset === addEmbeddingForDataset) dataset.embedding_added = true
@@ -187,7 +185,6 @@ const Settings = (props: {
 			}
 			const response2 = await fetch(`${process.env.REACT_APP_BACKEND_API}api/add_ollama_models/`, requestOptions)
 			const data2 = await response2.json()
-			console.log(data2)
 
 		}
 		postData()

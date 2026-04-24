@@ -174,36 +174,6 @@ const FlowSettings = (props: {
         relevance_score_cutoff: props.currentSettings?.relevance_score_cutoff || {}
     })
 
-    useEffect(() => {
-        console.log('Chat settings updated:', chatSettings)
-    }, [chatSettings])
-
-    //  useEffect(() => {
-    //     const { systemPrompt, contextParameters, llmParameters } = chatSettings
-
-    //     const { maximum_chunks_count, no_chunk_cutoff } = contextParameters
-    //     const { temperature, top_k, top_p } = llmParameters
-
-    //     const chunkingMethod = maximum_chunks_count === '0' ? 'no_chunking' : 'chunking'
-    //     const chunkSizeActive = maximum_chunks_count === '0' ? false : true
-
-    //     const newSettings = {
-    //         ...props.currentSettings,
-    //         system_prompt: systemPrompt,
-    //         chunkingMethod: chunkingMethod,
-    //         chunkSizeActive: chunkSizeActive,
-    //         useOverlap: 'Yes',
-    //         chunkSize: maximum_chunks_count,
-    //         no_chunk_cutoff: no_chunk_cutoff,
-    //         temperature: temperature,
-    //         top_k: top_k,
-    //         top_p: top_p,
-    //     }
-
-    //     props.settingsCallback(newSettings)
-
-    // }, [chatSettings])
-
     const [nodes, setNodes] = useState<FlowNode[]>(() =>
         initialNodes.map((node) => ({
             ...node,

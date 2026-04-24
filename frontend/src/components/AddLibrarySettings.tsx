@@ -46,8 +46,6 @@ const AddLibrarySettings = (props: {
   const [distanceFn, setDistanceFn] = useState('l2')
   const [languageOfDocs, setLanguageOfDocs] = useState('English')
 
-//   console.log(UploadLibraryName, uploadDocs)
-
   useEffect(() => {
 	if (addLibrary){
 		const formData = new FormData()
@@ -161,7 +159,6 @@ const AddLibrarySettings = (props: {
 			fetch(`${process.env.REACT_APP_BACKEND_API}api/upload_documents/`, requestOptions)
 			.then(response => response.json())
 			.then(data => {
-				console.log(data)
 				// props.reloadDatasetsCallabck()
 				props.settingsCallback({...currentSettings, fetchDatasets: true, datasetsUpdated: true})
 				setUploadLibrary(false)

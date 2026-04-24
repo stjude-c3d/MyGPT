@@ -13,8 +13,6 @@ import '@xyflow/react/dist/style.css';
 import { MathJaxContext, MathJax } from 'better-react-mathjax'
 const stateKey = 'seRelevanceScoreNodeState';
 const RelevanceScoreNode = ({ data }: any) => {
-
-    console.log('RelevanceScoreNode data:', data);
     const [collapsed, setCollapsed] = useState(false);
 
     const currentSettings = JSON.parse(JSON.stringify(data.currentSettings))
@@ -45,8 +43,6 @@ const RelevanceScoreNode = ({ data }: any) => {
     }
 
     const initialData = getInitialUploadNodeData()
-
-    console.log('Initial data for RelevanceScoreNode:', initialData);
 
     const [ARSbest, setARSbest] = useState(initialData.ARSbest)
     const [ARSworst, setARSworst] = useState(initialData.ARSworst)

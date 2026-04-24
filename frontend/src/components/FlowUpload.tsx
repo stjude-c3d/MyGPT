@@ -360,14 +360,9 @@ const FlowUpload = (props: {
 
     /* Pass currentSetting to all nodes as data */
     useEffect(() => {
-        console.log('form validation', formValidation) // IGNORE
-
-
         setNodes((nds) =>
             nds.map((node) => ({ ...node, data: { ...node.data, currentSettings: props.currentSettings, user: props.user, formValidation: formValidation } }))
         );
-
-        console.log('props.currentSettings.useBM25', props.currentSettings.useBM25) // IGNORE
 
         const isDisabled = props.currentSettings.useBM25 === false;
         const nextStyle = isDisabled ? dashedEdgeStyle : defaultEdgeStyle;
@@ -543,7 +538,6 @@ const FlowUpload = (props: {
                 uploadLibrary()
             } else {
                 setFormValidation(true)
-                console.log('file', props.currentSettings.docs)
                 console.error('Some fields are unknown.')
             }
         }
@@ -565,13 +559,6 @@ const FlowUpload = (props: {
         formData.append('reranker', props.currentSettings.reranker || 'qnli-electra-base (default)')
         formData.append('distance_function', props.currentSettings.distanceFn || 'l2')
         formData.append('documents_language', props.currentSettings.languageOfDocs || 'English')
-
-        console.log('FormData entries:')
-        for (const pair of formData.entries()) {
-            console.log(`${pair[0]}: ${pair[1]}`);
-        }
-
-        console.log('file', props.currentSettings.docs)
 
         props.currentSettings.docs.filter((d: { file: null; title: string; }) => d.file !== null && d.title !== '').forEach((doc: any) => {
             if (doc.title && doc.file) {
@@ -595,11 +582,9 @@ const FlowUpload = (props: {
         fetch(`${process.env.REACT_APP_BACKEND_API}api/upload_documents/`, requestOptions)
             .then(response => response.json())
             .then(data => {
-                console.log(data)
                 setAddLibrary(false)
                 // props.reloadDatasetsCallabck()
                 props.settingsCallback({ ...props.currentSettings, fetchDatasets: true, datasetsUpdated: true })
-                console.log('Upload successful:', data);
                 // setUploadLibrary(false)
                 // setUploadLibraryName('')
                 // setUploadDocs(emptyUploadDocs)

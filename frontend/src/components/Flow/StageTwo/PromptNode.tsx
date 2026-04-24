@@ -14,7 +14,6 @@ import '@xyflow/react/dist/style.css';
 const stateKey = 'sePromptNodeState';
 const PromptNode =({ data }: any) => {
 
-    console.log('PromptNode data:', data);
     const [collapsed, setCollapsed] = useState(false);
 
 
@@ -116,7 +115,7 @@ const PromptNode =({ data }: any) => {
         <div
             style={{
                 width: 550,
-                minHeight: 400,
+                // minHeight: 400,
                 border: '1px solid #ccc',
                 borderRadius: 10,
                 background: '#fff',
