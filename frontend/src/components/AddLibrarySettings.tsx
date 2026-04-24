@@ -219,7 +219,7 @@ const AddLibrarySettings = (props: {
 	}, [videoLibrary, videoLibraryName, videoDocURLs])
 
   return (
-	<div className='my-4'>
+	<div>
 		<div className='text-nav dark:text-nav-dark p-2 mt-2 flex justify-start text-lg font-semibold'> Add new library </div>
 		{ currentSettings.restriction_without_login && !props.user ?
 			<div className='text-nav dark:text-nav-dark p-2 mb-2 flex justify-start text-lg font-semibold'> Note: Please login to add library </div> : <></>
@@ -484,7 +484,7 @@ const AddLibrarySettings = (props: {
 						}}/>
 					</div>
 
-					<div className='flex justify-start mx-2 my-1'>
+					{/* <div className='flex justify-start mx-2 my-1'>
 						<div className='text-nav dark:text-nav-dark p-1 w-48'>Settings Mode</div>
 						<DropdownOptions
 							width={'270px'}
@@ -494,7 +494,7 @@ const AddLibrarySettings = (props: {
 								setUploadSettingsMode(option)
 							}}
 						/>
-					</div>
+					</div> */}
 
 					{uploadSettingsMode === 'Advanced settings' ?
 						<div className='mt-3 pt-2 border-t border-panel1'>
