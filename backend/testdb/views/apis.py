@@ -757,7 +757,7 @@ def save_answer(request):
         
         Answer.objects.create(
             answer_text=answer_text,
-            translated_answer_text=translated_answer_text if translated_answer_text else None,
+            translated_answer_text=translated_answer_text if translated_answer_text else '',
             answer_no_context_text=answer_no_context_text,
             semantic_score=semantic_score if semantic_score <= 100 else 100,
             keyword_score=keyword_score if keyword_score <= 100 else 100,
