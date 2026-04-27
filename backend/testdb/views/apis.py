@@ -1,4 +1,5 @@
 from django.core.files.base import File
+from django.http import StreamingHttpResponse
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework.views import APIView
@@ -16,6 +17,7 @@ import os
 import shutil
 import json
 import re
+from ollama import Client as OllamaClient
 from django.contrib.auth.models import User
 
 from .bm25_utils import (
@@ -222,7 +224,7 @@ def get_context(request):
         use_reranker = False if reranker == 'None' else True
         language_of_docs = dataset.documents_language if hasattr(dataset, 'documents_language') else 'english'
         keywords = json_request['keywords'] if 'keywords' in json_request else ''
-        translated_text = json_request['translated_text'] if language_of_docs != 'english' and 'translated_text' in json_request else None
+        translated_text = json_request['translated_text'] if language_of_docs != 'english' and 'translated_text' in json_request else ''
 
         if no_context:    
             titles, pages, starts, stops, chunks_txt, distances, reranked_scores = [], [], [], [], [], [], []
@@ -555,7 +557,7 @@ def save_answer(request):
         json_request = JSONParser().parse(request)
         question_text = json_request['question_text']
         answer_text = json_request['answer_text']
-        translated_answer_text = json_request['translated_answer_text'] if 'translated_answer_text' in json_request else None
+        translated_answer_text = json_request['translated_answer_text'] if 'translated_answer_text' in json_request else ''
         answer_no_context_text = json_request['answer_no_context_text']
         model = json_request['model_type']
         model_type = Model.objects.get(model_name=model)
@@ -757,7 +759,7 @@ def save_answer(request):
         
         Answer.objects.create(
             answer_text=answer_text,
-            translated_answer_text=translated_answer_text if translated_answer_text else None,
+            translated_answer_text=translated_answer_text if translated_answer_text else '',
             answer_no_context_text=answer_no_context_text,
             semantic_score=semantic_score if semantic_score <= 100 else 100,
             keyword_score=keyword_score if keyword_score <= 100 else 100,
@@ -1260,3 +1262,71 @@ class LogoutView(APIView):
             return Response(status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+@api_view(['POST'])
+def ollama_generate(request):
+    if request.method == 'POST':
+        try:
+            json_request = JSONParser().parse(request)
+            model = json_request['model']
+            prompt = json_request['prompt']
+            system = json_request.get('system', '')
+            stream = json_request.get('stream', True)
+            think = json_request.get('think', True)
+            temperature = json_request.get('options', {}).get('temperature', 0.7)
+            top_k = json_request.get('options', {}).get('top_k', 50)
+            top_p = json_request.get('options', {}).get('top_p', 0.9)
+
+            # Validate model_name input
+            if not model or not re.match(r'^[a-zA-Z0-9_\-:.]+$', model):
+                return Response({'error': True, 'error_message': 'Invalid model name'}, content_type="application/json")
+
+            client = OllamaClient(
+                host = os.environ.get('OLLAMA_SERVER')
+            )
+            
+            def stream_response():
+                try:
+                    options = {'temperature': temperature, 'top_k': top_k, 'top_p': top_p}
+                    try:
+                        # Use named args to avoid accidentally passing `system` as `suffix` (insert mode).
+                        response = client.generate(
+                            model=model,
+                            prompt=prompt,
+                            system=system,
+                            stream=stream,
+                            think=think,
+                            options=options,
+                        )
+                    except Exception as e:
+                        # Some models do not support think mode; retry once without think.
+                        if think and ('does not support think' in str(e).lower() or 'unknown field "think"' in str(e).lower()):
+                            response = client.generate(
+                                model=model,
+                                prompt=prompt,
+                                system=system,
+                                stream=stream,
+                                options=options,
+                            )
+                        else:
+                            raise
+                    for part in response:
+                        # Stream thinking if present
+                        if 'thinking' in part and part['thinking']:
+                            yield json.dumps({'type': 'thinking', 'content': part['thinking'], 'done': False}) + '\n'
+                        
+                        # Stream response if present
+                        if 'response' in part and part['response']:
+                            yield json.dumps({'type': 'response', 'content': part['response'], 'done': False}) + '\n'
+                    
+                    # Signal completion
+                    yield json.dumps({'type': 'done', 'content': '', 'done': True}) + '\n'
+                except Exception as e:
+                    yield json.dumps({'error': True, 'error_message': str(e), 'done': True}) + '\n'
+            
+            return StreamingHttpResponse(
+                stream_response(),
+                content_type='application/x-ndjson'
+            )
+        except Exception as e:
+            return Response({'error': True, 'error_message': str(e)}, content_type="application/json")

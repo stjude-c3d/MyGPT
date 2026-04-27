@@ -20,54 +20,60 @@ export const  OllamaDirectGenerateStream = async (
 	let content = ''
 	let thought = ''
 	let answerReceived = false
-	const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/generate`, {body, method: 'POST'})
+	const response = await fetch(`${process.env.REACT_APP_BACKEND_API}api/ollama_generate/`, {body, method: 'POST'})
 	const reader:any = response.body?.getReader()
-	let leftover:any = ''
+	const decoder = new TextDecoder()
+	let leftover = ''
 	while (true) {
 		const { done, value } = await reader.read()
 		if (done) {
 			break;
 		}
-		let rawjson = new TextDecoder().decode(value);
-		let jsons = []
-		if (leftover.length > 0){
-			rawjson = leftover + rawjson
-			leftover = ''
-		}
-		if (rawjson.includes('\n')){
-			jsons = rawjson.split('\n')
-				.filter((j:any)=>j.length)
-		}else{
-			jsons = [rawjson]
-		}
-		let last_json:any = ''
-		if (rawjson.includes('\n') && rawjson.length > 1000){
-			last_json = jsons.pop()
-			if (last_json[last_json.length-1] !== '}'){
-				leftover = last_json
-			}
-		}
+		const rawjson = leftover + decoder.decode(value, { stream: true })
+		const lines = rawjson.split('\n')
+		leftover = lines.pop() || ''
 
-		for (const j of jsons){
+		for (const j of lines){
+			if (!j.trim()) {
+				continue
+			}
 			const json = JSON.parse(j)
-			if (json.done === false) {
-				content += json.response
-				if (setThought){
-					if(json.thinking && json.thinking.length){
-						thought += json.thinking
-						setThought(thought)
-					}					
-				}
-			}else{
+			if (json.done === true) {
 				answerReceived = true
+				continue
+			}
+
+			const chunk = json.content || ''
+			if (!chunk.length) {
+				continue
+			}
+
+			if (json.type === 'thinking') {
+				if (setThought){
+					thought += chunk
+					setThought(thought)
+				}
+			} else {
+				content += chunk
 			}
 		}
 		setAnswer(content)
+	}
 
-		if (last_json.length && last_json[last_json.length - 1] === '}'){
-			const last_json_obj = JSON.parse(last_json)
-			if (last_json_obj.done === true){
-				answerReceived = true
+	if (leftover.trim().length) {
+		const lastJson = JSON.parse(leftover)
+		if (lastJson.done === true) {
+			answerReceived = true
+		} else {
+			const chunk = lastJson.content || ''
+			if (lastJson.type === 'thinking') {
+				if (setThought && chunk.length) {
+					thought += chunk
+					setThought(thought)
+				}
+			} else if (chunk.length) {
+				content += chunk
+				setAnswer(content)
 			}
 		}
 	}
@@ -96,7 +102,7 @@ export const OllamaDirectGenerateNoStream = async (
 	let content = ''
 	// let thought = ''
 	let answerReceived = false
-	const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/generate`, {body, method: 'POST'})
+	const response = await fetch(`${process.env.REACT_APP_BACKEND_API}api/ollama_generate/`, {body, method: 'POST'})
 	const data = await response.json()
 	if (data.response) {
 		content = data.response
