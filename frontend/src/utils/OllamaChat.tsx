@@ -4,7 +4,7 @@ export const  OllamaDirectChatStream = async (body:any, setAnswer:any, setThough
 	let answerReceived = false
 	const response = await fetch(`${process.env.REACT_APP_BACKEND_API}api/ollama_chat/`, {body, method: 'POST'})
 	const reader:any = response.body?.getReader()
-	const decoder = new TextDecoder()
+	// const decoder = new TextDecoder()
 	let leftover:any = ''
 	while (true) {
 		const { done, value } = await reader.read()

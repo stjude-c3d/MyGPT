@@ -17,7 +17,7 @@ import os
 import shutil
 import json
 import re
-from ollama import Client as OllamaClient
+from ollama import Client as OllamaClient, ListResponse
 from django.contrib.auth.models import User
 
 from .bm25_utils import (
@@ -1383,5 +1383,28 @@ def ollama_chat(request):
                 stream_response(),
                 content_type='application/x-ndjson'
             )
+        except Exception as e:
+            return Response({'error': True, 'error_message': str(e)}, content_type="application/json")
+        
+@api_view(['POST'])
+def get_ollama_models(request):
+    if request.method == 'POST':
+        models = []
+        try:
+            client = OllamaClient(host=os.environ.get('OLLAMA_SERVER'))
+            
+            response: ListResponse = client.list()
+            for model in response.models:
+                if model.size is not None and model.size > 0:
+                    if model.details:
+                        models.append({
+                            'name': model.model,
+                            'size': model.size,
+                            'family': model.details.get('family', 'unknown'),
+                            'format': model.details.get('format', 'unknown'),
+                            'parameter_size': model.details.get('parameter_size', 'unknown'),
+                            'quantization_level': model.details.get('quantization_level', 'unknown'),
+                        })
+            return Response({'added':True, 'models': models}, content_type="application/json")
         except Exception as e:
             return Response({'error': True, 'error_message': str(e)}, content_type="application/json")

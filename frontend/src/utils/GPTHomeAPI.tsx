@@ -14,14 +14,14 @@ export const fetchAndRegisterOllamaModels = async (
 	frontendSettings: any,
 	signal?: AbortSignal
 ): Promise<string[]> => {
-	const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/tags`, {
-		method: 'GET',
+	const response = await fetch(`${process.env.REACT_APP_BACKEND_API}api/get_ollama_models/`, {
+		method: 'POST',
 		signal,
 	})
 	const data = await response.json()
 
 	const llms: string[] = data.models
-		.filter((model: any) => model.details.quantization_level !== 'F16')
+		.filter((model: any) => model.quantization_level !== 'F16')
 		.map((model: any) => model.name)
 
 	const llms_object = data.models.map((model: any) => ({
@@ -48,8 +48,8 @@ export const fetchAndRegisterOllamaModels = async (
 
 	const embeddingModels = data.models.filter(
 		(model: any) =>
-			(model.details.quantization_level === 'F16' && model.details.family.includes('bert')) ||
-			model.details.family.includes('nomic-bert')
+			(model.quantization_level === 'F16' && model.family.includes('bert')) ||
+			model.family.includes('nomic-bert')
 	)
 	const embedding_models_object = embeddingModels.map((model: any) => ({
 		name: model.name,

@@ -21,8 +21,10 @@ const Footer = (props: {
 				if (isMounted) setBackendUp(false)
 			}
 			try {
-				const r = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/tags`, { method: 'GET' })
-				if (isMounted) setOllamaUp(r.ok)
+				const r = await fetch(`${process.env.REACT_APP_BACKEND_API}api/get_ollama_models/`, { method: 'POST' })
+				const data = await r.json()
+				const hasModelList = Array.isArray(data?.models)
+				if (isMounted) setOllamaUp(r.ok && hasModelList)
 			} catch {
 				if (isMounted) setOllamaUp(false)
 			}
