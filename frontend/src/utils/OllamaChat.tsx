@@ -2,14 +2,16 @@ export const  OllamaDirectChatStream = async (body:any, setAnswer:any, setThough
 	let content = ''
 	let thought = ''
 	let answerReceived = false
-	const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/chat`, {body, method: 'POST'})
+	const response = await fetch(`${process.env.REACT_APP_BACKEND_API}api/ollama_chat/`, {body, method: 'POST'})
 	const reader:any = response.body?.getReader()
+	const decoder = new TextDecoder()
 	let leftover:any = ''
 	while (true) {
 		const { done, value } = await reader.read()
 		if (done) {
 			break;
 		}
+
 		let rawjson = new TextDecoder().decode(value);
 		let jsons = []
 		if (leftover.length > 0){
@@ -22,31 +24,53 @@ export const  OllamaDirectChatStream = async (body:any, setAnswer:any, setThough
 		}else{
 			jsons = [rawjson]
 		}
-		let last_json:any = ''
-		if (rawjson.includes('\n') && rawjson.length > 1000){
-			last_json = jsons.pop()
-			if (last_json[last_json.length-1] !== '}'){
-				leftover = last_json
-			}
-		}
 
 		for (const j of jsons){
+			if (!j.trim()) {
+				continue
+			}
 			const json = JSON.parse(j)
-			if (json.done === false) {
-				content += json.message.content
+			if (json.done === true) {
+				answerReceived = true
+				continue
+			}
+
+			const chunk = json.content || ''
+			if (!chunk.length) {
+				continue
+			}
+
+			if (json.type === 'thinking') {
 				if (setThought){
-					if(json.message.thinking && json.message.thinking.length){
-						thought += json.message.thinking
-						setThought(thought)
-					}					
+					thought += chunk
+					setThought(thought)
 				}
 			} else {
-				answerReceived = true
+				content += chunk
 			}
 		}
 		setAnswer(content)
 		if (setThought && thought.length) setThought(thought)
 	}
+
+	if (leftover.trim().length) {
+		const json = JSON.parse(leftover)
+		if (json.done === true) {
+			answerReceived = true
+		} else {
+			const chunk = json.content || ''
+			if (json.type === 'thinking') {
+				if (setThought && chunk.length) {
+					thought += chunk
+					setThought(thought)
+				}
+			} else if (chunk.length) {
+				content += chunk
+				setAnswer(content)
+			}
+		}
+	}
+
 	return {content, answerReceived, thought}
 }
 
@@ -54,7 +78,7 @@ const OllamaDirectChatNoStream = async (body:any, setAnswer:any, setThought:any)
 	let content = ''
 	let thought = ''
 	let answerReceived = false
-	const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/chat`, {body, method: 'POST'})
+	const response = await fetch(`${process.env.REACT_APP_BACKEND_API}api/ollama_chat/`, {body, method: 'POST'})
 	const data = await response.json()
 	if (data.message && data.message.content) {
 		content = data.message.content
@@ -72,7 +96,7 @@ export const OllamaChatStreamWithToolSupport = async (body:any, setAnswer:any, M
 	let answerReceived
 	let content = ''
 	let toolResponse = ''
-	const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/chat`, {body, method: 'POST'})
+	const response = await fetch(`${process.env.REACT_APP_BACKEND_API}api/ollama_chat/`, {body, method: 'POST'})
 	const data = await response.json()
 	if (data.message.tool_calls && data.message.tool_calls.length > 0){
 		let body_json = JSON.parse(body)

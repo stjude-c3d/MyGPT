@@ -1330,3 +1330,58 @@ def ollama_generate(request):
             )
         except Exception as e:
             return Response({'error': True, 'error_message': str(e)}, content_type="application/json")
+        
+@api_view(['POST'])
+def ollama_chat(request):
+    if request.method == 'POST':
+        try:
+            json_request = JSONParser().parse(request)
+            model = json_request['model']
+            messages = json_request['messages']
+            stream = json_request.get('stream', True)
+            think = json_request.get('think', False)
+            temperature = json_request.get('options', {}).get('temperature', 0.7)
+            top_k = json_request.get('options', {}).get('top_k', 50)
+            top_p = json_request.get('options', {}).get('top_p', 0.9)
+
+            # Validate model_name input
+            if not model or not re.match(r'^[a-zA-Z0-9_\-:.]+$', model):
+                return Response({'error': True, 'error_message': 'Invalid model name'}, content_type="application/json")
+
+            client = OllamaClient(
+                host = os.environ.get('OLLAMA_SERVER')
+            )
+            
+            def stream_response():
+                try:
+                    options = {'temperature': temperature, 'top_k': top_k, 'top_p': top_p}
+                    response = client.chat(
+                        model=model,
+                        messages=messages,
+                        stream=stream,
+                        think=think,
+                        options=options,
+                    )
+                    for part in response:
+                        message = part.get('message', {})
+                        # Stream thinking if present (part['message']['thinking'])
+                        thinking = message.get('thinking', '')
+                        if thinking:
+                            yield json.dumps({'type': 'thinking', 'content': thinking, 'done': False}) + '\n'
+                        
+                        # Stream response content (part['message']['content'])
+                        content = message.get('content', '')
+                        if content:
+                            yield json.dumps({'type': 'response', 'content': content, 'done': False}) + '\n'
+                    
+                    # Signal completion
+                    yield json.dumps({'type': 'done', 'content': '', 'done': True}) + '\n'
+                except Exception as e:
+                    yield json.dumps({'error': True, 'error_message': str(e), 'done': True}) + '\n'
+            
+            return StreamingHttpResponse(
+                stream_response(),
+                content_type='application/x-ndjson'
+            )
+        except Exception as e:
+            return Response({'error': True, 'error_message': str(e)}, content_type="application/json")
