@@ -53,69 +53,115 @@ const EmbeddingSettings = (props: {
 			setEmbeddingModelToLoad(model)
 			
 			const body = JSON.stringify({
-				'name': model,
-				'stream': true,
+				'name': model
 			})
 
 			// fetch using async await
 			const postData = async () => {
-				const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/pull`, {body, method: 'POST'})
+				const response = await fetch(`${process.env.REACT_APP_BACKEND_API}api/ollama_pull_model/`, {body, method: 'POST'})
 				const reader:any = response.body?.getReader()
+				if (!reader) {
+					setMessage('No streaming response from server')
+					return
+				}
+
+				const decoder = new TextDecoder()
+				let buffer = ''
+
+				const markDownloadSuccess = () => {
+					let new_embeddingModels = props.embeddingModels
+					new_embeddingModels.push(model_name)
+					currentSettings.selectedEmbeddingModel = model_name
+					setMessage('success')
+					setModelLoaded(true)
+					embeddingModelsDownload = embeddingModelsDownload.filter((llm:string) => llm !== model_name)
+				}
+
+				const handleEvent = (json:any) => {
+					if (json.error) {
+						setMessage(json.error_message || 'Pull failed')
+						return 'error'
+					}
+
+					const status = json.status || ''
+					if (status) {
+						setMessage(status)
+					}
+
+					if (json.done === true) {
+						markDownloadSuccess()
+						return 'done'
+					}
+
+					return 'continue'
+				}
+
 				while (true) {
 					const { done, value } = await reader.read()
 					if (done) {
-						let new_embeddingModels = props.embeddingModels
-						new_embeddingModels.push(model_name)
-						currentSettings.selectedLlm = model_name
-						setMessage('success')
-						setModelLoaded(true)
-						embeddingModelsDownload = embeddingModelsDownload.filter((llm:string) => llm !== model_name)
 						break
 					} else {
-						const rawjson = new TextDecoder().decode(value)
-						const json = JSON.parse(rawjson.split('\n')[0])
-						let status = ''
-						if (done === false) {
-							status = json.status
+						buffer += decoder.decode(value, { stream: true })
+						// Handle both NDJSON and concatenated JSON objects like `}{`
+						buffer = buffer.replace(/}\s*{/g, '}\n{')
+						const parts = buffer.split('\n')
+						buffer = parts.pop() || ''
+
+						for (const part of parts) {
+							if (!part.trim()) continue
+							try {
+								const json = JSON.parse(part)
+								const result = handleEvent(json)
+								if (result === 'done' || result === 'error') {
+									return
+								}
+							} catch {
+								buffer = part + '\n' + buffer
+								break
+							}
 						}
-						if (status === 'success') {
-							let new_embeddingModels = props.embeddingModels
-							new_embeddingModels.push(model_name)
-							setMessage(status)
-							setModelLoaded(true)
-							break;
-						} else {
-							setMessage(status)
-						}
+					}
+				}
+
+				if (buffer.trim().length) {
+					try {
+						const json = JSON.parse(buffer)
+						handleEvent(json)
+					} catch {
+						// ignore incomplete trailing fragments
 					}
 				}
 			}
 
 			// check if the api is available
-			fetch(`${process.env.REACT_APP_OLLAMA_API}api/tags`, {method: 'GET'})
-			.then(response => {
-				if(response.ok){
+			const check = async () => {
+				try {
+					const r = await fetch(`${process.env.REACT_APP_BACKEND_API}api/get_ollama_models/`, { method: 'POST' })
+					const data = await r.json()
+					const hasModelList = Array.isArray(data?.models)
+					if (!hasModelList) {
+						throw new Error('Invalid response structure')
+					}
 					console.log('API is available')
 					postData()
-				} else if (response.status === 0) {
-					return Promise.reject(new Error('API is not available'))
+				} catch {
+					console.log('API is not available')
+					setMessage('API is not available (Ollama Server unavailable)')
 				}
-			}).catch(error => {
-				console.log('Error:', error)
-				setMessage(error + ' (Ollama Server unavailable)')
-			})
+			}
+			check()
 		}
 	}
 
 	// add new model to backend API
 	useEffect(() => {
-		if(message === 'success' && embeddingModelToLoad !== '' && currentSettings.selectedLlm !== ''){
-			// const model = currentSettings.selectedLlm.toLowerCase()
+		if(message === 'success' && embeddingModelToLoad !== '' && currentSettings.selectedEmbeddingModel !== ''){
+			// const model = currentSettings.selectedEmbeddingModel.toLowerCase()
 			const postData = async () => {
-				const response = await fetch(`http://localhost:11434/api/tags`, {method: 'GET'})
+				const response = await fetch(`${process.env.REACT_APP_BACKEND_API}api/get_ollama_models/`, {method: 'POST'})
 				const data = await response.json()
-				// const llm = data.models.filter((model:any) => model.name.split(':')[0] === currentSettings.selectedLlm.toLowerCase())[0]
-				const llm = data.models.filter((model:any) => model.name === currentSettings.selectedLlm.toLowerCase())[0]
+				// const llm = data.models.filter((model:any) => model.name.split(':')[0] === currentSettings.selectedEmbeddingModel.toLowerCase())[0]
+				const llm = data.models.filter((model:any) => model.name === currentSettings.selectedEmbeddingModel.toLowerCase())[0]
 				// convert bytes to GB
 				const llm_size = llm.size* 1e-9
 				const llm_size_gb = llm_size.toFixed(2)
@@ -132,7 +178,7 @@ const EmbeddingSettings = (props: {
 					keepalive: true,
 					setTimeout: 10000,
 					body: JSON.stringify({
-						'embeddingModels': [{ 
+						'llms': [{ 
 							'name': llm.name,
 							'size': llm_size_gb,
 						}]})
@@ -149,8 +195,7 @@ const EmbeddingSettings = (props: {
 			postData()
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [message, currentSettings.selectedLlm])
-
+	}, [message, currentSettings.selectedEmbeddingModel])
 
 	  return (
 		<div className='px-8 py-2 divide-y'>

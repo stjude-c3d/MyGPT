@@ -1408,3 +1408,89 @@ def get_ollama_models(request):
             return Response({'added':True, 'models': models}, content_type="application/json")
         except Exception as e:
             return Response({'error': True, 'error_message': str(e)}, content_type="application/json")
+        
+@api_view(['POST'])
+def ollama_pull_model(request):
+    if request.method == 'POST':
+        json_request = JSONParser().parse(request)
+        model_name = json_request.get('name', '')
+
+        # Validate model_name input
+        if not model_name or not re.match(r'^[a-zA-Z0-9_\-:.]+$', model_name):
+            return Response({'error': True, 'error_message': 'Invalid model name'}, content_type="application/json")
+        try:
+            client = OllamaClient(host=os.environ.get('OLLAMA_SERVER'))
+            
+            def stream_response():
+                try:
+                    current_digest = ''
+                    bars = {}
+                    response = client.pull(model=model_name, stream=True)
+                    for part in response:
+                        digest = part.get('digest', '')
+                        status_txt = part.get('status', '')
+
+                        if digest != current_digest and current_digest in bars:
+                            yield json.dumps({
+                                'type': 'layer_complete',
+                                'digest': current_digest,
+                                'status': 'layer completed',
+                                'done': False,
+                            }) + '\n'
+
+                        if not digest:
+                            yield json.dumps({
+                                'type': 'status',
+                                'status': status_txt,
+                                'done': False,
+                            }) + '\n'
+                            current_digest = digest
+                            continue
+
+                        total = part.get('total', 0)
+                        if digest not in bars and total:
+                            bars[digest] = {
+                                'total': total,
+                                'completed': 0,
+                            }
+
+                        completed = part.get('completed')
+                        if digest in bars and completed is not None:
+                            previous_completed = bars[digest]['completed']
+                            delta = completed - previous_completed
+                            if delta < 0:
+                                delta = 0
+                            bars[digest]['completed'] = completed
+                            layer_total = bars[digest]['total']
+                            percent = round((completed / layer_total) * 100, 2) if layer_total else 0
+                            yield json.dumps({
+                                'type': 'progress',
+                                'status': status_txt,
+                                'digest': digest,
+                                'total': layer_total,
+                                'completed': completed,
+                                'delta': delta,
+                                'percent': percent,
+                                'done': False,
+                            }) + '\n'
+                        else:
+                            yield json.dumps({
+                                'type': 'status',
+                                'status': status_txt,
+                                'digest': digest,
+                                'done': False,
+                            }) + '\n'
+
+                        current_digest = digest
+                    
+                    # Signal completion
+                    yield json.dumps({'status': 'completed', 'progress': 100, 'done': True}) + '\n'
+                except Exception as e:
+                    yield json.dumps({'error': True, 'error_message': str(e), 'done': True}) + '\n'
+            
+            return StreamingHttpResponse(
+                stream_response(),
+                content_type='application/x-ndjson'
+            )
+        except Exception as e:
+            return Response({'error': True, 'error_message': str(e)}, content_type="application/json")

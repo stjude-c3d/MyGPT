@@ -40,5 +40,6 @@ urlpatterns = [
     path('api/ollama_generate/', apis.ollama_generate, name='ollama_generate'),
     path('api/ollama_chat/', apis.ollama_chat, name='ollama_chat'),
     path('api/get_ollama_models/', apis.get_ollama_models, name='get_ollama_models'),
+    path('api/ollama_pull_model/', apis.ollama_pull_model, name='ollama_pull_model'),
 	path('logout/', LogoutView.as_view(), name='logout'),
 ]
