@@ -16,34 +16,7 @@ const EmbeddingSettings = (props: {
 	const [embeddingModelToLoad, setEmbeddingModelToLoad] = useState('')
 	const [message, setMessage] = useState('')
 	const [modelLoaded, setModelLoaded] = useState(false)
-
-	// get current embedding model from backend API
-	useEffect(()=>{
-		const requestOptions = {
-			method: 'GET',
-			headers: { 
-				'Content-Type': 'application/json',
-				'Authorization': `${
-						props.user && props.djangoLogin ?
-						'Bearer ' + localStorage.getItem('access') :
-						process.env.NODE_ENV === 'production' ? 
-						process.env.REACT_APP_AUTH_TOKEN_PROD 
-						: process.env.REACT_APP_AUTH_TOKEN_DEV}`
-			}
-		}
-		fetch(`${process.env.REACT_APP_BACKEND_API}api/embedding_models/?format=json`, requestOptions)
-			.then(response => response.json())
-			.then(data => {
-				if (data.results.length > 0) {
-					const loadedEmbeddingModels:any = []
-					data.results
-						.filter((model:any) => model.model_source === 'ollama')
-						.map((model:any) => loadedEmbeddingModels.push(model.model_name))
-					setDownloadedOllamaModels(loadedEmbeddingModels)
-				}
-			})
-	// eslint-disable-next-line react-hooks/exhaustive-deps
-	},[])
+	const [progressPercent, setProgressPercent] = useState<number>(0)
 
 	// add new model by calling Ollama API
 	const addOllamaModel = (model_name:string) => {
@@ -51,7 +24,9 @@ const EmbeddingSettings = (props: {
 		if(model_name !== ''){
 			const model = model_name.toLowerCase()
 			setEmbeddingModelToLoad(model)
-			
+			setProgressPercent(0)
+			setModelLoaded(false)
+
 			const body = JSON.stringify({
 				'name': model
 			})
@@ -69,18 +44,24 @@ const EmbeddingSettings = (props: {
 				let buffer = ''
 
 				const markDownloadSuccess = () => {
-					let new_embeddingModels = props.embeddingModels
-					new_embeddingModels.push(model_name)
+					let new_embedding_models = props.embeddingModels
+					new_embedding_models.push(model_name)
 					currentSettings.selectedEmbeddingModel = model_name
 					setMessage('success')
+					setProgressPercent(100)
 					setModelLoaded(true)
-					embeddingModelsDownload = embeddingModelsDownload.filter((llm:string) => llm !== model_name)
+					embeddingModelsDownload = embeddingModelsDownload.filter((embeddingModel:string) => embeddingModel !== model_name)
 				}
 
 				const handleEvent = (json:any) => {
 					if (json.error) {
+						setProgressPercent(0)
 						setMessage(json.error_message || 'Pull failed')
 						return 'error'
+					}
+
+					if (json.type === 'progress' && typeof json.percent === 'number') {
+						setProgressPercent(Math.max(0, Math.min(100, json.percent)))
 					}
 
 					const status = json.status || ''
@@ -152,6 +133,17 @@ const EmbeddingSettings = (props: {
 			check()
 		}
 	}
+
+	useEffect(() => {
+		if (message === 'success' && modelLoaded) {
+			const timer = setTimeout(() => {
+				setMessage('')
+				setModelLoaded(false)
+				setProgressPercent(0)
+			}, 10000)
+			return () => clearTimeout(timer)
+		}
+	}, [message, modelLoaded])
 
 	// add new model to backend API
 	useEffect(() => {
@@ -235,8 +227,33 @@ const EmbeddingSettings = (props: {
 					<div className='text-nav dark:text-nav-dark px-2 flex justify-start my-2 text-lg font-semibold'> embeddingModels ready to download </div>
 					{ 
 						message === '' ? <></> :
-						<div className={'ml-2 text-nav dark:text-nav-dark px-2 rounded-md' + (modelLoaded ? ' bg-green-200' : ' bg-orange-200')}>
-							{message}
+						<div className={'ml-2 text-nav dark:text-nav-dark px-2 py-2 rounded-md' + (modelLoaded ? ' bg-green-200' : ' bg-orange-200')}>
+							<div className='flex items-center justify-between gap-2'>
+								<span>{message}</span>
+								{modelLoaded ? (
+									<button
+										onClick={() => {
+											setMessage('')
+											setModelLoaded(false)
+											setProgressPercent(0)
+										}}
+										className='px-2 rounded bg-white/80 hover:bg-white text-nav'
+									>
+										x
+									</button>
+								) : <span />}
+							</div>
+							{!modelLoaded && progressPercent > 0 ? (
+								<div className='mt-2'>
+									<div className='w-full h-2 bg-white/60 rounded overflow-hidden'>
+										<div
+											className='h-2 bg-[#2A4759]'
+											style={{ width: `${progressPercent}%` }}
+										/>
+									</div>
+									<div className='text-xs mt-1 opacity-80'>{progressPercent.toFixed(2)}%</div>
+								</div>
+							) : <></>}
 						</div>
 					}
 					<div className='text-nav dark:text-nav-dark px-4 flex justify-start'>
