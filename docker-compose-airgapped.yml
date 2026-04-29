@@ -38,6 +38,7 @@ services:
       - POSTGRES_NAME=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+      - OLLAMA_SERVER=http://ollama:11434
     networks:
       - mygpt
     healthcheck:
