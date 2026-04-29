@@ -12,7 +12,6 @@ const EmbeddingSettings = (props: {
 	
 	let currentSettings = props.currentSettings
 	let embeddingModelsDownload = ['nomic-embed-text:latest', 'snowflake-arctic-embed:latest', 'bge-m3:latest', 'mxbai-embed-large:latest']
-	let [downloadedOllamaModels, setDownloadedOllamaModels] = useState([] as any)
 	const [embeddingModelToLoad, setEmbeddingModelToLoad] = useState('')
 	const [message, setMessage] = useState('')
 	const [modelLoaded, setModelLoaded] = useState(false)
@@ -259,17 +258,17 @@ const EmbeddingSettings = (props: {
 					<div className='text-nav dark:text-nav-dark px-4 flex justify-start'>
 						<ul className='list-disc'>
 							{embeddingModelsDownload
-								.filter((llm:string) => !downloadedOllamaModels.includes(llm))
-								.map((llm:string, index:number) => {
+								.filter((embeddingModel:string) => !props.embeddingModels.includes(embeddingModel))
+								.map((embeddingModel:string, index:number) => {
 								return(
 									<li key={index} className='ml-4'>
 										<div className='flex justify-between m-1 text-nav dark:text-nav-dark'>
 											<div className='w-56'>
-												{llm}
+												{embeddingModel}
 											</div>
 											<div>
 												<button className={'ml-2 px-2 rounded-md' + (message.length ? ' bg-gray-300 text-nav' : ' bg-panel1 dark:bg-panel3-dark text-white')} 
-													onClick={()=>{addOllamaModel(llm)}}
+													onClick={()=>{addOllamaModel(embeddingModel)}}
 													disabled={message.length && !modelLoaded ? true : false}
 												>{'Download'}</button>
 											</div>
