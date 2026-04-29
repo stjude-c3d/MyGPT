@@ -225,6 +225,7 @@ function GPTHome(props:{
 	
 	// get context from the backend vector database
 	useEffect(()=>{
+		if (answerWithoutContext) return
 		// setAnswers([])
 		// setSourceReceived(false)
 		const contextRequestBody = { 
@@ -420,6 +421,7 @@ function GPTHome(props:{
 
 	// get translated query if dataset language is different than english
 	useEffect(()=>{
+		if (answerWithoutContext) return
 		if (DatasetLanguage === 'english' || DatasetLanguage === '') {
 			setTranslatedQuery('')
 			return
@@ -449,6 +451,7 @@ function GPTHome(props:{
 
 	// get translated answer if dataset language is different than english
 	useEffect(()=>{
+		if (answerWithoutContext) return
 		if (!answerReceived || answer.length === 0) return
 		if (DatasetLanguage === 'english' || DatasetLanguage === '') {
 			setTranslatedAnswer('')

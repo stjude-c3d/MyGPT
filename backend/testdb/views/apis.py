@@ -1285,6 +1285,42 @@ def ollama_generate(request):
                 host = os.environ.get('OLLAMA_SERVER')
             )
             
+            # Non-streaming path: stream=False
+            if not stream:
+                try:
+                    options = {'temperature': temperature, 'top_k': top_k, 'top_p': top_p}
+                    try:
+                        # Call without streaming - returns a single dict object
+                        response = client.generate(
+                            model=model,
+                            prompt=prompt,
+                            system=system,
+                            stream=False,
+                            think=think,
+                            options=options,
+                        )
+                    except Exception as e:
+                        # Some models do not support think mode; retry once without think.
+                        if think and ('does not support think' in str(e).lower() or 'unknown field "think"' in str(e).lower()):
+                            response = client.generate(
+                                model=model,
+                                prompt=prompt,
+                                system=system,
+                                stream=False,
+                                options=options,
+                            )
+                        else:
+                            raise
+                    
+                    # Extract response and thinking from the single object
+                    return Response({
+                        'response': response.get('response', ''),
+                        'thinking': response.get('thinking', '')
+                    }, content_type="application/json")
+                except Exception as e:
+                    return Response({'error': True, 'error_message': str(e)}, content_type="application/json")
+            
+            # Streaming path: stream=True
             def stream_response():
                 try:
                     options = {'temperature': temperature, 'top_k': top_k, 'top_p': top_p}
@@ -1352,6 +1388,28 @@ def ollama_chat(request):
                 host = os.environ.get('OLLAMA_SERVER')
             )
             
+            # Non-streaming path: stream=False
+            if not stream:
+                try:
+                    options = {'temperature': temperature, 'top_k': top_k, 'top_p': top_p}
+                    response = client.chat(
+                        model=model,
+                        messages=messages,
+                        stream=False,
+                        think=think,
+                        options=options,
+                    )
+                    
+                    # Extract message content and thinking from the single object
+                    message = response.get('message', {})
+                    return Response({
+                        'content': message.get('content', ''),
+                        'thinking': message.get('thinking', '')
+                    }, content_type="application/json")
+                except Exception as e:
+                    return Response({'error': True, 'error_message': str(e)}, content_type="application/json")
+            
+            # Streaming path: stream=True
             def stream_response():
                 try:
                     options = {'temperature': temperature, 'top_k': top_k, 'top_p': top_p}
