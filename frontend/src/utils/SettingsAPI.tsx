@@ -75,14 +75,14 @@ export const fetchAndRegisterOllamaModels = async (
 	djangoLogin: any,
 	signal?: AbortSignal
 ): Promise<{ llms: string[]; llm: string }> => {
-	const tagsResponse = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/tags`, {
-		method: 'GET',
+	const tagsResponse = await fetch(`${process.env.REACT_APP_BACKEND_API}api/get_ollama_models/`, {
+		method: 'POST',
 		signal,
 	})
 	const data = await tagsResponse.json()
 
 	const llms: string[] = data.models
-		.filter((model: any) => model.details.quantization_level !== 'F16')
+		.filter((model: any) => model.quantization_level !== 'F16')
 		.map((model: any) => model.name)
 
 	const llms_object = data.models.map((model: any) => ({

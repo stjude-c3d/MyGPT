@@ -8,6 +8,7 @@ import defaultSettings from './utils/DefaultState'
 import ChatHistory from './components/ChatHistory'
 import Disclaimer from './components/Disclaimer'
 import FAQ from './components/FAQ'
+import Footer from './components/Footer'
 // import Plots from './components/Plots'
 import { PublicClientApplication } from '@azure/msal-browser'
 import { MsalProvider } from '@azure/msal-react'
@@ -320,25 +321,17 @@ function App() {
     </div>
   }
   {/* add footer */}
-  <div className='flex justify-between text-nav bg-[#2A4759] my-auto py-4 h-[6vh]'>
-    <div className='text-sm text-white mx-8 my-auto'>
-      {/* <p className='inline-block mx-2'>Designed by </p> */}
-      <img src={process.env.PUBLIC_URL + '/stjude-logo-child.png'} alt='St. Jude logo' className='h-[3vh] inline-block'/>
-      <p className='inline-block mx-2'>St. Jude Children's Research Hospital</p>
-    </div>
-    <div className='text-sm text-white mx-8 my-auto cursor-pointer flex flex-row'>
-    { frontendSettings.django_login ?
-        <div onClick={()=>{
-          setForceOpenDisclaimer(true)
-          setShowDisclaimer(!showDisclaimer)
-        }}>Disclaimer</div>
-         : <></>}
-       <div className='text-sm text-white mx-8 my-auto cursor-pointer' onClick={()=>{
-          setShowFAQ(!showFAQ)}
-        }>FAQs </div>
-        </div> 
+  <Footer 
+    frontendSettings={frontendSettings}
+    onDisclaimerClick={()=>{
+      setForceOpenDisclaimer(true)
+      setShowDisclaimer(!showDisclaimer)
+    }}
+    onFAQClick={()=>{
+      setShowFAQ(!showFAQ)
+    }}
+  />
 	</div>
-  </div>
   )
 }
 
