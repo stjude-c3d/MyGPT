@@ -13,7 +13,6 @@ import '@xyflow/react/dist/style.css';
 
 const stateKey = 'upBm25NodeState';
 const BM25Node = ({ data }: any) => {
-    const [enabled, setEnabled] = useState(true);
     const [collapsed, setCollapsed] = useState(false);
 
     const getInitialUploadNodeData = () => {
