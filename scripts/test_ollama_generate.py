@@ -6,6 +6,7 @@ Usage:
     python test_ollama_generate.py
     python test_ollama_generate.py --model llama3 --question "What is AI?"
     python test_ollama_generate.py --url http://your-host/api/ollama_generate/
+    python test_ollama_generate.py --models-url http://localhost/api/get_ollama_models/
 """
 
 import requests
