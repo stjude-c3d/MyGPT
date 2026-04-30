@@ -1,13 +1,7 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
-    ReactFlow,
-    applyNodeChanges,
-    applyEdgeChanges,
-    addEdge,
     Handle,
     Position,
-    NodeChange,
-    EdgeChange,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
@@ -52,16 +46,6 @@ const RerankerNode = ({ data }: any) => {
         width: 110,
         color: '#2a4759',
         flexShrink: 0,
-    };
-
-    const inputStyle: React.CSSProperties = {
-        flex: 1,
-        minWidth: 0,
-        padding: '6px 8px',
-        fontSize: 13,
-        border: '1px solid #ccc',
-        borderRadius: 6,
-        height: 30,
     };
 
     const selectStyle: React.CSSProperties = {

@@ -1,16 +1,10 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { MathJaxContext, MathJax } from 'better-react-mathjax'
 const stateKey = 'seRelevanceScoreNodeState';
 const RelevanceScoreNode = ({ data }: any) => {
     const [collapsed, setCollapsed] = useState(false);
-
-    const currentSettings = JSON.parse(JSON.stringify(data.currentSettings))
-    const [defaultQRSbest, setDefaultQRSbest] = useState(currentSettings.relevance_score_cutoff.question_best)
-    const [defaultQRSworst, setDefaultQRSworst] = useState(currentSettings.relevance_score_cutoff.question_worst)
-    const [defaultARSbest, setDefaultARSbest] = useState(currentSettings.relevance_score_cutoff.answer_best)
-    const [defaultARSworst, setDefaultARSworst] = useState(currentSettings.relevance_score_cutoff.answer_worst)
 
     const getInitialUploadNodeData = () => {
         try {
@@ -75,30 +69,11 @@ const RelevanceScoreNode = ({ data }: any) => {
     }, [ARSbest, ARSworst, QRSbest, QRSworst, HIa, HIb, HIc])
 
 
-    const labelStyle: React.CSSProperties = {
-        fontSize: 13,
-        width: 140,
-        flexShrink: 0,
-        whiteSpace: 'nowrap',
-        color: '#2a4759',
-    };
-
     const rowStyle: React.CSSProperties = {
         display: 'flex',
         alignItems: 'center',
         gap: 12,
         marginBottom: 12,
-    };
-
-    const inputStyle: React.CSSProperties = {
-        flex: 1,
-        padding: '6px 8px',
-        fontSize: 13,
-        border: '1px solid #ccc',
-        borderRadius: 6,
-        height: 30,
-        boxSizing: 'border-box',
-        backgroundColor: '#fff',
     };
 
     return (

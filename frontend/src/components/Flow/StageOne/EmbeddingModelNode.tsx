@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Handle,
     Position,
@@ -72,17 +72,6 @@ const EmbeddingModelNode = ({ data }: any) => {
         height: 30,
         boxSizing: 'border-box',
         backgroundColor: '#fff',
-    };
-
-    const selectStyle: React.CSSProperties = {
-        padding: '6px 8px',
-        fontSize: 13,
-        border: '1px solid #ccc',
-        borderRadius: 6,
-        height: 30,
-        boxSizing: 'border-box',
-        backgroundColor: '#fff',
-        width: '155px'
     };
 
     return (

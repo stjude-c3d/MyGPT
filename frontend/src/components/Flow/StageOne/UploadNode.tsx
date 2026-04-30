@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Handle,
     Position,
@@ -6,7 +6,6 @@ import {
 import '@xyflow/react/dist/style.css';
 const stateKey = 'upUploadNodeState';
 const UploadNode = ({ data }: any) => {
-    const [files, setFiles] = useState<File[]>([]);
     const [collapsed, setCollapsed] = useState(false);
 
     const emptyUploadDocs = Array.from(Array(40).keys()).map((x: any) => { return { title: '', file: null } })

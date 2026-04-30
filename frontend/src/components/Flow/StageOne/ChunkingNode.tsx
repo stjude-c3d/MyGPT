@@ -1,16 +1,9 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
-    ReactFlow,
-    applyNodeChanges,
-    applyEdgeChanges,
-    addEdge,
     Handle,
     Position,
-    NodeChange,
-    EdgeChange,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { DropdownOptions } from '../../DropDownMenu'
 
 const stateKey = 'upChunkingNodeState';
 const ChunkingNode = ({ data }: { data: { title: string, settingsCallback: (settings: any) => void, currentSettings: any } }) => {
@@ -75,17 +68,6 @@ const ChunkingNode = ({ data }: { data: { title: string, settingsCallback: (sett
         alignItems: 'center',
         gap: 0,
         marginBottom: 12,
-    };
-
-    const inputStyle: React.CSSProperties = {
-        flex: 1,
-        padding: '6px 8px',
-        fontSize: 13,
-        border: '1px solid #ccc',
-        borderRadius: 6,
-        height: 30,
-        boxSizing: 'border-box',
-        backgroundColor: '#fff',
     };
 
     const selectStyle: React.CSSProperties = {

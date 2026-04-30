@@ -1,13 +1,7 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
-    ReactFlow,
-    applyNodeChanges,
-    applyEdgeChanges,
-    addEdge,
     Handle,
     Position,
-    NodeChange,
-    EdgeChange,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
@@ -45,7 +39,7 @@ const PromptNode =({ data }: any) => {
 
     const [systemPrompt, setSystemPrompt] = useState(initialData.systemPrompt);
     const [contextParameters, setContextParameters] = useState(initialData.contextParameters);
-    const [llmParameters, setLlmParameters] = useState(initialData.llmParameters);
+    const [llmParameters] = useState(initialData.llmParameters);
 
 
     useEffect(() => {
@@ -86,17 +80,6 @@ const PromptNode =({ data }: any) => {
         alignItems: 'center',
         gap: 12,
         marginBottom: 12,
-    };
-
-    const inputStyle: React.CSSProperties = {
-        flex: 1,
-        padding: '6px 8px',
-        fontSize: 13,
-        border: '1px solid #ccc',
-        borderRadius: 6,
-        height: 30,
-        boxSizing: 'border-box',
-        backgroundColor: '#fff',
     };
 
     const textareaStyle: React.CSSProperties = {
