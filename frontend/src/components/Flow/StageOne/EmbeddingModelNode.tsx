@@ -9,7 +9,7 @@ import defaultSettings from '../../../utils/DefaultState'
 const stateKey = 'upEmbeddingModelNodeState';
 const EmbeddingModelNode = ({ data }: any) => {
     const [collapsed, setCollapsed] = useState(false);
-    const [modelOptions, setModelOptions] = useState([
+    const [modelOptions] = useState([
         ...defaultSettings.embedding_models,
     ]);
 
