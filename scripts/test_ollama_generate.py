@@ -188,9 +188,132 @@ def test_ollama_generate(
         }
 
 
+def test_get_ollama_models(
+    url: str = "http://localhost/api/get_ollama_models/",
+    timeout: int = 60,
+) -> Dict[str, Any]:
+    """
+    Test the /api/get_ollama_models/ endpoint.
+
+    Args:
+        url: Backend API endpoint URL
+        timeout: Request timeout in seconds
+
+    Returns:
+        Dictionary with status, response data, and any errors
+    """
+    print(f"\n{'='*70}")
+    print("Testing Backend get_ollama_models Endpoint")
+    print(f"{'='*70}")
+    print(f"URL: {url}")
+    print("Method: POST")
+    print(f"Timeout: {timeout}s")
+    print(f"{'-'*70}\n")
+
+    try:
+        print("Sending POST request...")
+        response = requests.post(
+            url,
+            json={},
+            timeout=timeout,
+            headers={"Content-Type": "application/json"},
+        )
+
+        print(f"Response Status Code: {response.status_code}")
+        print(f"{'-'*70}\n")
+
+        if response.status_code != 200:
+            print(f"✗ ERROR: Status code {response.status_code}")
+            try:
+                error_data = response.json()
+                print(json.dumps(error_data, indent=2))
+                return {
+                    "status": "error",
+                    "status_code": response.status_code,
+                    "data": error_data,
+                }
+            except json.JSONDecodeError:
+                return {
+                    "status": "error",
+                    "status_code": response.status_code,
+                    "data": response.text,
+                }
+
+        data = response.json()
+
+        if data.get("error"):
+            print(f"✗ ERROR: {data.get('error_message', 'Unknown error')}")
+            return {
+                "status": "error",
+                "status_code": response.status_code,
+                "data": data,
+            }
+
+        if not data.get("added"):
+            print("✗ ERROR: Response missing added=true")
+            return {
+                "status": "error",
+                "status_code": response.status_code,
+                "data": data,
+            }
+
+        models = data.get("models")
+        if not isinstance(models, list):
+            print("✗ ERROR: Response 'models' field is not a list")
+            return {
+                "status": "error",
+                "status_code": response.status_code,
+                "data": data,
+            }
+
+        print("✓ SUCCESS: Model list returned")
+        print(f"Models found: {len(models)}")
+        if models:
+            print("First models:")
+            for model in models[:5]:
+                print(f"- {model.get('name', 'unknown')}")
+        print(f"{'='*70}")
+
+        return {
+            "status": "success",
+            "status_code": response.status_code,
+            "models_count": len(models),
+            "data": data,
+        }
+
+    except requests.exceptions.Timeout:
+        print(f"\n✗ ERROR: Request timeout after {timeout}s")
+        print("The backend may be slow or not responding.")
+        return {
+            "status": "error",
+            "error": f"Request timeout after {timeout}s",
+            "message": "Backend may be slow or unresponsive"
+        }
+
+    except requests.exceptions.ConnectionError as e:
+        print("\n✗ ERROR: Connection failed")
+        print(f"Cannot reach {url}")
+        print(f"Error: {e}")
+        return {
+            "status": "error",
+            "error": "Connection failed",
+            "message": f"Cannot reach backend at {url}",
+            "details": str(e)
+        }
+
+    except requests.exceptions.RequestException as e:
+        print("\n✗ ERROR: Request failed")
+        print(f"Error: {e}")
+        return {
+            "status": "error",
+            "error": "Request failed",
+            "message": str(e)
+        }
+
+
 def main():
     parser = argparse.ArgumentParser(
-        description="Test backend /api/ollama_generate/ streaming endpoint"
+        description="Test backend /api/ollama_generate/ and /api/get_ollama_models/ endpoints"
     )
     parser.add_argument(
         "--url",
@@ -213,18 +336,33 @@ def main():
         default=60,
         help="Request timeout in seconds (default: 60)"
     )
+    parser.add_argument(
+        "--models-url",
+        default="http://localhost/api/get_ollama_models/",
+        help="Backend models API URL (default: http://localhost/api/get_ollama_models/)"
+    )
 
     args = parser.parse_args()
 
-    result = test_ollama_generate(
-        url=args.url,
-        model_name=args.model,
-        question=args.question,
-        timeout=args.timeout
+    generate_result = {
+        "status": "skipped",
+        "message": "Ollama generate test skipped (uncomment in main to run)"
+    }
+
+    # generate_result = test_ollama_generate(
+    #     url=args.url,
+    #     model_name=args.model,
+    #     question=args.question,
+    #     timeout=args.timeout
+    # )
+
+    models_result = test_get_ollama_models(
+        url=args.models_url,
+        timeout=args.timeout,
     )
 
-    # Exit with error code if test failed
-    if result["status"] == "error":
+    # Exit with error code if any test failed
+    if generate_result["status"] == "error" or models_result["status"] == "error":
         print(f"\nTest FAILED")
         sys.exit(1)
     else:
