@@ -132,7 +132,7 @@ const Settings = (props: {
 			}
 			fetch(`${process.env.REACT_APP_BACKEND_API}api/add_dataset_embeddings/?dataset=${addEmbeddingForDataset}`, requestOptions)
 				.then(response => response.json())
-				.then(data => {
+				.then(() => {
 					setAddEmbeddingForDataset('')
 					const dataset_details = datasets.map((dataset: any) => {
 						if (dataset.dataset === addEmbeddingForDataset) dataset.embedding_added = true
@@ -141,6 +141,7 @@ const Settings = (props: {
 					setDatasets(dataset_details)
 				})
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [addEmbeddingForDataset, datasets])
 
 	// get llms from backend
@@ -168,21 +169,21 @@ const Settings = (props: {
 				llms_object.push({ name: llm_name, size: llm_size_gb })
 			})
 
-			const requestOptions = {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'Authorization': `${props.user && props.djangoLogin ?
-						'Bearer ' + localStorage.getItem('access') :
-						process.env.NODE_ENV === 'production' ?
-							process.env.REACT_APP_AUTH_TOKEN_PROD
-							: process.env.REACT_APP_AUTH_TOKEN_DEV}`
-				},
-				setConnection: 'keep-alive',
-				keepalive: true,
-				setTimeout: 10000,
-				body: JSON.stringify({ 'llms': llms_object })
-			}
+			// const requestOptions = {
+			// 	method: 'POST',
+			// 	headers: {
+			// 		'Content-Type': 'application/json',
+			// 		'Authorization': `${props.user && props.djangoLogin ?
+			// 			'Bearer ' + localStorage.getItem('access') :
+			// 			process.env.NODE_ENV === 'production' ?
+			// 				process.env.REACT_APP_AUTH_TOKEN_PROD
+			// 				: process.env.REACT_APP_AUTH_TOKEN_DEV}`
+			// 	},
+			// 	setConnection: 'keep-alive',
+			// 	keepalive: true,
+			// 	setTimeout: 10000,
+			// 	body: JSON.stringify({ 'llms': llms_object })
+			// }
 			// const response2 = await fetch(`${process.env.REACT_APP_BACKEND_API}api/add_ollama_models/`, requestOptions)
 			// const data2 = await response2.json()
 
