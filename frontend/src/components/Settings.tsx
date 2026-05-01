@@ -183,7 +183,7 @@ const Settings = (props: {
 				setTimeout: 10000,
 				body: JSON.stringify({ 'llms': llms_object })
 			}
-			const response2 = await fetch(`${process.env.REACT_APP_BACKEND_API}api/add_ollama_models/`, requestOptions)
+			// const response2 = await fetch(`${process.env.REACT_APP_BACKEND_API}api/add_ollama_models/`, requestOptions)
 			// const data2 = await response2.json()
 
 		}
