@@ -57,22 +57,22 @@ describe('Settings', () => {
 
   it('renders expected panel tabs', () => {
     const { container } = render(<Settings {...baseProps} />)
-    const datasetsPanel = container.querySelector('div[data-panel="datasets"]')
-    const llmsPanel = container.querySelector('div[data-panel="llms"]')
-    const llmParamsPanel = container.querySelector('div[data-panel="llm_parameters"]')
-    const embeddingPanel = container.querySelector('div[data-panel="embedding_models"]')
-    const relevancePanel = container.querySelector('div[data-panel="relevance_score"]')
 
-    expect(datasetsPanel).toHaveTextContent('Document libraries')
-    expect(llmsPanel).toHaveTextContent('LLMs')
-    expect(llmParamsPanel).toHaveTextContent('Prompt and LLM parameters')
-    expect(embeddingPanel).toHaveTextContent('Embedding Models')
-    expect(relevancePanel).toHaveTextContent('Relevance score parameters')
+    const datasetsPanels = container.querySelectorAll('div[data-panel="datasets"]')
+    const chatSettingsPanels = container.querySelectorAll('div[data-panel="chatsettings"]')
+    const llmsPanels = container.querySelectorAll('div[data-panel="llms"]')
+
+    expect(datasetsPanels.length).toBeGreaterThan(0)
+    expect(chatSettingsPanels.length).toBeGreaterThan(0)
+    expect(llmsPanels.length).toBeGreaterThan(0)
+    expect(screen.queryByText('Prompt and LLM parameters')).not.toBeInTheDocument()
+    expect(screen.queryByText('Embedding Models')).not.toBeInTheDocument()
+    expect(screen.queryByText('Relevance score parameters')).not.toBeInTheDocument()
   })
 
   it('shows Add New Library button when openUpload is provided', () => {
     render(<Settings {...baseProps} openUpload={jest.fn()} />)
-    expect(screen.getByText('Add New Library')).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: /Add New Library/i }).length).toBeGreaterThan(0)
   })
 
   it('triggers close and upload open on Add New Library click', () => {
@@ -87,7 +87,9 @@ describe('Settings', () => {
       />
     )
 
-    fireEvent.click(screen.getByText('Add New Library'))
+    const addButtons = screen.getAllByRole('button', { name: /Add New Library/i })
+    const visibleButton = addButtons.find((button) => !button.closest('div[style="display: none;"]')) || addButtons[0]
+    fireEvent.click(visibleButton)
 
     expect(closeSettings).toHaveBeenCalledTimes(1)
     expect(openUpload).toHaveBeenCalledTimes(1)

@@ -1,64 +1,104 @@
-import { render, screen } from '@testing-library/react'
-// import { BrowserRouter } from 'react-router-dom'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import TopNav from '../components/TopNav'
+import useAuthenticateUser from '../hooks/useAuthenticateUser'
+
+jest.mock('../hooks/useAuthenticateUser')
+
+const mockedUseAuthenticateUser = useAuthenticateUser as jest.Mock
+
+const baseProps = {
+	setShowUpload: jest.fn(),
+	setShowSettings: jest.fn(),
+	setShowChatHistory: jest.fn(),
+	setPlotButton: jest.fn(),
+	loginCallback: jest.fn(),
+}
 
 describe('TopNav', () => {
-	const renderTopNav = (setShowSettings = jest.fn()) => {
+	beforeEach(() => {
+		jest.clearAllMocks()
+		localStorage.clear()
+		mockedUseAuthenticateUser.mockReturnValue({
+			activeAccounts: [],
+			appRoles: [],
+			instance: { loginRedirect: jest.fn(), logoutRedirect: jest.fn() },
+		})
+	})
+
+	const renderTopNav = (props = {}) => {
 		render(
 			<TopNav
-				setShowUpload={jest.fn()}
-				setShowSettings={setShowSettings}
-				setShowChatHistory={jest.fn()}
-				setPlotButton={jest.fn()}
-				loginCallback={jest.fn()}
+				{...baseProps}
+				{...props}
 			/>
 		)
-		return setShowSettings
 	}
 
 	it('renders the navigation bar', () => {
 		renderTopNav()
 
-		// Assert that the navigation bar is rendered
 		const navBarElement = screen.getByRole('navigation')
 		expect(navBarElement).toBeInTheDocument()
 	})
 
-	// Check that the navigation bar has the correct app name
 	it('renders the correct app name', () => {
 		renderTopNav()
 
-		// Assert that the navigation bar has the correct app name
 		const appNameElement = screen.getByText(/MyGPT/i)
 		expect(appNameElement).toBeInTheDocument()
 	})
 
-	// Check that the navigation bar has the correct app logo
 	it('renders the correct app logo', () => {
 		renderTopNav()
 
-		// Assert that the navigation bar has the correct app logo
 		const appLogoElement = screen.getByAltText(/mygpt_logo/i)
 		expect(appLogoElement).toBeInTheDocument()
 	})
 
-	// Check that the navigation bar has the expected buttons
-	it('renders the correct number of buttons', () => {
+	it('renders upload, settings, history, and dark mode buttons by default', () => {
 		renderTopNav()
 
-		// Upload, Settings, History, Dark/Light mode
-		const buttons = screen.getAllByRole('button')
-		expect(buttons).toHaveLength(4)
+		expect(screen.getByRole('button', { name: /upload/i })).toBeInTheDocument()
+		expect(screen.getByRole('button', { name: /settings/i })).toBeInTheDocument()
+		expect(screen.getByRole('button', { name: /history/i })).toBeInTheDocument()
+		expect(screen.getAllByRole('button')).toHaveLength(4)
 	})
 
-	// Check if clicking on settings opens a settings modal
-	it('opens a settings modal when the settings button is clicked', () => {
-		const setShowSettings = renderTopNav(jest.fn())
+	it('opens settings when the settings button is clicked', () => {
+		const setShowSettings = jest.fn()
+		renderTopNav({ setShowSettings })
 
 		const settingsButton = screen.getByRole('button', { name: /settings/i })
-		settingsButton.click()
+		fireEvent.click(settingsButton)
 
-		// Assert that the setShowSettings function was called
-		expect(setShowSettings).toHaveBeenCalled()
+		expect(setShowSettings).toHaveBeenCalledWith(true)
+	})
+
+	it('hides upload and settings when restrictions are enabled and user is not authenticated', () => {
+		renderTopNav({ restrictions: true })
+
+		expect(screen.queryByRole('button', { name: /upload/i })).not.toBeInTheDocument()
+		expect(screen.queryByRole('button', { name: /settings/i })).not.toBeInTheDocument()
+		expect(screen.getByRole('button', { name: /history/i })).toBeInTheDocument()
+	})
+
+	it('calls loginCallback with authenticated user details from MSAL account', async () => {
+		const loginCallback = jest.fn()
+		mockedUseAuthenticateUser.mockReturnValue({
+			activeAccounts: [{ name: 'Jane Doe', username: 'jane@org.org' }],
+			appRoles: ['MyGPTAdmin', 'Reader'],
+			instance: { loginRedirect: jest.fn(), logoutRedirect: jest.fn() },
+		})
+
+		renderTopNav({ loginCallback })
+
+		await waitFor(() => {
+			expect(loginCallback).toHaveBeenCalledWith({
+				user: 'Jane Doe',
+				user_email: 'jane@org.org',
+				isAdmin: false,
+				otherRoles: ['Reader'],
+			})
+		})
 	})
 })
