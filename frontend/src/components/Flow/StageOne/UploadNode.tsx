@@ -48,7 +48,7 @@ const UploadNode = ({ data }: any) => {
             docs: uploadDocs,
             languageOfDocs: languageOfDocs,
         })
-
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [uploadLibraryName, uploadDocs, languageOfDocs, uploadDocs])
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -4,8 +4,8 @@ import {
     applyNodeChanges,
     applyEdgeChanges,
     addEdge,
-    Handle,
-    Position,
+    // Handle,
+    // Position,
     NodeChange,
     EdgeChange,
     Node,
@@ -27,9 +27,9 @@ const nodeTypes = {
     uploadButtonNode: UploadButtonNode
 };
 
-const edgeTypes = {
-    dottededge: DottedEdge,
-};
+// const edgeTypes = {
+//     dottededge: DottedEdge,
+// };
 
 const dashedEdgeStyle: React.CSSProperties = {
     stroke: '#888',
@@ -45,144 +45,144 @@ const defaultEdgeStyle: React.CSSProperties = {
 
 
 /* ---------- Initial Data ---------- */
-const initialNodesOld: FlowNode[] = [
-    {
-        id: 'upload',
-        type: 'uploadNode',
-        position: { x: 0, y: 0 },
-        data: {
-            title: 'Upload Details',
-            libraryName: '',
-            languageOfDocument: '',
-        },
-    },
-    {
-        id: 'chunking',
-        type: 'chunkingNode',
-        position: { x: 350, y: 0 },
-        data: {
-            title: 'Chunking',
-        },
-    },
-    {
-        id: 'embeddingModel',
-        type: 'embeddingModelNode',
-        position: { x: 720, y: 0 },
-        data: {
-            title: 'Embedding Model',
-        },
-    },
-    {
-        id: 'bm25',
-        type: 'bm25Node',
-        position: { x: 720, y: 150 },
-        data: {
-            title: <span>BM25 <span style={{ 'fontSize': '10px' }}>(Optional)</span></span>,
-        },
-    },
-    {
-        id: 'reranker',
-        type: 'rerankerNode',
-        position: { x: 350, y: 250 },
-        data: {
-            title: <span>Reranker <span style={{ 'fontSize': '10px' }}>(Optional)</span></span>,
-        },
-    },
-    {
-        id: 'distanceFn',
-        type: 'distanceFnNode',
-        position: { x: 350, y: 400 },
-        data: {
-            title: <span>Distance Function <span style={{ 'fontSize': '10px' }}>(Optional)</span></span>,
-        },
-    },
-    {
-        id: 'uploadButton',
-        type: 'uploadButtonNode',
-        position: { x: 415, y: 520 },
+// const initialNodesOld: FlowNode[] = [
+//     {
+//         id: 'upload',
+//         type: 'uploadNode',
+//         position: { x: 0, y: 0 },
+//         data: {
+//             title: 'Upload Details',
+//             libraryName: '',
+//             languageOfDocument: '',
+//         },
+//     },
+//     {
+//         id: 'chunking',
+//         type: 'chunkingNode',
+//         position: { x: 350, y: 0 },
+//         data: {
+//             title: 'Chunking',
+//         },
+//     },
+//     {
+//         id: 'embeddingModel',
+//         type: 'embeddingModelNode',
+//         position: { x: 720, y: 0 },
+//         data: {
+//             title: 'Embedding Model',
+//         },
+//     },
+//     {
+//         id: 'bm25',
+//         type: 'bm25Node',
+//         position: { x: 720, y: 150 },
+//         data: {
+//             title: <span>BM25 <span style={{ 'fontSize': '10px' }}>(Optional)</span></span>,
+//         },
+//     },
+//     {
+//         id: 'reranker',
+//         type: 'rerankerNode',
+//         position: { x: 350, y: 250 },
+//         data: {
+//             title: <span>Reranker <span style={{ 'fontSize': '10px' }}>(Optional)</span></span>,
+//         },
+//     },
+//     {
+//         id: 'distanceFn',
+//         type: 'distanceFnNode',
+//         position: { x: 350, y: 400 },
+//         data: {
+//             title: <span>Distance Function <span style={{ 'fontSize': '10px' }}>(Optional)</span></span>,
+//         },
+//     },
+//     {
+//         id: 'uploadButton',
+//         type: 'uploadButtonNode',
+//         position: { x: 415, y: 520 },
 
-        data: {
-            title: 'Upload documents',
-        },
-    },
-];
+//         data: {
+//             title: 'Upload documents',
+//         },
+//     },
+// ];
 
 
-const initialEdgesOld = [
-    {
-        id: 'upload-to-chunking',
-        source: 'upload',
-        target: 'chunking',
-        type: 'default',
-        animated: false,
-        markerEnd: {
-            type: 'arrowclosed',
-            color: '#333',
-        },
-        style: { stroke: '#333', strokeWidth: 1 }
-    },
-    {
-        id: 'chunking-to-embedding',
-        source: 'chunking',
-        target: 'embeddingModel',
-        type: 'default',
-        animated: false,
-        markerEnd: {
-            type: 'arrowclosed',
-            color: '#333',
-        },
-        style: { stroke: '#333', strokeWidth: 1 }
+// const initialEdgesOld = [
+//     {
+//         id: 'upload-to-chunking',
+//         source: 'upload',
+//         target: 'chunking',
+//         type: 'default',
+//         animated: false,
+//         markerEnd: {
+//             type: 'arrowclosed',
+//             color: '#333',
+//         },
+//         style: { stroke: '#333', strokeWidth: 1 }
+//     },
+//     {
+//         id: 'chunking-to-embedding',
+//         source: 'chunking',
+//         target: 'embeddingModel',
+//         type: 'default',
+//         animated: false,
+//         markerEnd: {
+//             type: 'arrowclosed',
+//             color: '#333',
+//         },
+//         style: { stroke: '#333', strokeWidth: 1 }
 
-    },
-    {
-        id: 'embedding-to-bm25',
-        source: 'embeddingModel',
-        target: 'bm25',
-        type: 'default',
-        animated: false,
-        markerEnd: {
-            type: 'arrowclosed',
-            color: '#333',
-        },
-        style: { stroke: '#333', strokeWidth: 1 }
-    },
-    {
-        id: 'bm25-to-reranker',
-        source: 'bm25',
-        target: 'reranker',
-        type: 'default',
-        animated: false,
-        markerEnd: {
-            type: 'arrowclosed',
-            color: '#333',
-        },
-        style: { stroke: '#333', strokeWidth: 1 }
-    },
-    {
-        id: 'reranker-to-distanceFn',
-        source: 'reranker',
-        target: 'distanceFn',
-        type: 'default',
-        animated: false,
-        markerEnd: {
-            type: 'arrowclosed',
-            color: '#333',
-        },
-        style: { stroke: '#333', strokeWidth: 1 }
-    },
-    {
-        id: 'distanceFn-to-uploadButton',
-        source: 'distanceFn',
-        target: 'uploadButton',
-        type: 'default',
-        animated: false,
-        markerEnd: {
-            type: 'arrowclosed',
-            color: '#333',
-        },
-        style: { stroke: '#333', strokeWidth: 1 }
-    }
-];
+//     },
+//     {
+//         id: 'embedding-to-bm25',
+//         source: 'embeddingModel',
+//         target: 'bm25',
+//         type: 'default',
+//         animated: false,
+//         markerEnd: {
+//             type: 'arrowclosed',
+//             color: '#333',
+//         },
+//         style: { stroke: '#333', strokeWidth: 1 }
+//     },
+//     {
+//         id: 'bm25-to-reranker',
+//         source: 'bm25',
+//         target: 'reranker',
+//         type: 'default',
+//         animated: false,
+//         markerEnd: {
+//             type: 'arrowclosed',
+//             color: '#333',
+//         },
+//         style: { stroke: '#333', strokeWidth: 1 }
+//     },
+//     {
+//         id: 'reranker-to-distanceFn',
+//         source: 'reranker',
+//         target: 'distanceFn',
+//         type: 'default',
+//         animated: false,
+//         markerEnd: {
+//             type: 'arrowclosed',
+//             color: '#333',
+//         },
+//         style: { stroke: '#333', strokeWidth: 1 }
+//     },
+//     {
+//         id: 'distanceFn-to-uploadButton',
+//         source: 'distanceFn',
+//         target: 'uploadButton',
+//         type: 'default',
+//         animated: false,
+//         markerEnd: {
+//             type: 'arrowclosed',
+//             color: '#333',
+//         },
+//         style: { stroke: '#333', strokeWidth: 1 }
+//     }
+// ];
 
 const initialNodes: FlowNode[] = [
     {
@@ -528,7 +528,7 @@ const FlowUpload = (props: {
                     : e
             )
         );
-
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentSettings, props.user, formValidation]);
 
     const onNodeClick = (event: React.MouseEvent, node: FlowNode) => {

@@ -37,7 +37,7 @@ const Settings = (props: {
 
 	const [editPrompt, setEditPrompt] = useState(false)
 
-	const [settingMode, setSettingMode] = useState<'classic' | 'new'>('new');
+	const [settingMode] = useState<'classic' | 'new'>('new');
 
 	useEffect(() => {
 		const requestOptions = {
@@ -184,7 +184,7 @@ const Settings = (props: {
 				body: JSON.stringify({ 'llms': llms_object })
 			}
 			const response2 = await fetch(`${process.env.REACT_APP_BACKEND_API}api/add_ollama_models/`, requestOptions)
-			const data2 = await response2.json()
+			// const data2 = await response2.json()
 
 		}
 		postData()

@@ -65,7 +65,7 @@ const RelevanceScoreNode = ({ data }: any) => {
             }
         }))
 
-
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [ARSbest, ARSworst, QRSbest, QRSworst, HIa, HIb, HIc])
 
 

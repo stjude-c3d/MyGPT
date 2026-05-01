@@ -39,6 +39,7 @@ const RerankerNode = ({ data }: any) => {
             ...data.currentSettings,
             reranker: reranker,
         })
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [reranker])
 
     const labelStyle: React.CSSProperties = {

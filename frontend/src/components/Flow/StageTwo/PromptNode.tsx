@@ -61,7 +61,7 @@ const PromptNode =({ data }: any) => {
             top_k: llmParameters.top_k,
             top_p: llmParameters.top_p,
         }))
-
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [systemPrompt, contextParameters, llmParameters])
 
 

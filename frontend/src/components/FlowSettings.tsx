@@ -4,8 +4,8 @@ import {
     applyNodeChanges,
     applyEdgeChanges,
     addEdge,
-    Handle,
-    Position,
+    // Handle,
+    // Position,
     NodeChange,
     EdgeChange,
     Node,
@@ -164,7 +164,7 @@ const FlowSettings = (props: {
     djangoLogin?: any
 }) => {
 
-    const [formValidation, setFormValidation] = useState(false)
+    const [formValidation] = useState(false)
     const [showSuccess, setShowSuccess] = useState(false)
     const [chatSettings, setChatSettings] = useState({
         selectedLlm: props.currentSettings?.selectedLlm || 'llama3:latest',
@@ -207,6 +207,7 @@ const FlowSettings = (props: {
         setNodes((nds) =>
             nds.map((node) => ({ ...node, data: { ...node.data, currentSettings: props.currentSettings, user: props.user } }))
         );
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentSettings, props.user]);
 
     const saveSettings = () => {

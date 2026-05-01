@@ -52,7 +52,7 @@ const ChunkingNode = ({ data }: { data: { title: string, settingsCallback: (sett
             useOverlap: useOverlap,
             chunkSize: chunkSize,
         })
-
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [chunkingMethod, chunkSizeActive, useOverlap, chunkSize])
 
     const labelStyle: React.CSSProperties = {

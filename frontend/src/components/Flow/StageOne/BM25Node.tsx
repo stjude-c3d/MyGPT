@@ -45,6 +45,7 @@ const BM25Node = ({ data }: any) => {
             ...data.currentSettings,
             useBM25: useBM25,
         })
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [useBM25])
 
     return (

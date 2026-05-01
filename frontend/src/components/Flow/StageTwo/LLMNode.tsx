@@ -46,7 +46,7 @@ const LLMNode = ({ data }: any) => {
             ...prev,
             llm: selectedLlm,
         }))
-        
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedLlm])
 
     const labelStyle: React.CSSProperties = {

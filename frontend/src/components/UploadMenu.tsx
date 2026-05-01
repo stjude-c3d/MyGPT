@@ -11,7 +11,7 @@ const UploadMenu = (props: {
 	user?: any,
 	djangoLogin?: any
 }) => {
-	const [settingMode, setSettingMode] = useState<'classic' | 'graphical' | 'newsetting'>('newsetting');
+	const [settingMode] = useState<'classic' | 'graphical' | 'newsetting'>('newsetting');
 
 	const settingProps = {
 		currentSettings: props.currentSettings,
@@ -87,10 +87,10 @@ const UploadMenu = (props: {
 						<div className="text-sm font-medium text-center text-body border-default">
 							<ul className="flex flex-wrap -mb-px">
 								<li className="me-2">
-									<a href="#" className={`text-nav dark:text-nav-dark inline-block p-4 border-b border-transparent rounded-t-base hover:text-fg-brand hover:border-brand ${activeTab === 'simple' ? 'active-tab' : ''}`} onClick={() => handleTabClick('simple')}>Simple</a>
+									<button type="button" className={`text-nav dark:text-nav-dark inline-block p-4 border-b border-transparent rounded-t-base hover:text-fg-brand hover:border-brand bg-transparent ${activeTab === 'simple' ? 'active-tab' : ''}`} onClick={() => handleTabClick('simple')}>Simple</button>
 								</li>
 								<li className="me-2">
-									<a href="#" className={`text-nav dark:text-nav-dark inline-block p-4 text-fg-brand border-b border-brand rounded-t-base ${activeTab === 'advanced' ? 'active-tab' : ''}`} aria-current="page" onClick={() => handleTabClick('advanced')}>Advanced</a>
+									<button type="button" className={`text-nav dark:text-nav-dark inline-block p-4 text-fg-brand border-b border-brand rounded-t-base bg-transparent ${activeTab === 'advanced' ? 'active-tab' : ''}`} aria-current="page" onClick={() => handleTabClick('advanced')}>Advanced</button>
 								</li>
 							</ul>
 						</div>

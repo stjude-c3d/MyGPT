@@ -46,6 +46,7 @@ const EmbeddingModelNode = ({ data }: any) => {
             selectedEmbeddingModel: selectedEmbeddingModel,
             distanceFn: distanceFn,
         })
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedEmbeddingModel])
 
     const labelStyle: React.CSSProperties = {
