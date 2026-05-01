@@ -20,6 +20,7 @@
     "@types/d3": "^7.1.0",
     "@types/node": "^16.18.108",
     "@types/three": "^0.180.0",
+    "@xyflow/react": "^12.10.2",
     "better-react-mathjax": "^2.3.0",
     "d3": "7.9.0",
     "env-cmd": "^10.1.0",
