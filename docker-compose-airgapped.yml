@@ -1,0 +1,137 @@
+services:
+  db:
+    image: postgres:14
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    expose:
+      - "5432"
+    environment:
+      - POSTGRES_NAME=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    networks:
+      - mygpt
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    command: >
+      bash -c "dockerd >/dev/null 2>&1 & sleep 10
+      && python manage.py migrate --fake sessions zero
+      && python manage.py migrate --fake-initial
+      && python manage.py collectstatic --no-input
+      && python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./backend:/code
+      - ./backend/static:/static
+      - ./backend/media:/media
+      - /var/run/docker.sock:/var/run/docker.sock
+    expose:
+      - "8000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - POSTGRES_NAME=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      # - OLLAMA_SERVER=http://ollama:11434
+    networks:
+      - mygpt
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000"]
+      interval: 30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      db:
+        condition: service_healthy
+    links:
+      - db
+
+  nginx:
+    build: ./nginx
+    volumes:
+      - ./backend/static:/static
+      - ./label_studio/data:/label_studio/data
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - backend
+    networks:
+      - mygpt
+
+  frontend:
+    build: ./frontend
+    volumes:
+      # - .:/code
+      - ./frontend/build:/build
+    expose:
+      - "3000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - mygpt
+    depends_on:
+      backend:
+        condition: service_healthy
+      grobid:
+        condition: service_healthy
+
+  grobid:
+    image: lfoppiano/grobid:latest-crf
+    expose:
+      - "8070"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./grobid/logs:/var/log/grobid
+    environment:
+      - JAVA_OPTS=-Xmx4g
+    networks:
+      - mygpt
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8070/"]
+      interval: 30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+
+  mcp_server:
+    build: ./MCP-server
+    # image: ghcr.io/stjude-c3d/mygpt-mcp-server:latest
+    volumes:
+      - ./MCP-server:/app
+    expose:
+      - "5001"
+    networks:
+      - mygpt
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  ollama:
+    build: ./ollama
+    # set environment variables
+    environment:
+      - OLLAMA_ORIGINS=http://localhost:*
+    volumes:
+        - ./ollama/models:/root/.ollama/models
+    expose:
+        - "11434"
+    container_name: ollama
+    networks:
+      - mygpt
+    deploy:
+      resources:
+        limits:
+          cpus: '10.0'
+          memory: 8G
+
+networks:
+  mygpt:

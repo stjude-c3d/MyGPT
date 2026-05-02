@@ -39,3 +39,12 @@ div.answer-div li {
   margin-top: -5px;
   margin-bottom: -5px;
 }
+
+.active-tab {
+  border-bottom: rgb(104 126 140 / var(--tw-bg-opacity)) 1px solid;
+  background-color: rgb(104 126 140 / 0.2);
+}
+
+.dotted-edge {
+  stroke-dasharray: 2 2 !important;
+}

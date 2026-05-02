@@ -14,6 +14,7 @@ const LLMSettings = (props: {
 	const [llmToLoad, setLlmToLoad] = useState('')
 	const [message, setMessage] = useState('')
 	const [modelLoaded, setModelLoaded] = useState(false)
+	const [progressPercent, setProgressPercent] = useState<number>(0)
 
 	// add new model by calling Ollama API
 	const addOllamaModel = (model_name:string) => {
@@ -21,68 +22,133 @@ const LLMSettings = (props: {
 		if(model_name !== ''){
 			const model = model_name.toLowerCase()
 			setLlmToLoad(model)
-			
+			setProgressPercent(0)
+			setModelLoaded(false)
+
 			const body = JSON.stringify({
-				'name': model,
-				'stream': true,
+				'name': model
 			})
 
 			// fetch using async await
 			const postData = async () => {
-				const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/pull`, {body, method: 'POST'})
+				const response = await fetch(`${process.env.REACT_APP_BACKEND_API}api/ollama_pull_model/`, {body, method: 'POST'})
 				const reader:any = response.body?.getReader()
+				if (!reader) {
+					setMessage('No streaming response from server')
+					return
+				}
+
+				const decoder = new TextDecoder()
+				let buffer = ''
+
+				const markDownloadSuccess = () => {
+					let new_llms = props.llms
+					new_llms.push(model_name)
+					currentSettings.selectedLlm = model_name
+					setMessage('success')
+					setProgressPercent(100)
+					setModelLoaded(true)
+					llmsDownload = llmsDownload.filter((llm:string) => llm !== model_name)
+				}
+
+				const handleEvent = (json:any) => {
+					if (json.error) {
+						setProgressPercent(0)
+						setMessage(json.error_message || 'Pull failed')
+						return 'error'
+					}
+
+					if (json.type === 'progress' && typeof json.percent === 'number') {
+						setProgressPercent(Math.max(0, Math.min(100, json.percent)))
+					}
+
+					const status = json.status || ''
+					if (status) {
+						setMessage(status)
+					}
+
+					if (json.done === true) {
+						markDownloadSuccess()
+						return 'done'
+					}
+
+					return 'continue'
+				}
+
 				while (true) {
 					const { done, value } = await reader.read()
 					if (done) {
-						let new_llms = props.llms
-						new_llms.push(model_name)
-						currentSettings.selectedLlm = model_name
-						setMessage('success')
-						setModelLoaded(true)
-						llmsDownload = llmsDownload.filter((llm:string) => llm !== model_name)
 						break
 					} else {
-						const rawjson = new TextDecoder().decode(value)
-						const json = JSON.parse(rawjson.split('\n')[0])
-						let status = ''
-						if (done === false) {
-							status = json.status
+						buffer += decoder.decode(value, { stream: true })
+						// Handle both NDJSON and concatenated JSON objects like `}{`
+						buffer = buffer.replace(/}\s*{/g, '}\n{')
+						const parts = buffer.split('\n')
+						buffer = parts.pop() || ''
+
+						for (const part of parts) {
+							if (!part.trim()) continue
+							try {
+								const json = JSON.parse(part)
+								const result = handleEvent(json)
+								if (result === 'done' || result === 'error') {
+									return
+								}
+							} catch {
+								buffer = part + '\n' + buffer
+								break
+							}
 						}
-						if (status === 'success') {
-							let new_llms = props.llms
-							new_llms.push(model_name)
-							setMessage(status)
-							setModelLoaded(true)
-							break;
-						} else {
-							setMessage(status)
-						}
+					}
+				}
+
+				if (buffer.trim().length) {
+					try {
+						const json = JSON.parse(buffer)
+						handleEvent(json)
+					} catch {
+						// ignore incomplete trailing fragments
 					}
 				}
 			}
 
 			// check if the api is available
-			fetch('http://localhost:11434/api/tags', {method: 'GET'})
-			.then(response => {
-				if(response.ok){
+			const check = async () => {
+				try {
+					const r = await fetch(`${process.env.REACT_APP_BACKEND_API}api/get_ollama_models/`, { method: 'POST' })
+					const data = await r.json()
+					const hasModelList = Array.isArray(data?.models)
+					if (!hasModelList) {
+						throw new Error('Invalid response structure')
+					}
 					console.log('API is available')
 					postData()
-				} else if (response.status === 0) {
-					return Promise.reject(new Error('API is not available'))
+				} catch {
+					console.log('API is not available')
+					setMessage('API is not available (Ollama Server unavailable)')
 				}
-			}).catch(error => {
-				console.log('Error:', error)
-				setMessage(error + ' (Ollama Server unavailable)')
-			})
+			}
+			check()
 		}
 	}
+
+	useEffect(() => {
+		if (message === 'success' && modelLoaded) {
+			const timer = setTimeout(() => {
+				setMessage('')
+				setModelLoaded(false)
+				setProgressPercent(0)
+			}, 10000)
+			return () => clearTimeout(timer)
+		}
+	}, [message, modelLoaded])
 
 	// add new model to backend API
 	useEffect(() => {
 		if(message === 'success' && llmToLoad !== '' && currentSettings.selectedLlm !== ''){
 			// const model = currentSettings.selectedLlm.toLowerCase()
 			const postData = async () => {
-				const response = await fetch(`http://localhost:11434/api/tags`, {method: 'GET'})
+				const response = await fetch(`${process.env.REACT_APP_BACKEND_API}api/get_ollama_models/`, {method: 'POST'})
 				const data = await response.json()
 				// const llm = data.models.filter((model:any) => model.name.split(':')[0] === currentSettings.selectedLlm.toLowerCase())[0]
 				const llm = data.models.filter((model:any) => model.name === currentSettings.selectedLlm.toLowerCase())[0]
@@ -160,8 +226,33 @@ const LLMSettings = (props: {
 					<div className='text-nav dark:text-nav-dark px-2 flex justify-start my-2 text-lg font-semibold'> LLMs ready to download </div>
 					{ 
 						message === '' ? <></> :
-						<div className={'ml-2 text-nav dark:text-nav-dark px-2 rounded-md' + (modelLoaded ? ' bg-green-200' : ' bg-orange-200')}>
-							{message}
+						<div className={'ml-2 text-nav dark:text-nav-dark px-2 py-2 rounded-md' + (modelLoaded ? ' bg-green-200' : ' bg-orange-200')}>
+							<div className='flex items-center justify-between gap-2'>
+								<span>{message}</span>
+								{modelLoaded ? (
+									<button
+										onClick={() => {
+											setMessage('')
+											setModelLoaded(false)
+											setProgressPercent(0)
+										}}
+										className='px-2 rounded bg-white/80 hover:bg-white text-nav'
+									>
+										x
+									</button>
+								) : <span />}
+							</div>
+							{!modelLoaded && progressPercent > 0 ? (
+								<div className='mt-2'>
+									<div className='w-full h-2 bg-white/60 rounded overflow-hidden'>
+										<div
+											className='h-2 bg-[#2A4759]'
+											style={{ width: `${progressPercent}%` }}
+										/>
+									</div>
+									<div className='text-xs mt-1 opacity-80'>{progressPercent.toFixed(2)}%</div>
+								</div>
+							) : <></>}
 						</div>
 					}
 					<div className='text-nav dark:text-nav-dark px-4 flex justify-start'>

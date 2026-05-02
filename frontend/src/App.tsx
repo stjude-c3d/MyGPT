@@ -1,12 +1,14 @@
-import '../src/App.css'
+import './App.css'
 import { useState, useEffect } from 'react'
 import TopNav from './components/TopNav'
 import GPTHome from './components/GPTHome'
 import Settings from './components/Settings'
+import UploadMenu from './components/UploadMenu'
 import defaultSettings from './utils/DefaultState'
 import ChatHistory from './components/ChatHistory'
 import Disclaimer from './components/Disclaimer'
 import FAQ from './components/FAQ'
+import Footer from './components/Footer'
 // import Plots from './components/Plots'
 import { PublicClientApplication } from '@azure/msal-browser'
 import { MsalProvider } from '@azure/msal-react'
@@ -25,6 +27,7 @@ const default_frontend_settings = {
 function App() {  
   const [currentSettings, setCurrentSettings] = useState(defaultSettings)
   const [showSettings, setShowSettings] = useState(currentSettings.showSettings || defaultSettings.showSettings)
+  const [showUpload, setShowUpload] = useState(currentSettings.showUpload || defaultSettings.showUpload)
 
   const [showDisclaimer, setShowDisclaimer] = useState(false)
   const [forceopenDisclaimer, setForceOpenDisclaimer] = useState(false)
@@ -93,7 +96,7 @@ function App() {
           },
           body: JSON.stringify({
             'user_email': user.user_email,
-            'user_group': user.otherRoles.length ? user.otherRoles[0] : ''
+            'user_group': user.otherRoles?.length ? user.otherRoles[0] : ''
           })
         }
         fetch(`${process.env.REACT_APP_BACKEND_API}api/get_datasets/?format=json`, requestOptions)
@@ -141,7 +144,8 @@ function App() {
     { frontendSettings.azure_login ?
       <MsalProvider instance={msalInstance}>
         <div className='bg-gray-200 dark:bg-zinc-800'>
-        <TopNav 
+        <TopNav
+          setShowUpload={setShowUpload}
           setShowSettings={setShowSettings} 
           setShowChatHistory={setShowChatHistory} 
           setPlotButton={setShowPlotButton}
@@ -151,9 +155,20 @@ function App() {
           darkMode={darkMode}
           darkModeCallback={DarkModeCallback}
         />
+        {showUpload ?
+          <UploadMenu
+            closeUpload={() => setShowUpload(false)}
+            openSettings={() => setShowSettings(true)}
+            currentSettings={currentSettings}
+            settingsCallback={settingsCallback}
+            user={user}
+            djangoLogin={frontendSettings.django_login}
+          /> : <></>
+        }
         {showSettings ?
           <Settings 
-            closeSettings={() => setShowSettings(false)} 
+            closeSettings={() => setShowSettings(false)}
+            openUpload={() => { setShowSettings(false); setShowUpload(true); }}
             defaultSettings={defaultSettings} 
             currentSettings={currentSettings}
             settingsCallback={settingsCallback}
@@ -191,6 +206,7 @@ function App() {
     frontendSettings.django_login ?
     <div className='bg-gray-200'>
       <TopNav 
+        setShowUpload={setShowUpload}
         setShowSettings={setShowSettings} 
         setShowChatHistory={setShowChatHistory} 
         setPlotButton={setShowPlotButton}
@@ -199,9 +215,20 @@ function App() {
         loginCallback={loginCallback}
         darkModeCallback={DarkModeCallback}
       />
+      {showUpload ?
+        <UploadMenu
+          closeUpload={() => setShowUpload(false)}
+          openSettings={() => setShowSettings(true)}
+          currentSettings={currentSettings}
+          settingsCallback={settingsCallback}
+          user={user}
+          djangoLogin={frontendSettings.django_login}
+        /> : <></>
+      }
       {showSettings ?
         <Settings 
-          closeSettings={() => setShowSettings(false)} 
+          closeSettings={() => setShowSettings(false)}
+          openUpload={() => { setShowSettings(false); setShowUpload(true); }}
           defaultSettings={defaultSettings} 
           currentSettings={currentSettings}
           settingsCallback={settingsCallback}
@@ -247,6 +274,7 @@ function App() {
     :
     <div className='bg-gray-200'>
       <TopNav 
+        setShowUpload={setShowUpload}
         setShowSettings={setShowSettings}
         setPlotButton={setShowPlotButton} 
         setShowChatHistory={setShowChatHistory} 
@@ -254,9 +282,20 @@ function App() {
         loginCallback={()=>{}}
         darkModeCallback={DarkModeCallback}
       />
+      {showUpload ?
+        <UploadMenu
+          closeUpload={() => setShowUpload(false)}
+          openSettings={() => setShowSettings(true)}
+          currentSettings={currentSettings}
+          settingsCallback={settingsCallback}
+          user={user}
+          djangoLogin={frontendSettings.django_login}
+        /> : <></>
+      }
       {showSettings ?
         <Settings 
-          closeSettings={() => setShowSettings(false)} 
+          closeSettings={() => setShowSettings(false)}
+          openUpload={() => { setShowSettings(false); setShowUpload(true); }}
           defaultSettings={defaultSettings} 
           currentSettings={currentSettings}
           settingsCallback={settingsCallback}
@@ -282,25 +321,17 @@ function App() {
     </div>
   }
   {/* add footer */}
-  <div className='flex justify-between text-nav bg-[#2A4759] my-auto py-4 h-[6vh]'>
-    <div className='text-sm text-white mx-8 my-auto'>
-      {/* <p className='inline-block mx-2'>Designed by </p> */}
-      <img src={process.env.PUBLIC_URL + '/stjude-logo-child.png'} alt='St. Jude logo' className='h-[3vh] inline-block'/>
-      <p className='inline-block mx-2'>St. Jude Children's Research Hospital</p>
-    </div>
-    <div className='text-sm text-white mx-8 my-auto cursor-pointer flex flex-row'>
-    { frontendSettings.django_login ?
-        <div onClick={()=>{
-          setForceOpenDisclaimer(true)
-          setShowDisclaimer(!showDisclaimer)
-        }}>Disclaimer</div>
-         : <></>}
-       <div className='text-sm text-white mx-8 my-auto cursor-pointer' onClick={()=>{
-          setShowFAQ(!showFAQ)}
-        }>FAQs </div>
-        </div> 
+  <Footer 
+    frontendSettings={frontendSettings}
+    onDisclaimerClick={()=>{
+      setForceOpenDisclaimer(true)
+      setShowDisclaimer(!showDisclaimer)
+    }}
+    onFAQClick={()=>{
+      setShowFAQ(!showFAQ)
+    }}
+  />
 	</div>
-  </div>
   )
 }
 

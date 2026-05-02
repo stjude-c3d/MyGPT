@@ -8,13 +8,15 @@ import '@react-pdf-viewer/bookmark/lib/styles/index.css';
 import type { RenderBookmarkItemProps } from '@react-pdf-viewer/bookmark'
 import { pageNavigationPlugin } from '@react-pdf-viewer/page-navigation'
 import '@react-pdf-viewer/default-layout/lib/styles/index.css'
-import { PaperAirplaneIcon, Cog6ToothIcon, PaperClipIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { PaperAirplaneIcon, Cog6ToothIcon, PaperClipIcon, XMarkIcon, CheckIcon } from '@heroicons/react/24/outline'
 import { scaleSequential, interpolateRdYlGn } from 'd3'
 import Markdown from 'react-markdown'
 // import Feedback from './Feedback'
 import { OllamaDirectChatStream, OllamaChatStreamWithToolSupport } from '../utils/OllamaChat'
-import { OllamaDirectGenerateStream } from '../utils/OllamaGenerate'
+import { OllamaDirectGenerateStream, OllamaDirectGenerateNoStream } from '../utils/OllamaGenerate'
 import { SJRayDirectGenerateStream } from '../utils/SJRayGenerate'
+import { fetchAndRegisterOllamaModels, fetchDatasetDetails, fetchDocuments, fetchSections, addDemoLibraryRequest, fetchContext, saveAnswer } from '../utils/GPTHomeAPI'
+import FocusOnDocumentSelect from './DocumentFocusSelect'
 
 
 function GPTHome(props:{
@@ -25,6 +27,9 @@ function GPTHome(props:{
 }){
 	const [llms, setLlms] = useState<any[]>([])
 	const [selectedDataset, setSelectedDataset] = useState(props.currentSettings.selectedDataset)
+	const [DatasetLanguage, setDatasetLanguage] = useState(props.currentSettings.DatasetLanguage)
+	const [translatedQuery, setTranslatedQuery] = useState('')
+	const [translatedQueryReceived, setTranslatedQueryReceived] = useState(false)
 	const [searchTerm, setSearchTerm] = useState<any>('')
 	const [query, setQuery] = useState<any[]>([])
 	const [questionRelevancescore, setQuestionRelevancescore] = useState<any[]>([])
@@ -41,12 +46,14 @@ function GPTHome(props:{
 	const [nullThought, setNullThought] = useState<any>('')
 	const [nullAnswerReceived, setNullAnswerReceived] = useState<any>(false)
 	const [answers, setAnswers] = useState<any[]>([])
+	const [translatedAnswer, setTranslatedAnswer] = useState('')
+	const [translatedAnswerReceived, setTranslatedAnswerReceived] = useState(false)
 	const [thoughts, setThoughts] = useState<any[]>([])
 	const [nullAnswers, setNullAnswers] = useState<any[]>([])
 	const [nullThoughts, setNullThoughts] = useState<any[]>([])
 	const [showNullAnswerIndexes, setShowNullAnswerIndexes] = useState<any>([])
 	const [papers, setPapers] = useState<any[]>([])
-	const [focusedPaper, setFocusedPaper] = useState<any>(null)
+	const [focusedPapers, setFocusedPapers] = useState<string[]>([])
 	const [sections, setSections] = useState<any[]>([])
 	const [focusedSection, setFocusedSection] = useState<any>(null)
 	const [videos, setVideos] = useState<any[]>([])
@@ -83,112 +90,54 @@ function GPTHome(props:{
 		'gpt-oss', 'qwen3',
 	]
 
+	const chatModeOptions = [
+		{ value: 'chat_with_documents', label: 'Chat with Documents' },
+		// { value: 'workflow_for_documents', label: 'Workflow for Documents' },
+		{ value: 'direct_chat', label: 'Direct chat with GPTs' },
+	]
+
+	const supportedDatasetLanguages: any = {
+		english: { language_to_full: 'English', language_to: 'en' },
+		spanish: { language_to_full: 'Spanish', language_to: 'es' },
+		french: { language_to_full: 'French', language_to: 'fr' },
+		portugese: { language_to_full: 'Portuguese', language_to: 'pt' },
+	}
+
+	const isThinkStepSupported = llmswithThinkStepSupport.includes(props.currentSettings.selectedLlm.split(':')[0])
+
 	// get llms from backend
 	useEffect(()=>{
-
-		const postData = async () => {
-			const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/tags`, {method: 'GET'})
-				const data = await response.json()
-
-				// set models
-				const llms = data.models
-					.filter((model:any) => model.details.quantization_level !== 'F16')
-					.map((model:any) => model.name)
-				setLlms(llms)
-
-				// add new model to backend API
-				let llms_object:any = []
-				data.models.forEach((model:any) => {
-					// let llm_name = model.name.split(':')[0]
-					let llm_name = model.name
-					let llm_size = model.size* 1e-9
-					let llm_size_gb = llm_size.toFixed(2)
-					llms_object.push({name: llm_name, size: llm_size_gb})
-				})
-				
-				const requestOptions = {
-					method: 'POST',
-					headers: { 
-						'Content-Type': 'application/json',
-						'Authorization': `${
-							props.frontendSettings && props.frontendSettings.django_login ?
-							'Bearer ' + localStorage.getItem('access') :
-							process.env.NODE_ENV === 'production' ? 
-							process.env.REACT_APP_AUTH_TOKEN_PROD 
-							: process.env.REACT_APP_AUTH_TOKEN_DEV}`
-					},
-				setConnection: 'keep-alive',
-				keepalive: true,
-				setTimeout: 10000,
-				body: JSON.stringify({'llms': llms_object})
-				}
-				if (props.frontendSettings && props.frontendSettings.django_login && localStorage.getItem('access')?.length){
-					const response2 = await fetch(`${process.env.REACT_APP_BACKEND_API}api/add_ollama_models/`, requestOptions)
-					if (response2.ok){
-						const data2 = await response2.json()
-						console.log(data2)
-					}
-				}
-
-				// add embedding models to backend API
-				const embedding_models = data.models.filter((model:any) => 
-					(model.details.quantization_level === 'F16' && model.details.family.includes('bert')) || (model.details.family.includes('nomic-bert')))
-				
-				let embedding_models_object:any = []
-				embedding_models.forEach((model:any) => {
-					let model_name = model.name
-					let model_size = model.size* 1e-9
-					let model_size_gb = model_size.toFixed(2)
-					embedding_models_object.push({name: model_name, size: model_size_gb, source: 'ollama'})
-				})
-
-				const requestOptions2 = {
-					method: 'POST',
-					headers: { 
-						'Content-Type': 'application/json',
-						'Authorization': `${
-							props.frontendSettings && props.frontendSettings.django_login ?
-							'Bearer ' + localStorage.getItem('access') :
-							process.env.NODE_ENV === 'production' ? 
-							process.env.REACT_APP_AUTH_TOKEN_PROD 
-							: process.env.REACT_APP_AUTH_TOKEN_DEV}`
-					},
-					setConnection: 'keep-alive',
-					keepalive: true,
-					setTimeout: 10000,
-					body: JSON.stringify({'embedding_models': embedding_models_object})
-				}
-				if (props.frontendSettings){
-					const response3 = await fetch(`${process.env.REACT_APP_BACKEND_API}api/add_embedding_models/`, requestOptions2)
-					if (response3.ok){
-						const data3 = await response3.json()
-						console.log(data3)
-					}
-				}
-
-		}
-		postData()
+		let isMounted = true
+		const controller = new AbortController()
+		fetchAndRegisterOllamaModels(props.frontendSettings, controller.signal)
+			.then(llms => { if (isMounted) setLlms(llms) })
+			.catch((error) => { if (error?.name !== 'AbortError') console.error(error) })
+		return () => { isMounted = false; controller.abort() }
 	},[props.frontendSettings, props.frontendSettings.django_login])
+
+	// keep dataset language synced with the selected dataset
+	useEffect(() => {
+		if (props.currentSettings.selectedDataset === 'None') return
+		let isMounted = true
+		const controller = new AbortController()
+		fetchDatasetDetails(props.currentSettings.selectedDataset, props.user, props.frontendSettings, controller.signal)
+			.then(data => {
+				if (!isMounted) return
+				if (data && data.documents_language && props.currentSettings.DatasetLanguage !== data.documents_language) {
+					props.settingsCallback({ ...props.currentSettings, DatasetLanguage: data.documents_language })
+					setDatasetLanguage(data.documents_language)
+				}
+			})
+			.catch((error) => { if (error?.name !== 'AbortError') console.error(error) })
+		return () => { isMounted = false; controller.abort() }
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [props.currentSettings.selectedDataset])
 	
 	useEffect(()=>{
 		const postData = async () => {
-			const requestOptions = {
-				method: 'POST',
-				headers: { 
-					'Content-Type': 'application/json',
-					'Authorization': `${
-						props.frontendSettings && props.frontendSettings.django
-						? 'Bearer ' + localStorage.getItem('access')
-						: process.env.NODE_ENV === 'production' ?
-						process.env.REACT_APP_AUTH_TOKEN_PROD
-						: process.env.REACT_APP_AUTH_TOKEN_DEV}`
-				},
-				body: JSON.stringify({
-					'dataset': props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset,
-					'user_email': props.user && props.user.user_email ? props.user.user_email : '',
-					'user_group': props.user && props.user.otherRoles && props.user.otherRoles.length ? props.user.otherRoles[0] : ''
-				  })
-			}
+			const dataset = props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset
+				? props.currentSettings.selectedDataset
+				: props.currentSettings.defaultDataset
 
 			if (props.currentSettings.defaultDataset === props.currentSettings.selectedDataset && props.currentSettings.defaultDataset === 'None'){
 				return
@@ -196,8 +145,7 @@ function GPTHome(props:{
 
 			if((!props.currentSettings.answerWithoutContext && !papers.length && !videos.length) || (props.currentSettings.fetchPapers === true) ){
 				setTimeout(async () => {
-					const response = await fetch(`${process.env.REACT_APP_BACKEND_API}api/get_documents/?format=json`, requestOptions)
-					const data = await response.json()
+					const data = await fetchDocuments(dataset, props.user, props.frontendSettings)
 					if (data.dataset_type === 'papers'){ 
 						setPapers(data.documents)
 						setVideos([])
@@ -207,7 +155,6 @@ function GPTHome(props:{
 						setPapers([])
 					}
 				}, 500)
-				
 			}
 			props.settingsCallback({...props.currentSettings, showSettings: false, fetchPapers: false})
 
@@ -224,48 +171,33 @@ function GPTHome(props:{
 				setSourcePages([])
 				setSourceColorCodes([])
 				setSourceContexts([])
-				setFocusedPaper(null)
+				setFocusedPapers([])
 				setFocusedSection(null)
 			}
 		}
 		postData()
 	// eslint-disable-next-line react-hooks/exhaustive-deps	
 	},[papers, query, props.currentSettings.defaultDataset, props.currentSettings.selectedDataset, props.currentSettings.fetchPapers, props.currentSettings.selectedDataset])
-	
-	// console.log(props.currentSettings.selectedDataset, props.currentSettings.defaultDataset)
 
 	// set section by getting form this api/get_sections/ and dataset_name
 	useEffect(()=>{
-		const requestOptions = {
-			method: 'POST',
-			headers: { 
-				'Content-Type': 'application/json',
-				'Authorization': `${
-					props.frontendSettings && props.frontendSettings.django_login ?
-					'Bearer ' + localStorage.getItem('access') :
-					process.env.NODE_ENV === 'production' ?
-					process.env.REACT_APP_AUTH_TOKEN_PROD
-					: process.env.REACT_APP_AUTH_TOKEN_DEV}`
-			},
-			body: JSON.stringify({
-				dataset_name: props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset
-			})
-		}
+		let isMounted = true
+		const controller = new AbortController()
+		const datasetName = props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset
+			? props.currentSettings.selectedDataset
+			: props.currentSettings.defaultDataset
 
 		if (props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset && props.currentSettings.selectedDataset !== 'None'){
-			fetch(`${process.env.REACT_APP_BACKEND_API}api/get_sections/?format=json`, requestOptions)
-				.then(response => response.json())
+			fetchSections(datasetName, props.frontendSettings, controller.signal)
 				.then(data => {
-					if (data.sections && data.sections.length){
-						setSections(data.sections)
-					}else{
-						setSections([])
-					}
+					if (!isMounted) return
+					setSections(data.sections && data.sections.length ? data.sections : [])
 				})
-		}
-		else{
+				.catch((error) => { if (error?.name !== 'AbortError') console.error(error) })
+		} else {
 			setSections([])
 		}
+		return () => { isMounted = false; controller.abort() }
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[props.currentSettings.selectedDataset, props.currentSettings.defaultDataset])
 
@@ -276,68 +208,45 @@ function GPTHome(props:{
 
 	// add demo library
 	useEffect(()=>{
+		let isMounted = true
+		const controller = new AbortController()
 		if(addDemoLibrary){
-			const requestOptions = {
-				method: 'GET',
-				headers: { 
-					'Content-Type': 'application/json',
-					'Authorization': `${
-						props.frontendSettings && props.frontendSettings.django_login ?
-						'Bearer ' + localStorage.getItem('access') :
-						process.env.NODE_ENV === 'production' ? 
-						process.env.REACT_APP_AUTH_TOKEN_PROD 
-						: process.env.REACT_APP_AUTH_TOKEN_DEV}`
-				},
-				body: JSON.stringify({
-					sentence_transformer: props.currentSettings.selected_sentence_transformer
-				})
-			}
-			fetch(`${process.env.REACT_APP_BACKEND_API}api/add_demo_library/?format=json`, requestOptions)
-				.then(response => response.json())
+			addDemoLibraryRequest(props.currentSettings.selected_sentence_transformer, props.frontendSettings, controller.signal)
 				.then(data => {
+					if (!isMounted) return
 					console.log(data)
 					setAddDemoLibrary(false)
-					props.settingsCallback({...props.currentSettings, selectedDataset: 'GPCR' , showSettings: false, fetchPapers: true})
+					props.settingsCallback({...props.currentSettings, selectedDataset: 'GPCR', showSettings: false, fetchPapers: true})
 				})
+				.catch((error) => { if (error?.name !== 'AbortError') console.error(error) })
 		}
+		return () => { isMounted = false; controller.abort() }
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[addDemoLibrary])
 	
 	// get context from the backend vector database
 	useEffect(()=>{
+		if (answerWithoutContext) return
 		// setAnswers([])
 		// setSourceReceived(false)
-		const requestOptions = {
-			method: 'POST',
-			headers: { 
-				'Content-Type': 'application/json',
-				'Authorization': `${
-					props.frontendSettings && props.frontendSettings.django_login ?
-					'Bearer ' + localStorage.getItem('access') :
-					process.env.NODE_ENV === 'production' ? 
-					process.env.REACT_APP_AUTH_TOKEN_PROD 
-					: process.env.REACT_APP_AUTH_TOKEN_DEV}`
-			},
-			setConnection: 'keep-alive',
-			keepalive: true,
-			setTimeout: 10000,
-			body: JSON.stringify({ 
-				text: query[query.length-1] && query[query.length-1].question ? query[query.length-1].question.replaceAll('"',"'") : '',
-				model_type: props.currentSettings.selectedLlm,
-				dataset: props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset,
-				new_conversation: query.length === 1 ? true : false,
-				document_title: focusedPaper ? focusedPaper : '',
-				focused_section: focusedSection ? focusedSection.split(' (')[0] : '',
-				maximum_chunks_count: props.currentSettings.maximum_chunks_count,
-				no_cutoff: props.currentSettings.no_chunk_cutoff,
-				related_query: relatedQuery,
-				previous_query: query.length > 1 ? query[query.length-2].question.replaceAll('"',"'") : '',
-				no_context: answerWithoutContext,
-				sentence_transformer: props.currentSettings.selected_sentence_transformer,
-				use_default_qrs: props.currentSettings.use_default_qrs,
-				question_best_distance: props.currentSettings.relevance_score_cutoff.question_best,
-				question_worst_distance: props.currentSettings.relevance_score_cutoff.question_worst,
-			})
+		const contextRequestBody = { 
+			text: query[query.length-1] && query[query.length-1].question ? query[query.length-1].question.replaceAll('"',"'") : '',
+			translated_text: translatedQuery ? translatedQuery.replaceAll('"',"'") : '',
+			language_of_docs: DatasetLanguage,
+			model_type: props.currentSettings.selectedLlm,
+			dataset: props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset,
+			new_conversation: query.length === 1 ? true : false,
+			focused_document_titles: focusedPapers.length ? focusedPapers : [],
+			focused_section: focusedSection ? focusedSection.split(' (')[0] : '',
+			maximum_chunks_count: props.currentSettings.maximum_chunks_count,
+			no_cutoff: props.currentSettings.no_chunk_cutoff,
+			related_query: relatedQuery,
+			previous_query: query.length > 1 ? query[query.length-2].question.replaceAll('"',"'") : '',
+			no_context: answerWithoutContext,
+			sentence_transformer: props.currentSettings.selected_sentence_transformer,
+			use_default_qrs: props.currentSettings.use_default_qrs,
+			question_best_distance: props.currentSettings.relevance_score_cutoff.question_best,
+			question_worst_distance: props.currentSettings.relevance_score_cutoff.question_worst,
 		}
 		const postDataWithTools = async () => {
 			const toolsBody:any = {
@@ -368,20 +277,15 @@ function GPTHome(props:{
 			if (ollamaData && ollamaData.answerReceived) {
 				setAnswerReceived(ollamaData.answerReceived)
 				let answer = ollamaData.content;
-				let requestOptionsBody: any = JSON.parse(requestOptions.body);
-				requestOptionsBody['text'] = requestOptionsBody['text'] + '<tool_response>' + answer + '</tool_response>';
+				contextRequestBody['text'] = contextRequestBody['text'] + '<tool_response>' + answer + '</tool_response>';
 				setMcpResponse(answer)
-				// requestOptionsBody['text'] = answer + '
-				requestOptions.body = JSON.stringify(requestOptionsBody);
 				getContext();
 			}
 		}
 
 		const getContext = () => {
 			setRelatedQuery(false)
-			let llm_endpoint = 'get_context'
-				fetch(`${process.env.REACT_APP_BACKEND_API}api/${llm_endpoint}/?format=json`, requestOptions)
-					.then(response => response.json())
+				fetchContext(contextRequestBody, props.frontendSettings)
 					.then((data:any) => {
 						if (data.relevance_score === 0){
 							setQuestionRelevancescore((prevQuestionRelevancescore:any)=>[...prevQuestionRelevancescore, data.relevance_score])
@@ -396,6 +300,7 @@ function GPTHome(props:{
 								setSourceStops((prevSourceStops:any)=>[...prevSourceStops, []])
 							}
 							setAnswerReceived(false)
+							setTranslatedAnswerReceived(false)
 						}else{
 							setQuestionRelevancescore((prevQuestionRelevancescore:any)=>[...prevQuestionRelevancescore, data.relevance_score])
 							setContext(data.context)
@@ -416,8 +321,10 @@ function GPTHome(props:{
 								setselectedPaperIdx(videoIndex)
 							}
 							setAnswerReceived(false)
+							setTranslatedAnswerReceived(false)
 						}
 					})
+					.catch((error) => { console.error(error) })
 				}
 
 			if(query.length && query.length !== answers.length){
@@ -426,8 +333,12 @@ function GPTHome(props:{
 				if (llmsWithToolSupport.includes(props.currentSettings.selectedLlm.split(':')[0]) && mcpOllamaTools.length > 0){
 					postDataWithTools()
 				}
-				else{
-					getContext()
+				else {
+					if (DatasetLanguage !== 'english' && translatedQueryReceived){
+						getContext()
+					} else if (DatasetLanguage === 'english'){
+						getContext()
+					}
 				}
 
 				if (llmswithThinkStepSupport.includes(props.currentSettings.selectedLlm.split(':')[0])){
@@ -437,7 +348,7 @@ function GPTHome(props:{
 				}
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	},[query])
+	},[query, translatedQueryReceived])
 
 	// get answer from the ollama
 	useEffect(()=>{
@@ -458,7 +369,7 @@ function GPTHome(props:{
 						props.currentSettings.selectedLlm, 
 						question, systemPrompt, addToolsPromt, mcpResponse,
 						props.currentSettings.temperature, props.currentSettings.top_k, props.currentSettings.top_p, 
-						setAnswer, thinkAllowed ? setThought : null
+						setAnswer, isThinkStepSupported ? setThought : null
 					)
 				} else if (props.currentSettings.LLM_server_API_specs === 'sjray'){
 					answerReceived = await SJRayDirectGenerateStream(
@@ -492,7 +403,7 @@ function GPTHome(props:{
 						props.currentSettings.selectedLlm, 
 						question, systemPrompt, false, '',
 						props.currentSettings.temperature, props.currentSettings.top_k, props.currentSettings.top_p, 
-						setNullAnswer, thinkAllowed ? setNullThought : null
+						setNullAnswer, isThinkStepSupported ? setNullThought : null
 					)
 				} else if (props.currentSettings.LLM_server_API_specs === 'sjray'){
 					nullAnswerReceived = await SJRayDirectGenerateStream(
@@ -509,10 +420,72 @@ function GPTHome(props:{
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[query, context, props.currentSettings.selectedLlm, nullAnswer])
 
+	// get translated query if dataset language is different than english
+	useEffect(()=>{
+		if (answerWithoutContext) return
+		if (DatasetLanguage === 'english' || DatasetLanguage === '') {
+			setTranslatedQuery('')
+			return
+		}
+		const postData = async () => {
+			if (props.currentSettings.LLM_server_API_specs === 'ollama'){
+				let language_from_full = 'English'
+				let language_from = 'en'
+				let language_to_full = DatasetLanguage !== '-' ? supportedDatasetLanguages[DatasetLanguage].language_to_full : ''
+				let language_to = DatasetLanguage !== '-' ? supportedDatasetLanguages[DatasetLanguage].language_to : ''
+				let systemPrompt = `You are a professional ${language_from_full} (${language_from}) to ${language_to_full} (${language_to}) translator. Your goal is to accurately convey the meaning and nuances of the original ${language_from_full} text while adhering to ${language_to_full} grammar, vocabulary, and cultural sensitivities. Produce only the ${language_to_full} translation, without any additional explanations or commentary. Please translate the following ${language_from_full} text into ${language_to_full}: `
+				const translatedQueryReceived = await OllamaDirectGenerateNoStream(
+					'translategemma:latest', 
+					query[query.length-1] && query[query.length-1].question ? query[query.length-1].question.replaceAll('"',"'") : '',
+					systemPrompt,
+					false,
+					'',
+					props.currentSettings.temperature, props.currentSettings.top_k, props.currentSettings.top_p, 
+					setTranslatedQuery, false
+				)
+				setTranslatedQueryReceived(translatedQueryReceived)
+			}
+		}
+		postData()
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	},[query, DatasetLanguage])
+
+	// get translated answer if dataset language is different than english
+	useEffect(()=>{
+		if (answerWithoutContext) return
+		if (!answerReceived || answer.length === 0) return
+		if (DatasetLanguage === 'english' || DatasetLanguage === '') {
+			setTranslatedAnswer('')
+			return
+		}
+		const postData = async () => {
+			if (props.currentSettings.LLM_server_API_specs === 'ollama'){
+				let language_from_full = 'English'
+				let language_from = 'en'
+				let language_to_full = supportedDatasetLanguages[DatasetLanguage].language_to_full
+				let language_to = supportedDatasetLanguages[DatasetLanguage].language_to
+				let systemPrompt = `You are a professional ${language_from_full} (${language_from}) to ${language_to_full} (${language_to}) translator. Your goal is to accurately convey the meaning and nuances of the original ${language_from_full} text while adhering to ${language_to_full} grammar, vocabulary, and cultural sensitivities. Produce only the ${language_to_full} translation, without any additional explanations or commentary. Please translate the following ${language_from_full} text into ${language_to_full}: `
+				const translatedAnswerReceived = await OllamaDirectGenerateNoStream(
+					'translategemma:latest', 
+					answer,
+					systemPrompt,
+					false,
+					'',
+					props.currentSettings.temperature, props.currentSettings.top_k, props.currentSettings.top_p, 
+					setTranslatedAnswer, false
+				)
+				setTranslatedAnswerReceived(translatedAnswerReceived)
+			}
+		}
+		postData()
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	},[answer, answerReceived, DatasetLanguage])
+
 	useEffect(()=>{
 		if (answerReceived && answer.length !== 0){
 			setAnswers((prevAnswers:any)=>[...prevAnswers, {'response': answer, 'source': props.currentSettings.selectedLlm}])
 			setThoughts((prevThoughts:any)=>[...prevThoughts, thought])
+			setThought('')
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[answer, props.currentSettings.selectedLlm, answerReceived])
@@ -521,6 +494,7 @@ function GPTHome(props:{
 		if (nullAnswerReceived && nullAnswer.length !== 0){
 			setNullAnswers((prevNullAnswers:any)=>[...prevNullAnswers, nullAnswer])
 			setNullThoughts((prevNullThoughts:any)=>[...prevNullThoughts, nullThought])
+			setNullThought('')
 			setShowNullAnswerIndexes((prevShowNullAnswerIndexes:any)=>[...prevShowNullAnswerIndexes, false])
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -529,52 +503,44 @@ function GPTHome(props:{
 	// save answer to backend database
 	useEffect(()=>{
 		if(answers.length && query.length && nullAnswer.length && nullAnswerReceived && answerReceived && query.length === answers.length){
-			const requestOptions = {
-				method: 'POST',
-				headers: { 
-					'Content-Type': 'application/json',
-					'Authorization': `${
-						props.frontendSettings && props.frontendSettings.django_login ?
-						'Bearer ' + localStorage.getItem('access') :
-						process.env.NODE_ENV === 'production' ? 
-						process.env.REACT_APP_AUTH_TOKEN_PROD 
-						: process.env.REACT_APP_AUTH_TOKEN_DEV}`
-				},
-				body: JSON.stringify({ 
-					question_text: query[query.length-1].question.replaceAll('"',"'"),
-					answer_text: answers[answers.length-1].response.replaceAll('"',"'"),
-					answer_no_context_text: nullAnswer.replaceAll('"',"'"),
-					model_type: answers[answers.length-1].source,
-					dataset: props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset,
-					sentence_transformer: props.currentSettings.selected_sentence_transformer,
-					no_context: answerWithoutContext,
-					use_default_ars: props.currentSettings.use_default_ars,
-					answer_best_distance: props.currentSettings.relevance_score_cutoff.answer_best,
-					answer_worst_distance: props.currentSettings.relevance_score_cutoff.answer_worst,
-					use_default_hi: props.currentSettings.use_default_hi,
-					a_hi: props.currentSettings.relevance_score_cutoff.HIa,
-					b_hi: props.currentSettings.relevance_score_cutoff.HIb,
-					c_hi: props.currentSettings.relevance_score_cutoff.HIc,
-					temperature: props.currentSettings.temperature,
-					top_k: props.currentSettings.top_k,
-					top_p: props.currentSettings.top_p,
-				})
+			if (DatasetLanguage !== 'english' && !translatedAnswerReceived) return
+			const body = { 
+				question_text: query[query.length-1].question.replaceAll('"',"'"),
+				answer_text: answers[answers.length-1].response.replaceAll('"',"'"),
+				translated_answer_text: translatedAnswer.replaceAll('"',"'"),
+				answer_no_context_text: nullAnswer.replaceAll('"',"'"),
+				model_type: answers[answers.length-1].source,
+				dataset: props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset,
+				sentence_transformer: props.currentSettings.selected_sentence_transformer,
+				no_context: answerWithoutContext,
+				use_default_ars: props.currentSettings.use_default_ars,
+				answer_best_distance: props.currentSettings.relevance_score_cutoff.answer_best,
+				answer_worst_distance: props.currentSettings.relevance_score_cutoff.answer_worst,
+				use_default_hi: props.currentSettings.use_default_hi,
+				a_hi: props.currentSettings.relevance_score_cutoff.HIa,
+				b_hi: props.currentSettings.relevance_score_cutoff.HIb,
+				c_hi: props.currentSettings.relevance_score_cutoff.HIc,
+				temperature: props.currentSettings.temperature,
+				top_k: props.currentSettings.top_k,
+				top_p: props.currentSettings.top_p,
 			}
-			fetch(`${process.env.REACT_APP_BACKEND_API}api/save_answer/?format=json`, requestOptions)
-				.then(response => response.json())
+			saveAnswer(body, props.frontendSettings)
 				.then(data => {
 					console.log(data)
 					setAnswerRelevancescore((prevAnswerRelevancescore:any)=>[...prevAnswerRelevancescore, data.relevance_score])
-					setHallucinationIndex((prevHallucinationIndex:any)=>[...prevHallucinationIndex, data.hallucination_index])
+					setHallucinationIndex((prevHallucinationIndex:any)=>[...prevHallucinationIndex, data.hallucination_index_by_ml])
 					setContext('')
 					setAnswer('')
 					setNullAnswer('')
 					setNullAnswerReceived(false)
 					setAnswerReceived(false)
+					setTranslatedAnswer('')
+					setTranslatedAnswerReceived(false)
 				})
+				.catch((error) => console.error(error))
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	},[answers, nullAnswer, nullAnswerReceived, query, props.currentSettings.selectedDataset, props.currentSettings.defaultDataset, props.currentSettings.selected_sentence_transformer, answerWithoutContext])
+	},[answers, nullAnswer, nullAnswerReceived, translatedAnswerReceived, query, props.currentSettings.selectedDataset, props.currentSettings.defaultDataset, props.currentSettings.selected_sentence_transformer, answerWithoutContext])
 
 	// get answer from ollama without context while chatting to LLM without documents
 	useEffect(()=>{
@@ -617,7 +583,7 @@ function GPTHome(props:{
 		if(messages.length > 0 && answer === '' && !answerReceived && !llmsWithToolSupport.includes(props.currentSettings.selectedLlm.split(':')[0])){
 			// fetch using async await
 			const postData = async () => {
-				const data = await OllamaDirectChatStream(body, setAnswer, thinkAllowed ? setThought : null)
+				const data = await OllamaDirectChatStream(body, setAnswer, isThinkStepSupported ? setThought : null)
 				let answerReceived = data.answerReceived
 				setAnswerReceived(answerReceived)
 			}
@@ -641,46 +607,34 @@ function GPTHome(props:{
 	// save answer to backend database without context
 	useEffect(()=>{
 		if(answers.length && query.length && answer.length !== 0 && answerReceived && query.length === answers.length && answerWithoutContext){
-			const requestOptions = {
-				method: 'POST',
-				headers: { 
-					'Content-Type': 'application/json',
-					'Authorization': `${
-						props.frontendSettings && props.frontendSettings.django_login ?
-						'Bearer ' + localStorage.getItem('access') :
-						process.env.NODE_ENV === 'production' ?
-						process.env.REACT_APP_AUTH_TOKEN_PROD
-						: process.env.REACT_APP_AUTH_TOKEN_DEV}`
-				},
-				body: JSON.stringify({ 
-					question_text: query[query.length-1].question.replaceAll('"',"'"),
-					answer_text: answer.replaceAll('"',"'"),
-					answer_no_context_text: '',
-					model_type: props.currentSettings.selectedLlm,
-					dataset: props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset,
-					sentence_transformer: props.currentSettings.selected_sentence_transformer,
-					no_context: answerWithoutContext,
-					use_default_ars: props.currentSettings.use_default_ars,
-					answer_best_distance: props.currentSettings.relevance_score_cutoff.answer_best,
-					answer_worst_distance: props.currentSettings.relevance_score_cutoff.answer_worst,
-					use_default_hi: props.currentSettings.use_default_hi,
-					a_hi: props.currentSettings.relevance_score_cutoff.HIa,
-					b_hi: props.currentSettings.relevance_score_cutoff.HIb,
-					c_hi: props.currentSettings.relevance_score_cutoff.HIc,
-					temperature: props.currentSettings.temperature,
-					top_k: props.currentSettings.top_k,
-					top_p: props.currentSettings.top_p,
-				})
+			const body = { 
+				question_text: query[query.length-1].question.replaceAll('"',"'"),
+				answer_text: answer.replaceAll('"',"'"),
+				answer_no_context_text: '',
+				model_type: props.currentSettings.selectedLlm,
+				dataset: props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset ? props.currentSettings.selectedDataset : props.currentSettings.defaultDataset,
+				sentence_transformer: props.currentSettings.selected_sentence_transformer,
+				no_context: answerWithoutContext,
+				use_default_ars: props.currentSettings.use_default_ars,
+				answer_best_distance: props.currentSettings.relevance_score_cutoff.answer_best,
+				answer_worst_distance: props.currentSettings.relevance_score_cutoff.answer_worst,
+				use_default_hi: props.currentSettings.use_default_hi,
+				a_hi: props.currentSettings.relevance_score_cutoff.HIa,
+				b_hi: props.currentSettings.relevance_score_cutoff.HIb,
+				c_hi: props.currentSettings.relevance_score_cutoff.HIc,
+				temperature: props.currentSettings.temperature,
+				top_k: props.currentSettings.top_k,
+				top_p: props.currentSettings.top_p,
 			}
-			fetch(`${process.env.REACT_APP_BACKEND_API}api/save_answer/?format=json`, requestOptions)
-				.then(response => response.json())
+			saveAnswer(body, props.frontendSettings)
 				.then(data => {
 					console.log(data)
 					setAnswerRelevancescore((prevAnswerRelevancescore:any)=>[...prevAnswerRelevancescore, data.relevance_score])
-					setHallucinationIndex((prevHallucinationIndex:any)=>[...prevHallucinationIndex, data.hallucination_index])
+					setHallucinationIndex((prevHallucinationIndex:any)=>[...prevHallucinationIndex, data.hallucination_index_by_ml])
 					setAnswer('')
 					setAnswerReceived(false)
 				})
+				.catch((error) => console.error(error))
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[answers, query, answerWithoutContext, answerReceived, answer])
@@ -841,7 +795,6 @@ function GPTHome(props:{
 		setSourcePages([])
 		setSourceContexts([])
 		setSourceColorCodes([])
-		setFocusedPaper(null)
 		setFocusedSection(null)
 		setselectedPaperIdx(0)
 		setSelectedPage(0)
@@ -851,47 +804,48 @@ function GPTHome(props:{
 		setThought('')
 		setNullAnswer('')
 	}
+
+	const selectedChatMode = answerWithoutContext ? 'direct_chat' : 'with_documents'
+
+	const onChatModeChange = (mode: string) => {
+		if (mode === 'chat_with_documents') {
+			setAnswerWithoutContext(true)
+			resetStates()
+			props.settingsCallback({ ...props.currentSettings, selectedDataset: selectedDataset, answerWithoutContext: false, fetchPapers: true })
+			return
+		} else if (mode === 'direct_chat') {
+			setAnswerWithoutContext(false)
+			resetStates()
+			setSelectedDataset(props.currentSettings.selectedDataset)
+			props.settingsCallback({ ...props.currentSettings, selectedDataset: props.currentSettings.selectedLlm + '_direct_chat', answerWithoutContext: true, fetchPapers: false })
+			return
+		}
+		// else if (mode === 'workflow_for_documents') {
+		// 	setAnswerWithoutContext(true)
+		// 	resetStates()
+		// 	props.settingsCallback({ ...props.currentSettings, selectedDataset: selectedDataset, answerWithoutContext: false, fetchPapers: true })
+		// 	return
+		// }
+	}
+
+	const hasFocusedDocuments = focusedPapers.length > 0
+	const isFocusedDocument = (title: string) => focusedPapers.includes(title)
+
 	return (
 		<div className='grid grid-cols-10 p-4 bg-gray-200 dark:bg-neutral-800 max-w-[2000px] mx-auto h-[94vh]'>
 			<div className={'mt-24 p-6 bg-panel3 dark:bg-panel2-dark rounded-lg max-h-[92vh] overflow-y-auto duration-300 ease-in-out peer-checked:bg-panel1 after:w-4 after:h-4 after:bg-white after:rounded-full after:shadow-md after:duration-300' + 
 				(answerWithoutContext ? ' col-span-12 max-w-full' : ' col-span-3 max-w-4xl mr-6') }>
-				{/* Toggle button for chat mode at the top */}
+				{/* Chat mode dropdown at the top */}
 				<div className="flex justify-center mb-8">
-					<div className="flex">
-						<button
-							className={
-								"px-6 py-3 rounded-l-lg font-semibold text-lg " +
-								(answerWithoutContext
-									? "bg-gray-300 text-nav dark:bg-gray-500 dark:text-white"
-									: "bg-nav text-white shadow-lg dark:bg-stjude")
-							}
-							disabled={!answerWithoutContext}
-							onClick={() => {
-								setAnswerWithoutContext(true)
-								resetStates()
-								props.settingsCallback({...props.currentSettings, selectedDataset: selectedDataset, answerWithoutContext: false, fetchPapers: true})
-							}}
-						>
-							Chat with Documents
-						</button>
-						<button
-							className={
-								"px-6 py-3 rounded-r-lg font-semibold text-lg " +
-								(answerWithoutContext
-									? "bg-nav text-white shadow-lg dark:bg-stjude"
-									: "bg-gray-300 text-nav dark:bg-gray-500 dark:text-white")
-							}
-							disabled={answerWithoutContext}
-							onClick={() => {
-								setAnswerWithoutContext(false)
-								resetStates()
-								setSelectedDataset(props.currentSettings.selectedDataset)
-								props.settingsCallback({...props.currentSettings, selectedDataset: props.currentSettings.selectedLlm + '_direct_chat', answerWithoutContext: true, fetchPapers: false})
-							}}
-						>
-							Direct chat with GPTs
-						</button>
-					</div>
+					<select
+						className='px-4 py-3 rounded-lg font-semibold text-lg text-white bg-nav dark:bg-gray-500 dark:text-white shadow-md w-72'
+						value={selectedChatMode}
+						onChange={(e) => onChatModeChange(e.target.value)}
+					>
+						{chatModeOptions.map((option) => (
+							<option key={option.value} value={option.value}>{option.label}</option>
+						))}
+					</select>
 				</div>
 				<div className='text-2xl font-bold text-nav dark:text-nav-dark'>Ask a Question</div>
 				<div className='text-sm text-nav my-2 dark:text-nav-dark'>
@@ -951,6 +905,8 @@ function GPTHome(props:{
 							onKeyUp={
 								(e:any)=>{
 									if (e.keyCode === 13){
+										setThought('')
+										setNullThought('')
 										setQuery((prevQuery:any)=>[...prevQuery, 
 											{'question':searchTerm, 'related': relatedQuery}
 										])
@@ -964,6 +920,8 @@ function GPTHome(props:{
 						className='p-4 mx-2 my-auto bg-white hover:bg-bsk_dark_blue dark:bg-stjude dark:text-white text-bsk_dark_blue font-semibold hover:text-white py-2 px-3 hover:border-transparent rounded-full shadow-md hover:shadow-lg outline-none focus:outline-none h-12'
 						disabled={props.frontendSettings && props.frontendSettings.disable_chat_without_login && !props.currentSettings.loggedin}
 						onClick={() => {
+							setThought('')
+							setNullThought('')
 							setQuery((prevQuery:any)=>[...prevQuery, 
 									{'question':searchTerm, 'related': relatedQuery}
 								])
@@ -1195,7 +1153,7 @@ function GPTHome(props:{
 											>
 												<div className='text-gray-300 text-sm whitespace-pre-wrap overflow-y-auto max-h-48'>
 													<Markdown>
-														{showNullAnswerIndexes[query.length-i-1] === true? nullThoughts[query.length-i-1] : thoughts[thoughts.length-1]}
+														{showNullAnswerIndexes[query.length-i-1] === true? nullThoughts[query.length-i-1] : thoughts[query.length-i-1]}
 													</Markdown>
 												</div>
 											</div>
@@ -1429,37 +1387,13 @@ function GPTHome(props:{
 				</div>
 				{/* add filter column for documents */}
 				{ papers.length > 1 ?
-					<div className='p-2 text-sm border-slate-400 border-b'>
-						<div className='text-white inline-block px-2 w-40'> Focus on document </div>
-						<select 
-							className={'text-md text-nav dark:bg-stjude dark:text-white py-1 px-2 mx-1 rounded-md w-40 inline-block' + (focusedPaper !== null ? ' bg-panel3' : ' bg-panel2 dark:bg-panel4-dark')}
-							value={focusedPaper}
-							onChange={
-								(e) => {
-									if (e.target.value === 'None'){
-										setFocusedPaper(null)
-																			setselectedPaperIdx(0)
-									} else {
-										setFocusedPaper(e.target.value)
-										setselectedPaperIdx(papers.findIndex((p:any)=>p.paper_title===e.target.value))
-								}}
-							}
-						>
-							<option value={'None'}>None</option>
-							{papers.length ?
-								papers.map((p:any, index:number) => {
-									return (
-										<option key={index} value={p['paper_title']}>{p['paper_title']}</option>
-									)
-								}) :
-								videos.map((v:any, index:number) => {
-									return (
-										<option key={index} value={v['video_title']}>{v['video_title']}</option>
-									)
-								})
-							}
-						</select>
-					</div>	: <></>
+					<FocusOnDocumentSelect
+						papers={papers}
+						videos={videos}
+						focusedPapers={focusedPapers}
+						setFocusedPapers={setFocusedPapers}
+						setSelectedPaperIdx={setselectedPaperIdx}
+					/>	: <></>
 				}
 				{ sections.length ?
 					<div className='p-2 text-sm border-slate-400 border-b'>
@@ -1492,40 +1426,36 @@ function GPTHome(props:{
 				
 				<div className='mb-4 divide-y'>
 					{/* list all the papers */}
-					{ papers.length && focusedPaper === null ?
+					{ papers.length ?
 						papers.map((p:any, index:number)=>
-							<div key={index} className={'p-2 ' + (selectedPaperIdx === index ? ' bg-nav cursor-default': ' bg-panel1 dark:bg-panel4-dark cursor-pointer')}>
-								<div className='text-white text-sm '
+							<div key={index} className={'p-2 ' + (selectedPaperIdx === index ? ' bg-nav': ' bg-panel1 dark:bg-panel4-dark') + (hasFocusedDocuments && !isFocusedDocument(p['paper_title']) ? ' opacity-40 cursor-not-allowed' : selectedPaperIdx === index ? ' cursor-default' : ' cursor-pointer')}>
+								<div className='text-white text-sm flex items-center gap-1'
 									onClick={()=> {
+										if (hasFocusedDocuments && !isFocusedDocument(p['paper_title'])) return
 										setselectedPaperIdx(index)
 										setSelectedPage(0)
 										setFileAttachmentType('paper_attachment')
 									}}	
-								>{p['paper_title']}</div>
-							</div>
-						) :
-						focusedPaper !== null && papers.length ?
-							papers.filter((p:any)=>p['paper_title'] === focusedPaper).map((p:any, index:number)=>
-								<div key={index} className={'p-2 ' + (selectedPaperIdx === papers.findIndex((p:any)=>p.paper_title===focusedPaper) ? ' bg-nav cursor-default': ' bg-panel1 dark:bg-panel4-dark cursor-pointer')}>
-									<div className='text-white text-sm '
-										onClick={()=> {
-											setselectedPaperIdx(index)
-											setSelectedPage(0)
-											setFileAttachmentType('paper_attachment')
-										}}	
-									>{p['paper_title']}</div>
+								>
+									{hasFocusedDocuments && isFocusedDocument(p['paper_title']) ? <CheckIcon className='w-4 h-4 text-green-300 flex-shrink-0' /> : null}
+									{p['paper_title']}
 								</div>
+							</div>
 						) :
 						videos.length ?
 						videos.map((v:any, index:number)=>
-							<div key={index} className={'p-2 ' + (selectedPaperIdx === index ? ' bg-nav cursor-default': ' bg-panel1 dark:bg-panel4-dark cursor-pointer')}>
-								<div className='text-white text-sm '
+							<div key={index} className={'p-2 ' + (selectedPaperIdx === index ? ' bg-nav': ' bg-panel1 dark:bg-panel4-dark') + (hasFocusedDocuments && !isFocusedDocument(v['video_title']) ? ' opacity-40 cursor-not-allowed' : selectedPaperIdx === index ? ' cursor-default' : ' cursor-pointer')}>
+								<div className='text-white text-sm flex items-center gap-1'
 									onClick={()=> {
+										if (hasFocusedDocuments && !isFocusedDocument(v['video_title'])) return
 										setselectedPaperIdx(index)
 										setSelectedPage(0)
 										setFileAttachmentType('paper_attachment')
 									}}	
-								>{v['video_title']}</div>
+								>
+									{hasFocusedDocuments && isFocusedDocument(v['video_title']) ? <CheckIcon className='w-4 h-4 text-green-300 flex-shrink-0' /> : null}
+									{v['video_title']}
+								</div>
 							</div>
 						) : <></>
 					}
@@ -1533,7 +1463,7 @@ function GPTHome(props:{
 			</div>
 			<div className='col-span-5 mt-24 p-6 max-w-5xl w-full bg-panel2 dark:bg-panel3-dark rounded-r-lg overflow-y-auto max-h-[92vh]'>
 					<div className='overflow-x-auto h-full w-full pt-4 '>
-						<Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.js">
+						<Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
 						<div  className='h-[76vh]'>
 							{papers.length ?
 								<Viewer
