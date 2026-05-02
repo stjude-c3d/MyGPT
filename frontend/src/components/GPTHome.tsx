@@ -117,6 +117,7 @@ function GPTHome(props:{
 
 	// keep dataset language synced with the selected dataset
 	useEffect(() => {
+		if (props.currentSettings.selectedDataset === 'None') return
 		let isMounted = true
 		const controller = new AbortController()
 		fetchDatasetDetails(props.currentSettings.selectedDataset, props.user, props.frontendSettings, controller.signal)
