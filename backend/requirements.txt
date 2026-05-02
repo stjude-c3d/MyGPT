@@ -19,7 +19,6 @@ pytest-django
 pytube
 youtube_transcript_api
 pdfkit
-ollama
 duckdb
 openpyxl
 langchain_community
