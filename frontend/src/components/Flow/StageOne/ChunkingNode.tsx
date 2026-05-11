@@ -146,10 +146,10 @@ const ChunkingNode = ({ data }: { data: { title: string, settingsCallback: (sett
                     <div style={rowStyle}>
                         <div style={labelStyle}>Chunk Size</div>
                         <select style={selectStyle} value={chunkSize} disabled={!chunkSizeActive} onChange={(e) => setChunkSize(e.target.value)}>
-                            <option value="100">500</option>
-                            <option value="200">750</option>
-                            <option value="300">1000</option>
-                            <option value="400">1200</option>
+                            <option value="500">500</option>
+                            <option value="750">750</option>
+                            <option value="1000">1000</option>
+                            <option value="1200">1200</option>
                         </select>
                     </div>
 
