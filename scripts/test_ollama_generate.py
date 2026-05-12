@@ -190,7 +190,7 @@ def test_ollama_generate(
 
 
 def test_get_ollama_models(
-    url: str = "http://localhost/api/get_ollama_models/",
+    url: str = "http://localhost:8000/api/get_ollama_models/",
     timeout: int = 60,
 ) -> Dict[str, Any]:
     """
@@ -318,8 +318,8 @@ def main():
     )
     parser.add_argument(
         "--url",
-        default="http://localhost/api/ollama_generate/",
-        help="Backend API URL (default: http://localhost/api/ollama_generate/)"
+        default="http://localhost:8000/api/ollama_generate/",
+        help="Backend API URL (default: http://localhost:8000/api/ollama_generate/)"
     )
     parser.add_argument(
         "--model",
@@ -339,8 +339,8 @@ def main():
     )
     parser.add_argument(
         "--models-url",
-        default="http://localhost/api/get_ollama_models/",
-        help="Backend models API URL (default: http://localhost/api/get_ollama_models/)"
+        default="http://localhost:8000/api/get_ollama_models/",
+        help="Backend models API URL (default: http://localhost:8000/api/get_ollama_models/)"
     )
 
     args = parser.parse_args()
