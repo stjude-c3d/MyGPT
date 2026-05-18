@@ -5,17 +5,36 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import defaultSettings from '../../../utils/DefaultState'
+import { fetchAndRegisterOllamaModels } from '../../../utils/GPTHomeAPI'
 
 const stateKey = 'seLLMNodeState';
 const LLMNode = ({ data }: any) => {
     const [collapsed, setCollapsed] = useState(false);
 
-    const [llmOptions] = useState([
+    const [llmOptions, setLlmOptions] = useState([
         ...new Set([
             ...defaultSettings.llms,
-            ...data.currentSettings.llms
+            ...data.currentSettings.llms,
+            data.currentSettings.defaultLlm
         ])
     ]);
+
+    useEffect(() => {
+        const abortController = new AbortController();
+        
+        const fetchOllamaLLMs = async () => {
+            try {
+                const ollamaLlms = await fetchAndRegisterOllamaModels(data.currentSettings, abortController.signal);
+                setLlmOptions((prev) => [...new Set([...prev, ...ollamaLlms])]);
+            } catch (error) {
+                console.error('Failed to fetch Ollama models:', error);
+            }
+        };
+        
+        fetchOllamaLLMs();
+        
+        return () => abortController.abort();
+    }, [data.currentSettings]);
 
     const getInitialUploadNodeData = () => {
         try {
@@ -28,7 +47,7 @@ const LLMNode = ({ data }: any) => {
         }
 
         return {
-            selectedLlm: 'llama3:latest'
+            selectedLlm: data.currentSettings.defaultLlm || 'llama3:latest'
         }
     }
 
@@ -51,7 +70,7 @@ const LLMNode = ({ data }: any) => {
 
     const labelStyle: React.CSSProperties = {
         fontSize: 13,
-        width: 140,
+        width: 100,
         flexShrink: 0,
         whiteSpace: 'nowrap',
         color: '#2a4759',

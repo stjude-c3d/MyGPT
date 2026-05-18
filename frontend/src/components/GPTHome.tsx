@@ -15,7 +15,7 @@ import Markdown from 'react-markdown'
 import { OllamaDirectChatStream, OllamaChatStreamWithToolSupport } from '../utils/OllamaChat'
 import { OllamaDirectGenerateStream, OllamaDirectGenerateNoStream } from '../utils/OllamaGenerate'
 import { SJRayDirectGenerateStream } from '../utils/SJRayGenerate'
-import { fetchAndRegisterOllamaModels, fetchDatasetDetails, fetchDocuments, fetchSections, addDemoLibraryRequest, fetchContext, saveAnswer } from '../utils/GPTHomeAPI'
+import { fetchAndRegisterOllamaModels, fetchDatasetDetails, fetchDocuments, fetchSections, addDemoLibraryRequest, fetchContext, saveAnswer, fetchProtectedMediaBlobUrl } from '../utils/GPTHomeAPI'
 import FocusOnDocumentSelect from './DocumentFocusSelect'
 
 
@@ -68,6 +68,9 @@ function GPTHome(props:{
 	const [selectedStart, setSelectedStart] = useState(0)
 	const [selectedStop, setSelectedStop] = useState(0)
 	const [fileAttachmentType, setFileAttachmentType] = useState('paper_attachment')
+	const [viewerFileUrl, setViewerFileUrl] = useState('')
+	const [mediaLoading, setMediaLoading] = useState(false)
+	const [mediaLoadError, setMediaLoadError] = useState('')
 	const ConfidenceScoreColor = scaleSequential()
 		.domain([0, 100])
 		.interpolator(interpolateRdYlGn)
@@ -178,6 +181,55 @@ function GPTHome(props:{
 		postData()
 	// eslint-disable-next-line react-hooks/exhaustive-deps	
 	},[papers, query, props.currentSettings.defaultDataset, props.currentSettings.selectedDataset, props.currentSettings.fetchPapers, props.currentSettings.selectedDataset])
+
+	useEffect(() => {
+		const controller = new AbortController()
+		let objectUrl = ''
+
+		const loadProtectedMedia = async () => {
+			if (!papers.length || !papers[selectedPaperIdx]) {
+				setMediaLoading(false)
+				setMediaLoadError('')
+				setViewerFileUrl('')
+				return
+			}
+
+			const mediaPath = papers[selectedPaperIdx][fileAttachmentType]
+			if (!mediaPath) {
+				setMediaLoading(false)
+				setMediaLoadError('No file path found for this document')
+				setViewerFileUrl('')
+				return
+			}
+
+			try {
+				setMediaLoading(true)
+				setMediaLoadError('')
+				setViewerFileUrl('')
+				objectUrl = await fetchProtectedMediaBlobUrl(mediaPath, props.frontendSettings, controller.signal)
+				setViewerFileUrl(objectUrl)
+				setMediaLoading(false)
+			} catch (error:any) {
+				if (error?.name !== 'AbortError') {
+					console.error(error)
+					setMediaLoading(false)
+					if (error?.status === 401 || error?.status === 403) {
+						setMediaLoadError('Unable to load document. Authentication is required.')
+					} else {
+						setMediaLoadError('Unable to load document. Please check login and permissions.')
+					}
+					setViewerFileUrl('')
+				}
+			}
+		}
+
+		loadProtectedMedia()
+
+		return () => {
+			controller.abort()
+			if (objectUrl) URL.revokeObjectURL(objectUrl)
+		}
+	}, [papers, selectedPaperIdx, fileAttachmentType, props.frontendSettings, props.currentSettings.loggedin])
 
 	// set section by getting form this api/get_sections/ and dataset_name
 	useEffect(()=>{
@@ -1465,10 +1517,10 @@ function GPTHome(props:{
 					<div className='overflow-x-auto h-full w-full pt-4 '>
 						<Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
 						<div  className='h-[76vh]'>
-							{papers.length ?
+							{papers.length && viewerFileUrl ?
 								<Viewer
 								theme={props.currentSettings.darkMode ? 'dark' : 'light'}
-								fileUrl={`${process.env.REACT_APP_BACKEND_API}media/${papers.length ? papers[selectedPaperIdx][fileAttachmentType] : ''}`}
+								fileUrl={viewerFileUrl}
 								defaultScale={SpecialZoomLevel.ActualSize}
 								initialPage={selectedPage-1}
 								plugins={[
@@ -1476,7 +1528,11 @@ function GPTHome(props:{
 									PageNavigationPluginInstance,
 									bookmarkPluginInstance,
 								]}
-								/> : videos.length && videos[selectedPaperIdx] && videos[selectedPaperIdx]['video_link'] ?
+								/> : papers.length ?
+								<div className='text-center text-nav'>
+									{mediaLoading ? 'Loading document...' : mediaLoadError || 'Preparing document...'}
+								</div>
+								: videos.length && videos[selectedPaperIdx] && videos[selectedPaperIdx]['video_link'] ?
 								// show embedded youtube videos
 									<div className='p-2'>
 										<iframe 

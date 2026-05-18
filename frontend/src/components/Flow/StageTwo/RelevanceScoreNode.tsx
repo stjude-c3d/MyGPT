@@ -21,9 +21,8 @@ const RelevanceScoreNode = ({ data }: any) => {
             ARSworst: data.currentSettings.relevance_score_cutoff.answer_worst,
             QRSbest: data.currentSettings.relevance_score_cutoff.question_best,
             QRSworst: data.currentSettings.relevance_score_cutoff.question_worst,
-            HIa: data.currentSettings.relevance_score_cutoff.HIa,
-            HIb: data.currentSettings.relevance_score_cutoff.HIb,
-            HIc: data.currentSettings.relevance_score_cutoff.HIc,
+            HIp: data.currentSettings.relevance_score_cutoff.HIp,
+            HIq: data.currentSettings.relevance_score_cutoff.HIq,
         }
     }
 
@@ -33,9 +32,10 @@ const RelevanceScoreNode = ({ data }: any) => {
     const [ARSworst, setARSworst] = useState(initialData.ARSworst)
     const [QRSbest, setQRSbest] = useState(initialData.QRSbest)
     const [QRSworst, setQRSworst] = useState(initialData.QRSworst)
-    const [HIa, setHIa] = useState(initialData.HIa)
-    const [HIb, setHIb] = useState(initialData.HIb)
-    const [HIc, setHIc] = useState(initialData.HIc)
+    const [HIp, setHIp] = useState(initialData.HIp)
+    const [HIq, setHIq] = useState(initialData.HIq)
+    const [HIMode, setHIMode] = useState('ML based prediction')
+    // const [HIc, setHIc] = useState(initialData.HIc)
 
     useEffect(() => {
         // localStorage.setItem(
@@ -45,9 +45,8 @@ const RelevanceScoreNode = ({ data }: any) => {
         //         ARSworst,
         //         QRSbest,
         //         QRSworst,
-        //         HIa,
-        //         HIb,
-        //         HIc,
+        //         HIp,
+        //         HIq,
         //     })
         // )
 
@@ -59,14 +58,13 @@ const RelevanceScoreNode = ({ data }: any) => {
                 answer_worst: ARSworst,
                 question_best: QRSbest,
                 question_worst: QRSworst,
-                HIa: HIa,
-                HIb: HIb,
-                HIc: HIc,
+                HIp: HIp,
+                HIq: HIq,
             }
         }))
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [ARSbest, ARSworst, QRSbest, QRSworst, HIa, HIb, HIc])
+    }, [ARSbest, ARSworst, QRSbest, QRSworst, HIp, HIq])
 
 
     const rowStyle: React.CSSProperties = {
@@ -74,6 +72,17 @@ const RelevanceScoreNode = ({ data }: any) => {
         alignItems: 'center',
         gap: 12,
         marginBottom: 12,
+    };
+
+    const inputStyle: React.CSSProperties = {
+        flex: 1,
+        padding: '6px 8px',
+        fontSize: 13,
+        border: '1px solid #ccc',
+        borderRadius: 6,
+        height: 30,
+        boxSizing: 'border-box',
+        backgroundColor: '#fff',
     };
 
     return (
@@ -159,24 +168,31 @@ const RelevanceScoreNode = ({ data }: any) => {
 
                         <div style={rowStyle}>
                             <div>
-                                <div className='text-nav dark:text-nav-dark inline-block text-sm'>Hallucination Index coefficients</div>
-                                <div>
-                                    <div className='w-24 inline-block text-nav dark:text-nav-dark text-sm'><MathJax>{"\\(HI = a - b  (QRS) - c (ARS)\\)"}</MathJax></div>
+                                <div className='text-nav dark:text-nav-dark inline-block text-sm'>Hallucination Index</div>
+                                <div className='flex justify-between my-2'>
+                                    <label className='text-nav dark:text-nav-dark text-sm my-auto mx-2'>Mode:</label>
+                                    <select value={HIMode} style={inputStyle} onChange={(e) => setHIMode(e.target.value)} className='text-sm rounded-md w-40 p-1 dark:text-white dark:bg-gray-500'>
+                                        <option value='ML based prediction'>ML based prediction</option>
+                                        <option value='Equation based'>Equation based</option>
+                                    </select>
                                 </div>
-                                <div>
-                                    <div className='flex justify-between'>
-                                        <div className='text-nav dark:text-nav-dark p-1 my-1 text-sm'><MathJax>{"\\(a \\)"}</MathJax></div>
-                                        <input type='number' placeholder='a' className='inputStyle text-sm rounded-md w-24 m-1 dark:text-white dark:bg-gray-500 dark:placeholder:text-nav-dark' value={HIa} onChange={(e) => setHIa(e.target.value)} />
+                                {HIMode === 'Equation based' && (
+                                    <div>
+                                        <div className='w-24 inline-block text-nav dark:text-nav-dark text-sm'><MathJax>{"\\(HI = 1 - (\\frac{p \\times QRS}{p  +  q})\\ - (\\frac{q \\times ARS}{p + q})\\)"}</MathJax></div>
                                     </div>
-                                    <div className='flex justify-between'>
-                                        <div className='text-nav dark:text-nav-dark p-1 my-1 text-sm'><MathJax>{"\\(b \\)"}</MathJax></div>
-                                        <input type='number' placeholder='b' className='inputStyle text-sm rounded-md w-24 m-1 dark:text-white dark:bg-gray-500 dark:placeholder:text-nav-dark' value={HIb} onChange={(e) => setHIb(e.target.value)} />
+                                )}
+                                {HIMode === 'Equation based' && (
+                                    <div>
+                                        <div className='flex justify-between'>
+                                            <div className='text-nav dark:text-nav-dark p-1 my-1 text-sm'><MathJax>{"\\(p \\)"}</MathJax></div>
+                                            <input type='number' placeholder='p' className='inputStyle text-sm rounded-md w-24 m-1 dark:text-white dark:bg-gray-500 dark:placeholder:text-nav-dark' value={HIp} onChange={(e) => setHIp(e.target.value)} />
+                                        </div>
+                                        <div className='flex justify-between'>
+                                            <div className='text-nav dark:text-nav-dark p-1 my-1 text-sm'><MathJax>{"\\(q \\)"}</MathJax></div>
+                                            <input type='number' placeholder='q' className='inputStyle text-sm rounded-md w-24 m-1 dark:text-white dark:bg-gray-500 dark:placeholder:text-nav-dark' value={HIq} onChange={(e) => setHIq(e.target.value)} />
+                                        </div>
                                     </div>
-                                    <div className='flex justify-between'>
-                                        <div className='text-nav dark:text-nav-dark p-1 my-1 text-sm'><MathJax>{"\\(c \\)"}</MathJax></div>
-                                        <input type='number' placeholder='c' className='inputStyle text-sm rounded-md w-24 m-1 dark:text-white dark:bg-gray-500 dark:placeholder:text-nav-dark' value={HIc} onChange={(e) => setHIc(e.target.value)} />
-                                    </div>
-                                </div>
+                                )}
                             </div>
                         </div>
                     </MathJaxContext>

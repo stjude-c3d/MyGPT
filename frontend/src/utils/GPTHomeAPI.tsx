@@ -1,11 +1,15 @@
 // Shared auth header helper (mirrors SettingsAPI.tsx)
 export const getAuthHeader = (frontendSettings: any): string => {
-	if (frontendSettings && frontendSettings.django_login) {
-		return 'Bearer ' + localStorage.getItem('access')
+	const jwtAccessToken = localStorage.getItem('access')
+	if (jwtAccessToken?.length) {
+		return 'Bearer ' + jwtAccessToken
 	}
-	return process.env.NODE_ENV === 'production'
+	const staticToken = process.env.NODE_ENV === 'production'
 		? process.env.REACT_APP_AUTH_TOKEN_PROD ?? ''
 		: process.env.REACT_APP_AUTH_TOKEN_DEV ?? ''
+
+	// Fall back to static token when JWT is not available.
+	return staticToken
 }
 
 // GET Ollama api/tags  +  POST api/add_ollama_models/  +  POST api/add_embedding_models/
@@ -192,4 +196,33 @@ export const saveAnswer = async (
 		signal,
 	})
 	return response.json()
+}
+
+// GET protected media through authenticated request and return an object URL.
+export const fetchProtectedMediaBlobUrl = async (
+	mediaPath: string,
+	frontendSettings: any,
+	signal?: AbortSignal
+): Promise<string> => {
+	if (!mediaPath) return ''
+	const authHeader = getAuthHeader(frontendSettings)
+	const requestHeaders: Record<string, string> = {}
+	if (authHeader) {
+		requestHeaders['Authorization'] = authHeader
+	}
+
+	const response = await fetch(`${process.env.REACT_APP_BACKEND_API}media/${mediaPath}`, {
+		method: 'GET',
+		headers: requestHeaders,
+		signal,
+	})
+
+	if (!response.ok) {
+		const error = new Error(`Failed to fetch media: ${response.status}`)
+		;(error as any).status = response.status
+		throw error
+	}
+
+	const blob = await response.blob()
+	return URL.createObjectURL(blob)
 }

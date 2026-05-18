@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import {
     ReactFlow,
+    Controls,
     applyNodeChanges,
     applyEdgeChanges,
     addEdge,
@@ -548,7 +549,7 @@ const FlowUpload = (props: {
         const formData = new FormData()
 
         formData.append('dataset_name', props.currentSettings.libraryName)
-        formData.append('embedding_model', props.currentSettings.selectedEmbeddingModel)
+        formData.append('embedding_model', props.currentSettings.selectedEmbeddingModel || 'nomic-embed-text:latest')
         formData.append('user', props.user ? props.user.user.replace(', ', '_') : '-')
         formData.append('user_email', props.user ? props.user.user_email : '-')
         formData.append('user_group', props.user && props.user.isAdmin ? 'admin' : 'user')
@@ -622,7 +623,9 @@ const FlowUpload = (props: {
                 onConnect={onConnect}
                 onNodeClick={onNodeClick}
                 defaultViewport={{ x: 0, y: 0, zoom: 0.75 }}
-            />
+            >
+                <Controls showFitView={false} showInteractive={false} position='top-right' />
+            </ReactFlow>
         </div>
     );
 }

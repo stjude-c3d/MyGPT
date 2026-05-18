@@ -1,7 +1,9 @@
 from django.core.files.base import File
-from django.http import StreamingHttpResponse
+from django.http import StreamingHttpResponse, FileResponse, Http404
+from django.conf import settings
+from django.utils._os import safe_join
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.views import APIView
 from rest_framework.parsers import JSONParser
 from django.utils.timezone import make_aware
@@ -9,7 +11,7 @@ from django.core import serializers
 import numpy as np
 import chromadb
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 from pytube import YouTube, Playlist
 import datetime
@@ -1251,6 +1253,44 @@ def disclaimer_agreement(request):
             agreement_date_time=make_aware(datetime.datetime.now())
         )
         return Response({'agreed':True}, content_type="application/json")
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def secure_media(request, file_path):
+    django_login_enabled = False
+    if FrontEndSettings.objects.exists():
+        frontend_settings = FrontEndSettings.objects.latest('saved_date_time')
+        django_login_enabled = frontend_settings.django_login
+
+    is_authenticated_user = bool(getattr(request, 'user', None) and request.user.is_authenticated)
+    auth_header = request.headers.get('Authorization', '')
+    bearer_token = auth_header.split(' ', 1)[1] if auth_header.startswith('Bearer ') and ' ' in auth_header else ''
+    static_tokens = [
+        os.environ.get('AUTH_TOKEN_PROD'),
+        os.environ.get('AUTH_TOKEN_DEV'),
+        os.environ.get('REACT_APP_AUTH_TOKEN_PROD'),
+        os.environ.get('REACT_APP_AUTH_TOKEN_DEV'),
+    ]
+    valid_static_tokens = [token for token in static_tokens if token]
+    has_valid_static_token = (
+        auth_header in valid_static_tokens
+        or bearer_token in valid_static_tokens
+        or any(auth_header == f'Bearer {token}' for token in valid_static_tokens)
+    )
+
+    if django_login_enabled and not is_authenticated_user and not has_valid_static_token:
+        return Response({'detail': 'Authentication credentials were not provided.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    try:
+        absolute_path = safe_join(settings.MEDIA_ROOT, file_path)
+    except ValueError:
+        raise Http404('File not found')
+
+    if not os.path.exists(absolute_path) or not os.path.isfile(absolute_path):
+        raise Http404('File not found')
+
+    return FileResponse(open(absolute_path, 'rb'))
 
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]

@@ -58,9 +58,8 @@ const defaultSettings = {
 		question_worst: 1.7,
 		answer_best: 0.12,
 		answer_worst: 1.42,
-		HIa: 1,
-		HIb: 0.5,
-		HIc: 0.5,
+		HIp: 1,
+		HIq: 2,
 	},
 	LLM_server_API_specs: 'ollama', // 'openai', 'ollama', 'sjray'
 	use_default_qrs: true,

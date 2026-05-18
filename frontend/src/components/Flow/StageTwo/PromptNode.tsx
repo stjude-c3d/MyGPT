@@ -39,7 +39,7 @@ const PromptNode =({ data }: any) => {
 
     const [systemPrompt, setSystemPrompt] = useState(initialData.systemPrompt);
     const [contextParameters, setContextParameters] = useState(initialData.contextParameters);
-    const [llmParameters] = useState(initialData.llmParameters);
+    const [llmParameters, setLlmParameters] = useState(initialData.llmParameters);
 
 
     useEffect(() => {
@@ -145,13 +145,86 @@ const PromptNode =({ data }: any) => {
                             style={{ ...textareaStyle, resize: 'both' }}
                             placeholder="Enter system prompt here..."
                             value={systemPrompt}
-                            rows={10}
+                            rows={7}
                             onChange={(e) => setSystemPrompt(e.target.value)}
                         />
                     </div>
 
                     <div className='flex flex-column mt-2'>
-                        <div style={labelStyle}>Maximum Chunks</div>
+                        <div style={labelStyle}>Precision vs Creativity</div>
+                        <div className='mx-4 w-full'>
+                            <div className='text-nav dark:text-nav-dark text-sm mb-2'>Temperature</div>
+                            <input
+                                type='range'
+                                min='0'
+                                max='1'
+                                step='0.1'
+                                value={llmParameters.temperature}
+                                onChange={(e) =>
+                                    setLlmParameters((prev: any) => ({
+                                        ...prev,
+                                        temperature: parseFloat(e.target.value),
+                                    }))
+                                }
+                                className='nodrag w-80 p-1 accent-panel1 dark:accent-panel3-dark'
+                            />
+                        </div>
+                    </div>
+
+                    <div className='flex flex-column mt-2'>
+                        <div style={labelStyle}></div>
+                        <div className='mx-4 w-full'>
+                            <div className='text-nav dark:text-nav-dark text-sm mb-2'>Top K</div>
+                            <input
+                                type='range'
+                                min='5'
+                                max='100'
+                                step='5'
+                                value={llmParameters.top_k}
+                                onChange={(e) =>
+                                    setLlmParameters((prev: any) => ({
+                                        ...prev,
+                                        top_k: parseInt(e.target.value),
+                                    }))
+                                }
+                                className='nodrag w-80 p-1 accent-panel1 dark:accent-panel3-dark'
+                            />
+                            <div className='flex flex-row justify-between'>
+                                <div className='text-nav dark:text-nav-dark text-sm text-center'>5</div>
+                                <div className='text-nav dark:text-nav-dark text-sm text-center font-semibold'>{llmParameters.top_k}</div>
+                                <div className='text-nav dark:text-nav-dark text-sm text-center'>100</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className='flex flex-column mt-2'>
+                        <div style={labelStyle}></div>
+                        <div className='mx-4 w-full'>
+                            <div className='text-nav dark:text-nav-dark text-sm mb-2'>Top P</div>
+                            <input
+                                type='range'
+                                min='0.4'
+                                max='1.0'
+                                step='0.05'
+                                value={llmParameters.top_p}
+                                onChange={(e) =>
+                                    setLlmParameters((prev: any) => ({
+                                        ...prev,
+                                        top_p: parseFloat(e.target.value),
+                                    }))
+                                }
+                                className='nodrag w-80 p-1 accent-panel1 dark:accent-panel3-dark'
+                            />
+                            <div className='flex flex-row justify-between'>
+                                <div className='text-nav dark:text-nav-dark text-sm text-center'>0.4</div>
+                                <div className='text-nav dark:text-nav-dark text-sm text-center font-semibold'>{llmParameters.top_p}</div>
+                                <div className='text-nav dark:text-nav-dark text-sm text-center'>1.0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className='flex flex-column mt-2'>
+                        <div style={labelStyle}>Maximum Chunks (n)</div>
                         {/* slider from value 1 to 20 in increament of 1 */}
                         <div className="mx-4">
                             <input

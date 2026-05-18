@@ -275,7 +275,7 @@ function App() {
     <div className='bg-gray-200'>
       <TopNav 
         setShowUpload={setShowUpload}
-        setShowSettings={setShowSettings}
+        setShowSettings={setShowSettings} 
         setPlotButton={setShowPlotButton} 
         setShowChatHistory={setShowChatHistory} 
         showLoginButton={frontendSettings.azure_login}

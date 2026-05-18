@@ -17,6 +17,7 @@ from django.contrib import admin
 from django.urls import include, path
 from django.conf.urls.static import static
 from django.conf import settings
+from testdb.views import apis
 from rest_framework_simplejwt import views as jwt_views
 
 urlpatterns = [
@@ -24,7 +25,9 @@ urlpatterns = [
     path('evaluation_dataset/', include('evaluation_dataset.urls')),
     path('admin/', admin.site.urls),
 	path('token/', jwt_views.TokenObtainPairView.as_view(), name ='token_obtain_pair'),
-     path('token/refresh/',  jwt_views.TokenRefreshView.as_view(), name ='token_refresh')
+     path('token/refresh/',  jwt_views.TokenRefreshView.as_view(), name ='token_refresh'),
+    path('media/<path:file_path>/', apis.secure_media, name='secure_media'),
 ]
 
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

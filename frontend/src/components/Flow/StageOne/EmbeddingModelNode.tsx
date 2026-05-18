@@ -24,7 +24,7 @@ const EmbeddingModelNode = ({ data }: any) => {
         }
 
         return {
-            selectedEmbeddingModel: '',
+            selectedEmbeddingModel: 'nomic-embed-text:latest',
             distanceFn: 'l2'
         }
     }

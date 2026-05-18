@@ -9,7 +9,8 @@ import {
     NodeChange,
     EdgeChange,
     Node,
-    MarkerType
+    MarkerType, 
+    Controls
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 // import { UploadNode, ChunkingNode, EmbeddingModelNode, BM25Node, RerankerNode } from './Flow/StageOne';
@@ -35,7 +36,7 @@ const initialNodes: FlowNode[] = [
         type: 'inputNode',
         position: { x: 0, y: 50 },
         data: {
-            title: 'Input',
+            title: 'User query',
         },
     },
     {
@@ -51,7 +52,7 @@ const initialNodes: FlowNode[] = [
         type: 'promptNode',
         position: { x: 600, y: 0 },
         data: {
-            title: 'Prompt',
+            title: 'Prompt, creativity & chunk settings',
         },
     },
     {
@@ -65,15 +66,15 @@ const initialNodes: FlowNode[] = [
     {
         id: 'outputNode',
         type: 'outputNode',
-        position: { x: 600, y: 500 },
+        position: { x: 600, y: 600 },
         data: {
-            title: 'Output',
+            title: 'LLM Response',
         },
     },
     {
         id: 'saveNode',
         type: 'saveNode',
-        position: { x: 800, y: 500 },
+        position: { x: 800, y: 600 },
         data: {
             title: 'Save Settings',
         },
@@ -239,7 +240,9 @@ const FlowSettings = (props: {
                 // fitView
                 defaultViewport={{ x: 0, y: 0, zoom: 0.7 }}
             // fitViewOptions={{ padding: 0.2 }}
-            />
+            >
+                <Controls showFitView={false} showInteractive={false} position='bottom-left' />
+            </ReactFlow>
         </div>
     );
 }

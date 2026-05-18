@@ -1,7 +1,7 @@
 import AddLibrarySettings from './AddLibrarySettings'
 import { ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline'
 import FlowUpload from './FlowUpload'
-import { useState } from 'react'
+import { useState, type MouseEvent } from 'react'
 
 const UploadMenu = (props: {
 	closeUpload: any,
@@ -22,13 +22,21 @@ const UploadMenu = (props: {
 
 	const [activeTab, setActiveTab] = useState<"simple" | "advanced">("simple");
 
-	const handleTabClick = (tab: "simple" | "advanced") => {
-		setActiveTab(tab);
+	const handleTabClick = (event: MouseEvent<HTMLButtonElement>, tab: "simple" | "advanced") => {
+		event.preventDefault()
+		event.stopPropagation()
+		setActiveTab(tab)
 	};
 
+	const openLibraryManagement = () => {
+		props.settingsCallback({ ...props.currentSettings, selectedPanel: 'datasets', showSettings: false })
+		props.closeUpload()
+		props.openSettings()
+	}
+
 	return (
-		<div className='fixed inset-0 z-50 bg-black bg-opacity-70 flex items-center justify-center'>
-			<div className='bg-panel1 dark:bg-panel4-dark w-3/4 max-h-[1100px] max-w-[1200px] rounded-lg'>
+		<div className='fixed inset-0 z-50 bg-black bg-opacity-70 flex items-center justify-center' onClick={props.closeUpload}>
+			<div className='bg-panel1 dark:bg-panel4-dark w-3/4 max-h-[1100px] max-w-[1200px] rounded-lg' onClick={(event) => event.stopPropagation()}>
 				<div className='flex justify-between items-center px-8 py-6'>
 					<div className='text-2xl font-bold text-white'>
 						Upload Documents
@@ -87,10 +95,10 @@ const UploadMenu = (props: {
 						<div className="text-sm font-medium text-center text-body border-default">
 							<ul className="flex flex-wrap -mb-px">
 								<li className="me-2">
-									<button type="button" className={`text-nav dark:text-nav-dark inline-block p-4 border-b border-transparent rounded-t-base hover:text-fg-brand hover:border-brand bg-transparent ${activeTab === 'simple' ? 'active-tab' : ''}`} onClick={() => handleTabClick('simple')}>Simple</button>
+									<button type="button" className={`text-nav dark:text-nav-dark inline-block p-4 border-b border-transparent rounded-t-base hover:text-fg-brand hover:border-brand bg-transparent ${activeTab === 'simple' ? 'active-tab' : ''}`} onClick={(event) => handleTabClick(event, 'simple')}>Simple</button>
 								</li>
 								<li className="me-2">
-									<button type="button" className={`text-nav dark:text-nav-dark inline-block p-4 text-fg-brand border-b border-brand rounded-t-base bg-transparent ${activeTab === 'advanced' ? 'active-tab' : ''}`} aria-current="page" onClick={() => handleTabClick('advanced')}>Advanced</button>
+									<button type="button" className={`text-nav dark:text-nav-dark inline-block p-4 text-fg-brand border-b border-brand rounded-t-base bg-transparent ${activeTab === 'advanced' ? 'active-tab' : ''}`} aria-current="page" onClick={(event) => handleTabClick(event, 'advanced')}>Advanced</button>
 								</li>
 							</ul>
 						</div>
@@ -106,7 +114,17 @@ const UploadMenu = (props: {
 						{activeTab === "advanced" && (
 							<FlowUpload {...settingProps} />
 						)}
-
+						<div className='flex justify-start px-4 py-4'>
+							<div className='mx-4 my-auto'>To manage your libraries:</div>
+							<button
+								type='button'
+								className='flex items-center gap-2 bg-panel1 dark:bg-panel3-dark text-white text-sm px-4 py-2 rounded-md hover:bg-nav transition ease-in-out'
+								onClick={openLibraryManagement}
+							>
+								Library Management
+								<ArrowTopRightOnSquareIcon className='h-4 w-4' />
+							</button>
+						</div>
 					</div>
 				</div>
 			</div>

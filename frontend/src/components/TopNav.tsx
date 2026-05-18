@@ -13,7 +13,7 @@ function TopNav(props:{
   showPopupLogin?:boolean,
   loginCallback?:any,
   darkMode?:boolean,
-  darkModeCallback?:any
+  darkModeCallback?:any,
 }) {
 
   const { activeAccounts, appRoles, instance }:any = useAuthenticateUser()

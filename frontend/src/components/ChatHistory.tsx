@@ -182,8 +182,8 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 
 	return (
 		// create floating panel with opque background
-		<div className='fixed inset-0 z-50 bg-black bg-opacity-70 flex items-center justify-center'>
-			<div className={'bg-panel1 dark:bg-panel4-dark w-3/4 max-w-[1200px] rounded-lg ' + (window.screen.availHeight < 1000 ? 'h-[95vh] max-h-[95vh]' : 'h-[70vh] max-h-[70vh]')}>
+		<div className='fixed inset-0 z-50 bg-black bg-opacity-70 flex items-center justify-center' onClick={props.closeChatHistory}>
+			<div className={'bg-panel1 dark:bg-panel4-dark w-3/4 max-w-[1200px] rounded-lg ' + (window.screen.availHeight < 1000 ? 'h-[95vh] max-h-[95vh]' : 'h-[70vh] max-h-[70vh]')} onClick={(event) => event.stopPropagation()}>
 				<div className='flex justify-between'>
 					<div className='text-2xl font-bold text-white mt-8 mx-8'>Chat History</div>
 					<div className='text-2xl font-bold text-white mt-8 mr-8 cursor-pointer' onClick={props.closeChatHistory}>×</div>
