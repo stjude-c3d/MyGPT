@@ -1,6 +1,9 @@
 from django.core.files.base import File
+from django.http import StreamingHttpResponse, FileResponse, Http404
+from django.conf import settings
+from django.utils._os import safe_join
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.views import APIView
 from rest_framework.parsers import JSONParser
 from django.utils.timezone import make_aware
@@ -8,7 +11,7 @@ from django.core import serializers
 import numpy as np
 import chromadb
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 from pytube import YouTube, Playlist
 import datetime
@@ -16,8 +19,15 @@ import os
 import shutil
 import json
 import re
+from ollama import Client as OllamaClient, ListResponse
 from django.contrib.auth.models import User
-from .bm25_utils import index_document_by_bm25, retrieve_chunks_by_bm25, hybrid_source_combination
+
+from .bm25_utils import (
+    index_document_by_bm25, 
+    retrieve_chunks_by_bm25, 
+    hybrid_source_combination,
+    get_answer_distance_by_context_bm25 
+)
 
 # Import from specialized modules
 from .helpers import (
@@ -71,6 +81,13 @@ from .dataset_management import (
     # get_conversation_json,
     # get_previous_qna_json
 )
+
+from .rerank_utils import (
+    rerank_answer_sources
+)
+
+from .HI_prediction_by_random_forest import predict_hallucination_index
+
 from ..models import Papers, Videos, Dataset, chunks, Question, Answer, Source, Conversation, Model, EmbeddingModel, FrontEndSettings, DisclaimerAgreement, PaperSections
 
 ####################
@@ -101,6 +118,30 @@ def get_datasets(request):
         datasets = sorted(datasets, key=lambda x: x['dataset_name'])
         return Response(datasets)
 
+def resolve_dataset_for_user(dataset_name, user_email, user_group):
+    if user_email == '':
+        return Dataset.objects.get(dataset_name=dataset_name, user_email='-')
+
+    dataset_count = Dataset.objects.filter(dataset_name=dataset_name, user_email=user_email).count()
+    if dataset_count == 0 and user_group != '' and user_group != 'user':
+        return Dataset.objects.get(dataset_name=dataset_name, user_group=user_group)
+
+    return Dataset.objects.get(dataset_name=dataset_name, user_email=user_email)
+
+
+@api_view(['POST'])
+def get_dataset_details(request):
+    if request.method == 'POST':
+        json_request = JSONParser().parse(request)
+        dataset_name = json_request['dataset']
+        user_email = json_request['user_email']
+        user_group = json_request['user_group']
+
+        dataset = resolve_dataset_for_user(dataset_name, user_email, user_group)
+        dataset_json = serializers.serialize('json', [dataset])
+        dataset_fields = json.loads(dataset_json)[0]['fields']
+        return Response(dataset_fields)
+
 @api_view(['POST'])
 def get_documents(request):
     if request.method == 'POST':
@@ -108,16 +149,7 @@ def get_documents(request):
         dataset_name = json_request['dataset']
         user_email = json_request['user_email']
         user_group = json_request['user_group']
-        if user_email == '':
-            dataset = Dataset.objects.get(dataset_name=dataset_name, user_email='-')
-        elif user_email != '' or user_email != '-':
-            dataset_count = Dataset.objects.filter(dataset_name=dataset_name, user_email=user_email).count()
-            if dataset_count == 0 and user_group != '' and user_group != 'user':
-                dataset = Dataset.objects.get(dataset_name=dataset_name, user_group=user_group)
-            else:
-                dataset = Dataset.objects.get(dataset_name=dataset_name, user_email=user_email)
-        elif user_group != '' and user_group != 'user':
-            dataset = Dataset.objects.get(dataset_name=dataset_name, user_group=user_group)
+        dataset = resolve_dataset_for_user(dataset_name, user_email, user_group)
 
         papers = Papers.objects.filter(paper_dataset=dataset).order_by('paper_date_time')
         if papers.count() > 0:
@@ -152,7 +184,8 @@ def get_context(request):
             skip_highlight = False
         model_type = Model.objects.get(model_name=model)
         dataset_name = json_request['dataset']
-        document_title = json_request['document_title'] if 'document_title' in json_request else ''
+        # document_title = json_request['document_title'] if 'document_title' in json_request else ''
+        focused_document_titles = json_request['focused_document_titles'] if 'focused_document_titles' in json_request else []
         focused_section = json_request['focused_section'] if 'focused_section' in json_request else ''
         use_default_qrs = json_request['use_default_qrs']
         question_best_distance = json_request['question_best_distance']
@@ -163,6 +196,16 @@ def get_context(request):
         # best and worst scores for BM25
         best_bm25_score = 20
         worst_bm25_score = 0
+
+        semantic_score = 0
+        keyword_score = 0
+        rerank_score = 0
+        relevance_score = 0
+        weight_a = 4 
+        weight_b = -4
+        weight_c = -1
+        relevance_score_min = -5.5
+        relevance_score_max = 3.03
 
         # check if dataset exists or crate a new one
         dataset_exist = Dataset.objects.filter(dataset_name=dataset_name).exists()
@@ -179,23 +222,32 @@ def get_context(request):
         previous_question = json_request['previous_query']
         no_context = json_request['no_context']
         use_bm25 = dataset.use_bm25 if hasattr(dataset, 'use_bm25') else False
+        reranker = dataset.reranker if hasattr(dataset, 'reranker') else 'None'
+        use_reranker = False if reranker == 'None' else True
+        language_of_docs = dataset.documents_language if hasattr(dataset, 'documents_language') else 'english'
         keywords = json_request['keywords'] if 'keywords' in json_request else ''
+        translated_text = json_request['translated_text'] if language_of_docs != 'english' and 'translated_text' in json_request else ''
+
         if no_context:    
-            context, titles, pages, starts, stops, chunks_txt, distances = '', [], [], [], [], [], []
+            titles, pages, starts, stops, chunks_txt, distances, reranked_scores = [], [], [], [], [], [], []
             vector_sources = []
             bm25_sources = []
             relevance_score = 0
+            semantic_score = 0
+            keyword_score = 0
+            rerank_score = 0
             normalized_distances = []
         else:
-            context, titles, pages, starts, stops, chunks_txt, distances = nearestDataChroma(question_text, dataset_name, document_title, focused_section, keywords, embedding_model, maximum_chunks_count, no_cutoff)
+            titles, pages, starts, stops, chunks_txt, distances, reranked_scores = nearestDataChroma(translated_text if translated_text else question_text, dataset_name, focused_document_titles, focused_section, keywords, embedding_model, maximum_chunks_count, no_cutoff, reranker, language_of_docs)
             vector_sources = []
             distances = [round(dist, 3) for dist in distances]
-            relevance_score, normalized_distances = get_relevance_score(distances, embedding_model, True, use_default_qrs, question_best_distance, question_worst_distance)
+            semantic_score, normalized_distances = get_relevance_score(distances, embedding_model, True, use_default_qrs, question_best_distance, question_worst_distance)
 
             bm25_sources = []
             if use_bm25:
                 # get similar chunks using BM25
-                results, scores = retrieve_chunks_by_bm25(question_text, dataset_name, document_title, 3)
+                results, scores = retrieve_chunks_by_bm25(translated_text if translated_text else question_text, dataset_name, focused_document_titles, maximum_chunks_count, reranker, language_of_docs)
+                # results, scores = retrieve_chunks_by_bm25(question_text, dataset_name, document_title, 3, reranker)
                 normalized_scores = min_max_normalization(scores, best_bm25_score, worst_bm25_score, False)
                 for idx, result in enumerate(results):
                     cleaned_chunk = re.sub(r'\s+', ' ', str(result['text']))
@@ -213,9 +265,13 @@ def get_context(request):
                         'bm25_score': round(normalized_scores[idx], 3),
                         'vector_score': 0,
                         'rank': idx + 1,
+                        'reranked_score': result.get('reranked_score', 0),
                         'vector_distance_raw': 0,
                     })
-        library_type = 'papers' if len(pages) else 'videos'
+                # get average BM25 score for sources
+                keyword_score = round(sum([source['bm25_score'] for source in bm25_sources]) / len(bm25_sources) if bm25_sources else 0, 2)
+        # library_type = 'papers' if len(pages) else 'videos'
+        library_type = 'papers'
 
         # if no_context is true, create or get dataset
         if no_context:
@@ -234,12 +290,12 @@ def get_context(request):
         current_date_time = make_aware(datetime.datetime.now())
         dataset = Dataset.objects.get(dataset_name=dataset_name)
         question_text = question_text.split('<tool_response>')[0]
-        quesiton_exist = Question.objects.filter(question_dataset=dataset).filter(question_text=question_text).filter(model_type=model_type).exists()
-        if quesiton_exist:
+        question_exist = Question.objects.filter(question_dataset=dataset).filter(question_text=question_text).filter(model_type=model_type).exists()
+        if question_exist:
             questions = Question.objects.filter(question_text=question_text, model_type=model_type, question_dataset=dataset)
             question = questions[0]
             question.keywords = keywords
-            question.relevance_score = relevance_score if relevance_score <= 100 else 100
+            question.relevance_score = semantic_score if semantic_score <= 100 else 100
             question.save()
             conversation_id = question.conversation.id
             conversation = Conversation.objects.get(id=conversation_id)
@@ -262,7 +318,8 @@ def get_context(request):
                 conversation.save()
             question = Question.objects.create(
                 question_text=question_text,
-                relevance_score=relevance_score if relevance_score <= 100 else 100,
+                translated_question_text=translated_text if translated_text else '',
+                relevance_score=semantic_score if semantic_score <= 100 else 100,
                 model_type=model_type,
                 keywords=keywords,
                 question_dataset=dataset,
@@ -289,16 +346,28 @@ def get_context(request):
                 'vector_distance_raw': round(distances[idx],3), #round to 3 decimals,
                 'vector_score': round(normalized_distances[idx],3),
                 'rank': idx + 1,
+                'reranked_score': reranked_scores[idx] if use_reranker else 0,
                 'bm25_score_raw': 0,
                 'bm25_score': 0,
                 'bm25_rank': 0
             })
 
         # combine vector_sources and bm25_sources
-        combined_sources = hybrid_source_combination(vector_sources, bm25_sources)
+        reranked_sources = hybrid_source_combination(vector_sources, bm25_sources)
+        
+        # get average reranked score for sources
+        rerank_score = round(sum([source['reranked_score'] for source in reranked_sources]) / len(reranked_sources) if reranked_sources else 0, 2)
+
+        # calcuate relevance score based on semantic_score, keyword_score and rerank_score with weights determined by sensitivity analysis
+        relevance_score_raw = round((semantic_score/100 * weight_a) + (keyword_score * weight_b) + (rerank_score * weight_c), 2)
+        # normalize relevance score to be between 0 and 100 with min-max normalization using relevance_score_min and relevance_score_max
+        relevance_score = round(min_max_normalization([relevance_score_raw], relevance_score_max, relevance_score_min, False)[0] * 100, 0)
+
+        # reranked sources based on vector_score + bm25_score
+        # reranked_sources = rerank_sources(combined_sources, question_text)
 
         sources_grouped = []
-        for source in combined_sources:
+        for source in reranked_sources:
             if len(sources_grouped) == 0:
                 sources_grouped.append([source])
             else:
@@ -343,39 +412,57 @@ def get_context(request):
                         # paper.paper_attachment.save(dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf', File(f), save=True)
                         paper.highlighted_attachment.save(dataset_name + '/' + paper_name.split('.')[0] + '_highlighted.pdf', File(f), save=True)
         
-        for source in combined_sources:
-            chunk = chunks.objects.filter(chunk_text=source['context'], chunk_dataset=dataset)
+        full_context = ''
+        if question_exist:
+            # delete previous sources
+            Source.objects.filter(question=question).delete()
+        for idx, source in enumerate(reranked_sources):
+            sanitized_context = str(source.get('context', '')).replace("\x00", "\uFFFD")
+            chunk = chunks.objects.filter(chunk_text=sanitized_context, chunk_dataset=dataset)
             Source.objects.create(
                 source_doc=source['document'],
                 source_pointer=source['page'] if library_type == 'papers' else source['start'],
-                context=source['context'].replace("\x00", "\uFFFD"),
-                vector_distance_raw=source['vector_distance_raw'] if 'vector_distance_raw' in source else 0,
-                vector_score=source['vector_score'] if 'vector_score' in source else 0,
-                bm25_score_raw=source['bm25_score_raw'] if 'bm25_score_raw' in source else 0,
-                bm25_score=source['bm25_score'] if 'bm25_score' in source else 0,
-                rank=source['rank'],
-                secondary_rank=source['bm25_rank'] if 'bm25_rank' in source else 0,
+                context=sanitized_context,
+                vector_distance_raw=source.get('vector_distance_raw', 0),
+                vector_score=source.get('vector_score', 0),
+                bm25_score_raw=source.get('bm25_score_raw', 0),
+                bm25_score=source.get('bm25_score', 0),
+                rank=source.get('rank', 0),
+                rerank_score=source.get('reranked_score', 0),
+                secondary_rank=source.get('bm25_rank', 0),
                 question=question,
                 chunk=chunk[0] if chunk.count() else None
             )
-            
+            full_context += sanitized_context + "\n\n"
             # Determine the color code based on distance or score
-            if (source['vector_score'] != 0 and source['vector_score'] > 0.5) or (source['bm25_score'] != 0 and source['bm25_score'] > 0.5):
+            if (source.get('vector_score', 0) > 0.5) or (source.get('bm25_score', 0) > 0.5):
                 source['color_code'] = 'green'
-            elif (source['vector_score'] != 0 and source['vector_score'] > 0.3) or (source['bm25_score'] != 0 and source['bm25_score'] > 0.3):
+            elif (source.get('vector_score', 0) > 0.3) or (source.get('bm25_score', 0) > 0.3):
                 source['color_code'] = 'yellow'
-            elif (source['vector_score'] != 0 and source['vector_score'] > 0.15) or (source['bm25_score'] != 0 and source['bm25_score'] > 0.15):
+            elif (source.get('vector_score', 0) > 0.15) or (source.get('bm25_score', 0) > 0.15):
                 source['color_code'] = 'red'
             else:
                 source['color_code'] = 'gray'
 
         # combine the vector_scores and bm25_scores and sort them from high to low
-        combined_sources = sorted(combined_sources, key=lambda x: (x['vector_score'] if 'vector_score' in x else 0) + (x['bm25_score'] if 'bm25_score' in x else 0), reverse=True)
-            
+        # combined_sources = sorted(combined_sources, key=lambda x: (x['vector_score'] if 'vector_score' in x else 0) + (x['bm25_score'] if 'bm25_score' in x else 0), reverse=True)
+
+        # sort reranked sources by vector_score, then by bm25_score
+        reranked_sources = sorted(reranked_sources, key=lambda x: (x['vector_score'] if 'vector_score' in x else 0) + (x['bm25_score'] if 'bm25_score' in x else 0), reverse=True)
+
+        question.semantic_score = semantic_score if semantic_score <= 100 else 100
+        question.keyword_score = keyword_score*100 if keyword_score <= 1 else 100
+        question.rerank_score = rerank_score*100 if rerank_score <= 1 else 100
+        question.relevance_score = relevance_score if relevance_score <= 100 else 100
+        question.save()
+
         context_json = {
-            'context': context,
+            'context': full_context,
             'relevance_score': relevance_score if relevance_score <= 100 else 100,
-            'sources': combined_sources if not no_context else []
+            'semantic_score': semantic_score if semantic_score <= 100 else 100,
+            'keyword_score': keyword_score*100,
+            'rerank_score': rerank_score*100,
+            'sources': reranked_sources if not no_context else []
         }
         
         return Response(context_json, content_type="application/json")
@@ -426,17 +513,22 @@ def get_question_details(request):
                 'vector_score': source.vector_score,
                 'bm25_score_raw': source.bm25_score_raw,
                 'bm25_score': source.bm25_score,
+                'rerank_score': source.rerank_score,
                 'rank': source.rank,
                 'secondary_rank': source.secondary_rank,
             })
-        # sort sources by vector_score and bm25_score
-        sources_json = sorted(sources_json, key=lambda x: (x['vector_score'] if 'vector_score' in x else 0) + (x['bm25_score'] if 'bm25_score' in x else 0), reverse=True)
+        # check if sources has rank, if yes, sort by rank or sort sources by vector_score and bm25_score
+        if (sources_json[0]['rank'] != 0):
+            sources_json = sorted(sources_json, key=lambda x: x['rank'])
+        else:
+            sources_json = sorted(sources_json, key=lambda x: (x['vector_score'] if 'vector_score' in x else 0) + (x['bm25_score'] if 'bm25_score' in x else 0), reverse=True)
         answers_json = []
         for answer in answers:
             answers_json.append({
                 'answer': answer.answer_text,
                 'relevance_score': answer.relevance_score,
-                'hallucination_index': answer.hallucination_index,
+                'hallucination_index_by_equation': answer.hallucination_index_by_equation,
+                'hallucination_index_by_ml': answer.hallucination_index_by_ml,
                 'answer_no_context': answer.answer_no_context_text,
             })
         # Determine the color code based on distance or score
@@ -467,12 +559,14 @@ def save_answer(request):
         json_request = JSONParser().parse(request)
         question_text = json_request['question_text']
         answer_text = json_request['answer_text']
+        translated_answer_text = json_request['translated_answer_text'] if 'translated_answer_text' in json_request else ''
         answer_no_context_text = json_request['answer_no_context_text']
         model = json_request['model_type']
         model_type = Model.objects.get(model_name=model)
         dataset_name = json_request['dataset']
         dataset = Dataset.objects.get(dataset_name=dataset_name)
         use_bm25 = dataset.use_bm25 if hasattr(dataset, 'use_bm25') else False
+        language_of_docs = dataset.documents_language if hasattr(dataset, 'documents_language') else 'english'
         question = Question.objects.get(question_text=question_text, model_type=model_type, question_dataset=dataset)
         embedding_model = dataset.embedding_model
         no_context = json_request['no_context']
@@ -491,31 +585,77 @@ def save_answer(request):
 
         # get context from sources
         sources = Source.objects.filter(question=question)
-        vector_contexts = []
-        bm25_contexts = []
+        all_contexts = [source.context for source in sources]
+        sources_ranks = [source.rank for source in sources]
+        # vector_contexts = []
+        vector_distances = []
+        vector_scores = []
+        # bm25_contexts = []
+        bm25_scores_raw = []
+        bm25_scores = []
+        rerank_sentiments = []
+        # bm25_rerank_scores = []
 
-        for source in sources:
+        # best and worst scores for BM25
+        best_bm25_score = 20
+        worst_bm25_score = 0
 
-            if source.vector_distance_raw != 0:
-                vector_contexts.append(source.context)
-            if source.bm25_score_raw != 0:
-                bm25_contexts.append(source.context)
+        relevance_score_min = -6.42
+        relevance_score_max = 3.65
+        weight_x = 5
+        weight_y = -2
+        weight_z = 0
+
+        semantic_score = 0
+        keyword_score = 0
+        rerank_score = 0
+        relevance_score = 0
+
+        # for source in sources:
+
+            # if source.vector_distance_raw != 0:
+            #     vector_contexts.append(source.context)
+            # if source.bm25_score_raw != 0:
+            #     bm25_contexts.append(source.context)
         
         if not no_context:
-            distances = get_answer_distance_by_context(answer_no_context_text, dataset_name, vector_contexts, embedding_model)
-            distances = [round(dist, 3) for dist in distances]
+            distances = get_answer_distance_by_context(answer_no_context_text, dataset_name, all_contexts, embedding_model)
 
-            distances_a = get_answer_distance_by_context(answer_text, dataset_name, vector_contexts, embedding_model)
-            distances_a = [round(dist, 3) for dist in distances_a]
-            mean_distance_a = round((sum(distances_a) / len(distances_a)), 3)
+            if distances is None or len(distances) == 0:
+                mean_distance_a = 0
+                semantic_score = 0
+            else:
+                distances = [round(dist, 3) for dist in distances]
+                distances_a = get_answer_distance_by_context(translated_answer_text if translated_answer_text else answer_text, dataset_name, all_contexts, embedding_model)
+                distances_a = [round(dist, 3) for dist in distances_a]
+                vector_distances = distances_a
 
-            # if use_bm25:
-                # bm25_docs, bm25_scores = get_answer_distance_by_context_bm25(answer_text, bm25_contexts)
+                mean_distance_a = round((sum(distances_a) / len(distances_a)), 3)
+
+            rerank_sentiments = []
+            if language_of_docs == 'english':
+                rerank_sentiments = rerank_answer_sources(all_contexts, translated_answer_text if translated_answer_text else answer_text)
+
+            if use_bm25:
+                try:
+                    bm25_docs, bm25_scores_raw = get_answer_distance_by_context_bm25(translated_answer_text if translated_answer_text else answer_text, all_contexts, language_of_docs)
+                    # round bm25_scores to 3 decimals
+                    bm25_scores_raw = [round(float(score), 3) for score in bm25_scores_raw]
+                    bm25_scores = min_max_normalization(bm25_scores_raw, best_bm25_score, worst_bm25_score, False)
+                    # round to 3 decimals
+                    bm25_scores = [round(score, 3) for score in bm25_scores]
+                    keyword_score = round(sum(bm25_scores) / len(bm25_scores) * 100, 2) if bm25_scores else 0
+                except Exception as e:
+                    print('Error in BM25 answer distance: ', e)
+                    bm25_scores = []
+
+                # bm25_rerank_scores = rerank_answer_sources(all_contexts, answer_text)
+                    
                 # extra_score = round((sum(bm25_scores) / len(bm25_scores)), 3)
                 # mean_distance_a += extra_score
         else:
             mean_distance_a = 0
-            relevance_score = 0
+            semantic_score = 0
 
         #  calculate answer relevance score
         if use_default_ars and not no_context:
@@ -546,7 +686,16 @@ def save_answer(request):
         #     best_distance_a = -1
         #     worst_distance_a = 1.4
 
-        relevance_score = round(((1 - ((mean_distance_a - best_distance_a) / (worst_distance_a - best_distance_a))) * 100),0)
+        vector_scores = min_max_normalization(vector_distances, best_distance_a, worst_distance_a, False)
+        # round to 3 decimals
+        vector_scores = [round(score, 3) for score in vector_scores]
+        semantic_score = round(sum(vector_scores) / len(vector_scores) * 100, 2) if vector_scores else 0
+
+        # relevance_score = round(((1 - ((mean_distance_a - best_distance_a) / (worst_distance_a - best_distance_a))) * 100),0)
+
+        # get relevance score based on semantic_score, keyword_score and rerank_score with weights determined by sensitivity analysis
+        relevance_score_raw = round((semantic_score/100 * weight_x) + (keyword_score/100 * weight_y) + (rerank_score/100 * weight_z), 2)
+        relevance_score = round(min_max_normalization([relevance_score_raw], relevance_score_max, relevance_score_min, False)[0] * 100, 0)
         if relevance_score < 0:
             relevance_score = 0
         elif relevance_score > 100:
@@ -566,18 +715,60 @@ def save_answer(request):
         minHI = 0.2
 
         if(question_relevance_score == 0):
-            hallucination_index_raw = a_HI
-            hallucination_index = round((hallucination_index_raw - minHI)/(maxHI - minHI) * 100, 0)
+            hallucination_index_by_equation_raw = a_HI
+            hallucination_index_by_equation = round((hallucination_index_by_equation_raw - minHI)/(maxHI - minHI) * 100, 0)
         else:
-            hallucination_index_raw = a_HI - (b_HI * question_relevance_score/100) - (c_HI * relevance_score/100)
-            hallucination_index = round((hallucination_index_raw - minHI)/(maxHI - minHI) * 100, 0)
+            hallucination_index_by_equation_raw = a_HI - (b_HI * question_relevance_score/100) - (c_HI * relevance_score/100)
+            hallucination_index_by_equation = round((hallucination_index_by_equation_raw - minHI)/(maxHI - minHI) * 100, 0)
 
+        # create new sources array with vector_distances and vector_scores
+        new_sources = []
+        for rank in sources_ranks:
+            new_source = sources.filter(rank=rank).last()
+            idx = sources_ranks.index(rank)
+            new_source.vector_distance_answer_raw = vector_distances[idx] if len(vector_distances) > idx else 0
+            new_source.vector_score_answer = vector_scores[idx] if len(vector_scores) > idx else 0
+            new_source.bm25_score_raw_answer = bm25_scores_raw[idx] if len(bm25_scores_raw) > idx else 0
+            new_source.bm25_score_answer = bm25_scores[idx] if len(bm25_scores) > idx else 0
+            new_source.rerank_entailment = rerank_sentiments[idx][0] if len(rerank_sentiments) > idx else "unknown"
+            new_source.save()
+            new_sources.append(new_source)
+            # convert to json serializable format
+        new_sources_json = []
+        for source in new_sources:
+            new_sources_json.append({
+                'paper': source.source_doc,
+                'page': source.source_pointer,
+                'context': source.context,
+                'vector_distance_raw': source.vector_distance_raw,
+                'vector_score': source.vector_score,
+                'answer_vector_distance_raw': source.vector_distance_answer_raw,
+                'answer_vector_score': source.vector_score_answer,
+                'bm25_score_raw': source.bm25_score_raw,
+                'bm25_score': source.bm25_score,
+                'rerank_score': source.rerank_score,
+                'rank': source.rank,
+                'secondary_rank': source.secondary_rank,
+                'answer_bm25_score': source.bm25_score_answer,
+                'rerank_sentiment': source.rerank_entailment
+            })
 
+        hallucination_index_by_ml = 0
+        try:
+            hallucination_index_by_ml = predict_hallucination_index(vector_scores, bm25_scores, sources, rerank_sentiments)
+        except Exception as e:
+            print('Error calculating random forest hallucination probability:', e)
+        
         Answer.objects.create(
             answer_text=answer_text,
+            translated_answer_text=translated_answer_text if translated_answer_text else '',
             answer_no_context_text=answer_no_context_text,
+            semantic_score=semantic_score if semantic_score <= 100 else 100,
+            keyword_score=keyword_score if keyword_score <= 100 else 100,
+            rerank_score=rerank_score if rerank_score <= 100 else 100,
             relevance_score=relevance_score if question_relevance_score != 0 else 0, 
-            hallucination_index=hallucination_index if hallucination_index < 100 else 100,
+            hallucination_index_by_equation=hallucination_index_by_equation if hallucination_index_by_equation < 100 else 100,
+            hallucination_index_by_ml=hallucination_index_by_ml if hallucination_index_by_ml < 100 else 100,
             ars_lower_range=best_distance_a,
             ars_upper_range=worst_distance_a,
             a_hi=a_HI,
@@ -592,18 +783,22 @@ def save_answer(request):
         # add embeddings to answer
         if not no_context:
             add_embeddings_to_qna(answer_text, 'answer', embedding_model)
-            hallucination_index_final = 0
-            if hallucination_index < 0:
-                hallucination_index_final = 0
-            elif hallucination_index > 100:
-                hallucination_index_final = 100
+            hallucination_index_by_equation_final = 0
+            if hallucination_index_by_equation < 0:
+                hallucination_index_by_equation_final = 0
+            elif hallucination_index_by_equation > 100:
+                hallucination_index_by_equation_final = 100
             else:
-                hallucination_index_final = hallucination_index
+                hallucination_index_by_equation_final = hallucination_index_by_equation
             return Response({
                 'saved':True, 
                 'mean_distance_a': mean_distance_a,
                 'relevance_score': relevance_score if question_relevance_score != 0 else 0,
-                'hallucination_index': hallucination_index_final  
+                'semantic_score': semantic_score,
+                'keyword_score': keyword_score,
+                'hallucination_index_by_equation': hallucination_index_by_equation_final,
+                'hallucination_index_by_ml': hallucination_index_by_ml,
+                'sources': new_sources_json,
             }, content_type="application/json")
         else:
             return Response({'saved':True, 'relevance_score': relevance_score}, content_type="application/json")
@@ -738,7 +933,7 @@ def add_zotero_dataset(request):
             dataset_name = sanitize_filename(dataset_name)
 
         if use_bm25 == 'Yes':
-            index_document_by_bm25(dataset_name)
+            index_document_by_bm25(dataset_name, language_of_docs='english')
 
         # if dataset_name.error:
         #     return Response({'error':True, 'error_message': dataset_name.error}, content_type="application/json")
@@ -762,9 +957,11 @@ def upload_documents(request):
         dataset_name = add_dataset_from_upload(request)
         chunking_method = request.POST.get('chunking_method')
         use_bm25 = request.POST.get('use_bm25')
+        reranker = request.POST.get('reranker')
+        language_of_docs = request.POST.get('documents_language').lower()
 
         if use_bm25 == 'Yes':
-            index_document_by_bm25(dataset_name)
+            index_document_by_bm25(dataset_name, language_of_docs)
         
         # Validate embedding_model input
         embedding_model_request = request.POST.get('embedding_model')
@@ -774,7 +971,7 @@ def upload_documents(request):
         else:
             embedding_model = embedding_model_request
 
-        message = add_to_chroma(dataset_name, embedding_model, distance_function, chunking_method)
+        message = add_to_chroma(dataset_name, embedding_model, distance_function, chunking_method, reranker)
 
         if message == False:
             return Response({'error': True}, content_type="application/json")
@@ -1057,6 +1254,44 @@ def disclaimer_agreement(request):
         )
         return Response({'agreed':True}, content_type="application/json")
 
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def secure_media(request, file_path):
+    django_login_enabled = False
+    if FrontEndSettings.objects.exists():
+        frontend_settings = FrontEndSettings.objects.latest('saved_date_time')
+        django_login_enabled = frontend_settings.django_login
+
+    is_authenticated_user = bool(getattr(request, 'user', None) and request.user.is_authenticated)
+    auth_header = request.headers.get('Authorization', '')
+    bearer_token = auth_header.split(' ', 1)[1] if auth_header.startswith('Bearer ') and ' ' in auth_header else ''
+    static_tokens = [
+        os.environ.get('AUTH_TOKEN_PROD'),
+        os.environ.get('AUTH_TOKEN_DEV'),
+        os.environ.get('REACT_APP_AUTH_TOKEN_PROD'),
+        os.environ.get('REACT_APP_AUTH_TOKEN_DEV'),
+    ]
+    valid_static_tokens = [token for token in static_tokens if token]
+    has_valid_static_token = (
+        auth_header in valid_static_tokens
+        or bearer_token in valid_static_tokens
+        or any(auth_header == f'Bearer {token}' for token in valid_static_tokens)
+    )
+
+    if django_login_enabled and not is_authenticated_user and not has_valid_static_token:
+        return Response({'detail': 'Authentication credentials were not provided.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    try:
+        absolute_path = safe_join(settings.MEDIA_ROOT, file_path)
+    except ValueError:
+        raise Http404('File not found')
+
+    if not os.path.exists(absolute_path) or not os.path.isfile(absolute_path):
+        raise Http404('File not found')
+
+    return FileResponse(open(absolute_path, 'rb'))
+
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
     def post(self, request):
@@ -1067,3 +1302,293 @@ class LogoutView(APIView):
             return Response(status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+@api_view(['POST'])
+def ollama_generate(request):
+    if request.method == 'POST':
+        try:
+            json_request = JSONParser().parse(request)
+            model = json_request['model']
+            prompt = json_request['prompt']
+            system = json_request.get('system', '')
+            stream = json_request.get('stream', True)
+            think = json_request.get('think', True)
+            temperature = json_request.get('options', {}).get('temperature', 0.7)
+            top_k = json_request.get('options', {}).get('top_k', 50)
+            top_p = json_request.get('options', {}).get('top_p', 0.9)
+
+            # Validate model_name input
+            if not model or not re.match(r'^[a-zA-Z0-9_\-:.]+$', model):
+                return Response({'error': True, 'error_message': 'Invalid model name'}, content_type="application/json")
+
+            client = OllamaClient(
+                host = os.environ.get('OLLAMA_SERVER')
+            )
+            
+            # Non-streaming path: stream=False
+            if not stream:
+                try:
+                    options = {'temperature': temperature, 'top_k': top_k, 'top_p': top_p}
+                    try:
+                        # Call without streaming - returns a single dict object
+                        response = client.generate(
+                            model=model,
+                            prompt=prompt,
+                            system=system,
+                            stream=False,
+                            think=think,
+                            options=options,
+                        )
+                    except Exception as e:
+                        # Some models do not support think mode; retry once without think.
+                        if think and ('does not support think' in str(e).lower() or 'unknown field "think"' in str(e).lower()):
+                            response = client.generate(
+                                model=model,
+                                prompt=prompt,
+                                system=system,
+                                stream=False,
+                                options=options,
+                            )
+                        else:
+                            raise
+                    
+                    # Extract response and thinking from the single object
+                    return Response({
+                        'response': response.get('response', ''),
+                        'thinking': response.get('thinking', '')
+                    }, content_type="application/json")
+                except Exception as e:
+                    return Response({'error': True, 'error_message': str(e)}, content_type="application/json")
+            
+            # Streaming path: stream=True
+            def stream_response():
+                try:
+                    options = {'temperature': temperature, 'top_k': top_k, 'top_p': top_p}
+                    try:
+                        # Use named args to avoid accidentally passing `system` as `suffix` (insert mode).
+                        response = client.generate(
+                            model=model,
+                            prompt=prompt,
+                            system=system,
+                            stream=stream,
+                            think=think,
+                            options=options,
+                        )
+                    except Exception as e:
+                        # Some models do not support think mode; retry once without think.
+                        if think and ('does not support think' in str(e).lower() or 'unknown field "think"' in str(e).lower()):
+                            response = client.generate(
+                                model=model,
+                                prompt=prompt,
+                                system=system,
+                                stream=stream,
+                                options=options,
+                            )
+                        else:
+                            raise
+                    for part in response:
+                        # Stream thinking if present
+                        if 'thinking' in part and part['thinking']:
+                            yield json.dumps({'type': 'thinking', 'content': part['thinking'], 'done': False}) + '\n'
+                        
+                        # Stream response if present
+                        if 'response' in part and part['response']:
+                            yield json.dumps({'type': 'response', 'content': part['response'], 'done': False}) + '\n'
+                    
+                    # Signal completion
+                    yield json.dumps({'type': 'done', 'content': '', 'done': True}) + '\n'
+                except Exception as e:
+                    yield json.dumps({'error': True, 'error_message': str(e), 'done': True}) + '\n'
+            
+            return StreamingHttpResponse(
+                stream_response(),
+                content_type='application/x-ndjson'
+            )
+        except Exception as e:
+            return Response({'error': True, 'error_message': str(e)}, content_type="application/json")
+        
+@api_view(['POST'])
+def ollama_chat(request):
+    if request.method == 'POST':
+        try:
+            json_request = JSONParser().parse(request)
+            model = json_request['model']
+            messages = json_request['messages']
+            stream = json_request.get('stream', True)
+            think = json_request.get('think', False)
+            temperature = json_request.get('options', {}).get('temperature', 0.7)
+            top_k = json_request.get('options', {}).get('top_k', 50)
+            top_p = json_request.get('options', {}).get('top_p', 0.9)
+
+            # Validate model_name input
+            if not model or not re.match(r'^[a-zA-Z0-9_\-:.]+$', model):
+                return Response({'error': True, 'error_message': 'Invalid model name'}, content_type="application/json")
+
+            client = OllamaClient(
+                host = os.environ.get('OLLAMA_SERVER')
+            )
+            
+            # Non-streaming path: stream=False
+            if not stream:
+                try:
+                    options = {'temperature': temperature, 'top_k': top_k, 'top_p': top_p}
+                    response = client.chat(
+                        model=model,
+                        messages=messages,
+                        stream=False,
+                        think=think,
+                        options=options,
+                    )
+                    
+                    # Extract message content and thinking from the single object
+                    message = response.get('message', {})
+                    return Response({
+                        'content': message.get('content', ''),
+                        'thinking': message.get('thinking', '')
+                    }, content_type="application/json")
+                except Exception as e:
+                    return Response({'error': True, 'error_message': str(e)}, content_type="application/json")
+            
+            # Streaming path: stream=True
+            def stream_response():
+                try:
+                    options = {'temperature': temperature, 'top_k': top_k, 'top_p': top_p}
+                    response = client.chat(
+                        model=model,
+                        messages=messages,
+                        stream=stream,
+                        think=think,
+                        options=options,
+                    )
+                    for part in response:
+                        message = part.get('message', {})
+                        # Stream thinking if present (part['message']['thinking'])
+                        thinking = message.get('thinking', '')
+                        if thinking:
+                            yield json.dumps({'type': 'thinking', 'content': thinking, 'done': False}) + '\n'
+                        
+                        # Stream response content (part['message']['content'])
+                        content = message.get('content', '')
+                        if content:
+                            yield json.dumps({'type': 'response', 'content': content, 'done': False}) + '\n'
+                    
+                    # Signal completion
+                    yield json.dumps({'type': 'done', 'content': '', 'done': True}) + '\n'
+                except Exception as e:
+                    yield json.dumps({'error': True, 'error_message': str(e), 'done': True}) + '\n'
+            
+            return StreamingHttpResponse(
+                stream_response(),
+                content_type='application/x-ndjson'
+            )
+        except Exception as e:
+            return Response({'error': True, 'error_message': str(e)}, content_type="application/json")
+        
+@api_view(['POST'])
+def get_ollama_models(request):
+    if request.method == 'POST':
+        models = []
+        try:
+            client = OllamaClient(host=os.environ.get('OLLAMA_SERVER'))
+            
+            response: ListResponse = client.list()
+            for model in response.models:
+                if model.size is not None and model.size > 0:
+                    if model.details:
+                        models.append({
+                            'name': model.model,
+                            'size': model.size,
+                            'family': model.details.get('family', 'unknown'),
+                            'format': model.details.get('format', 'unknown'),
+                            'parameter_size': model.details.get('parameter_size', 'unknown'),
+                            'quantization_level': model.details.get('quantization_level', 'unknown'),
+                        })
+            return Response({'added':True, 'models': models}, content_type="application/json")
+        except Exception as e:
+            return Response({'error': True, 'error_message': str(e)}, content_type="application/json")
+        
+@api_view(['POST'])
+def ollama_pull_model(request):
+    if request.method == 'POST':
+        json_request = JSONParser().parse(request)
+        model_name = json_request.get('name', '')
+
+        # Validate model_name input
+        if not model_name or not re.match(r'^[a-zA-Z0-9_\-:.]+$', model_name):
+            return Response({'error': True, 'error_message': 'Invalid model name'}, content_type="application/json")
+        try:
+            client = OllamaClient(host=os.environ.get('OLLAMA_SERVER'))
+            
+            def stream_response():
+                try:
+                    current_digest = ''
+                    bars = {}
+                    response = client.pull(model=model_name, stream=True)
+                    for part in response:
+                        digest = part.get('digest', '')
+                        status_txt = part.get('status', '')
+
+                        if digest != current_digest and current_digest in bars:
+                            yield json.dumps({
+                                'type': 'layer_complete',
+                                'digest': current_digest,
+                                'status': 'layer completed',
+                                'done': False,
+                            }) + '\n'
+
+                        if not digest:
+                            yield json.dumps({
+                                'type': 'status',
+                                'status': status_txt,
+                                'done': False,
+                            }) + '\n'
+                            current_digest = digest
+                            continue
+
+                        total = part.get('total', 0)
+                        if digest not in bars and total:
+                            bars[digest] = {
+                                'total': total,
+                                'completed': 0,
+                            }
+
+                        completed = part.get('completed')
+                        if digest in bars and completed is not None:
+                            previous_completed = bars[digest]['completed']
+                            delta = completed - previous_completed
+                            if delta < 0:
+                                delta = 0
+                            bars[digest]['completed'] = completed
+                            layer_total = bars[digest]['total']
+                            percent = round((completed / layer_total) * 100, 2) if layer_total else 0
+                            yield json.dumps({
+                                'type': 'progress',
+                                'status': status_txt,
+                                'digest': digest,
+                                'total': layer_total,
+                                'completed': completed,
+                                'delta': delta,
+                                'percent': percent,
+                                'done': False,
+                            }) + '\n'
+                        else:
+                            yield json.dumps({
+                                'type': 'status',
+                                'status': status_txt,
+                                'digest': digest,
+                                'done': False,
+                            }) + '\n'
+
+                        current_digest = digest
+                    
+                    # Signal completion
+                    yield json.dumps({'status': 'completed', 'progress': 100, 'done': True}) + '\n'
+                except Exception as e:
+                    yield json.dumps({'error': True, 'error_message': str(e), 'done': True}) + '\n'
+            
+            return StreamingHttpResponse(
+                stream_response(),
+                content_type='application/x-ndjson'
+            )
+        except Exception as e:
+            return Response({'error': True, 'error_message': str(e)}, content_type="application/json")

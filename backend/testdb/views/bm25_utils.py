@@ -4,9 +4,14 @@ import Stemmer
 from pathlib import Path
 from tqdm import tqdm
 import numpy as np
+import shutil
+# from nltk.stem.snowball import SnowballStemmer
+from .rerank_utils import (
+    rerank_sources
+)
 
 #this method should be called as part of the upload document process just after adding chunks into the chromadb
-def index_document_by_bm25(dataset_name):
+def index_document_by_bm25(dataset_name, language_of_docs='english'):
     documents_directory = '/code/data/data_chunks' # some other directory can be initalized for storing indices for each document
     # tokenizer_directory = '/code/data/bm25_tokenizer/' + dataset_name
     tokenizer_directory = Path('/code/data/bm25_tokenizer') / dataset_name
@@ -25,7 +30,7 @@ def index_document_by_bm25(dataset_name):
             documents.append('document ' + str(line_json['title']) +  '; page ' + str(line_json['page'])+ '; ' + line_json['content'].strip())
 
     # default tokenizer
-    stemmer = Stemmer.Stemmer("english")
+    stemmer = Stemmer.Stemmer(language_of_docs.lower())
     tokenizer = bm25s.tokenization.Tokenizer(stemmer=stemmer)
     corpus_tokenized = tokenizer.tokenize(documents, return_as='tuple')
 
@@ -35,23 +40,53 @@ def index_document_by_bm25(dataset_name):
     tokenizer.save_vocab(tokenizer_directory)
     tokenizer.save_stopwords(tokenizer_directory)
 
-def retrieve_chunks_by_bm25(queryText, dataset_name, document_title, chunk_count=10):
+def retrieve_chunks_by_bm25(queryText, dataset_name, focused_document_titles=[], chunk_count=10, reranker='None', language_of_docs='english'):
 
-    stemmer = Stemmer.Stemmer("english")
+    stemmer = Stemmer.Stemmer(language_of_docs.lower())
+    # french_stemmer = SnowballStemmer("french")
 
      # Tokenize the queries
     queriesTokenized = bm25s.tokenize([queryText], stemmer=stemmer)
+    # queriesTokenized = bm25s.tokenize([queryText], stemmer=french_stemmer)
 
-    # if document_title is not empty, get the chunk file and create weight mask for the documents
-    if document_title != '':
+    results = []
+    scores = []
+    # if focused_document_titles is not empty, get the chunk file and create weight mask for the documents
+    if focused_document_titles != []:
         chunk_file = f'/code/data/data_chunks/{dataset_name}.txt'
         with open(chunk_file, 'r') as file:
             chunk_lines = file.readlines()
-        weight_mask = np.array([1 if "'title': '" + str(document_title) + "'" in line else 0 for line in chunk_lines])
+        for document_title in focused_document_titles:
+            weight_mask = np.array([1 if "'title': '" + str(document_title) + "'" in line else 0 for line in chunk_lines])
 
-    retriever_loaded = bm25s.BM25.load(f"/code/data/bm25_tokenizer/{dataset_name}", mmap=True, load_corpus=True)
-    results, scores = retriever_loaded.retrieve(queriesTokenized, k=chunk_count, return_as="tuple", weight_mask=weight_mask if document_title != '' else None)
+            retriever_loaded = bm25s.BM25.load(f"/code/data/bm25_tokenizer/{dataset_name}", mmap=True, load_corpus=True)
+            results_temp, scores_temp = retriever_loaded.retrieve(queriesTokenized, k=chunk_count, return_as="tuple", weight_mask=weight_mask if document_title != '' else None)
+            results.extend(results_temp)
+            scores.extend(scores_temp)
+    else:
+        retriever_loaded = bm25s.BM25.load(f"/code/data/bm25_tokenizer/{dataset_name}", mmap=True, load_corpus=True)
+        results, scores = retriever_loaded.retrieve(queriesTokenized, k=chunk_count, return_as="tuple")
 
+    if reranker != 'None':
+        # rerank the sources based on cross encoder
+        prererank_results = []
+        reranked_results = []
+        prereranked_bm25_scores = []
+        for idx, result in enumerate(results[0]):
+            prereranked_bm25_scores.append(scores[0][idx])
+            prererank_results.append({
+                'context': result['text'],
+                'bm25_score_raw': scores[0][idx],
+            })
+        reranked_results = rerank_sources(prererank_results, queryText, reranker, language_of_docs)
+        results_ = []
+        for reranked_result in reranked_results:
+            results_.append({
+                'text': reranked_result['context'],
+                'reranked_score': reranked_result['reranked_score'],
+            })
+        results = [results_]
+        scores = [[i['bm25_score_raw'] for i in reranked_results]]
     # returns ids of the chunks as a list
     return results[0], scores[0]
 
@@ -105,13 +140,13 @@ def hybrid_source_combination(vector_sources, bm25_sources):
 
     return combined_sources
 
-def get_answer_distance_by_context_bm25(text, contexts = ['']):
+def get_answer_distance_by_context_bm25(text, contexts = [''], language_of_docs='english'):
 
     tokenizer_directory = Path('/code/data/bm25_tokenizer') / 'answers'
     tokenizer_directory.mkdir(parents=True, exist_ok=True)
 
     # default tokenizer
-    stemmer = Stemmer.Stemmer("english")
+    stemmer = Stemmer.Stemmer(language_of_docs.lower())
     tokenizer = bm25s.tokenization.Tokenizer(stemmer=stemmer)
     corpus_tokenized = tokenizer.tokenize(contexts, return_as='tuple')
 
@@ -128,6 +163,9 @@ def get_answer_distance_by_context_bm25(text, contexts = ['']):
 
     # Get the top 10 results
     results, scores = retriever_loaded.retrieve(queriesTokenized, k=len(contexts), return_as="tuple")
+
+    # delete the tokenizer directory after use
+    shutil.rmtree(tokenizer_directory)
 
     # returns ids of the chunks as a list
     return results[0], scores[0]

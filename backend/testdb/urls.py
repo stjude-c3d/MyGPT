@@ -15,6 +15,7 @@ urlpatterns = [
     path('api/', include(router.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 	path('api/get_datasets/', apis.get_datasets, name='get_datasets'),
+    path('api/get_dataset_details/', apis.get_dataset_details, name='get_dataset_details'),
     path('api/get_documents/', apis.get_documents, name='get_documents'),
 	path('api/get_sections/', apis.get_dataset_sections, name='get_sections'),
 	path('api/get_context/', apis.get_context, name='get_context'),
@@ -36,5 +37,9 @@ urlpatterns = [
 	path('api/get_distance_between_answers/', apis.get_distance_between_answers, name='get_distance_between_answers'),
 	path('api/get_username/', apis.get_username, name='get_username'),
 	path('api/submit_disclaimer_agreement/', apis.disclaimer_agreement, name='disclaimer_agreement'),
+    path('api/ollama_generate/', apis.ollama_generate, name='ollama_generate'),
+    path('api/ollama_chat/', apis.ollama_chat, name='ollama_chat'),
+    path('api/get_ollama_models/', apis.get_ollama_models, name='get_ollama_models'),
+    path('api/ollama_pull_model/', apis.ollama_pull_model, name='ollama_pull_model'),
 	path('logout/', LogoutView.as_view(), name='logout'),
 ]

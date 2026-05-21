@@ -1,11 +1,12 @@
 Django>=5.0.14
 psycopg2-binary>=2.8
-requests>=2.32.2
+requests>=2.32.5
 djangorestframework
 django-cors-headers
 djangorestframework-simplejwt>=5.3.1
 sacremoses
-sentence_transformers>=3.0.0
+transformers>=4.57.2
+sentence_transformers>=5.1.2
 pypdf
 pandas
 pyzotero
@@ -18,14 +19,16 @@ pytest-django
 pytube
 youtube_transcript_api
 pdfkit
-ollama
 duckdb
 openpyxl
 langchain_community
 langchain==1.0.0a1
+huggingface-hub>=0.36.0
 pycryptodome==3.15.0
 sqlparse>=0.5.0 # not directly required, pinned by Snyk to avoid a vulnerability
 urllib3>=2.2.2 # not directly required, pinned by Snyk to avoid a vulnerability
 zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
 bm25s
 pystemmer
+zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
+ollama>=0.6.1

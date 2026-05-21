@@ -38,3 +38,7 @@ backend/chroma_context.txt
 evaluation_dataset_frontend/node_modules/
 frontend/.env.azure
 backend/data/bm25_tokenizer/*
+label_studio/data/*
+backend/data/reranker/*
+scripts/data/*
+frontend/.env.*

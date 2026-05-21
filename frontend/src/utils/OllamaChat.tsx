@@ -1,76 +1,144 @@
-export const  OllamaDirectChatStream = async (body:any, setAnswer:any) => {
+export const  OllamaDirectChatStream = async (body:any, setAnswer:any, setThought:any) => {
 	let content = ''
+	let thought = ''
 	let answerReceived = false
-	const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/chat`, {body, method: 'POST'})
+	const response = await fetch(`${process.env.REACT_APP_BACKEND_API}api/ollama_chat/`, {body, method: 'POST'})
 	const reader:any = response.body?.getReader()
-	let leftover:any = ''
+	const decoder = new TextDecoder()
+	let buffer = ''
+
+	const handleEvent = (json:any) => {
+		if (json.done === true) {
+			answerReceived = true
+			return
+		}
+
+		const chunk = json.content || ''
+		if (!chunk.length) {
+			return
+		}
+
+		if (json.type === 'thinking') {
+			if (setThought) {
+				thought += chunk
+				setThought(thought)
+			}
+		} else {
+			content += chunk
+		}
+	}
+
+	const processBuffer = () => {
+		let didProgress = true
+		while (didProgress) {
+			didProgress = false
+
+			if (buffer.includes('\n')) {
+				const parts = buffer.split('\n')
+				buffer = parts.pop() || ''
+
+				for (const line of parts) {
+					const trimmed = line.trim()
+					if (!trimmed) {
+						continue
+					}
+					try {
+						const json = JSON.parse(trimmed)
+						handleEvent(json)
+						didProgress = true
+					} catch {
+						buffer = trimmed + '\n' + buffer
+						break
+					}
+				}
+				continue
+			}
+
+			const trimmedBuffer = buffer.trim()
+			if (!trimmedBuffer) {
+				buffer = ''
+				break
+			}
+
+			if (trimmedBuffer.includes('}{')) {
+				buffer = trimmedBuffer.replace(/}\s*{/g, '}\n{')
+				didProgress = true
+				continue
+			}
+
+			if (trimmedBuffer.startsWith('{') && trimmedBuffer.endsWith('}')) {
+				try {
+					const json = JSON.parse(trimmedBuffer)
+					handleEvent(json)
+					buffer = ''
+					didProgress = true
+				} catch {
+					// Wait for additional bytes to complete JSON.
+				}
+			}
+		}
+	}
+
 	while (true) {
 		const { done, value } = await reader.read()
 		if (done) {
 			break;
 		}
-		let rawjson = new TextDecoder().decode(value);
-		let jsons = []
-		if (leftover.length > 0){
-			rawjson = leftover + rawjson
-			leftover = ''
-		}
-		if (rawjson.includes('\n')){
-			jsons = rawjson.split('\n')
-				.filter((j:any)=>j.length)
-		}else{
-			jsons = [rawjson]
-		}
-		let last_json:any = ''
-		if (rawjson.includes('\n') && rawjson.length > 1000){
-			last_json = jsons.pop()
-			if (last_json[last_json.length-1] !== '}'){
-				leftover = last_json
-			}
-		}
 
-		for (const j of jsons){
-			const json = JSON.parse(j)
-			if (json.done === false) {
-				content += json.message.content
-			}
-			else {
-				setAnswer(content)
-				answerReceived = true
-			}
+		buffer += decoder.decode(value, { stream: true })
+		processBuffer()
+		setAnswer(content)
+		if (setThought && thought.length) setThought(thought)
+	}
+
+	buffer += decoder.decode()
+	processBuffer()
+	if (buffer.trim().length) {
+		try {
+			const json = JSON.parse(buffer.trim())
+			handleEvent(json)
+		} catch {
+			// Ignore trailing incomplete JSON if stream ended unexpectedly.
 		}
 		setAnswer(content)
+		if (setThought && thought.length) setThought(thought)
 	}
-	return {content, answerReceived}
+
+	return {content, answerReceived, thought}
 }
 
-const OllamaDirectChatNoStream = async (body:any, setAnswer:any) => {
+const OllamaDirectChatNoStream = async (body:any, setAnswer:any, setThought:any) => {
 	let content = ''
+	let thought = ''
 	let answerReceived = false
-	const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/chat`, {body, method: 'POST'})
+	const response = await fetch(`${process.env.REACT_APP_BACKEND_API}api/ollama_chat/`, {body, method: 'POST'})
 	const data = await response.json()
-	if (data.message && data.message.content) {
-		content = data.message.content
+	if (data.content) {
+		content = data.content
 		setAnswer(content)
 		answerReceived = true
 	}
-	return {content, answerReceived}
+	if (setThought && data.thinking){
+		thought = data.thinking
+		setThought(thought)
+	}
+	return {content, answerReceived, thought}
 }
 
 export const OllamaChatStreamWithToolSupport = async (body:any, setAnswer:any, MCPTools:any, MCPClient:any, stream:boolean, returnToolResponse:boolean) => {
 	let answerReceived
 	let content = ''
 	let toolResponse = ''
-	const response = await fetch(`${process.env.REACT_APP_OLLAMA_API}api/chat`, {body, method: 'POST'})
+	const response = await fetch(`${process.env.REACT_APP_BACKEND_API}api/ollama_chat/`, {body, method: 'POST'})
 	const data = await response.json()
-	if (data.message.tool_calls && data.message.tool_calls.length > 0){
+	if (data.tool_calls && data.tool_calls.length > 0){
 		let body_json = JSON.parse(body)
 		let messages = body_json.messages || []
 		// handle tool calls here
 		await Promise.all(MCPTools.map(async (tool:any) => {
 			const result = await MCPClient.callTool({
 			name: tool['name'],
-			arguments: data.message.tool_calls[0].function.arguments,
+			arguments: data.tool_calls[0].function.arguments,
 			})
 			if (result.content && result.content.length > 0){
 				messages.push({
@@ -91,11 +159,11 @@ export const OllamaChatStreamWithToolSupport = async (body:any, setAnswer:any, M
 			answerReceived = true
 		}
 		else if (!returnToolResponse && stream){
-			const data = await OllamaDirectChatStream(JSON.stringify(body_2), setAnswer)
+			const data = await OllamaDirectChatStream(JSON.stringify(body_2), setAnswer, ()=>{})
 			answerReceived = data.answerReceived
 			content = data.content
 		} else {
-			const data = await OllamaDirectChatNoStream(JSON.stringify(body_2), setAnswer)
+			const data = await OllamaDirectChatNoStream(JSON.stringify(body_2), setAnswer, ()=>{})
 			console.log('data_2', data)
 			answerReceived = data.answerReceived
 			content = data.content

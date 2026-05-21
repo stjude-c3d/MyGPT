@@ -155,6 +155,9 @@ def get_relevance_score(distances, embedding_model, question=True, use_default=T
         best_distance = qrs_lower
         worst_distance = qrs_upper
 
+    if len(distances) == 0:
+        return 0, []
+
     # calculate confidence score
     if min(distances) > worst_distance:
         relevance_score = 0

@@ -5,6 +5,7 @@ import asyncio
 from fastmcp import FastMCP
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
+import re
 
 # Initialize FastMCP server
 mcp = FastMCP("MyGPT-MCP", host="0.0.0.0", port=5001)
@@ -72,6 +73,29 @@ async def get_mygpt_datasets(user_email: str) -> dict[str, Any] | None:
 	return {
 		"datasets_names": dataset_names,
 	}
+
+@mcp.tool()
+async def get_pubmed_id_from_question(pubmed_id: str) -> dict[str, Any] | None:
+    """
+    Retrieves PubMed ID from a question. the pubmed_id will be in the format '12345678'
+    Get the number from the question and return as a single string. If no number is found, return an error message.
+
+        Args:
+            pubmed_id: The question containing the PubMed ID.
+
+        Returns:
+            A dictionary containing the extracted pubmed_id or an error message if no valid ID is found.
+    """
+
+    # convert the input to string in case it's not
+    pubmed_id_str = str(pubmed_id)
+    # Use regular expression to find a sequence of 8 digits in the input string
+    match = re.search(r'\b\d{8}\b', pubmed_id_str)
+    if match:        
+        pubmed_id = match.group(0)
+        return {"pubmed_id": pubmed_id}
+    else:        
+        return {"error": "No valid PubMed ID found in the question."}
 
 @mcp.tool()
 async def get_mygpt_documents(user_email: str, dataset: str) -> dict[str, Any] | None:
