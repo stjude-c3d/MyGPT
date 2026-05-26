@@ -164,6 +164,7 @@ const ChunkingNode = ({ data }: { data: { title: string, settingsCallback: (sett
                 </div>
             )}
 
+            <Handle type="target" position={Position.Top} id="chunking-target-top" style={{ background: 'none', border: 'none' }} />
             <Handle type="target" position={Position.Left} style={{ background: 'none', border: 'none' }} />
             <Handle type="source" position={Position.Right} />
         </div>

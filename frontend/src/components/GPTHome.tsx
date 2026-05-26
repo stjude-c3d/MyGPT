@@ -569,9 +569,9 @@ function GPTHome(props:{
 				answer_best_distance: props.currentSettings.relevance_score_cutoff.answer_best,
 				answer_worst_distance: props.currentSettings.relevance_score_cutoff.answer_worst,
 				use_default_hi: props.currentSettings.use_default_hi,
-				a_hi: props.currentSettings.relevance_score_cutoff.HIa,
-				b_hi: props.currentSettings.relevance_score_cutoff.HIb,
-				c_hi: props.currentSettings.relevance_score_cutoff.HIc,
+				QRS_p: props.currentSettings.relevance_score_cutoff.QRS_p,
+				ARS_q: props.currentSettings.relevance_score_cutoff.ARS_q,
+				HI_by_equation: props.currentSettings.relevance_score_cutoff.HI_by_equation,
 				temperature: props.currentSettings.temperature,
 				top_k: props.currentSettings.top_k,
 				top_p: props.currentSettings.top_p,
@@ -935,6 +935,13 @@ function GPTHome(props:{
 							)
 						})}
 					</select>
+					{ (props.frontendSettings && !props.frontendSettings.restriction_without_login) || (props.frontendSettings.restriction_without_login && props.currentSettings.loggedin) ?
+					<div className='mx-1 inline-block px-2 py-1 bg-panel2 dark:bg-stjude dark:text-white rounded-md cursor-pointer hover:bg-slate-200' 
+						onClick={()=>{
+							props.settingsCallback({...props.currentSettings, selectedPanel: 'chatsettings', showSettings: true})
+						}}>
+						<Cog6ToothIcon className='w-4 h-4 inline-block'/>
+					</div> : <></>}
 					
 				</div>
 				<div className='pt-4 mb-2 flex'>

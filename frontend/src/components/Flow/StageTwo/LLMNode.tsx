@@ -97,7 +97,7 @@ const LLMNode = ({ data }: any) => {
     return (
         <div
             style={{
-                width: 300,
+                width: 330,
                 border: '1px solid #ccc',
                 borderRadius: 10,
                 background: '#fff',

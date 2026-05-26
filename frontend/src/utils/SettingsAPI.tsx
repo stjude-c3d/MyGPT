@@ -68,6 +68,26 @@ export const addEmbeddingForDatasetRequest = async (
 	return response.json()
 }
 
+// POST api/update_dataset/
+export const updateDatasetRequest = async (
+	requestBody: Record<string, any>,
+	user: any,
+	djangoLogin: any,
+	signal?: AbortSignal
+): Promise<any> => {
+	const requestOptions: RequestInit = {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			'Authorization': getAuthHeader(user, djangoLogin),
+		},
+		body: JSON.stringify(requestBody),
+		signal,
+	}
+	const response = await fetch(`${process.env.REACT_APP_BACKEND_API}api/update_dataset/?format=json`, requestOptions)
+	return response.json()
+}
+
 // GET Ollama api/tags  +  POST api/add_ollama_models/
 // Returns the filtered LLM names and the first model as the default.
 export const fetchAndRegisterOllamaModels = async (

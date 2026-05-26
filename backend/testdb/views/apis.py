@@ -143,6 +143,47 @@ def get_dataset_details(request):
         return Response(dataset_fields)
 
 @api_view(['POST'])
+def update_dataset(request):
+    if request.method == 'POST':
+        json_request = JSONParser().parse(request)
+        dataset_name = json_request.get('dataset', '')
+
+        if not dataset_name:
+            return Response({'saved': False, 'error': True, 'error_message': 'Dataset name is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            dataset = Dataset.objects.get(dataset_name=dataset_name)
+        except Dataset.DoesNotExist:
+            return Response({'saved': False, 'error': True, 'error_message': 'Dataset not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        if 'system_prompt' in json_request:
+            dataset.dataset_prompt = json_request['system_prompt']
+        if 'Qsem_a' in json_request:
+            dataset.coefficient_a_Qsem = json_request['Qsem_a']
+        if 'Qkey_b' in json_request:
+            dataset.coefficient_b_Qkey = json_request['Qkey_b']
+        if 'Qrank_c' in json_request:
+            dataset.coefficient_c_Qrank = json_request['Qrank_c']
+        if 'Asem_x' in json_request:
+            dataset.coefficient_x_Asem = json_request['Asem_x']
+        if 'Akey_y' in json_request:
+            dataset.coefficient_y_Akey = json_request['Akey_y']
+        if 'Arank_z' in json_request:
+            dataset.coefficient_z_Arank = json_request['Arank_z']
+        if 'QRS_p' in json_request:
+            dataset.coefficient_p_QRS = json_request['QRS_p']
+        if 'ARS_q' in json_request:
+            dataset.coefficient_q_ARS = json_request['ARS_q']
+        if 'HI_by_equation' in json_request:
+            dataset.HI_by_equation = json_request['HI_by_equation']
+
+        dataset.save()
+
+        dataset_json = serializers.serialize('json', [dataset])
+        dataset_fields = json.loads(dataset_json)[0]['fields']
+        return Response({'saved': True, 'dataset': dataset_fields}, content_type="application/json")
+
+@api_view(['POST'])
 def get_documents(request):
     if request.method == 'POST':
         json_request = JSONParser().parse(request)
@@ -201,9 +242,9 @@ def get_context(request):
         keyword_score = 0
         rerank_score = 0
         relevance_score = 0
-        weight_a = 4 
-        weight_b = -4
-        weight_c = -1
+        weight_a_default = 4 
+        weight_b_default = -4
+        weight_c_default = -1
         relevance_score_min = -5.5
         relevance_score_max = 3.03
 
@@ -214,7 +255,10 @@ def get_context(request):
                 dataset_name=dataset_name,
                 dataset_size=0,
                 dataset_date_time=make_aware(datetime.datetime.now()),
-                user_email='-'
+                user_email='-',
+                coefficient_a_Qsem = weight_a_default,
+                coefficient_b_Qkey = weight_b_default,
+                coefficient_c_Qrank = weight_c_default,
             )
         dataset = Dataset.objects.get(dataset_name=dataset_name)
         embedding_model = dataset.embedding_model
@@ -224,6 +268,9 @@ def get_context(request):
         use_bm25 = dataset.use_bm25 if hasattr(dataset, 'use_bm25') else False
         reranker = dataset.reranker if hasattr(dataset, 'reranker') else 'None'
         use_reranker = False if reranker == 'None' else True
+        weight_a = dataset.coefficient_a_Qsem if hasattr(dataset, 'coefficient_a_Qsem') else weight_a_default
+        weight_b = dataset.coefficient_b_Qkey if hasattr(dataset, 'coefficient_b_Qkey') else weight_b_default
+        weight_c = dataset.coefficient_c_Qrank if hasattr(dataset, 'coefficient_c_Qrank') else weight_c_default
         language_of_docs = dataset.documents_language if hasattr(dataset, 'documents_language') else 'english'
         keywords = json_request['keywords'] if 'keywords' in json_request else ''
         translated_text = json_request['translated_text'] if language_of_docs != 'english' and 'translated_text' in json_request else ''
@@ -575,10 +622,10 @@ def save_answer(request):
         worst_distance_a_r = json_request['answer_worst_distance']
         use_default_ars = json_request['use_default_ars']
         
+        QRS_p_r = json_request['QRS_p']
+        ARS_q_r = json_request['ARS_q']
+        # HI_by_equation = json_request['HI_by_equation']
         use_default_hi = json_request['use_default_hi']
-        a_HI_r = json_request['a_hi']
-        b_HI_r = json_request['b_hi']
-        c_HI_r = json_request['c_hi']
         temperature = json_request['temperature']
         top_k = json_request['top_k']
         top_p = json_request['top_p']
@@ -602,9 +649,9 @@ def save_answer(request):
 
         relevance_score_min = -6.42
         relevance_score_max = 3.65
-        weight_x = 5
-        weight_y = -2
-        weight_z = 0
+        weight_x = dataset.coefficient_x_Asem if hasattr(dataset, 'coefficient_x_Asem') else 5
+        weight_y = dataset.coefficient_y_Akey if hasattr(dataset, 'coefficient_y_Akey') else -2
+        weight_z = dataset.coefficient_z_Arank if hasattr(dataset, 'coefficient_z_Arank') else 0
 
         semantic_score = 0
         keyword_score = 0
@@ -704,21 +751,19 @@ def save_answer(request):
 
         # caclulate hallucination index
         if use_default_hi:
-            a_HI = 1.0
-            b_HI = 0.5
-            c_HI = 0.5
+            QRS_p = 1
+            ARS_q = 2
         else:
-            a_HI = a_HI_r
-            b_HI = b_HI_r
-            c_HI = c_HI_r
+            QRS_p = QRS_p_r
+            ARS_q = ARS_q_r
         maxHI = 0.8
         minHI = 0.2
 
         if(question_relevance_score == 0):
-            hallucination_index_by_equation_raw = a_HI
+            hallucination_index_by_equation_raw = 1
             hallucination_index_by_equation = round((hallucination_index_by_equation_raw - minHI)/(maxHI - minHI) * 100, 0)
         else:
-            hallucination_index_by_equation_raw = a_HI - (b_HI * question_relevance_score/100) - (c_HI * relevance_score/100)
+            hallucination_index_by_equation_raw = 1 - ((QRS_p * question_relevance_score)/ (QRS_p + ARS_q)) - ((ARS_q * relevance_score)/ (QRS_p + ARS_q))
             hallucination_index_by_equation = round((hallucination_index_by_equation_raw - minHI)/(maxHI - minHI) * 100, 0)
 
         # create new sources array with vector_distances and vector_scores
@@ -771,9 +816,6 @@ def save_answer(request):
             hallucination_index_by_ml=hallucination_index_by_ml if hallucination_index_by_ml < 100 else 100,
             ars_lower_range=best_distance_a,
             ars_upper_range=worst_distance_a,
-            a_hi=a_HI,
-            b_hi=b_HI,
-            c_hi=c_HI,
             temperature=temperature,
             top_k=top_k,
             top_p=top_p,

@@ -40,7 +40,7 @@ const dashedEdgeStyle: React.CSSProperties = {
 
 const defaultEdgeStyle: React.CSSProperties = {
     stroke: '#333',
-    strokeWidth: 1,
+    strokeWidth: 1.5,
     strokeDasharray: undefined,
 };
 
@@ -189,7 +189,7 @@ const initialNodes: FlowNode[] = [
     {
         id: 'upload',
         type: 'uploadNode',
-        position: { x: 0, y: 100 },
+        position: { x: 12, y: 10 },
         data: {
             title: 'Upload Details',
             libraryName: '',
@@ -199,7 +199,7 @@ const initialNodes: FlowNode[] = [
     {
         id: 'chunking',
         type: 'chunkingNode',
-        position: { x: 350, y: 109 },
+        position: { x: 0, y: 250 },
         data: {
             title: 'Chunking',
         },
@@ -207,7 +207,7 @@ const initialNodes: FlowNode[] = [
     {
         id: 'embeddingModel',
         type: 'embeddingModelNode',
-        position: { x: 725, y: 0 },
+        position: { x: 425, y: 10 },
         data: {
             title: 'Embedding Model',
         },
@@ -215,7 +215,7 @@ const initialNodes: FlowNode[] = [
     {
         id: 'bm25',
         type: 'bm25Node',
-        position: { x: 725, y: 250 },
+        position: { x: 525, y: 250 },
         data: {
             title: <span>BM25 <span style={{ 'fontSize': '10px' }}>(Optional)</span></span>,
         },
@@ -223,7 +223,7 @@ const initialNodes: FlowNode[] = [
     {
         id: 'reranker',
         type: 'rerankerNode',
-        position: { x: 1180, y: 110 },
+        position: { x: 880, y: 110 },
         data: {
             title: <span>Reranker <span style={{ 'fontSize': '10px' }}>(Optional)</span></span>,
         },
@@ -231,7 +231,7 @@ const initialNodes: FlowNode[] = [
     {
         id: 'uploadButton',
         type: 'uploadButtonNode',
-        position: { x: 1245, y: 273 },
+        position: { x: 945, y: 273 },
 
         data: {
             title: 'Upload documents',
@@ -244,7 +244,9 @@ const initialEdges = [
     {
         id: 'upload-to-chunking',
         source: 'upload',
+        sourceHandle: 'upload-source-bottom',
         target: 'chunking',
+        targetHandle: 'chunking-target-top',
         type: 'smoothstep',
         animated: false,
         markerEnd: {

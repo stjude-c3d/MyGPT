@@ -16,6 +16,7 @@ urlpatterns = [
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 	path('api/get_datasets/', apis.get_datasets, name='get_datasets'),
     path('api/get_dataset_details/', apis.get_dataset_details, name='get_dataset_details'),
+	path('api/update_dataset/', apis.update_dataset, name='update_dataset'),
     path('api/get_documents/', apis.get_documents, name='get_documents'),
 	path('api/get_sections/', apis.get_dataset_sections, name='get_sections'),
 	path('api/get_context/', apis.get_context, name='get_context'),

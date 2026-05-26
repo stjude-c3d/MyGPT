@@ -21,21 +21,29 @@ const RelevanceScoreNode = ({ data }: any) => {
             ARSworst: data.currentSettings.relevance_score_cutoff.answer_worst,
             QRSbest: data.currentSettings.relevance_score_cutoff.question_best,
             QRSworst: data.currentSettings.relevance_score_cutoff.question_worst,
-            HIp: data.currentSettings.relevance_score_cutoff.HIp,
-            HIq: data.currentSettings.relevance_score_cutoff.HIq,
+            Qsem_a: data.currentSettings.relevance_score_cutoff.Qsem_a,
+            Qkey_b: data.currentSettings.relevance_score_cutoff.Qkey_b,
+            Qrank_c: data.currentSettings.relevance_score_cutoff.Qrank_c,
+            Asem_x: data.currentSettings.relevance_score_cutoff.Asem_x,
+            Akey_y: data.currentSettings.relevance_score_cutoff.Akey_y,
+            Arank_z: data.currentSettings.relevance_score_cutoff.Arank_z,
+            QRS_p: data.currentSettings.relevance_score_cutoff.QRS_p,
+            ARS_q: data.currentSettings.relevance_score_cutoff.ARS_q,
+            HI_by_equation: data.currentSettings.relevance_score_cutoff.HI_by_equation,
         }
     }
 
     const initialData = getInitialUploadNodeData()
 
-    const [ARSbest, setARSbest] = useState(initialData.ARSbest)
-    const [ARSworst, setARSworst] = useState(initialData.ARSworst)
-    const [QRSbest, setQRSbest] = useState(initialData.QRSbest)
-    const [QRSworst, setQRSworst] = useState(initialData.QRSworst)
-    const [HIp, setHIp] = useState(initialData.HIp)
-    const [HIq, setHIq] = useState(initialData.HIq)
-    const [HIMode, setHIMode] = useState('ML based prediction')
-    // const [HIc, setHIc] = useState(initialData.HIc)
+    const [Qsem_a, setQsem_a] = useState(initialData.Qsem_a)
+    const [Qkey_b, setQkey_b] = useState(initialData.Qkey_b)
+    const [Qrank_c, setQrank_c] = useState(initialData.Qrank_c)
+    const [Asem_x, setAsem_x] = useState(initialData.Asem_x)
+    const [Akey_y, setAkey_y] = useState(initialData.Akey_y)
+    const [Arank_z, setArank_z] = useState(initialData.Arank_z)
+    const [QRS_p, setQRS_p] = useState(initialData.QRS_p)
+    const [ARS_q, setARS_q] = useState(initialData.ARS_q)
+    const [HIMode, setHIMode] = useState(initialData.HI_by_equation ? 'Equation based' : 'ML based prediction')
 
     useEffect(() => {
         // localStorage.setItem(
@@ -47,24 +55,26 @@ const RelevanceScoreNode = ({ data }: any) => {
         //         QRSworst,
         //         HIp,
         //         HIq,
-        //     })
         // )
 
         data.setChatSettings((prev: any) => ({
             ...prev,
             relevance_score_cutoff: {
-                ...data.currentSettings.relevance_score_cutoff, 
-                answer_best: ARSbest,
-                answer_worst: ARSworst,
-                question_best: QRSbest,
-                question_worst: QRSworst,
-                HIp: HIp,
-                HIq: HIq,
+                ...(prev?.relevance_score_cutoff || {}),
+                Qsem_a: parseFloat(Qsem_a),
+                Qkey_b: parseFloat(Qkey_b),
+                Qrank_c: parseFloat(Qrank_c),
+                Asem_x: parseFloat(Asem_x),
+                Akey_y: parseFloat(Akey_y),
+                Arank_z: parseFloat(Arank_z),
+                QRS_p: parseFloat(QRS_p),
+                ARS_q: parseFloat(ARS_q),
+                HI_by_equation: HIMode === 'Equation based',
             }
         }))
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [ARSbest, ARSworst, QRSbest, QRSworst, HIp, HIq])
+    }, [Qsem_a, Qkey_b, Qrank_c, Asem_x, Akey_y, Arank_z, QRS_p, ARS_q, HIMode])
 
 
     const rowStyle: React.CSSProperties = {
@@ -88,7 +98,7 @@ const RelevanceScoreNode = ({ data }: any) => {
     return (
         <div
             style={{
-                width: 300,
+                width: 450,
                 border: '1px solid #ccc',
                 borderRadius: 10,
                 background: '#fff',
@@ -132,35 +142,43 @@ const RelevanceScoreNode = ({ data }: any) => {
                         {/* Chunking Method */}
                         <div style={rowStyle}>
                             <div>
-                                <div className='text-nav dark:text-nav-dark inline-block my-2 text-sm'>Question relevance score (QRS) range</div>
+                                <div className='text-nav dark:text-nav-dark inline-block my-2 text-sm'>Question relevance score (QRS)</div>
                                 <div>
-                                    <div className='w-24 block text-nav dark:text-nav-dark text-sm '><MathJax>{"\\(QRS = 1 - \\frac{QC_{mean} - QC_{best}}{QC_{worst} - QC_{best}} \\)"}</MathJax></div>
+                                    <div className='w-24 block text-nav dark:text-nav-dark text-sm '><MathJax>{"\\(QRS = (a \\times \\frac{\\sum_{i=1}^{k}Q_{sem,i}}{k} ) + (b \\times \\frac{\\sum_{i=1}^{k}Q_{key,i}}{k} ) + (c \\times \\frac{\\sum_{i=1}^{k}Q_{rank,i}}{k} )\\)"}</MathJax></div>
                                 </div>
                                 <div className='flex justify-between'>
-                                    <div className='text-nav dark:text-nav-dark my-1 text-sm'><MathJax>{"\\(QC_{best} \\)"}</MathJax></div>
-                                    <input type='number' className='text-sm rounded-md w-24 m-1 dark:text-white dark:bg-gray-500 dark:placeholder:text-nav-dark' value={QRSbest} onChange={(e)=>setQRSbest(e.target.value)} />
+                                    <div className='text-nav dark:text-nav-dark my-1 text-sm'><MathJax>{"\\(a \\)"}</MathJax></div>
+                                    <input type='number' style={inputStyle} className='text-sm rounded-md w-16 m-1 ml-6 dark:text-white dark:bg-gray-500 dark:placeholder:text-nav-dark' value={Qsem_a} onChange={(e)=>setQsem_a(e.target.value)} />
                                 </div>
                                 <div className='flex justify-between'>
-                                    <div className='text-nav dark:text-nav-dark  my-1 text-sm'><MathJax>{"\\(QC_{worst} \\)"}</MathJax></div>
-                                    <input type='number' className='text-sm rounded-md w-24 m-1 dark:text-white dark:bg-gray-500 dark:placeholder:text-nav-dark' value={QRSworst} onChange={(e)=>setQRSworst(e.target.value)} />
+                                    <div className='text-nav dark:text-nav-dark  my-1 text-sm'><MathJax>{"\\(b \\)"}</MathJax></div>
+                                    <input type='number' style={inputStyle} className='text-sm rounded-md w-16 m-1 ml-6 dark:text-white dark:bg-gray-500 dark:placeholder:text-nav-dark' value={Qkey_b} onChange={(e)=>setQkey_b(e.target.value)} />
+                                </div>
+                                <div className='flex justify-between'>
+                                    <div className='text-nav dark:text-nav-dark  my-1 text-sm'><MathJax>{"\\(c \\)"}</MathJax></div>
+                                    <input type='number' style={inputStyle} className='text-sm rounded-md w-16 m-1 ml-6 dark:text-white dark:bg-gray-500 dark:placeholder:text-nav-dark' value={Qrank_c} onChange={(e)=>setQrank_c(e.target.value)} />
                                 </div>
                             </div>
                         </div>
 
                         <div style={rowStyle}>
                             <div>
-                                <div className='text-nav dark:text-nav-dark inline-block text-sm'>Answer relevance score (ARS) range</div>
+                                <div className='text-nav dark:text-nav-dark inline-block text-sm'>Answer relevance score (ARS)</div>
                                 <div>
                                     <div>
-                                        <div className='w-24 block text-nav dark:text-nav-dark text-sm '><MathJax>{"\\(ARS = 1 - \\frac{AC_{mean} - AC_{best}}{AC_{worst} - AC_{best}} \\)"}</MathJax></div>
+                                        <div className='w-24 block text-nav dark:text-nav-dark text-sm '><MathJax>{"\\(ARS = (x \\times \\frac{\\sum_{i=1}^{k}A_{sem,i}}{k} ) + (y \\times \\frac{\\sum_{i=1}^{k}A_{key,i}}{k} ) + (z \\times \\frac{\\sum_{i=1}^{k}A_{rank,i}}{k} )\\)"}</MathJax></div>
                                     </div>
                                     <div className='flex justify-between'>
-                                        <div className='text-nav dark:text-nav-dark my-1 text-sm'><MathJax>{"\\(AC_{best} \\)"}</MathJax></div>
-                                        <input type='number' placeholder='Best' className='text-sm rounded-md w-24 m-1 dark:text-white dark:bg-gray-500 dark:placeholder:text-nav-dark' value={ARSbest} onChange={(e) => setARSbest(e.target.value)} />
+                                        <div className='text-nav dark:text-nav-dark my-1 text-sm'><MathJax>{"\\(x \\)"}</MathJax></div>
+                                        <input type='number' style={inputStyle} className='text-sm rounded-md w-16 m-1 ml-6 dark:text-white dark:bg-gray-500 dark:placeholder:text-nav-dark' value={Asem_x} onChange={(e) => setAsem_x(e.target.value)} />
                                     </div>
                                     <div className='flex justify-between'>
-                                        <div className='text-nav dark:text-nav-dark my-1 text-sm'><MathJax>{"\\(AC_{worst} \\)"}</MathJax></div>
-                                        <input type='number' placeholder='Worst' className='text-sm rounded-md w-24 m-1 dark:text-white dark:bg-gray-500 dark:placeholder:text-nav-dark' value={ARSworst} onChange={(e) => setARSworst(e.target.value)} />
+                                        <div className='text-nav dark:text-nav-dark my-1 text-sm'><MathJax>{"\\(y \\)"}</MathJax></div>
+                                        <input type='number' style={inputStyle} className='text-sm rounded-md w-16 m-1 ml-6 dark:text-white dark:bg-gray-500 dark:placeholder:text-nav-dark' value={Akey_y} onChange={(e) => setAkey_y(e.target.value)} />
+                                    </div>
+                                    <div className='flex justify-between'>
+                                        <div className='text-nav dark:text-nav-dark my-1 text-sm'><MathJax>{"\\(z \\)"}</MathJax></div>
+                                        <input type='number' style={inputStyle} className='text-sm rounded-md w-16 m-1 ml-6 dark:text-white dark:bg-gray-500 dark:placeholder:text-nav-dark' value={Arank_z} onChange={(e) => setArank_z(e.target.value)} />
                                     </div>
                                 </div>
                             </div>
@@ -185,11 +203,11 @@ const RelevanceScoreNode = ({ data }: any) => {
                                     <div>
                                         <div className='flex justify-between'>
                                             <div className='text-nav dark:text-nav-dark p-1 my-1 text-sm'><MathJax>{"\\(p \\)"}</MathJax></div>
-                                            <input type='number' placeholder='p' className='inputStyle text-sm rounded-md w-24 m-1 dark:text-white dark:bg-gray-500 dark:placeholder:text-nav-dark' value={HIp} onChange={(e) => setHIp(e.target.value)} />
+                                            <input type='number' style={inputStyle} placeholder='p' className='inputStyle text-sm rounded-md w-16 m-1 ml-6 dark:text-white dark:bg-gray-500 dark:placeholder:text-nav-dark' value={QRS_p} onChange={(e) => setQRS_p(e.target.value)} />
                                         </div>
                                         <div className='flex justify-between'>
                                             <div className='text-nav dark:text-nav-dark p-1 my-1 text-sm'><MathJax>{"\\(q \\)"}</MathJax></div>
-                                            <input type='number' placeholder='q' className='inputStyle text-sm rounded-md w-24 m-1 dark:text-white dark:bg-gray-500 dark:placeholder:text-nav-dark' value={HIq} onChange={(e) => setHIq(e.target.value)} />
+                                            <input type='number' style={inputStyle} placeholder='q' className='inputStyle text-sm rounded-md w-16 m-1 ml-6 dark:text-white dark:bg-gray-500 dark:placeholder:text-nav-dark' value={ARS_q} onChange={(e) => setARS_q(e.target.value)} />
                                         </div>
                                     </div>
                                 )}

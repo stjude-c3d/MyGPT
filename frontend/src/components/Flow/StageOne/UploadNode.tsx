@@ -225,7 +225,7 @@ const UploadNode = ({ data }: any) => {
                 </div>
             )}
 
-            <Handle type="source" position={Position.Right} />
+            <Handle type="source" position={Position.Bottom} id="upload-source-bottom" style={{ background: 'none', border: 'none' }} />
         </div>
     );
 };

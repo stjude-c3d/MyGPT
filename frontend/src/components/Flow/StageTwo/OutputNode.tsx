@@ -17,7 +17,6 @@ const OutputNode = ({ data }: any) => {
       }}
     >
       {data.title}
-      <Handle type="source" position={Position.Right} />
       <Handle type="target" position={Position.Left} style={{ background: 'none', border: 'none' }}/>
     </div>
   );

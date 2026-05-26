@@ -192,6 +192,7 @@ const Settings = (props: {
 	}, [props.user, props.djangoLogin])
 
 	const settingProps = {
+		defaultSettings: props.defaultSettings,
 		currentSettings: currentSettings,
 		settingsCallback: props.settingsCallback,
 		user: props.user,
@@ -725,7 +726,7 @@ const Settings = (props: {
 							}
 
 							{activeTab === 'chatsettings' ?
-								<div className={'flex justify-between my-6 pl-4 pr-4 pt-4 overflow-y-auto bg-panel2 dark:bg-panel2-dark  rounded-b-lg h-[48vh]'}>
+								<div className={'flex justify-between my-6 pl-4 pr-4 pt-4 overflow-y-auto bg-panel2 dark:bg-panel2-dark rounded-b-lg ' + (window.screen.availHeight < 1000 ? 'h-[70vh]' : 'h-[48vh]')}>
 									<FlowSettings {...settingProps} />
 								</div> : <></>
 							}

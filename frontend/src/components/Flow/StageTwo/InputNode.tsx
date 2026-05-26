@@ -4,7 +4,7 @@ const InputNode = ({ data }: any) => {
   return (
     <div
       style={{
-        width: 140,
+        width: 110,
         padding: '10px 14px',
         border: '1px solid #ccc',
         borderRadius: 10,
