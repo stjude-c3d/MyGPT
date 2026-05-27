@@ -126,8 +126,11 @@ function GPTHome(props:{
 		fetchDatasetDetails(props.currentSettings.selectedDataset, props.user, props.frontendSettings, controller.signal)
 			.then(data => {
 				if (!isMounted) return
+				let system_prompt = props.currentSettings.system_prompt
 				if (data && data.documents_language && props.currentSettings.DatasetLanguage !== data.documents_language) {
-					props.settingsCallback({ ...props.currentSettings, DatasetLanguage: data.documents_language })
+					if (data.dataset_prompt && data.dataset_prompt.system_prompt !== '-') 
+						system_prompt = data.dataset_prompt
+					props.settingsCallback({ ...props.currentSettings, DatasetLanguage: data.documents_language, system_prompt })
 					setDatasetLanguage(data.documents_language)
 				}
 			})

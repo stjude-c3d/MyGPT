@@ -36,6 +36,7 @@ def add_dataset_from_upload(request):
     reranker_r = request.POST.get('reranker')
     language_of_docs_r = request.POST.get('documents_language')
     use_reranker = False if reranker_r == 'None' else True
+    default_prompt = '###INSTUCTIONS#### \nUse following information to answer the question in less than 200 words, try not to use any other information other than provided context. if the information is not in the context, then tell user that information is not found in the documents.\n ### CONTEXT ####'
 
     # Validate all inputs for code injection
     if not dataset_name_r or not re.match(r'^[a-zA-Z0-9_\-\s\w]+$', dataset_name_r):
@@ -101,6 +102,7 @@ def add_dataset_from_upload(request):
             documents_language=language_of_docs,
             distance_function=distance_function,
             user = user if len(user) else '-',
+            dataset_prompt = default_prompt,
             user_email = user_email if len(user_email) else '-',
             user_group = user_group if len(user_group) else '-',
             dataset_date_time=make_aware(datetime.datetime.now())
