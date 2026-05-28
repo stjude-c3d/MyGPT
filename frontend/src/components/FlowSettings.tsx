@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import {
     ReactFlow,
     applyNodeChanges,
@@ -16,7 +16,7 @@ import '@xyflow/react/dist/style.css';
 // import { UploadNode, ChunkingNode, EmbeddingModelNode, BM25Node, RerankerNode } from './Flow/StageOne';
 import { InputNode, OutputNode, LLMNode, PromptNode, RelevanceScoreNode, SaveNode } from './Flow/StageTwo';
 import { ReactNode } from 'react';
-import { updateDatasetRequest } from '../utils/SettingsAPI';
+import { updateDatasetRequest, getDatasetDetailsRequest } from '../utils/SettingsAPI';
 
 type FlowNode = Node<{ title: string | ReactNode; libraryName?: string; languageOfDocument?: string }, string>;
 
@@ -166,6 +166,8 @@ const FlowSettings = (props: {
     const [formValidation] = useState(false)
     const [statusMessage, setStatusMessage] = useState<string | null>(null)
     const [flowRenderKey, setFlowRenderKey] = useState(0)
+    const [loadingLibrarySettings, setLoadingLibrarySettings] = useState(false)
+    const [selectedLibrary, setSelectedLibrary] = useState(props.currentSettings?.selectedDataset || 'None')
     const [chatSettings, setChatSettings] = useState({
         selectedLlm: props.currentSettings?.selectedLlm || 'gpt-oss:20b',
         systemPrompt: props.currentSettings?.system_prompt || '',
@@ -183,6 +185,8 @@ const FlowSettings = (props: {
 
     const [edges, setEdges] = useState(initialEdges);
     const currentSettings = JSON.stringify(props.currentSettings ?? {});
+    const hasMounted = useRef(false)
+    const hydratedDatasetRef = useRef<string | null>(null)
 
     const onNodesChange = useCallback(
         (changes: NodeChange<FlowNode>[]) =>
@@ -211,12 +215,99 @@ const FlowSettings = (props: {
     }, [currentSettings, props.user]);
 
     useEffect(() => {
+        if (!hasMounted.current) {
+            hasMounted.current = true
+            return
+        }
+        setFlowRenderKey((prev) => prev + 1)
+    }, [currentSettings])
+
+    useEffect(() => {
+        setSelectedLibrary(props.currentSettings?.selectedDataset || 'None')
+    }, [props.currentSettings?.selectedDataset])
+
+    useEffect(() => {
         if (!statusMessage) return
         const timer = window.setTimeout(() => {
             setStatusMessage(null)
         }, 5000)
         return () => window.clearTimeout(timer)
     }, [statusMessage])
+
+    const handleLibraryChange = async (datasetName: string, showStatusMessage: boolean = true) => {
+        setSelectedLibrary(datasetName)
+        if (!datasetName || datasetName === 'None') {
+            return
+        }
+
+        setLoadingLibrarySettings(true)
+        try {
+            const datasetDetails = await getDatasetDetailsRequest(datasetName, props.user, props.djangoLogin)
+            if (!datasetDetails) {
+                setLoadingLibrarySettings(false)
+                return
+            }
+
+            const nextRelevanceScoreCutoff = {
+                ...props.currentSettings.relevance_score_cutoff,
+                Qsem_a: datasetDetails.coefficient_a_Qsem,
+                Qkey_b: datasetDetails.coefficient_b_Qkey,
+                Qrank_c: datasetDetails.coefficient_c_Qrank,
+                Asem_x: datasetDetails.coefficient_x_Asem,
+                Akey_y: datasetDetails.coefficient_y_Akey,
+                Arank_z: datasetDetails.coefficient_z_Arank,
+                QRS_p: datasetDetails.coefficient_p_QRS,
+                ARS_q: datasetDetails.coefficient_q_ARS,
+                HI_by_equation: datasetDetails.HI_by_equation,
+            }
+
+            const nextSettings = {
+                ...props.currentSettings,
+                selectedDataset: datasetName,
+                system_prompt: datasetDetails.dataset_prompt ?? props.currentSettings.system_prompt,
+                DatasetLanguage: datasetDetails.documents_language ?? props.currentSettings.DatasetLanguage,
+                answerWithoutContext: datasetDetails.direct_chat_without_docs ?? props.currentSettings.answerWithoutContext,
+                fetchPapers: !(datasetDetails.direct_chat_without_docs ?? props.currentSettings.answerWithoutContext),
+                relevance_score_cutoff: nextRelevanceScoreCutoff,
+                use_default_qrs: false,
+                use_default_ars: false,
+                use_default_hi: false,
+            }
+
+            setChatSettings((prev) => ({
+                ...prev,
+                systemPrompt: nextSettings.system_prompt,
+                relevance_score_cutoff: nextRelevanceScoreCutoff,
+            }))
+
+            hydratedDatasetRef.current = datasetName
+            props.settingsCallback(nextSettings)
+            if (showStatusMessage) {
+                setStatusMessage('Library settings loaded.')
+            }
+        } catch (error) {
+            console.error('Failed to load library settings:', error)
+            if (showStatusMessage) {
+                setStatusMessage('Failed to load library settings.')
+            }
+        } finally {
+            setLoadingLibrarySettings(false)
+        }
+    }
+
+    useEffect(() => {
+        const datasetName = props.currentSettings?.selectedDataset
+        if (!datasetName || datasetName === 'None') {
+            return
+        }
+
+        if (hydratedDatasetRef.current === datasetName) {
+            return
+        }
+
+        handleLibraryChange(datasetName, false)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [props.currentSettings?.selectedDataset])
 
     const saveSettings = async () => {
         const datasetName = props.currentSettings.selectedDataset !== props.currentSettings.defaultDataset
@@ -315,7 +406,23 @@ const FlowSettings = (props: {
     };
 
     return (
-        <div style={{ width: '100%', height: '100%' }}>
+        <div style={{ width: '100%', height: '95%' }}>
+            <div className='flex items-center gap-3 mb-2'>
+                <label className='text-nav dark:text-nav-dark text-sm font-semibold'>Library</label>
+                <select
+                    className='text-sm rounded-md p-1 dark:text-white dark:bg-gray-500'
+                    value={selectedLibrary}
+                    onChange={(e) => handleLibraryChange(e.target.value)}
+                    disabled={loadingLibrarySettings}
+                >
+                    {(props.currentSettings?.datasets || [])
+                        .filter((dataset: string) => dataset && dataset !== 'None')
+                        .map((dataset: string) => (
+                            <option key={dataset} value={dataset}>{dataset}</option>
+                        ))}
+                </select>
+                {loadingLibrarySettings && <span className='text-nav dark:text-nav-dark text-xs'>Loading...</span>}
+            </div>
             {statusMessage &&
                 <div className='flex justify-start'>
                     <div className='text-nav dark:text-nav-dark p-1 text-sm bg-green-200 rounded-md flex items-center gap-2'>

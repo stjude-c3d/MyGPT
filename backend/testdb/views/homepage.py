@@ -1,24 +1,35 @@
 from django.shortcuts import render
 from ..models import Dataset, EmbeddingModel, RerankerModel
+import pandas as pd
 
 def home(request):
     datasets = Dataset.objects.all()
 
-    # check if nomic embedding model exists
-    nomic_model = EmbeddingModel.objects.filter(model_name='nomic-embed-text:latest').first()
-    if not nomic_model:
-        nomic_model = EmbeddingModel(
-            model_name='nomic-embed-text:latest',
-            model_size=0.27,
-            model_source='ollama',
-            best_distance_q=73.323,
-            worst_distance_q=344.086,
-            best_distance_ac=39.767,
-            worst_distance_ac=288.555,
-            best_distance_nac=266.08,
-            worst_distance_nac=158.389
-        )
-        nomic_model.save()
+    # add embedding models from csv if not present in database
+    df = pd.read_csv('/code/data/cutoff_examples/embedding_models_cutoffs.csv')
+    for i in range(len(df)):
+        model_name = df['model_name'][i]
+        model_size = df['model_size'][i]
+        model_source = df['model_source'][i]
+        best_distance_q = df['best_distance_q'][i]
+        worst_distance_q = df['worst_distance_q'][i]
+        best_distance_ac = df['best_distance_ac'][i]
+        worst_distance_ac = df['worst_distance_ac'][i]
+
+        existing_model = EmbeddingModel.objects.filter(model_name=model_name).first()
+        if not existing_model:
+            new_model = EmbeddingModel(
+                model_name=model_name,
+                model_size=model_size,
+                model_source=model_source,
+                best_distance_q=best_distance_q,
+                worst_distance_q=worst_distance_q,
+                best_distance_ac=best_distance_ac,
+                worst_distance_ac=worst_distance_ac,
+                best_distance_nac=best_distance_ac,
+                worst_distance_nac=worst_distance_ac
+            )
+            new_model.save()
 
     # create reranker model if not exists
     defaul_rerankers = [

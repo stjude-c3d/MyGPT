@@ -88,6 +88,35 @@ export const updateDatasetRequest = async (
 	return response.json()
 }
 
+// POST api/get_dataset_details/
+export const getDatasetDetailsRequest = async (
+	dataset: string,
+	user: any,
+	djangoLogin: any,
+	signal?: AbortSignal
+): Promise<any> => {
+	if (!dataset || dataset === 'None') {
+		return Promise.resolve(null)
+	}
+
+	const requestOptions: RequestInit = {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			'Authorization': getAuthHeader(user, djangoLogin),
+		},
+		body: JSON.stringify({
+			dataset,
+			user_email: user?.user_email ?? '',
+			user_group: user?.otherRoles?.length ? user.otherRoles[0] : user?.user_group ?? '',
+		}),
+		signal,
+	}
+
+	const response = await fetch(`${process.env.REACT_APP_BACKEND_API}api/get_dataset_details/?format=json`, requestOptions)
+	return response.json()
+}
+
 // GET Ollama api/tags  +  POST api/add_ollama_models/
 // Returns the filtered LLM names and the first model as the default.
 export const fetchAndRegisterOllamaModels = async (

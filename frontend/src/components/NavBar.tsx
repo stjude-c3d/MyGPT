@@ -255,9 +255,11 @@ export const NavBar = (props = defaultNavProps) => {
 					<div className='flex flex-col'>
 						<input type='text' className='object-cover text-bsk_dark_blue rounded-md h-[50px] w-[200px] px-2 mx-4 my-2 hover:bolder'
 							onChange={(e) => setUsername(e.target.value)}
+							onKeyDown={(e) => e.key === 'Enter' && AttemptDjagoLogin()}
 							placeholder='Username'/>
 						<input type='password' className='object-cover text-bsk_dark_blue rounded-md h-[50px] w-[200px] px-2 mx-4 my-2 hover:bolder'
 							onChange={(e) => setPassword(e.target.value)}
+							onKeyDown={(e) => e.key === 'Enter' && AttemptDjagoLogin()}
 							placeholder='Password'/>
 						<button className='object-cover bg-panel1 text-panel3 rounded-full h-[50px] w-[100px] mx-auto hover:bolder'
 							onClick={() => AttemptDjagoLogin()}>

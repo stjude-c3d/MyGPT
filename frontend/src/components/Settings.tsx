@@ -93,9 +93,8 @@ const Settings = (props: {
 	}, [datasets.length, props.currentSettings.fetchDatasets])
 
 	useEffect(() => {
-		currentSettings.selectedDataset = selectedDataset
-	}, [selectedDataset, currentSettings])
-
+		setSelectedDataset(props.currentSettings.selectedDataset || props.defaultSettings.selectedDataset)
+	}, [props.currentSettings.selectedDataset, props.defaultSettings.selectedDataset])
 	useEffect(() => {
 		if (deleteDataset) {
 			const email = props.user ? props.user.user_email : '-'

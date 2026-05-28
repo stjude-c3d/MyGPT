@@ -10,7 +10,7 @@ def _load_cross_encoder(model_name_or_path, trust_remote_code=False):
         return CrossEncoder(
             model_name_or_path,
             trust_remote_code=trust_remote_code,
-            tokenizer_args={"fix_mistral_regex": True},
+            processor_kwargs={"fix_mistral_regex": True},
             activation_fn=torch.nn.Sigmoid()
         )
     except TypeError:
