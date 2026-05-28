@@ -1078,8 +1078,8 @@ def add_demo_dataset_api(request):
     if request.method == 'GET':
         datasets = Dataset.objects.all()
         embedding_model = request.GET.get('embedding_model')
-        if datasets.count() > 0 and datasets.filter(dataset_name='GPCR').count() > 0:
-            datasets.get(dataset_name='GPCR').delete()
+        if datasets.count() > 0 and datasets.filter(dataset_name='MyGPT').count() > 0:
+            datasets.get(dataset_name='MyGPT').delete()
         add_demo_dataset(embedding_model)
         return Response({'added':True}, content_type="application/json")
     

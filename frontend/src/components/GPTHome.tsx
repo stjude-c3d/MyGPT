@@ -271,7 +271,7 @@ function GPTHome(props:{
 					if (!isMounted) return
 					console.log(data)
 					setAddDemoLibrary(false)
-					props.settingsCallback({...props.currentSettings, selectedDataset: 'GPCR', showSettings: false, fetchPapers: true})
+					props.settingsCallback({...props.currentSettings, selectedDataset: 'MyGPT', showSettings: false, fetchPapers: true})
 				})
 				.catch((error) => { if (error?.name !== 'AbortError') console.error(error) })
 		}
@@ -1578,7 +1578,7 @@ function GPTHome(props:{
 											}}
 										>
 											<p className='inline-block ml-2'>
-												Load demo "GPCR" library
+												Load referemce "MyGPT" library
 											</p>
 										</button>
 									</div>

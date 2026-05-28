@@ -319,7 +319,7 @@ def add_demo_dataset(embedding_model_request='multi-qa-MiniLM-L6-cos-v1'):
     documents_directory = '/code/data'
     documents = []
     metadatas = []
-    dataset_name = 'GPCR'
+    dataset_name = 'MyGPT'
     titles = []
     client = chromadb.PersistentClient(path='/code/chroma_storage/.')
 
@@ -338,9 +338,9 @@ def add_demo_dataset(embedding_model_request='multi-qa-MiniLM-L6-cos-v1'):
 
     # Load the documents in batches of 100
     if count == 0:
-        with open(f'{documents_directory}/data_chunks/GPCR.txt', 'r') as file:
+        with open(f'{documents_directory}/data_chunks/MyGPT.txt', 'r') as file:
             for line_number, line in enumerate(
-                tqdm((file.readlines()), desc=f'Reading GPCR.txt'), 1
+                tqdm((file.readlines()), desc=f'Reading MyGPT.txt'), 1
             ):
                 # Strip whitespace and append the line to the documents list
                 line = line.strip()

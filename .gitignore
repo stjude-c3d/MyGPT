@@ -6,10 +6,10 @@ backend/media/*
 backend/chroma_storage/*
 backend/chroma/*
 backend/data/data_chunks/*
-!backend/data/data_chunks/GPCR.txt
+!backend/data/data_chunks/MyGPT.txt
 backend/data/pdfs/*
-!backend/data/pdfs/GPCR
-backend/data/pdfs/GPCR/*_highlighted.pdf
+!backend/data/pdfs/MyGPT
+backend/data/pdfs/MyGPT/*_highlighted.pdf
 backend/.env
 google_colab_demo/static/*
 static/*
