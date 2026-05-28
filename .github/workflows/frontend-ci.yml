@@ -36,6 +36,8 @@ jobs:
     - name: Build
       run: npm run build --if-present
       working-directory: ./frontend
+      env:
+        GENERATE_SOURCEMAP: false
 
     - name: Test
       run: npm run test:ci --if-present

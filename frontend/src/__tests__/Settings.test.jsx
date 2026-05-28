@@ -1,148 +1,97 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import Settings from '../components/Settings'
 import defaultSettings from '../utils/DefaultState'
 
+jest.mock('../components/LLMSettings', () => () => <div data-testid='llm-settings'>LLM Settings</div>)
+jest.mock('../components/EmbeddingSettings', () => () => <div data-testid='embedding-settings'>Embedding Settings</div>)
+jest.mock('../components/RelevanceScoresSettings', () => () => <div data-testid='relevance-settings'>Relevance Settings</div>)
+jest.mock('../components/MCPClient', () => () => <div data-testid='mcp-client'>MCP Client</div>)
+
 describe('Settings', () => {
-  it('renders "Settings" component', () => {
-    const settingsCallback = jest.fn()
-    const setShowSettings = jest.fn()
+  const baseProps = {
+    closeSettings: jest.fn(),
+    defaultSettings,
+    currentSettings: defaultSettings,
+    settingsCallback: jest.fn(),
+    djangoLogin: false,
+    user: { user_email: 'abc@xyz.com', otherRoles: [] }
+  }
 
-    render(<Settings 
-        closeSettings={() => setShowSettings(false)} 
-        defaultSettings={defaultSettings} 
-        currentSettings={defaultSettings}
-        settingsCallback={settingsCallback}
-        djangoLogin={false}
-        user={{user_email: 'abc@xyz.com'}}
-      />)
+  beforeEach(() => {
+    jest.clearAllMocks()
+    jest.spyOn(console, 'log').mockImplementation(() => {})
 
-    const element = screen.getByText(/Customizations/i)
-    expect(element).toBeInTheDocument()
+    global.fetch = jest.fn((url) => {
+      const urlStr = typeof url === 'string' ? url : (url && url.url ? url.url : String(url))
+
+      if (urlStr.includes('get_datasets')) {
+        return Promise.resolve({
+          json: () => Promise.resolve([])
+        })
+      }
+
+      if (urlStr.includes('api/tags') || urlStr.includes('/tags')) {
+        return Promise.resolve({
+          json: () => Promise.resolve({ models: [] })
+        })
+      }
+
+      if (urlStr.includes('add_ollama_models')) {
+        return Promise.resolve({
+          json: () => Promise.resolve({ added: true })
+        })
+      }
+
+      return Promise.resolve({ json: () => Promise.resolve({}) })
+    })
   })
 
-  it('renders "MyGPT Workflow" svg', () => {
-    const settingsCallback = jest.fn()
-    const setShowSettings = jest.fn()
-
-    const { container } = render(<Settings 
-        closeSettings={() => setShowSettings(false)} 
-        defaultSettings={defaultSettings} 
-        currentSettings={defaultSettings}
-        settingsCallback={settingsCallback}
-        user={{user_email: 'abc@xyz.com'}}
-      />)
-
-    const svgEl = container.querySelector(`svg[id="MyGPT_workflow"]`)
-    expect(svgEl).toBeInTheDocument()
+  afterEach(() => {
+    jest.restoreAllMocks()
   })
 
-  it('renders "LLMs" settings panel', () => {
-    const settingsCallback = jest.fn()
-    const setShowSettings = jest.fn()
-    const activeTab = 'llms'
-    const activeTabTextContent = 'LLMs'
-
-    const { container } = render(<Settings 
-        closeSettings={() => setShowSettings(false)} 
-        defaultSettings={defaultSettings} 
-        currentSettings={defaultSettings}
-        settingsCallback={settingsCallback}
-        djangoLogin={false}
-        user={{user_email: 'abc@xyz.com'}}
-    />)
-
-    const divEl = container.querySelector(`div[data-panel="${activeTab}"]`)
-
-    fireEvent.click(divEl)
-
-    expect(divEl.textContent).toBe(activeTabTextContent)
+  it('renders Settings header', () => {
+    render(<Settings {...baseProps} />)
+    expect(screen.getByText('Settings')).toBeInTheDocument()
   })
 
-  it('renders "Prompt and LLM parameters" panel', () => {
-    const settingsCallback = jest.fn()
-    const setShowSettings = jest.fn()
-    const activeTab = 'llm_parameters'
-    const activeTabTextContent = 'Prompt and LLM parameters'
+  it('renders expected panel tabs', () => {
+    const { container } = render(<Settings {...baseProps} />)
 
-    const { container } = render(<Settings 
-        closeSettings={() => setShowSettings(false)} 
-        defaultSettings={defaultSettings} 
-        currentSettings={defaultSettings}
-        settingsCallback={settingsCallback}
-        djangoLogin={false}
-        user={{user_email: 'abc@xyz.com'}}
-    />)
+    const datasetsPanels = container.querySelectorAll('div[data-panel="datasets"]')
+    const chatSettingsPanels = container.querySelectorAll('div[data-panel="chatsettings"]')
+    const llmsPanels = container.querySelectorAll('div[data-panel="llms"]')
 
-    const divEl = container.querySelector(`div[data-panel="${activeTab}"]`)
-
-    fireEvent.click(divEl)
-
-    expect(divEl.textContent).toBe(activeTabTextContent)
+    expect(datasetsPanels.length).toBeGreaterThan(0)
+    expect(chatSettingsPanels.length).toBeGreaterThan(0)
+    expect(llmsPanels.length).toBeGreaterThan(0)
+    expect(screen.queryByText('Prompt and LLM parameters')).not.toBeInTheDocument()
+    expect(screen.queryByText('Embedding Models')).not.toBeInTheDocument()
+    expect(screen.queryByText('Relevance score parameters')).not.toBeInTheDocument()
   })
 
-  it('renders "Publication libraries" panel', () => {
-    const settingsCallback = jest.fn()
-    const setShowSettings = jest.fn()
-    const activeTab = 'datasets'
-    const activeTabTextContent = 'Publication libraries'
-
-    const { container } = render(<Settings 
-        closeSettings={() => setShowSettings(false)} 
-        defaultSettings={defaultSettings} 
-        currentSettings={defaultSettings}
-        settingsCallback={settingsCallback}
-        djangoLogin={false}
-        user={{user_email: 'abc@xyz.com'}}
-    />)
-
-    const divEl = container.querySelector(`div[data-panel="${activeTab}"]`)
-
-    fireEvent.click(divEl)
-
-    expect(divEl.textContent).toBe(activeTabTextContent)
+  it('shows Add New Library button when openUpload is provided', () => {
+    render(<Settings {...baseProps} openUpload={jest.fn()} />)
+    expect(screen.getAllByRole('button', { name: /Add New Library/i }).length).toBeGreaterThan(0)
   })
 
-  it('renders "Embedding Models" panel', () => {
-    const settingsCallback = jest.fn()
-    const setShowSettings = jest.fn()
-    const activeTab = 'embedding_models'
-    const activeTabTextContent = 'Embedding Models'
+  it('triggers close and upload open on Add New Library click', () => {
+    const closeSettings = jest.fn()
+    const openUpload = jest.fn()
 
-    const { container } = render(<Settings 
-        closeSettings={() => setShowSettings(false)} 
-        defaultSettings={defaultSettings} 
-        currentSettings={defaultSettings}
-        settingsCallback={settingsCallback}
-        djangoLogin={false}
-        user={{user_email: 'abc@xyz.com'}}
-    />)
+    render(
+      <Settings
+        {...baseProps}
+        closeSettings={closeSettings}
+        openUpload={openUpload}
+      />
+    )
 
-    const divEl = container.querySelector(`div[data-panel="${activeTab}"]`)
+    const addButtons = screen.getAllByRole('button', { name: /Add New Library/i })
+    const visibleButton = addButtons.find((button) => !button.closest('div[style="display: none;"]')) || addButtons[0]
+    fireEvent.click(visibleButton)
 
-    fireEvent.click(divEl)
-
-    expect(divEl.textContent).toBe(activeTabTextContent)
-  })
-
-  it('renders "Relevance score parameters" panel', () => {
-    const settingsCallback = jest.fn()
-    const setShowSettings = jest.fn()
-    const activeTab = 'relevance_score'
-    const activeTabTextContent = 'Relevance score parameters'
-
-    const { container } = render(<Settings 
-        closeSettings={() => setShowSettings(false)} 
-        defaultSettings={defaultSettings} 
-        currentSettings={defaultSettings}
-        settingsCallback={settingsCallback}
-        djangoLogin={false}
-        user={{user_email: 'abc@xyz.com'}}
-    />)
-
-    const divEl = container.querySelector(`div[data-panel="${activeTab}"]`)
-
-    fireEvent.click(divEl)
-
-    expect(divEl.textContent).toBe(activeTabTextContent)
+    expect(closeSettings).toHaveBeenCalledTimes(1)
+    expect(openUpload).toHaveBeenCalledTimes(1)
   })
 })

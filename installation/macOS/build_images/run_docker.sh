@@ -13,3 +13,5 @@ sleep 60
 
 # run frontend
 docker compose up -d frontend
+sleep 30
+open http://localhost:3000

@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { 
-	// Cog6ToothIcon, InboxIcon,
-	SunIcon, MoonIcon,  
+	ArrowUpTrayIcon,
+	Cog6ToothIcon,
+	ClockIcon,
+	SunIcon, MoonIcon,
 	ChartBarSquareIcon } from '@heroicons/react/24/outline'
 
 // -----------------------------//
@@ -17,6 +19,8 @@ interface NavProps {
 	appLogoExternalLink?: any,
 	showPlotButton?: boolean,
 	plotButtonCallback?: any,
+	showUploadButton?: boolean,
+	uploadButtonCallback?: any,
 	showHistoryButton?: boolean,
 	historyButtonCallback?: any,
 	showSettingsButton?: boolean,
@@ -39,6 +43,7 @@ const defaultNavProps : NavProps = {
 	appName: 'Example App',
 	appNameLink: '/',
   	showAppLogo: false,
+	showUploadButton: false,
   	showHistoryButton: false,
 	showSettingsButton: false,
 	showLoginButton: false,
@@ -165,14 +170,28 @@ export const NavBar = (props = defaultNavProps) => {
 					</div>
 				</div>
 				<div className='flex flex-row mx-6'>
-					<div>
-						<button className='object-cover text-white dark:text-nav-dark bg-bsk_opp_darker rounded-full p-2 inline-block hover:drop-shadow-sm transition ease-in-out hover:bg-panel1'
-							onClick={props.darkModeCallback}
-						>
-							{!props.darkMode ? <SunIcon className='h-5 w-5'/> : <MoonIcon className='h-5 w-5'/>}
-						</button>
-					
-					</div>
+					{
+						props.showUploadButton ?
+						(
+							<button className='flex flex-row object-cover text-white bg-bsk_opp_darker rounded-full p-2 mx-1 hover:drop-shadow-sm transition ease-in-out hover:bg-panel1'
+								onClick={props.uploadButtonCallback}
+							>
+								<ArrowUpTrayIcon className='h-5 w-5'/>
+								<span className='px-2 text-sm'>Upload</span>
+							</button>
+						) : (<></>)
+					}
+					{
+						props.showSettingsButton ?
+						(
+							<button className='flex flex-row object-cover text-white bg-bsk_opp_darker rounded-full p-2 mx-1 hover:drop-shadow-sm transition ease-in-out hover:bg-panel1'
+								onClick={props.settingButtonCallback}
+							>
+								<Cog6ToothIcon className='h-5 w-5'/>
+								<span className='px-2 text-sm'>Settings</span>
+							</button>
+						) : (<></>)
+					}
 					{
 						props.showPlotButton ?
 						(
@@ -188,22 +207,19 @@ export const NavBar = (props = defaultNavProps) => {
 						(
 							<button className='flex flex-row object-cover text-white bg-bsk_opp_darker rounded-full p-2 mx-1 hover:drop-shadow-sm transition ease-in-out hover:bg-panel1'
 								onClick={props.historyButtonCallback}
-							> <span className='px-2 text-sm'>History</span>
-								{/* <InboxIcon className='h-6 w-6'/> */}
-							</button>
-						) : (<></>)
-					}
-					{
-						props.showSettingsButton ?
-						(
-							<button className='flex flex-row object-cover text-white bg-bsk_opp_darker rounded-full p-2 mx-1 hover:drop-shadow-sm transition ease-in-out hover:bg-panel1'
-								onClick={props.settingButtonCallback}
 							>
-								<span className='px-2 text-sm'>Customize</span>
-								{/* <Cog6ToothIcon className='h-6 w-6'/> */}
+								<ClockIcon className='h-5 w-5'/>
+								<span className='px-2 text-sm'>History</span>
 							</button>
 						) : (<></>)
 					}
+					<div>
+						<button className='object-cover text-white dark:text-nav-dark bg-bsk_opp_darker rounded-full p-2 inline-block hover:drop-shadow-sm transition ease-in-out hover:bg-panel1'
+							onClick={props.darkModeCallback}
+						>
+							{!props.darkMode ? <SunIcon className='h-5 w-5'/> : <MoonIcon className='h-5 w-5'/>}
+						</button>
+					</div>
 					{	
 						props.showLoginButton && props.isAuthenticated && !props.showPopupLogin ?
 						(<Link to='/'>
@@ -239,9 +255,11 @@ export const NavBar = (props = defaultNavProps) => {
 					<div className='flex flex-col'>
 						<input type='text' className='object-cover text-bsk_dark_blue rounded-md h-[50px] w-[200px] px-2 mx-4 my-2 hover:bolder'
 							onChange={(e) => setUsername(e.target.value)}
+							onKeyDown={(e) => e.key === 'Enter' && AttemptDjagoLogin()}
 							placeholder='Username'/>
 						<input type='password' className='object-cover text-bsk_dark_blue rounded-md h-[50px] w-[200px] px-2 mx-4 my-2 hover:bolder'
 							onChange={(e) => setPassword(e.target.value)}
+							onKeyDown={(e) => e.key === 'Enter' && AttemptDjagoLogin()}
 							placeholder='Password'/>
 						<button className='object-cover bg-panel1 text-panel3 rounded-full h-[50px] w-[100px] mx-auto hover:bolder'
 							onClick={() => AttemptDjagoLogin()}>

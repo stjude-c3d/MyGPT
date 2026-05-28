@@ -60,12 +60,24 @@ MyGPT can be hosted on any cloud service but we are providing Azure as an exampl
 To run the pipleine on Azure, follow the instructions:
 * [Azure Installation](./installation/azure/README.md)
 
+## Dependencies
+
+For a complete list of backend and frontend dependencies, see [dependencies.md](./dependencies.md).
+
+For environment-specific dependencies and prerequisites, refer to the installation guides:
+
+- Mac: [installation/macOS/README.md](./installation/macOS/README.md)
+- Linux: [installation/linux/README.md](./installation/linux/README.md)
+- Windows: [installation/windows/README.md](./installation/windows/README.md)
+- VM/Server: [installation/vm/README.md](./installation/vm/README.md)
+- Cloud (Azure): [installation/azure/README.md](./installation/azure/README.md)
+
 ## User Interface
 MyGPT user interface will allow users to check the publcation library, ask questions, and get answers. The user interface is built using ReactJS.
 
 Here is an example of the user interface with question, answer, and source citing:
 
-<img src='./images/MyGPT_UI.png' width='800px' alt='MyGPT user interface'>
+<img src='./images/MyGPT_UI.png' width='800px' alt='MyGPT user interface' style='background-color: white; padding: 10px;'>
 
 ## FAQs
 
