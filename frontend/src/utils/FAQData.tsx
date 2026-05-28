@@ -1,7 +1,7 @@
 interface FAQItem {
 	question: string;
 	answer: string;
-	image?: string;
+	image?: string | string[];
   }
   
   interface FAQData {
@@ -35,12 +35,12 @@ interface FAQItem {
 		},
 		{
 			"question": "3. Can I use MyGPT to chat with LLM without incorporating documents pipeline (RAG), like ChatGPT?",
-			"answer": "You can use MyGPT to chat directly with LLM without the RAG pipeline. Under the input box where users can ask questions, we have provided a switch to skip the RAG pipeline. In this  case, MyGPT will use LLM’s inherent knowledge to answer user’s questions",
-		    "image": "./Chat_wo_document.png"
+			"answer": "You can use MyGPT to chat directly with LLM without the RAG pipeline. At the top of the Chat panel, you can use the drop-down to switch from \"Chat with Documents\" to \"Direct chat with GPTs\". In this case, MyGPT will use LLM’s inherent knowledge to answer users' questions.",
+		    "image": ["./Chat_with_document.png", "./Chat_wo_document_dropdown.png", "./Chat_wo_document.png"]
 		},
 		{
 		   "question": "4. What happens if the information to answer the question is not available in my library?",
-			"answer": "If the information to answer the question is unavailable in your library, MyGPT will use its inherent knowledge to answer it. It will also provide confidence matrices in the form of  question relevance score (QRS), answer relevance score (ARS) and hallucination index  (HI). Low QRS, QRS, and high HI should be interpreted as an indication to verify and cross-reference the generated answer with the retrieved context highlighted in the documents.  Suppose the question is off-topic from the subjects covered in the papers. In that case, the  QRS score will be zero, indicating the generated answer does not use any information from  the document and is entirely generated using inherent knowledge of LLM."
+			"answer": "If the information needed to answer the question is unavailable in your library, MyGPT will either acknowledge that it is missing from the library or, in rare cases, use the LLM’s inherent knowledge to answer it. It will also provide confidence matrices in the form of question relevance score (QRS), answer relevance score (ARS), and hallucination index (HI). Low QRS, QRS, and high HI should be interpreted as an indication to verify and cross-reference the generated answer with the retrieved context highlighted in the documents. Suppose the question is off-topic from the subjects covered in the papers. In that case, the QRS and ARS scores will be low, and HI will be high, indicating that the generated answer does not use any information from the document and is entirely generated using the LLM's inherent knowledge."
 		},
 		{
 			"question": "5. If I am certain my library has the necessary information to answer the question, but MyGPT is not able to find it, what should I do?",
@@ -53,7 +53,7 @@ interface FAQItem {
 		{
 			"question": "7. If there is information on my library that is outdated or inconsistent with public information  available on the internetfacts available in public domain, will MyGPT detect the inconsistency?",
 			"answer": "MyGPT is designed to perform question-answering in the context of your library of documents and will hold the information from your documents as the highest truth. If the  information in your document is outdated compared to facts in the public domain, MyGPT will answer them using only information from your documents. If the LLM has more up-to-date information about your question, the answer relevance score (ARS) and hallucination  index (HI) may be able to guide you. MyGPT also provides answers generated without the  RAG pipeline as the drop-down with the original MyGPT-generated answers. You can  compare that answer with an original answer to verify the discrepancy in relevance scores.  However, if the most up-to-date information about your topic is also missing from LLM training data, MyGPT will answer it only using information from your documents",
-		    "image": "./Dropdown_Image.png"
+		    "image": ["./Dropdown_Image.png", "./Dropdown_Image_2.png"]
 		},
 		{
 			"question": "8. If the answer is related to up-to-date information that is contained in my library but that was missing from the training data used for the LLM being used, will MyGPT be able to answer accurately?",
