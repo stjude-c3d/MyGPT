@@ -42,3 +42,4 @@ label_studio/data/*
 backend/data/reranker/*
 scripts/data/*
 frontend/.env.*
+backend/data/pdfs/MyGPT/paper*.pdf
