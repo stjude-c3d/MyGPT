@@ -1305,6 +1305,17 @@ def secure_media(request, file_path):
         frontend_settings = FrontEndSettings.objects.latest('saved_date_time')
         django_login_enabled = frontend_settings.django_login
 
+    normalized_path = file_path.replace('\\', '/')
+    is_public_library_media = False
+    if normalized_path.startswith('papers/'):
+        path_parts = normalized_path.split('/')
+        if len(path_parts) > 1 and path_parts[1]:
+            dataset_name = path_parts[1]
+            is_public_library_media = Dataset.objects.filter(
+                dataset_name=dataset_name,
+                user_email='-'
+            ).exists()
+
     is_authenticated_user = bool(getattr(request, 'user', None) and request.user.is_authenticated)
     auth_header = request.headers.get('Authorization', '')
     bearer_token = auth_header.split(' ', 1)[1] if auth_header.startswith('Bearer ') and ' ' in auth_header else ''
@@ -1321,7 +1332,7 @@ def secure_media(request, file_path):
         or any(auth_header == f'Bearer {token}' for token in valid_static_tokens)
     )
 
-    if django_login_enabled and not is_authenticated_user and not has_valid_static_token:
+    if django_login_enabled and not is_public_library_media and not is_authenticated_user and not has_valid_static_token:
         return Response({'detail': 'Authentication credentials were not provided.'}, status=status.HTTP_401_UNAUTHORIZED)
 
     try:

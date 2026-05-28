@@ -3,7 +3,7 @@ media/*
 chroma_storage/*
 chroma/*
 data/data_chunks/*
-!data/data_chunks/GPCR.txt
+!data/data_chunks/MyGPT.txt
 data/pdfs/*
-!data/pdfs/GPCR
-data/pdfs/GPCR/*_highlighted.pdf
+!data/pdfs/MyGPT
+data/pdfs/MyGPT/*_highlighted.pdf
