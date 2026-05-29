@@ -266,7 +266,7 @@ function GPTHome(props:{
 		let isMounted = true
 		const controller = new AbortController()
 		if(addDemoLibrary){
-			addDemoLibraryRequest(props.currentSettings.selected_sentence_transformer, props.frontendSettings, controller.signal)
+			addDemoLibraryRequest(props.currentSettings.selectedEmbeddingModel, props.frontendSettings, controller.signal)
 				.then(data => {
 					if (!isMounted) return
 					console.log(data)
@@ -885,6 +885,12 @@ function GPTHome(props:{
 
 	const hasFocusedDocuments = focusedPapers.length > 0
 	const isFocusedDocument = (title: string) => focusedPapers.includes(title)
+	const canLoadDemoLibraryWithoutLogin =
+		!props.currentSettings.loggedin &&
+		props.frontendSettings &&
+		!props.frontendSettings.django_login &&
+		!props.frontendSettings.azure_login &&
+		props.currentSettings?.datasets?.length === 0
 
 	return (
 		<div className='grid grid-cols-10 p-4 bg-gray-200 dark:bg-neutral-800 max-w-[2000px] mx-auto h-[94vh]'>
@@ -1556,7 +1562,7 @@ function GPTHome(props:{
 										</iframe>
 										</div>
 								:
-								!props.currentSettings.loggedin ?
+								!props.currentSettings.loggedin && !canLoadDemoLibraryWithoutLogin ?
 								<div>
 									<div className='text-center text-nav'>
 										Login to view document library

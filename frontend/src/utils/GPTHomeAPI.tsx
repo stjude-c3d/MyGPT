@@ -149,13 +149,15 @@ export const addDemoLibraryRequest = async (
 	frontendSettings: any,
 	signal?: AbortSignal
 ): Promise<any> => {
-	const response = await fetch(`${process.env.REACT_APP_BACKEND_API}api/add_demo_library/?format=json`, {
+	const params = new URLSearchParams({
+		format: 'json',
+		embedding_model: sentenceTransformer,
+	})
+	const response = await fetch(`${process.env.REACT_APP_BACKEND_API}api/add_demo_library/?${params.toString()}`, {
 		method: 'GET',
 		headers: {
-			'Content-Type': 'application/json',
 			'Authorization': getAuthHeader(frontendSettings),
 		},
-		body: JSON.stringify({ sentence_transformer: sentenceTransformer }),
 		signal,
 	})
 	return response.json()

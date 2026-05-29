@@ -347,7 +347,7 @@ def add_demo_dataset(embedding_model_request='multi-qa-MiniLM-L6-cos-v1'):
                 #convert line to json
                 line_json = eval(line)
                 documents.append(line_json['content'])
-                metadatas.append({'filename': line_json['title'], 'page': line_json['page']})
+                metadatas.append({'filename': line_json['title'], 'page': line_json['page'], 'type': line_json['type']})
                 if line_json['title'] not in titles:
                     titles.append(line_json['title'])
         ids = [str(i) for i in range(count, count + len(documents))]
@@ -374,12 +374,18 @@ def add_demo_dataset(embedding_model_request='multi-qa-MiniLM-L6-cos-v1'):
         dataset = Dataset.objects.create(
             dataset_name=dataset_name,
             dataset_size=new_count,
+            embedding_model=embedding_model_request,
             chunksize=1000,
             chunking_method='fixed_chunk_size',
-            overlap=False,
-            use_bm25=False,
+            overlap=True,
+            use_bm25=True,
             distance_function='l2',
-            dataset_date_time=make_aware(datetime.datetime.now())
+            dataset_date_time=make_aware(datetime.datetime.now()),
+            user='-',
+            user_email='-',
+            user_group='user',
+            documents_language='english',
+            dataset_prompt='###INSTUCTIONS#### \nUse following information to answer the question in less than 200 words, try not to use any other information other than provided context. if the information is not in the context, then tell user that information is not found in the documents.\n ### CONTEXT ####'
         )
 
         for (idx, title) in enumerate(titles):
