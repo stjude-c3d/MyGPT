@@ -293,7 +293,7 @@ function GPTHome(props:{
 			new_conversation: query.length === 1 ? true : false,
 			focused_document_titles: focusedPapers.length ? focusedPapers : [],
 			focused_section: focusedSection ? focusedSection.split(' (')[0] : '',
-			maximum_chunks_count: props.currentSettings.maximum_chunks_count,
+			maximum_chunks_count: parseInt(props.currentSettings.maximum_chunks_count, 10),
 			no_cutoff: props.currentSettings.no_chunk_cutoff,
 			related_query: relatedQuery,
 			previous_query: query.length > 1 ? query[query.length-2].question.replaceAll('"',"'") : '',
@@ -319,9 +319,9 @@ function GPTHome(props:{
 				'stream': false,
 				'tools': mcpOllamaTools,
 				'options': {
-					'temperature': props.currentSettings.temperature,
-					'top_k': props.currentSettings.top_k,
-					'top_p': props.currentSettings.top_p,
+					'temperature': parseFloat(props.currentSettings.temperature),
+					'top_k': parseInt(props.currentSettings.top_k, 10),
+					'top_p': parseFloat(props.currentSettings.top_p),
 				}
 			}
 			const body = JSON.stringify(toolsBody)
