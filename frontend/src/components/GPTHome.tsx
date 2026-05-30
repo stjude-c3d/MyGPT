@@ -1584,12 +1584,12 @@ function GPTHome(props:{
 											}}
 										>
 											<p className='inline-block ml-2'>
-												Load referemce "MyGPT" library
+												Load "MyGPT" meta library as demo
 											</p>
 										</button>
 									</div>
 									<div className='text-center text-nav mt-2'>
-										Or you can add your own library from Settings menu.
+										Or you can add your own library from Upload menu.
 									</div>
 								</div>
 							}
