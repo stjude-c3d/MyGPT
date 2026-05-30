@@ -1548,13 +1548,19 @@ def get_ollama_models(request):
             for model in response.models:
                 if model.size is not None and model.size > 0:
                     if model.details:
+                        quantization_level = model.details.get('quantization_level', 'unknown')
+                        if quantization_level != 'F16' and not Model.objects.filter(model_name=model.model).exists():
+                            Model.objects.create(
+                                model_name=model.model,
+                                model_size=f"{(model.size * 1e-9):.2f}",
+                            )
                         models.append({
                             'name': model.model,
                             'size': model.size,
                             'family': model.details.get('family', 'unknown'),
                             'format': model.details.get('format', 'unknown'),
                             'parameter_size': model.details.get('parameter_size', 'unknown'),
-                            'quantization_level': model.details.get('quantization_level', 'unknown'),
+                            'quantization_level': quantization_level,
                         })
             return Response({'added':True, 'models': models}, content_type="application/json")
         except Exception as e:
