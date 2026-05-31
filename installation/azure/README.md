@@ -138,6 +138,7 @@ Pull the latest LLM models by running the following commands:
 ```bash
 ollama pull llama3
 ollama pull llama3.1
+ollama pull gpt-oss
 ```
 
 Also, get the nomic embedding model, which is best performing embedding model for MyGPT pipeline, by running following command:

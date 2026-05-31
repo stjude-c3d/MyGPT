@@ -80,12 +80,13 @@ We will install these two tools in the following steps:
 	You can check if Ollama is running by visiting http://localhost:11434/ in your default browser.
 
 > [!CAUTION]
-> After installing Ollama, close any open Terminal/Command Prompt before you pull Llama3.
+> After installing Ollama, close any open Terminal/Command Prompt before you pull Llama3 or gpt-oss (if you have more than 8 GB RAM).
 
-Once you start Ollama, you have to pull Llama3 model by running following command:
+Once you start Ollama, you have to pull Llama3 or gpt-oss model by running following command:
 
 ```
 ollama pull llama3
+ollama pull gpt-oss
 ```
 
 Also, get the nomic embedding model, which is best performing embedding model for MyGPT pipeline, by running following command:
