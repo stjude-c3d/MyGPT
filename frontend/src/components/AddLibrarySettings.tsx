@@ -341,7 +341,7 @@ const AddLibrarySettings = (props: {
 						<div className='text-nav dark:text-nav-dark p-1 w-48'>Language of Documents</div>
 						<DropdownOptions
 							width={'280px'}
-							optionsList={['English', 'French', 'Spanish', 'Portuguese', 'Unknown']}
+							optionsList={['English', 'French', 'Spanish', 'Portuguese', 'German', 'Italian', 'Dutch', 'Arabic', 'Hindi', 'Hungarian', 'Unknown']}
 							defaultOption={'English'}
 							dropDownCallback={(option:string)=>{
 								setLanguageOfDocs(option)

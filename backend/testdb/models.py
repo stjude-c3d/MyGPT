@@ -46,6 +46,12 @@ document_languages = (
 	('french', 'french'),
 	('spanish', 'spanish'),
 	('portuguese', 'portuguese'),
+	('german', 'german'),
+	('italian', 'italian'),
+	('dutch', 'dutch'),
+	('arabic', 'arabic'),
+	('hindi', 'hindi'),
+	('hungarian', 'hungarian'),
 	('unknown', 'unknown'),
 )
 

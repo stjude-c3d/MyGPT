@@ -104,6 +104,12 @@ function GPTHome(props:{
 		spanish: { language_to_full: 'Spanish', language_to: 'es' },
 		french: { language_to_full: 'French', language_to: 'fr' },
 		portugese: { language_to_full: 'Portuguese', language_to: 'pt' },
+		german: { language_to_full: 'German', language_to: 'de' },
+		italian: { language_to_full: 'Italian', language_to: 'it' },
+		dutch: { language_to_full: 'Dutch', language_to: 'nl' },
+		arabic: { language_to_full: 'Arabic', language_to: 'ar' },
+		hindi: { language_to_full: 'Hindi', language_to: 'hi' },
+		hungarian: { language_to_full: 'Hungarian', language_to: 'hu' },
 	}
 
 	const isThinkStepSupported = llmswithThinkStepSupport.includes(props.currentSettings.selectedLlm.split(':')[0])

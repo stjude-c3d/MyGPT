@@ -219,6 +219,12 @@ const UploadNode = ({ data }: any) => {
                             <option value="English">English</option>
                             <option value="French">French</option>
                             <option value="Spanish">Spanish</option>
+                            <option value="German">German</option>
+                            <option value="Italian">Italian</option>
+                            <option value="Dutch">Dutch</option>
+                            <option value="Arabic">Arabic</option>
+                            <option value="Hindi">Hindi</option>
+                            <option value="Hungarian">Hungarian</option>
                         </select>
 
                     </div>
