@@ -1,4 +1,5 @@
 ## run docker containers as detached 
+docker compose down
 docker compose up -d db
 sleep 10
 
