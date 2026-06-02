@@ -5,22 +5,77 @@ import fitz
 import base64
 import subprocess
 import requests
+import re
 import xml.etree.ElementTree as ET
 from pypdf import PdfReader
 from langchain_community.llms import Ollama
 
 
+class ExtractedPDFPage:
+    """A lightweight page wrapper that preserves the extract_text() interface."""
+
+    def __init__(self, text, page_number):
+        self._text = text or ""
+        self.page_number = page_number
+
+    def extract_text(self):
+        return self._text
+
+
+def _contains_devanagari(text):
+    return bool(re.search(r"[\u0900-\u097F]", text or ""))
+
+
+def _is_probably_garbled(text):
+    if not text:
+        return True
+
+    stripped = text.strip()
+    if not stripped:
+        return True
+
+    # Common marker when font-to-unicode mappings are missing in PDFs.
+    if len(re.findall(r"\(cid:\d+\)", stripped)) >= 3:
+        return True
+
+    replacement_chars = stripped.count("\ufffd") + stripped.count("\x00")
+    if replacement_chars / max(len(stripped), 1) > 0.02:
+        return True
+
+    return False
+
+
 def getPDFContent(path):
-    """Extracts content from a given PDF file and returns it along with the number of pages."""
+    """Extract text from PDF pages with Hindi-friendly fallback handling."""
     try:
         reader = PdfReader(path, strict=False)
-        # check if the PDF has a root/catalog
         if len(reader.pages) == 0:
-            print(f"PDF structure error: Pages are not of type list in {path}")
+            print(f"PDF structure error: no pages found in {path}")
             return []
-        for i, page in enumerate(reader.pages):
-            print(f"Page {i + 1}: {page.extract_text()}")
-        return reader.pages
+
+        extracted_pages = []
+
+        # PyMuPDF often extracts Indic scripts more reliably than pypdf for some fonts.
+        with fitz.open(path) as fitz_doc:
+            for i, page in enumerate(reader.pages):
+                pypdf_text = page.extract_text() or ""
+                fitz_text = ""
+
+                if i < len(fitz_doc):
+                    fitz_text = fitz_doc[i].get_text("text") or ""
+
+                use_fitz = False
+                if _is_probably_garbled(pypdf_text) and fitz_text.strip():
+                    use_fitz = True
+                elif not _contains_devanagari(pypdf_text) and _contains_devanagari(fitz_text):
+                    use_fitz = True
+                elif not pypdf_text.strip() and fitz_text.strip():
+                    use_fitz = True
+
+                final_text = fitz_text if use_fitz else pypdf_text
+                extracted_pages.append(ExtractedPDFPage(final_text, i + 1))
+
+        return extracted_pages
     except Exception as e:
         print(f"Error reading PDF {path}: {e}")
         return []

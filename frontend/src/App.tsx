@@ -206,8 +206,14 @@ function App() {
     frontendSettings.django_login ?
     <div className='bg-gray-200'>
       <TopNav 
-        setShowUpload={setShowUpload}
-        setShowSettings={setShowSettings} 
+        setShowUpload={()=>{
+          setShowUpload(true)
+          currentSettings.showUpload = true
+        }}
+        setShowSettings={()=>{
+          setShowSettings(true)
+          currentSettings.showSettings = true
+        }} 
         setShowChatHistory={setShowChatHistory} 
         setPlotButton={setShowPlotButton}
         showPopupLogin={frontendSettings.django_login}
@@ -217,8 +223,14 @@ function App() {
       />
       {showUpload ?
         <UploadMenu
-          closeUpload={() => setShowUpload(false)}
-          openSettings={() => setShowSettings(true)}
+          closeUpload={() => {
+            setShowUpload(false)
+            currentSettings.showUpload = false
+          }}
+          openSettings={() => {
+            setShowSettings(true)
+            currentSettings.showSettings = true
+          }}
           currentSettings={currentSettings}
           settingsCallback={settingsCallback}
           user={user}
@@ -227,7 +239,10 @@ function App() {
       }
       {showSettings ?
         <Settings 
-          closeSettings={() => setShowSettings(false)}
+          closeSettings={() => {
+            setShowSettings(false)
+            currentSettings.showSettings = false
+          }}
           openUpload={() => { setShowSettings(false); setShowUpload(true); }}
           defaultSettings={defaultSettings} 
           currentSettings={currentSettings}

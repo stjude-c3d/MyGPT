@@ -9,7 +9,16 @@ const UploadNode = ({ data }: any) => {
     const [collapsed, setCollapsed] = useState(false);
 
     const emptyUploadDocs = Array.from(Array(40).keys()).map((x: any) => { return { title: '', file: null } })
+    const safeCurrentSettings = data.currentSettings || {}
     const getInitialUploadNodeData = () => {
+        if (safeCurrentSettings.libraryName || safeCurrentSettings.docs || safeCurrentSettings.languageOfDocs) {
+            return {
+                libraryName: safeCurrentSettings.libraryName || '',
+                docs: safeCurrentSettings.docs || emptyUploadDocs,
+                languageOfDocs: safeCurrentSettings.languageOfDocs || 'English',
+            }
+        }
+
         try {
             const saved = localStorage.getItem(stateKey)
             if (saved) {
@@ -33,14 +42,38 @@ const UploadNode = ({ data }: any) => {
     const [languageOfDocs, setLanguageOfDocs] = useState(initialData.languageOfDocs)
 
     useEffect(() => {
-        // localStorage.setItem(
-        //     stateKey,
-        //     JSON.stringify({
-        //         libraryName: uploadLibraryName,
-        //         docs: uploadDocs,
-        //         languageOfDocs: languageOfDocs,
-        //     })
-        // )
+        // Only sync from currentSettings if not in the middle of state cleanup
+        const nextLibraryName = data.currentSettings?.libraryName
+        const nextDocs = data.currentSettings?.docs
+        const nextLanguage = data.currentSettings?.languageOfDocs
+
+        if (typeof nextLibraryName === 'string' && nextLibraryName !== uploadLibraryName) {
+            setUploadLibraryName(nextLibraryName)
+        }
+
+        if (Array.isArray(nextDocs) && nextDocs !== uploadDocs) {
+            setUploadDocs(nextDocs)
+        }
+
+        if (typeof nextLanguage === 'string' && nextLanguage !== languageOfDocs) {
+            setLanguageOfDocs(nextLanguage)
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [data.currentSettings?.libraryName, data.currentSettings?.docs, data.currentSettings?.languageOfDocs])
+
+    useEffect(() => {
+        try {
+            localStorage.setItem(
+                stateKey,
+                JSON.stringify({
+                    libraryName: uploadLibraryName,
+                    docs: uploadDocs,
+                    languageOfDocs: languageOfDocs,
+                })
+            )
+        } catch (error) {
+            console.error('Failed to save uploadNodeData to localStorage:', error)
+        }
 
         data.settingsCallback({
             ...data.currentSettings,
@@ -49,7 +82,7 @@ const UploadNode = ({ data }: any) => {
             languageOfDocs: languageOfDocs,
         })
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [uploadLibraryName, uploadDocs, languageOfDocs, uploadDocs])
+    }, [uploadLibraryName, uploadDocs, languageOfDocs])
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         // const selected = Array.from(e.target.files || []);
@@ -200,9 +233,12 @@ const UploadNode = ({ data }: any) => {
                                     wordBreak: 'break-word',
                                 }}
                             >
-                                {uploadDocs.filter((d: { file: null; title: string; }) => d.file !== null && d.title !== '').length === 0
-                                    ? 'No files selected'
-                                    : uploadDocs.filter((d: { file: null; title: string; }) => d.file !== null && d.title !== '').map((f: { title: any; }) => f.title).join(', ')}
+                                {(() => {
+                                    const selectedCount = uploadDocs.filter((d: { file: null; title: string; }) => d.file !== null && d.title !== '').length;
+                                    return selectedCount === 0
+                                        ? 'No files selected'
+                                        : `${selectedCount} file${selectedCount === 1 ? '' : 's'} selected`;
+                                })()}
                             </div>
                         </div>
                     </div>

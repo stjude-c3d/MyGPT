@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
 import { DropdownOptions } from './DropDownMenu'
 
@@ -8,43 +8,184 @@ const AddLibrarySettings = (props: {
 	user?: any,
 	djangoLogin?: any
 }) => {
-  const [apiKey, setApiKey] = useState('')
-  const [showAPIHelp, setShowAPIHelp] = useState(false)
-  const [libraryId, setLibraryId] = useState('')
-  const [libraryIdType, setLibraryIdType] = useState('user') // ['user', 'group']
-  const [showLibraryIDHelp, setShowLibraryIDHelp] = useState(false)
-  const [collectionId, setCollectionId] = useState('')
-  const [showCollectionIDHelp, setShowCollectionIDHelp] = useState(false)
-  const [addLibrary, setAddLibrary] = useState(false)
-  const [showSuccess, setShowSuccess] = useState(false)
-  const [showError, setShowError] = useState(false)
-  const [errorMessage, setErrorMessage] = useState('')
+	const stateKey = 'upUploadNodeState';
+	const emptyUploadDocs:any = Array.from(Array(40).keys()).map((x: any) => { return { title: '', file: null } })
+	const safeCurrentSettings = props.currentSettings || {}
+	const getInitialUploadNodeData = () => {
+		if (safeCurrentSettings.libraryName || safeCurrentSettings.docs || safeCurrentSettings.languageOfDocs) {
+			           return {
+                libraryName: safeCurrentSettings.libraryName || '',
+                docs: safeCurrentSettings.docs || emptyUploadDocs,
+                languageOfDocs: safeCurrentSettings.languageOfDocs || 'English',
+            }
+		}
 
-  const [uploadPanel, setUploadPanel] = useState(true)
-  const [zoteroPanel, setZoteroPanel] = useState(false)
-  const [videoPanel, setVideoPanel] = useState(false)
+		try {
+			const saved = localStorage.getItem(stateKey)
+			if (saved) {
+				return JSON.parse(saved)
+			}
+		} catch (error) {
+			console.error('Failed to parse uploadNodeData from localStorage:', error)
+		}
 
-  const [UploadLibraryName, setUploadLibraryName] = useState('')
-  const [uploadDocCount, setUploadDocCount] = useState(5)
-  const emptyUploadDocs = Array.from(Array(40).keys()).map((x:any) => {return {title: '', file: null}})
-  const [uploadDocs, setUploadDocs] = useState(emptyUploadDocs)
-  const [uploadLibrary, setUploadLibrary] = useState(false)
-	const [uploadSettingsMode, setUploadSettingsMode] = useState('Default settings')
-  const currentSettings = JSON.parse(JSON.stringify(props.currentSettings))
+        return {
+            libraryName: '',
+            docs: emptyUploadDocs,
+            languageOfDocs: 'English',
+        }
+    }
 
-  const [videoLibraryName, setVideoLibraryName] = useState('')
-  const [videoLibrary, setVideoLibrary] = useState(false)
-  const [videoPlaylistURL, setVideoPlaylistURL] = useState('')
-  const [videoDocURLs, setVideoDocURLs] = useState([''])
+	const initialData = getInitialUploadNodeData()
+	const [apiKey, setApiKey] = useState('')
+	const [showAPIHelp, setShowAPIHelp] = useState(false)
+	const [libraryId, setLibraryId] = useState('')
+	const [libraryIdType, setLibraryIdType] = useState('user') // ['user', 'group']
+	const [showLibraryIDHelp, setShowLibraryIDHelp] = useState(false)
+	const [collectionId, setCollectionId] = useState('')
+	const [showCollectionIDHelp, setShowCollectionIDHelp] = useState(false)
+	const [addLibrary, setAddLibrary] = useState(false)
+	const [showSuccess, setShowSuccess] = useState(false)
+	const [showError, setShowError] = useState(false)
+	const [errorMessage, setErrorMessage] = useState('')
 
-  const [chunkingMethod, setChunkingMethod] = useState('fixed_chunk_size') // ['fixed_chunk_size', 'structure_preserving']
-  const [chunkSizeActive, setChunkSizeActive] = useState(true)
-  const [useOverlap, setUseOverlap] = useState('Yes')
-  const [chunkSize, setChunkSize] = useState('1000')
-  const [useBM25, setUseBM25] = useState('Yes')
-  const [Reranker, setReranker] = useState('qnli-electra-base (default)')
-  const [distanceFn, setDistanceFn] = useState('l2')
-  const [languageOfDocs, setLanguageOfDocs] = useState('English')
+	const [uploadPanel, setUploadPanel] = useState(true)
+	const [zoteroPanel, setZoteroPanel] = useState(false)
+	const [videoPanel, setVideoPanel] = useState(false)
+
+	const [UploadLibraryName, setUploadLibraryName] = useState(initialData.libraryName)
+	const [uploadDocCount, setUploadDocCount] = useState(5)
+	const [uploadDocs, setUploadDocs] = useState(initialData.docs)
+	const [uploadLibrary, setUploadLibrary] = useState(false)
+		const [uploadSettingsMode, setUploadSettingsMode] = useState('Default settings')
+	const currentSettings = JSON.parse(JSON.stringify(props.currentSettings))
+
+	const [videoLibraryName, setVideoLibraryName] = useState('')
+	const [videoLibrary, setVideoLibrary] = useState(false)
+	const [videoPlaylistURL, setVideoPlaylistURL] = useState('')
+	const [videoDocURLs, setVideoDocURLs] = useState([''])
+
+	const [chunkingMethod, setChunkingMethod] = useState('fixed_chunk_size') // ['fixed_chunk_size', 'structure_preserving']
+	const [chunkSizeActive, setChunkSizeActive] = useState(true)
+	const [useOverlap, setUseOverlap] = useState('Yes')
+	const [chunkSize, setChunkSize] = useState('1000')
+	const [useBM25, setUseBM25] = useState('Yes')
+	const [Reranker, setReranker] = useState('qnli-electra-base (default)')
+	const [distanceFn, setDistanceFn] = useState('l2')
+	const [languageOfDocs, setLanguageOfDocs] = useState(initialData.languageOfDocs || 'English')
+	const uploadFileInputRef = useRef<HTMLInputElement | null>(null)
+	const [hasStoredLibraryData, setHasStoredLibraryData] = useState(false)
+	const selectedUploadDocsCount = (uploadDocs || []).filter((doc:any) => {
+		const hasFile = doc?.file !== null && doc?.file !== undefined
+		const hasTitle = typeof doc?.title === 'string' && doc.title.trim() !== ''
+		return hasFile || hasTitle
+	}).length
+
+	const hasMeaningfulLibraryData = (state: any) => {
+		const savedLibraryName = typeof state?.libraryName === 'string' ? state.libraryName.trim() : ''
+		const savedDocs = Array.isArray(state?.docs) ? state.docs : []
+		const savedDocsCount = savedDocs.filter((doc:any) => {
+			const hasFile = doc?.file !== null && doc?.file !== undefined
+			const hasTitle = typeof doc?.title === 'string' && doc.title.trim() !== ''
+			return hasFile || hasTitle
+		}).length
+
+		return savedLibraryName.length > 0 || savedDocsCount > 0
+	}
+
+	const refreshStoredLibraryDataState = () => {
+		try {
+			const saved = localStorage.getItem(stateKey)
+			if (!saved) {
+				setHasStoredLibraryData(false)
+				return
+			}
+
+			const parsed = JSON.parse(saved)
+			setHasStoredLibraryData(hasMeaningfulLibraryData(parsed))
+		} catch (error) {
+			console.error('Failed to read uploadNodeData from localStorage:', error)
+			setHasStoredLibraryData(false)
+		}
+	}
+
+	const clearUploadLibraryForm = () => {
+		try {
+			localStorage.removeItem(stateKey)
+		} catch (error) {
+			console.error('Failed to clear uploadNodeData from localStorage:', error)
+		}
+
+		if (uploadFileInputRef.current) {
+			uploadFileInputRef.current.value = ''
+		}
+
+		setUploadLibraryName('')
+		setUploadDocs(emptyUploadDocs)
+		setLanguageOfDocs('English')
+		setShowError(false)
+		setErrorMessage('')
+		setHasStoredLibraryData(false)
+
+		props.settingsCallback({
+			...currentSettings,
+			libraryName: '',
+			docs: emptyUploadDocs,
+			languageOfDocs: 'English',
+		})
+	}
+
+	useEffect(() => {
+		refreshStoredLibraryDataState()
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [])
+
+	useEffect(() => {
+		// Only sync from props if not currently processing an upload
+		if (!uploadLibrary && uploadPanel) {
+			const nextLibraryName = props.currentSettings?.libraryName
+			const nextDocs = props.currentSettings?.docs
+			const nextLanguage = props.currentSettings?.languageOfDocs
+
+			if (typeof nextLibraryName === 'string' && nextLibraryName !== UploadLibraryName) {
+				setUploadLibraryName(nextLibraryName)
+			}
+
+			if (Array.isArray(nextDocs) && nextDocs !== uploadDocs) {
+				setUploadDocs(nextDocs)
+			}
+
+			if (typeof nextLanguage === 'string' && nextLanguage !== languageOfDocs) {
+				setLanguageOfDocs(nextLanguage)
+			}
+		}
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [props.currentSettings?.libraryName, props.currentSettings?.docs, props.currentSettings?.languageOfDocs, uploadLibrary, uploadPanel])
+
+	useEffect(() => {
+		try {
+			localStorage.setItem(
+				stateKey,
+				JSON.stringify({
+					libraryName: UploadLibraryName,
+					docs: uploadDocs,
+					languageOfDocs: languageOfDocs,
+				})
+			)
+		} catch (error) {
+			console.error('Failed to save uploadNodeData to localStorage:', error)
+		}
+
+		setHasStoredLibraryData(UploadLibraryName.trim().length > 0 || selectedUploadDocsCount > 0)
+
+		props.settingsCallback({
+			...currentSettings,
+			libraryName: UploadLibraryName,
+			docs: uploadDocs,
+			languageOfDocs: languageOfDocs,
+		})
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [UploadLibraryName, uploadDocs, languageOfDocs])
 
   useEffect(() => {
 	if (addLibrary){
@@ -125,7 +266,7 @@ const AddLibrarySettings = (props: {
 			}
 
 			// show error if no file is selected
-			if (uploadDocs.filter((d)=> d.file !== null && d.title !== '').length === 0){
+			if (uploadDocs.filter((d:any)=> d.file !== null && d.title !== '').length === 0){
 				setShowError(true)
 				setErrorMessage('No file selected')
 				setUploadLibrary(false)
@@ -137,7 +278,7 @@ const AddLibrarySettings = (props: {
 				setErrorMessage('')
 			}
 
-			uploadDocs.filter((d)=> d.file !== null && d.title !== '').forEach((doc:any) => {
+			uploadDocs.filter((d:any)=> d.file !== null && d.title !== '').forEach((doc:any) => {
 				if (doc.title && doc.file){
 					formData.append('paper_title', doc.title)
 					formData.append('paper_attachment', doc.file)
@@ -160,7 +301,7 @@ const AddLibrarySettings = (props: {
 			.then(response => response.json())
 			.then(data => {
 				// props.reloadDatasetsCallabck()
-				props.settingsCallback({...currentSettings, fetchDatasets: true, datasetsUpdated: true})
+				props.settingsCallback({...currentSettings, libraryName: '', docs: emptyUploadDocs, fetchDatasets: true, datasetsUpdated: true})
 				setUploadLibrary(false)
 				setUploadLibraryName('')
 				setUploadDocs(emptyUploadDocs)
@@ -472,13 +613,35 @@ const AddLibrarySettings = (props: {
 					<div className='flex justify-start m-2'>
 						{/* multiple documents upload */}
 						<div className='text-nav dark:text-nav-dark p-1 w-48'>Select Documents</div>
-						<input type='file' disabled={currentSettings.restriction_without_login && !props.user} multiple className='rounded-md w-60 p-1 text-nav dark:text-nav-dark' onChange={(e) => {
-							const files = e.target.files
-							if (files){
-								const docs = Array.from(files).map((file:any) => {return {title: file.name.split('.pdf')[0], file: file}})
-								setUploadDocs(docs)
-							}
-						}}/>
+						<div className='flex flex-col'>
+							<input
+								ref={uploadFileInputRef}
+								type='file'
+								disabled={currentSettings.restriction_without_login && !props.user}
+								multiple
+								className='hidden'
+								onChange={(e) => {
+									const files = e.target.files
+									if (files){
+										const docs = Array.from(files).map((file:any) => {return {title: file.name.split('.pdf')[0], file: file}})
+										setUploadDocs(docs)
+									}
+								}}
+							/>
+							<button
+								type='button'
+								disabled={currentSettings.restriction_without_login && !props.user}
+								className='rounded-md w-32 px-3 py-1 border border-gray-300 bg-gray-100 text-nav dark:text-nav-dark disabled:opacity-50'
+								onClick={() => uploadFileInputRef.current?.click()}
+							>
+								Choose Files
+							</button>
+							<div className='text-xs text-nav dark:text-nav-dark mt-1'>
+								{selectedUploadDocsCount === 0
+									? 'No files selected'
+									: `${selectedUploadDocsCount} file${selectedUploadDocsCount === 1 ? '' : 's'} selected`}
+							</div>
+						</div>
 					</div>
 
 					{/* <div className='flex justify-start mx-2 my-1'>
@@ -600,8 +763,24 @@ const AddLibrarySettings = (props: {
 
 					<div className='flex justify-center mt-2'>
 						<button className='bg-panel1 dark:bg-panel3-dark text-white px-4 py-2 rounded-md m-2'
-							onClick={() => setUploadLibrary(true)}
+							onClick={() => {
+								try {
+									localStorage.removeItem(stateKey)
+								} catch (error) {
+									console.error('Failed to clear uploadNodeData from localStorage:', error)
+								}
+								setUploadLibrary(true)
+							}}
 						>Upload documents</button>
+						{hasStoredLibraryData ? (
+							<button
+								type='button'
+								className='bg-white text-panel1 border border-panel1 dark:bg-nav-dark dark:text-nav-dark px-4 py-2 rounded-md m-2'
+								onClick={clearUploadLibraryForm}
+							>
+								Clear form
+							</button>
+						) : null}
 					</div>
 				</div>
 			</div>
