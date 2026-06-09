@@ -59,7 +59,7 @@ const Disclaimer = (props: DisclaimerProps) =>{
 				}})
 				.then(response => response.json())
 				.then(data => {
-					if (data.results.length > 0 && data.results.filter((agreement:any) => agreement.user === djangoUser.user).length > 0) {
+					if (data.results?.length > 0 && data.results.filter((agreement:any) => agreement.user === djangoUser.user).length > 0) {
 						setDisclaimerAgreed(true)
 					}
 				})

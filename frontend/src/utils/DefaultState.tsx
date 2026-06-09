@@ -45,7 +45,7 @@ const defaultSettings = {
 		'mxbai-embed-large:latest',
 		'granite-embedding:latest'
 	],
-    system_prompt: '###INSTUCTIONS#### \nUse following information to answer the question in less than 200 words, try not to use any other information other than provided context. if the information is not in the context, then tell user that information is not found in the documents.\n ### CONTEXT ####',
+    system_prompt: '###INSTRUCTIONS#### \n Use following information to answer the question in less than 200 words, try not to use any other information other than provided context. if the information is not in the context, then tell user that information is not found in the documents. \n ### CONTEXT ####',
 	direct_chat_system_prompt: 'Answer the question in less than 200 words.',
 	maximum_chunks_count: 15,
 	no_chunk_cutoff: false,

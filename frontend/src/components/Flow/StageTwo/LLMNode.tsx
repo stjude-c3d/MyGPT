@@ -27,6 +27,7 @@ const LLMNode = ({ data }: any) => {
                 const ollamaLlms = await fetchAndRegisterOllamaModels(data.currentSettings, abortController.signal);
                 setLlmOptions((prev) => [...new Set([...prev, ...ollamaLlms])]);
             } catch (error) {
+                if (error instanceof Error && error.name === 'AbortError') return;
                 console.error('Failed to fetch Ollama models:', error);
             }
         };

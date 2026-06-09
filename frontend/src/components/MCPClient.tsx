@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Client } from '@modelcontextprotocol/sdk/client/index'
 import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse'
 
 const MCPClient = (props:{
   currentSettings:any,
-  settingsCallback:any
+  settingsCallback:any,
+  onMCPClientReady?: (client: any) => void
 }) => {
 
    // get tools from the client
@@ -12,6 +13,9 @@ const MCPClient = (props:{
   const [connected, setConnected] = useState(false)
   const [serverName, setServerName] = useState('')
   const [selectedTools, setSelectedTools]:any = useState([])
+  const clientRef = useRef<any>(null)
+  const transportRef = useRef<any>(null)
+  const connectPromiseRef = useRef<Promise<any> | null>(null)
   // const [toolResult, setToolResult]:any = useState('')
   // const [client, setClient] = useState(new Client({
   //   name: 'MyGPT-MCP-Client',
@@ -20,86 +24,105 @@ const MCPClient = (props:{
   // }))
   
   const currentSettings = props.currentSettings
-  const transport = new SSEClientTransport(new URL(process.env.REACT_APP_MCP_SERVER_URL || 'http://localhost:5001/sse'))
-  const client:any = new Client({
-    name: 'MyGPT-MCP-Client',
-    description: 'A client for MyGPT using Model Context Protocol',
-    version: '0.1.0',
-    transport: transport
-  })
+  const getClient = () => {
+    if (!transportRef.current) {
+      transportRef.current = new SSEClientTransport(
+        new URL(process.env.REACT_APP_MCP_SERVER_URL || 'http://localhost:5001/sse')
+      )
+    }
+    if (!clientRef.current) {
+      clientRef.current = new Client({
+        name: 'MyGPT-MCP-Client',
+        description: 'A client for MyGPT using Model Context Protocol',
+        version: '0.1.0',
+      })
+    }
+    return clientRef.current
+  }
+
+  const ensureConnected = async () => {
+    if (connected && clientRef.current) {
+      return clientRef.current
+    }
+    if (connectPromiseRef.current) {
+      return connectPromiseRef.current
+    }
+
+    connectPromiseRef.current = (async () => {
+      const client = getClient()
+      await client.connect(transportRef.current)
+      const serverInfo = client._serverVersion || {}
+      setServerName(serverInfo.name || 'MCP Server')
+      setConnected(true)
+      return client
+    })()
+
+    try {
+      return await connectPromiseRef.current
+    } catch (error) {
+      setConnected(false)
+      throw error
+    } finally {
+      connectPromiseRef.current = null
+    }
+  }
 
   useEffect(() => {
+    let isMounted = true
 
-    if (!connected) {
-      // const transport = new SSEClientTransport(new URL(serverURL))
-      
-      // const client = new Client({
-      //   name: 'MyGPT-MCP-Client',
-      //   description: 'A client for MyGPT using Model Context Protocol',
-      //   version: '0.1.0',
-      //   transport: transport
-      // })
-
-    // update transport when serverURL changes
-    const connectToServer = async () => {
-        // console.log('Connecting to MCP server at:', serverURL)
-        try {
-          await client.connect(transport)
-          // get server name
-          const serverInfo = client._serverVersion
-          setServerName(serverInfo.name || 'MCP Server')
-          console.log('MCP Client connected successfully')
-          setConnected(true)
-        } catch (error) {
-          console.error('Error connecting to MCP server:', error)
-          setConnected(false)
-        }
-
-        try{
-          const toolsList:any = await client.listTools()
+    const connectAndFetchTools = async () => {
+      try {
+        const client = await ensureConnected()
+        const toolsList:any = await client.listTools()
+        if (isMounted) {
           console.log('Fetched tools:', toolsList)
           setTools(toolsList['tools'] || [])
-        } catch (error) {
-          console.error('Error fetching tools:', error)
+        }
+      } catch (error) {
+        if (isMounted) {
+          console.error('Error connecting to MCP server:', error)
           setTools([])
+          setConnected(false)
+        }
+      }
+    }
+
+    connectAndFetchTools()
+
+    return () => {
+      isMounted = false
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    const syncSelectedTools = async () => {
+      if (selectedTools.length > 0) {
+        props.currentSettings.MCP_tools = selectedTools
+      }
+
+      let client = clientRef.current
+      if (!client) {
+        try {
+          client = await ensureConnected()
+        } catch (error) {
+          console.error('Error ensuring MCP client connection:', error)
         }
       }
 
-    // const fetchTools = async () => {
-    //   try {
-    //     // await client.connect(transport)
-    //     // console.log('MCP Client connected successfully')
-    //     const toolsList:any = await client.listTools()
-    //     setTools(toolsList['tools'] || [])
-    //   } catch (error) {
-    //     console.error('Error fetching tools:', error)
-    //   }
-    // }
-
-    
-      connectToServer()
-      // fetchTools()
-      // setConnected(true)
-      // setClient(clinet)
-      // console.log('MCP Client transport updated with URL:', serverURL)  
-  }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connected])
-
-  useEffect(() => {
-    if (selectedTools.length > 0) {
-      props.currentSettings.MCP_tools = selectedTools
-    }
-    const runSelectedTools = async () => {
-      await client.connect(transport)
+      // Store the live client instance in a module-level ref so callers can
+      // access it without putting it in the serialisable settings object.
       props.settingsCallback({
         ...currentSettings,
         MCPTools: selectedTools,
-        MCPClient: client,
       })
+      // Expose the client separately so consumers can call it directly.
+      if (props.onMCPClientReady) {
+        props.onMCPClientReady(client)
+      }
     }
-    runSelectedTools()
+
+    syncSelectedTools()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   },[selectedTools])
   
@@ -171,10 +194,18 @@ const MCPClient = (props:{
                 // setConnected(true)
                 // console.log('Connecting to MCP server at:', tempServerURL)
                 // connectToServer(tempServerURL)
-                client.connect(transport)
-                  .then(() => {
+                ensureConnected()
+                  .then(async (client:any) => {
                     console.log('MCP Client connected successfully')
                     setConnected(true)
+
+                    try {
+                      const toolsList:any = await client.listTools()
+                      setTools(toolsList['tools'] || [])
+                    } catch (error:any) {
+                      console.error('Error fetching tools:', error)
+                      setTools([])
+                    }
                   })
                   .catch((error:any) => {
                     console.error('Error connecting to MCP server:', error)
@@ -216,7 +247,7 @@ const MCPClient = (props:{
                     if (e.target.checked) {
                       setSelectedTools([...selectedTools, tool])
                     } else {
-                      setSelectedTools(selectedTools.filter((t:any) => t !== tool.name))
+                      setSelectedTools(selectedTools.filter((t:any) => t.name !== tool.name))
                     }
                   }}
                 />

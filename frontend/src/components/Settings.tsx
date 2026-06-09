@@ -25,7 +25,24 @@ const Settings = (props: {
 	// const [workflowZoomedIn, setWorkflowZoomedIn] = useState(false)
 	// const [workflowCollapsed, setWorkflowCollapsed] = useState(false)
 
-	const currentSettings = JSON.parse(JSON.stringify(props.currentSettings || props.defaultSettings))
+	// Deep-clone only serialisable primitives; non-serialisable objects (e.g.
+	// the MCP Client instance) are stripped to avoid circular-reference crashes.
+	const safeClone = (obj: any) => {
+		try {
+			return JSON.parse(JSON.stringify(obj))
+		} catch {
+			const stripped: any = {}
+			for (const key of Object.keys(obj || {})) {
+				try {
+					stripped[key] = JSON.parse(JSON.stringify(obj[key]))
+				} catch {
+					// skip non-serialisable keys (e.g. MCPClient)
+				}
+			}
+			return stripped
+		}
+	}
+	const currentSettings = safeClone(props.currentSettings || props.defaultSettings)
 	const [datasets, setDatasets]: [any, any] = useState([])
 	const [selectedDataset, setSelectedDataset] = useState(props.currentSettings.selectedDataset || props.defaultSettings.selectedDataset)
 	const [deleteDataset, setDeleteDataset] = useState('')
@@ -235,7 +252,7 @@ const Settings = (props: {
 								{props.defaultSettings.settingsPanels.map((panel: any, index: number) => {
 									const showMCPMenu = process.env.REACT_APP_MCP_SHOW_MCP_MENU === 'false' ? false :
 										process.env.REACT_APP_MCP_SHOW_MCP_MENU === 'true' ? true : false
-									console.log('showMCPMenu', showMCPMenu)
+									// console.log('showMCPMenu', showMCPMenu)
 									// if MCP menu is not shown, skip the mcp panel
 									if (!showMCPMenu && panel.key === 'mcp') return null
 									return (

@@ -67,7 +67,22 @@ export const RelevanceScoreSettings = (props: any) => {
 
 	return (
 		<div className='px-8 py-2 flex flex-col divide-y'>
-			<MathJaxContext>
+			<MathJaxContext
+				hideUntilTypeset={'first'}
+				onStartup={(mathJax: any) => {
+					const origTypesetPromise = mathJax.typesetPromise.bind(mathJax);
+					const origTypesetClear = mathJax.typesetClear.bind(mathJax);
+					mathJax.typesetPromise = (elements?: (HTMLElement | null)[]) => {
+						const safe = elements ? elements.filter(Boolean) : [];
+						if (safe.length === 0) return Promise.resolve();
+						return origTypesetPromise(safe);
+					};
+					mathJax.typesetClear = (elements?: (HTMLElement | null)[]) => {
+						const safe = elements ? elements.filter(Boolean) : [];
+						if (safe.length > 0) origTypesetClear(safe);
+					};
+				}}
+			>
 			<div className='m-2'>
 			<div className='text-nav dark:text-nav-dark p-1 my-2'><span className='font-bold'>Notes</span> 
 				<ul className='list-disc'>
