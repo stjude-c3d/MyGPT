@@ -989,35 +989,105 @@ def add_zotero_dataset(request):
             dataset_names.append(dataset.dataset_name)
         return Response({'added':True, 'datasets': dataset_names}, content_type="application/json")
     
+def _send_progress(progress_percentage, stage, message=''):
+    """Helper function to format progress updates for streaming response"""
+    return json.dumps({
+        'type': 'progress',
+        'stage': stage,
+        'progress': progress_percentage,
+        'message': message
+    }) + '\n'
+
 @api_view(['POST'])
 def upload_documents(request):
     if request.method == 'POST':
-        # validation = validate_post_request(request, ['dataset_name', 'embedding_model'])
-        # if not validation:
-        #     return Response({'error': True, 'error_message': validation}, content_type="application/json")
-        # else:
-        dataset_name = add_dataset_from_upload(request)
-        chunking_method = request.POST.get('chunking_method')
-        use_bm25 = request.POST.get('use_bm25')
-        reranker = request.POST.get('reranker')
-        language_of_docs = request.POST.get('documents_language').lower()
+        try:
+            # Get stream parameter - if True, send progress updates
+            stream_progress = request.POST.get('stream_progress', 'false').lower() == 'true'
+            
+            # Define progress callback
+            def on_progress(stage, progress, message=''):
+                return _send_progress(progress, stage, message)
+            
+            def stream_upload_response():
+                try:
+                    # Stage 1: Upload and process documents (0-25%)
+                    yield on_progress('uploading', 10, 'Starting upload...')
+                    dataset_name = add_dataset_from_upload(request, on_progress)
+                    
+                    if not dataset_name:
+                        yield json.dumps({'type': 'error', 'error': True, 'error_message': 'Failed to upload documents'}) + '\n'
+                        return
+                    
+                    yield on_progress('uploading', 25, 'Documents processed')
+                    
+                    chunking_method = request.POST.get('chunking_method')
+                    use_bm25 = request.POST.get('use_bm25')
+                    reranker = request.POST.get('reranker')
+                    language_of_docs = request.POST.get('documents_language').lower()
 
-        if use_bm25 == 'Yes':
-            index_document_by_bm25(dataset_name, language_of_docs)
-        
-        # Validate embedding_model input
-        embedding_model_request = request.POST.get('embedding_model')
-        distance_function = request.POST.get('distance_function')
-        if not embedding_model_request or not re.match(r'^[a-zA-Z0-9_/:\-.]+$', embedding_model_request):
-            return Response({'error': True, 'error_message': 'Invalid embedding model name'}, content_type="application/json")
-        else:
-            embedding_model = embedding_model_request
+                    # Stage 2: BM25 indexing (25-50%)
+                    if use_bm25 == 'Yes':
+                        yield on_progress('bm25_indexing', 25, 'Starting BM25 indexing...')
+                        index_document_by_bm25(dataset_name, language_of_docs, on_progress)
+                        yield on_progress('bm25_indexing', 50, 'BM25 indexing completed')
+                    else:
+                        yield on_progress('bm25_indexing', 50, 'BM25 indexing skipped')
+                    
+                    # Validate embedding_model input
+                    embedding_model_request = request.POST.get('embedding_model')
+                    distance_function = request.POST.get('distance_function')
+                    if not embedding_model_request or not re.match(r'^[a-zA-Z0-9_/:\-.]+$', embedding_model_request):
+                        yield json.dumps({'type': 'error', 'error': True, 'error_message': 'Invalid embedding model name'}) + '\n'
+                        return
+                    else:
+                        embedding_model = embedding_model_request
 
-        message = add_to_chroma(dataset_name, embedding_model, distance_function, chunking_method, reranker)
+                    # Stage 3: Add to Chroma (50-100%)
+                    yield on_progress('chroma_indexing', 50, 'Starting ChromaDB indexing...')
+                    message = add_to_chroma(dataset_name, embedding_model, distance_function, chunking_method, reranker, on_progress)
 
-        if message == False:
-            return Response({'error': True}, content_type="application/json")
-        return Response({'uploaded': True}, content_type="application/json")
+                    if message == False:
+                        yield json.dumps({'type': 'error', 'error': True, 'error_message': 'Failed to add documents to ChromaDB'}) + '\n'
+                        return
+                    
+                    yield on_progress('chroma_indexing', 100, 'Upload completed successfully')
+                    yield json.dumps({'type': 'done', 'uploaded': True}) + '\n'
+                    
+                except Exception as e:
+                    yield json.dumps({'type': 'error', 'error': True, 'error_message': str(e)}) + '\n'
+            
+            if stream_progress:
+                return StreamingHttpResponse(
+                    stream_upload_response(),
+                    content_type='application/x-ndjson'
+                )
+            else:
+                # Non-streaming path for backward compatibility
+                dataset_name = add_dataset_from_upload(request)
+                chunking_method = request.POST.get('chunking_method')
+                use_bm25 = request.POST.get('use_bm25')
+                reranker = request.POST.get('reranker')
+                language_of_docs = request.POST.get('documents_language').lower()
+
+                if use_bm25 == 'Yes':
+                    index_document_by_bm25(dataset_name, language_of_docs)
+                
+                # Validate embedding_model input
+                embedding_model_request = request.POST.get('embedding_model')
+                distance_function = request.POST.get('distance_function')
+                if not embedding_model_request or not re.match(r'^[a-zA-Z0-9_/:\-.]+$', embedding_model_request):
+                    return Response({'error': True, 'error_message': 'Invalid embedding model name'}, content_type="application/json")
+                else:
+                    embedding_model = embedding_model_request
+
+                message = add_to_chroma(dataset_name, embedding_model, distance_function, chunking_method, reranker)
+
+                if message == False:
+                    return Response({'error': True}, content_type="application/json")
+                return Response({'uploaded': True}, content_type="application/json")
+        except Exception as e:
+            return Response({'error': True, 'error_message': str(e)}, content_type="application/json")
 
 @api_view(['POST'])
 def add_ollama_models(request):

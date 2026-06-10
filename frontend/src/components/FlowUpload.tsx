@@ -331,7 +331,11 @@ const FlowUpload = (props: {
 }) => {
     const [showSuccess, setShowSuccess] = useState(false)
     const [showError, setShowError] = useState(false)
+    const [showErrorMessage, setShowErrorMessage] = useState('')
     const [addLibrary, setAddLibrary] = useState(false)
+    const [uploadProgress, setUploadProgress] = useState(0)
+    const [uploadStage, setUploadStage] = useState('')
+    const [uploadProgressMessage, setUploadProgressMessage] = useState('')
     const [formValidation, setFormValidation] = useState(false)
 
     const [nodes, setNodes] = useState<FlowNode[]>(() =>
@@ -548,6 +552,10 @@ const FlowUpload = (props: {
 
     const uploadLibrary = () => {
         setAddLibrary(true)
+        setUploadProgress(0)
+        setUploadStage('uploading')
+        setUploadProgressMessage('Starting upload...')
+        
         const formData = new FormData()
 
         formData.append('dataset_name', props.currentSettings.libraryName)
@@ -562,6 +570,7 @@ const FlowUpload = (props: {
         formData.append('reranker', props.currentSettings.reranker || 'qnli-electra-base (default)')
         formData.append('distance_function', props.currentSettings.distanceFn || 'l2')
         formData.append('documents_language', props.currentSettings.languageOfDocs || 'English')
+        formData.append('stream_progress', 'true')
 
         props.currentSettings.docs.filter((d: { file: null; title: string; }) => d.file !== null && d.title !== '').forEach((doc: any) => {
             if (doc.title && doc.file) {
@@ -573,7 +582,6 @@ const FlowUpload = (props: {
         const requestOptions = {
             method: 'POST',
             headers: {
-                // 'Content-Type': 'multipart/form-data',
                 'Authorization': `${props.user && props.djangoLogin ?
                     'Bearer ' + localStorage.getItem('access') :
                     process.env.NODE_ENV === 'production' ?
@@ -582,20 +590,73 @@ const FlowUpload = (props: {
             },
             body: formData
         }
+        
         fetch(`${process.env.REACT_APP_BACKEND_API}api/upload_documents/`, requestOptions)
-            .then(response => response.json())
-            .then(data => {
-                setAddLibrary(false)
-                // props.reloadDatasetsCallabck()
-                props.settingsCallback({ ...props.currentSettings, fetchDatasets: true, datasetsUpdated: true })
-                // setUploadLibrary(false)
-                // setUploadLibraryName('')
-                // setUploadDocs(emptyUploadDocs)
-                if (data.uploaded) {
-                    setShowSuccess(true)
-                } else {
-                    setShowError(true)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Upload failed')
                 }
+                
+                const reader = response.body?.getReader()
+                const decoder = new TextDecoder()
+                let buffer = ''
+
+                const processStream = async () => {
+                    try {
+                        while (reader) {
+                            const { done, value } = await reader.read()
+                            if (done) break
+
+                            buffer += decoder.decode(value, { stream: true })
+                            const lines = buffer.split('\n')
+                            buffer = lines.pop() || ''
+
+                            for (const line of lines) {
+                                if (line.trim()) {
+                                    try {
+                                        const update = JSON.parse(line)
+
+                                        if (update.type === 'progress') {
+                                            setUploadProgress(update.progress)
+                                            setUploadStage(update.stage)
+                                            setUploadProgressMessage(update.message)
+                                        } else if (update.type === 'done') {
+                                            setUploadProgress(100)
+                                            setUploadStage('completed')
+                                            // Clear localStorage and form data
+                                            localStorage.removeItem('upUploadNodeState')
+                                            const emptyDocs = Array.from(Array(40).keys()).map(() => ({ title: '', file: null }))
+                                            props.settingsCallback({ ...props.currentSettings, libraryName: '', docs: emptyDocs, fetchDatasets: true, datasetsUpdated: true })
+                                            setAddLibrary(false)
+                                            setShowSuccess(true)
+                                        } else if (update.type === 'error') {
+                                            setShowError(true)
+                                            setShowErrorMessage(update.error_message || 'Error uploading documents')
+                                            setAddLibrary(false)
+                                        }
+                                    } catch (parseError) {
+                                        console.error('Failed to parse update:', parseError)
+                                    }
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Stream processing error:', error)
+                        setShowError(true)
+                        setShowErrorMessage('Error processing upload')
+                        setAddLibrary(false)
+                    }
+                }
+
+                if (reader) {
+                    processStream()
+                }
+            })
+            .catch(error => {
+                console.error('Upload error:', error)
+                setShowError(true)
+                setShowErrorMessage('Error uploading documents')
+                setAddLibrary(false)
             })
     }
 
@@ -606,14 +667,31 @@ const FlowUpload = (props: {
                     <div className='text-nav dark:text-nav-dark p-1 text-sm bg-green-200 rounded-md'>Library uploaded successfully</div>
                 </div> :
                 addLibrary && !showSuccess ?
-                    <div className='flex justify-start'>
-                        <div className='text-nav dark:text-nav-dark p-1 text-sm bg-orange-200 rounded-md'>Uploading documents...</div>
+                    <div className='flex flex-col justify-start gap-2'>
+                        <div className='text-nav dark:text-nav-dark p-1 text-sm bg-orange-200 rounded-md'>Uploading Documents</div>
+                        <div className='flex flex-col gap-1'>
+                            <div className='flex justify-between text-xs text-nav dark:text-nav-dark'>
+                                <span>{uploadStage.charAt(0).toUpperCase() + uploadStage.slice(1).replace(/_/g, ' ')}</span>
+                                <span>{uploadProgress}%</span>
+                            </div>
+                            <div className='w-full bg-gray-300 dark:bg-gray-600 rounded-full h-2 overflow-hidden'>
+                                <div 
+                                    className='bg-blue-500 h-2 transition-all duration-300'
+                                    style={{ width: `${uploadProgress}%` }}
+                                />
+                            </div>
+                            {uploadProgressMessage && (
+                                <div className='text-xs text-nav dark:text-nav-dark mt-1'>{uploadProgressMessage}</div>
+                            )}
+                        </div>
                     </div> :
                     <></>
             }
             {showError ?
                 <div className='flex justify-start'>
-                    <div className='text-nav dark:text-nav-dark p-1 text-sm bg-red-200 rounded-md'>Error uploading documents</div>
+                    <div className='text-nav dark:text-nav-dark p-1 text-sm bg-red-200 rounded-md'>
+                        {showErrorMessage || 'Error uploading documents'}
+                    </div>
                 </div> : <></>
             }
             <ReactFlow

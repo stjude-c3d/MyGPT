@@ -57,7 +57,10 @@ const AddLibrarySettings = (props: {
 	const [uploadDocCount, setUploadDocCount] = useState(5)
 	const [uploadDocs, setUploadDocs] = useState(initialData.docs)
 	const [uploadLibrary, setUploadLibrary] = useState(false)
-		const [uploadSettingsMode, setUploadSettingsMode] = useState('Default settings')
+	const [uploadProgress, setUploadProgress] = useState(0)
+	const [uploadStage, setUploadStage] = useState('')
+	const [uploadProgressMessage, setUploadProgressMessage] = useState('')
+	const [uploadSettingsMode, setUploadSettingsMode] = useState('Default settings')
 	const currentSettings = JSON.parse(JSON.stringify(props.currentSettings))
 
 	const [videoLibraryName, setVideoLibraryName] = useState('')
@@ -254,6 +257,7 @@ const AddLibrarySettings = (props: {
 			formData.append('reranker', Reranker)
 			formData.append('distance_function', distanceFn)
 			formData.append('documents_language', languageOfDocs)
+			formData.append('stream_progress', 'true')
 
 			// show error if dataset name is empty
 			if (UploadLibraryName === ''){
@@ -287,7 +291,6 @@ const AddLibrarySettings = (props: {
 			const requestOptions = {
 				method: 'POST',
 				headers: {
-					// 'Content-Type': 'multipart/form-data',
 					'Authorization': `${
 					props.user && props.djangoLogin ?
 					'Bearer ' + localStorage.getItem('access') :
@@ -297,19 +300,78 @@ const AddLibrarySettings = (props: {
 					},
 				body: formData
 			}
+
+			// Reset progress state
+			setUploadProgress(0)
+			setUploadStage('uploading')
+			setUploadProgressMessage('Starting upload...')
+
 			fetch(`${process.env.REACT_APP_BACKEND_API}api/upload_documents/`, requestOptions)
-			.then(response => response.json())
-			.then(data => {
-				// props.reloadDatasetsCallabck()
-				props.settingsCallback({...currentSettings, libraryName: '', docs: emptyUploadDocs, fetchDatasets: true, datasetsUpdated: true})
-				setUploadLibrary(false)
-				setUploadLibraryName('')
-				setUploadDocs(emptyUploadDocs)
-				if (data.uploaded){
-					setShowSuccess(true)
-				}else{
-					setShowError(true)
+			.then(response => {
+				// Handle streaming response
+				if (!response.ok) {
+					throw new Error('Upload failed')
 				}
+				
+				const reader = response.body?.getReader()
+				const decoder = new TextDecoder()
+				let buffer = ''
+
+				const processStream = async () => {
+					try {
+						while (reader) {
+							const { done, value } = await reader.read()
+							if (done) break
+
+							buffer += decoder.decode(value, { stream: true })
+							const lines = buffer.split('\n')
+							buffer = lines.pop() || ''
+
+							for (const line of lines) {
+								if (line.trim()) {
+									try {
+										const update = JSON.parse(line)
+
+										if (update.type === 'progress') {
+											setUploadProgress(update.progress)
+											setUploadStage(update.stage)
+											setUploadProgressMessage(update.message)
+										} else if (update.type === 'done') {
+											setUploadProgress(100)
+											setUploadStage('completed')
+											props.settingsCallback({...currentSettings, libraryName: '', docs: emptyUploadDocs, fetchDatasets: true, datasetsUpdated: true})
+											setUploadLibrary(false)
+											setUploadLibraryName('')
+											setUploadDocs(emptyUploadDocs)
+											setShowSuccess(true)
+										} else if (update.type === 'error') {
+											setShowError(true)
+											setErrorMessage(update.error_message || 'Error uploading documents')
+											setUploadLibrary(false)
+										}
+									} catch (parseError) {
+										console.error('Failed to parse update:', parseError)
+									}
+								}
+							}
+						}
+					} catch (error) {
+						console.error('Stream processing error:', error)
+						setShowError(true)
+						setErrorMessage('Error processing upload')
+						setUploadLibrary(false)
+					}
+				}
+
+				if (reader) {
+					processStream()
+				}
+			})
+			.catch(error => {
+				console.error('Upload error:', error)
+				setShowError(true)
+				setErrorMessage('Error uploading documents')
+				setUploadLibrary(false)
 			})
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -593,8 +655,35 @@ const AddLibrarySettings = (props: {
 							<div className='text-nav dark:text-nav-dark p-1 text-lg bg-green-200 rounded-md'>Library uploaded successfully</div>
 						</div> : 
 						uploadLibrary && !showSuccess ?
-						<div className='flex justify-start'>
-							<div className='text-nav dark:text-nav-dark p-1 text-lg bg-orange-200 rounded-md'>Uploading documents...</div>
+						<div className='flex flex-col justify-start w-full'>
+							<div className='text-nav dark:text-nav-dark p-2 text-lg font-semibold bg-orange-100 dark:bg-orange-900 rounded-md mb-3'>
+								Uploading Documents
+							</div>
+							<div className='flex flex-col gap-2 mb-4'>
+								<div className='flex justify-between'>
+									<div className='text-nav dark:text-nav-dark p-1'>
+										<span className='font-semibold'>Stage:</span> {uploadStage.charAt(0).toUpperCase() + uploadStage.slice(1).replace(/_/g, ' ')}
+									</div>
+									<div className='text-nav dark:text-nav-dark p-1 font-semibold'>
+										{uploadProgress}%
+									</div>
+								</div>
+								<div className='w-full bg-gray-300 dark:bg-gray-600 rounded-full h-3 overflow-hidden'>
+									<div 
+										className='bg-blue-500 dark:bg-blue-600 h-full transition-all duration-300 flex items-center justify-center'
+										style={{ width: `${uploadProgress}%` }}
+									>
+										{uploadProgress > 10 && (
+											<span className='text-white text-xs font-bold'>{uploadProgress}%</span>
+										)}
+									</div>
+								</div>
+								{uploadProgressMessage && (
+									<div className='text-nav dark:text-nav-dark text-sm italic'>
+										{uploadProgressMessage}
+									</div>
+								)}
+							</div>
 						</div> :
 						<></>
 					}
@@ -606,7 +695,7 @@ const AddLibrarySettings = (props: {
 					{/* <div className='text-nav dark:text-nav-dark p-1 my-2'> Note: Because of limited resources on the hosting server, upload up to 7-10 PDFs per library. It may take 3-4 minutes to see a success message.</div> */}
 					<div className='flex justify-start m-2'>
 						<div className='text-nav dark:text-nav-dark p-1 w-48'>Library Name</div>
-						<input type='text' placeholder=' Library Name' disabled={currentSettings.restriction_without_login && !props.user} className='rounded-md w-[270px] px-2 py-1 dark:bg-gray-500 dark:text-white dark:placeholder:text-white text-nav' value={UploadLibraryName}
+						<input type='text' placeholder=' Library Name' disabled={(currentSettings.restriction_without_login && !props.user) || uploadLibrary} className='rounded-md w-[270px] px-2 py-1 dark:bg-gray-500 dark:text-white dark:placeholder:text-white text-nav' value={UploadLibraryName}
 							onChange={(e) => setUploadLibraryName(e.target.value)}
 						/>
 					</div>
@@ -630,7 +719,7 @@ const AddLibrarySettings = (props: {
 							/>
 							<button
 								type='button'
-								disabled={currentSettings.restriction_without_login && !props.user}
+								disabled={(currentSettings.restriction_without_login && !props.user) || uploadLibrary}
 								className='rounded-md w-32 px-3 py-1 border border-gray-300 bg-gray-100 text-nav dark:text-nav-dark disabled:opacity-50'
 								onClick={() => uploadFileInputRef.current?.click()}
 							>
@@ -762,7 +851,9 @@ const AddLibrarySettings = (props: {
 					: <></>}
 
 					<div className='flex justify-center mt-2'>
-						<button className='bg-panel1 dark:bg-panel3-dark text-white px-4 py-2 rounded-md m-2'
+						<button 
+							disabled={uploadLibrary}
+							className='bg-panel1 dark:bg-panel3-dark text-white px-4 py-2 rounded-md m-2 disabled:opacity-50 disabled:cursor-not-allowed'
 							onClick={() => {
 								try {
 									localStorage.removeItem(stateKey)
@@ -775,7 +866,8 @@ const AddLibrarySettings = (props: {
 						{hasStoredLibraryData ? (
 							<button
 								type='button'
-								className='bg-white text-panel1 border border-panel1 dark:bg-nav-dark dark:text-nav-dark px-4 py-2 rounded-md m-2'
+								disabled={uploadLibrary}
+								className='bg-white text-panel1 border border-panel1 dark:bg-nav-dark dark:text-nav-dark px-4 py-2 rounded-md m-2 disabled:opacity-50 disabled:cursor-not-allowed'
 								onClick={clearUploadLibraryForm}
 							>
 								Clear form

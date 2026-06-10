@@ -11,13 +11,18 @@ from .rerank_utils import (
 )
 
 #this method should be called as part of the upload document process just after adding chunks into the chromadb
-def index_document_by_bm25(dataset_name, language_of_docs='english'):
+def index_document_by_bm25(dataset_name, language_of_docs='english', progress_callback=None):
     documents_directory = '/code/data/data_chunks' # some other directory can be initalized for storing indices for each document
     # tokenizer_directory = '/code/data/bm25_tokenizer/' + dataset_name
     tokenizer_directory = Path('/code/data/bm25_tokenizer') / dataset_name
     tokenizer_directory.mkdir(parents=True, exist_ok=True)
 
     documents = []
+
+    # First, count total lines for progress tracking
+    total_lines = 0
+    with open(f'{documents_directory}/{dataset_name}.txt', 'r') as file:
+        total_lines = sum(1 for _ in file)
 
     with open(f'{documents_directory}/{dataset_name}.txt', 'r') as file:
         for line_number, line in enumerate(
@@ -28,14 +33,29 @@ def index_document_by_bm25(dataset_name, language_of_docs='english'):
             # convert line to json
             line_json = eval(line)
             documents.append('document ' + str(line_json['title']) +  '; page ' + str(line_json['page'])+ '; ' + line_json['content'].strip())
+            
+            # Report progress for reading phase
+            if progress_callback and total_lines > 0:
+                progress = 25 + int((line_number / total_lines) * 10)
+                progress_callback('bm25_indexing', min(progress, 35), f'Reading documents: {line_number}/{total_lines}')
+
+    if progress_callback:
+        progress_callback('bm25_indexing', 40, 'Building BM25 index...')
 
     # default tokenizer
     stemmer = Stemmer.Stemmer(language_of_docs.lower())
     tokenizer = bm25s.tokenization.Tokenizer(stemmer=stemmer)
     corpus_tokenized = tokenizer.tokenize(documents, return_as='tuple')
 
+    if progress_callback:
+        progress_callback('bm25_indexing', 45, 'Indexing documents...')
+
     retriever = bm25s.BM25(corpus=documents)
     retriever.index(corpus_tokenized)
+    
+    if progress_callback:
+        progress_callback('bm25_indexing', 48, 'Saving BM25 index...')
+    
     retriever.save(tokenizer_directory)
     tokenizer.save_vocab(tokenizer_directory)
     tokenizer.save_stopwords(tokenizer_directory)

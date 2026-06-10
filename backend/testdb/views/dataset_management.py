@@ -20,7 +20,7 @@ from .embedding_utils import get_embedding_model_ef
 from .analytics import add_pca_to_chunks
 
 
-def add_dataset_from_upload(request):
+def add_dataset_from_upload(request, progress_callback=None):
     """Create dataset from uploaded files"""
     dataset_name_r = request.POST.get('dataset_name').replace(' ', '_')
     paper_titles_r = request.POST.getlist('paper_title')
@@ -114,9 +114,18 @@ def add_dataset_from_upload(request):
     
     # save pdfs
     data = []
+    valid_files = [title for title in paper_titles if title and title != '-']
+    total_files = len(valid_files)
+    file_count = 0
+    
     for idx in range(len(paper_titles)):
         if paper_titles[idx] == '' or paper_titles[idx] == '-':
             continue
+        
+        file_count += 1
+        progress_percent = 10 + int((file_count / total_files) * 15) if total_files > 0 else 10
+        if progress_callback:
+            progress_callback('uploading', progress_percent, f'Processing file {file_count}/{total_files}')
         paper = Papers.objects.create(
             paper_title=paper_titles[idx],
             paper_dataset=dataset,

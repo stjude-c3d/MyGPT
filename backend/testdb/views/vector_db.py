@@ -23,12 +23,15 @@ from .rerank_utils import (
 con = duckdb.connect()
 
 
-def add_to_chroma(dataset_name, embedding_model_request='all-MiniLM-L6-v2', distance_function='l2', chunking_method='fixed_chunk_size', reranker='None'):
+def add_to_chroma(dataset_name, embedding_model_request='all-MiniLM-L6-v2', distance_function='l2', chunking_method='fixed_chunk_size', reranker='None', progress_callback=None):
     """Add dataset to ChromaDB vector database"""
     documents_directory = '/code/data/data_chunks'
     documents = []
     metadatas = []
     files = [dataset_name + '.txt']
+
+    if progress_callback:
+        progress_callback('chroma_indexing', 62, 'Initializing ChromaDB...')
 
     # Instantiate a persistent chroma client in the persist_directory.
     client = chromadb.PersistentClient(path='/code/chroma_storage/.')
@@ -52,6 +55,15 @@ def add_to_chroma(dataset_name, embedding_model_request='all-MiniLM-L6-v2', dist
 
     # Load the documents in batches of 100
     if count == 0:
+        # First pass: count total lines for progress
+        total_lines = 0
+        for filename in files:
+            with open(f'{documents_directory}/{filename}', 'r') as file:
+                total_lines += sum(1 for _ in file)
+
+        if progress_callback:
+            progress_callback('chroma_indexing', 55, f'Reading {total_lines} documents...')
+
         for filename in files:
             with open(f'{documents_directory}/{filename}', 'r') as file:
                 for line_number, line in enumerate(
@@ -68,22 +80,39 @@ def add_to_chroma(dataset_name, embedding_model_request='all-MiniLM-L6-v2', dist
                         metadatas.append({'filename': line_json['title'], 'page': line_json['page'], 'section': line_json['section'], 'type': line_json['type']})
                     else:
                         metadatas.append({'filename': line_json['title'], 'page': line_json['page'], 'type': line_json['type']})
+                    
+                    # Report progress
+                    if progress_callback and total_lines > 0:
+                        progress = 55 + int((line_number / total_lines) * 15)
+                        progress_callback('chroma_indexing', min(progress, 70), f'Read {line_number}/{total_lines}')
+
         ids = [str(i) for i in range(count, count + len(documents))]
         
+        if progress_callback:
+            progress_callback('chroma_indexing', 70, f'Adding {len(documents)} documents to ChromaDB...')
+        
         # add to vector database
-        for i in tqdm(
-            range(0, len(documents), 100), desc='Adding documents', unit_scale=100
-        ):
+        batch_size = 100
+        total_batches = (len(documents) + batch_size - 1) // batch_size
+        for batch_idx, i in enumerate(tqdm(
+            range(0, len(documents), batch_size), desc='Adding documents', unit_scale=batch_size
+        )):
             try:
                 collection.add(
-                    ids=ids[i : i + 100],
-                    documents=documents[i : i + 100],
-                    metadatas=metadatas[i : i + 100],  # type: ignore
+                    ids=ids[i : i + batch_size],
+                    documents=documents[i : i + batch_size],
+                    metadatas=metadatas[i : i + batch_size],  # type: ignore
                 )
+                
+                # Report progress
+                if progress_callback:
+                    progress = 70 + int((batch_idx / total_batches) * 18)
+                    progress_callback('chroma_indexing', min(progress, 98), f'Added batch {batch_idx}/{total_batches}')
+                    
             except Exception as e:
-                print(f'Error adding documents {i} to {i+100}: {e}')
+                print(f'Error adding documents {i} to {i+batch_size}: {e}')
                 # If there's an error, we can try adding the documents one by one to identify the problematic document
-                for j in range(i, min(i + 100, len(documents))):
+                for j in range(i, min(i + batch_size, len(documents))):
                     try:
                         collection.add(
                             ids=[ids[j]],
@@ -100,6 +129,9 @@ def add_to_chroma(dataset_name, embedding_model_request='all-MiniLM-L6-v2', dist
         dataset.use_reranker = False if reranker == 'None' else True
         dataset.reranker = reranker
         dataset.save()
+
+        if progress_callback:
+            progress_callback('chroma_indexing', 99, 'Finalizing...')
 
         print(f'Added {new_count - count} documents')
         return True
