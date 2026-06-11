@@ -30,8 +30,11 @@ def add_to_chroma(dataset_name, embedding_model_request='all-MiniLM-L6-v2', dist
     metadatas = []
     files = [dataset_name + '.txt']
 
-    if progress_callback:
-        progress_callback('chroma_indexing', 62, 'Initializing ChromaDB...')
+    def emit_progress(progress, message):
+        if progress_callback:
+            progress_callback('chroma_indexing', progress, message)
+
+    emit_progress(52, 'Initializing ChromaDB...')
 
     # Instantiate a persistent chroma client in the persist_directory.
     client = chromadb.PersistentClient(path='/code/chroma_storage/.')
@@ -61,8 +64,7 @@ def add_to_chroma(dataset_name, embedding_model_request='all-MiniLM-L6-v2', dist
             with open(f'{documents_directory}/{filename}', 'r') as file:
                 total_lines += sum(1 for _ in file)
 
-        if progress_callback:
-            progress_callback('chroma_indexing', 55, f'Reading {total_lines} documents...')
+        emit_progress(55, f'Reading {total_lines} documents...')
 
         for filename in files:
             with open(f'{documents_directory}/{filename}', 'r') as file:
@@ -82,14 +84,13 @@ def add_to_chroma(dataset_name, embedding_model_request='all-MiniLM-L6-v2', dist
                         metadatas.append({'filename': line_json['title'], 'page': line_json['page'], 'type': line_json['type']})
                     
                     # Report progress
-                    if progress_callback and total_lines > 0:
+                    if total_lines > 0:
                         progress = 55 + int((line_number / total_lines) * 15)
-                        progress_callback('chroma_indexing', min(progress, 70), f'Read {line_number}/{total_lines}')
+                        emit_progress(min(progress, 70), f'Read {line_number}/{total_lines}')
 
         ids = [str(i) for i in range(count, count + len(documents))]
         
-        if progress_callback:
-            progress_callback('chroma_indexing', 70, f'Adding {len(documents)} documents to ChromaDB...')
+        emit_progress(70, f'Adding {len(documents)} documents to ChromaDB...')
         
         # add to vector database
         batch_size = 100
@@ -105,9 +106,9 @@ def add_to_chroma(dataset_name, embedding_model_request='all-MiniLM-L6-v2', dist
                 )
                 
                 # Report progress
-                if progress_callback:
-                    progress = 70 + int((batch_idx / total_batches) * 18)
-                    progress_callback('chroma_indexing', min(progress, 98), f'Added batch {batch_idx}/{total_batches}')
+                if total_batches > 0:
+                    progress = 70 + int(((batch_idx + 1) / total_batches) * 28)
+                    emit_progress(min(progress, 98), f'Added batch {batch_idx + 1}/{total_batches}')
                     
             except Exception as e:
                 print(f'Error adding documents {i} to {i+batch_size}: {e}')
@@ -130,11 +131,16 @@ def add_to_chroma(dataset_name, embedding_model_request='all-MiniLM-L6-v2', dist
         dataset.reranker = reranker
         dataset.save()
 
-        if progress_callback:
-            progress_callback('chroma_indexing', 99, 'Finalizing...')
+        emit_progress(99, 'Finalizing...')
 
         print(f'Added {new_count - count} documents')
+        
+        emit_progress(100, 'ChromaDB indexing completed')
+        
         return True
+
+    emit_progress(100, 'ChromaDB indexing completed')
+    return True
 
 
 def nearestDataChroma(text, dataset_name, focused_document_titles=[], focused_section_str='', keywords_str='', embedding_model_request='multi-qa-MiniLM-L6-cos-v1', maximum_chunks_count=15, no_cutoff=False, reranker='None', language_of_docs='english'):

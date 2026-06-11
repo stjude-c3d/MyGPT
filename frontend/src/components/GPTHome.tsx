@@ -11,6 +11,7 @@ import '@react-pdf-viewer/default-layout/lib/styles/index.css'
 import { PaperAirplaneIcon, Cog6ToothIcon, PaperClipIcon, XMarkIcon, CheckIcon } from '@heroicons/react/24/outline'
 import { scaleSequential, interpolateRdYlGn } from 'd3'
 import Markdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 // import Feedback from './Feedback'
 import { OllamaDirectChatStream, OllamaChatStreamWithToolSupport } from '../utils/OllamaChat'
 import { OllamaDirectGenerateStream, OllamaDirectGenerateNoStream } from '../utils/OllamaGenerate'
@@ -1226,14 +1227,14 @@ function GPTHome(props:{
 												style={{ height: minimizedThinking ? 0 : 'auto', overflow: minimizedThinking ? 'hidden' : 'visible' }}
 											>
 												<div className='text-gray-300 text-sm whitespace-pre-wrap overflow-y-auto max-h-48'>
-													<Markdown>
+													<Markdown remarkPlugins={[remarkGfm]}>
 														{showNullAnswerIndexes[query.length-i-1] === true? nullThoughts[query.length-i-1] : thoughts[query.length-i-1]}
 													</Markdown>
 												</div>
 											</div>
 										</div>
 									)}
-									<Markdown>
+									<Markdown remarkPlugins={[remarkGfm]}>
 										{showNullAnswerIndexes[query.length-i-1] === true? nullAnswers[query.length-i-1] : answers[query.length-i-1].response}
 									</Markdown>
 								</div>
@@ -1343,14 +1344,14 @@ function GPTHome(props:{
 										<div className='mb-4 p-4 bg-slate-700 dark:bg-slate-800 rounded-lg border-l-4 border-blue-500'>
 											<div className='text-blue-300 text-sm font-semibold mb-2'>💭 Thinking...</div>
 											<div className='text-gray-300 text-sm whitespace-pre-wrap'>
-												<Markdown>
+												<Markdown remarkPlugins={[remarkGfm]}>
 													{thought}
 												</Markdown>
 											</div>
 										</div>
 									)}
 									<div className='text-white whitespace-pre-wrap answer-div'>
-										<Markdown>
+										<Markdown remarkPlugins={[remarkGfm]}>
 											{answer.length ? answer: 'Generating answer...'}
 										</Markdown>
 									</div>
@@ -1454,7 +1455,7 @@ function GPTHome(props:{
 					{ (props.frontendSettings && !props.frontendSettings.restriction_without_login) || (props.frontendSettings.restriction_without_login && props.currentSettings.loggedin) ?
 					<div className='mx-1 inline-block px-2 py-1 bg-white dark:bg-stjude dark:text-white rounded-md cursor-pointer hover:bg-slate-200' 
 						onClick={()=>{
-							props.settingsCallback({...props.currentSettings, selectedPanel: 'datasets', showSettings: true})
+							props.settingsCallback({...props.currentSettings, selectedPanel: 'datasets', showSettings: true, showUpload: false})
 						}}>
 						<Cog6ToothIcon className='w-4 h-4 inline-block'/>
 					</div> : <></>}

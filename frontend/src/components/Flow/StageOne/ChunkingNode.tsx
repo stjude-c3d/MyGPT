@@ -150,6 +150,8 @@ const ChunkingNode = ({ data }: { data: { title: string, settingsCallback: (sett
                             <option value="750">750</option>
                             <option value="1000">1000</option>
                             <option value="1200">1200</option>
+                            <option value="1500">1500</option>
+                            <option value="2500">2500</option>
                         </select>
                     </div>
 

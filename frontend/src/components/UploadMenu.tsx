@@ -29,7 +29,7 @@ const UploadMenu = (props: {
 	};
 
 	const openLibraryManagement = () => {
-		props.settingsCallback({ ...props.currentSettings, selectedPanel: 'datasets', showSettings: false })
+		props.settingsCallback({ ...props.currentSettings, selectedPanel: 'datasets', showSettings: false, showUpload: false })
 		props.closeUpload()
 		props.openSettings()
 	}
@@ -68,9 +68,8 @@ const UploadMenu = (props: {
 					<div className='text-2xl font-bold text-white cursor-pointer' onClick={props.closeUpload}>x</div>
 				</div>
 				<div className='flex gap-6 px-0 bg-panel2 dark:bg-panel2-dark rounded-b-lg overflow-y-auto h-[65vh]'>
-					<div className='mygptcol1 flex-1 divide-y  px-4 py-6'
-						style={{ 'display': settingMode === 'classic' ? 'block' : 'none' }}
-					>
+					{settingMode === 'classic' && (
+					<div className='mygptcol1 flex-1 divide-y  px-4 py-6'>
 						<div className='flex justify-start mb-4'>
 							<div
 								className='flex items-center gap-2 bg-panel1 dark:bg-panel3-dark text-white text-sm px-4 py-2 rounded-md hover:bg-nav transition ease-in-out'
@@ -82,15 +81,15 @@ const UploadMenu = (props: {
 						</div>
 						<AddLibrarySettings {...settingProps} />
 					</div>
-					<div className='mygptcol2 flex-1 divide-y py-6'
-						style={{ 'display': settingMode === 'graphical' ? 'block' : 'none' }}
-					>
+					)}
+					{settingMode === 'graphical' && (
+					<div className='mygptcol2 flex-1 divide-y py-6'>
 						{/* <FlowUpload {...settingProps} /> */}
 					</div>
+					)}
 
-					<div className='flex-1 divide-y'
-						style={{ 'display': settingMode === 'newsetting' ? 'block' : 'none' }}
-					>
+					{settingMode === 'newsetting' && (
+					<div className='flex-1 divide-y'>
 
 						<div className="text-sm font-medium text-center text-body border-default">
 							<ul className="flex flex-wrap -mb-px">
@@ -126,6 +125,7 @@ const UploadMenu = (props: {
 							</button>
 						</div>
 					</div>
+					)}
 				</div>
 			</div>
 		</div>

@@ -168,7 +168,12 @@ function App() {
         {showSettings ?
           <Settings 
             closeSettings={() => setShowSettings(false)}
-            openUpload={() => { setShowSettings(false); setShowUpload(true); }}
+            openUpload={() => { 
+              setShowSettings(false); 
+              setShowUpload(true);
+              currentSettings.showSettings = false
+              currentSettings.showUpload = true
+            }}
             defaultSettings={defaultSettings} 
             currentSettings={currentSettings}
             settingsCallback={settingsCallback}

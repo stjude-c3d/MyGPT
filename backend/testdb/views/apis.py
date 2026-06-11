@@ -19,6 +19,8 @@ import os
 import shutil
 import json
 import re
+import queue
+import threading
 from ollama import Client as OllamaClient, ListResponse
 from django.contrib.auth.models import User
 
@@ -1045,7 +1047,45 @@ def upload_documents(request):
 
                     # Stage 3: Add to Chroma (50-100%)
                     yield on_progress('chroma_indexing', 50, 'Starting ChromaDB indexing...')
-                    message = add_to_chroma(dataset_name, embedding_model, distance_function, chunking_method, reranker, on_progress)
+
+                    progress_queue = queue.Queue()
+                    done_signal = object()
+                    stage3_state = {'message': None, 'error': None}
+
+                    def stage3_progress_callback(stage, progress, message=''):
+                        progress_queue.put(_send_progress(progress, stage, message))
+
+                    def run_stage3_chroma():
+                        try:
+                            stage3_state['message'] = add_to_chroma(
+                                dataset_name,
+                                embedding_model,
+                                distance_function,
+                                chunking_method,
+                                reranker,
+                                stage3_progress_callback,
+                            )
+                        except Exception as exc:
+                            stage3_state['error'] = str(exc)
+                        finally:
+                            progress_queue.put(done_signal)
+
+                    stage3_thread = threading.Thread(target=run_stage3_chroma, daemon=True)
+                    stage3_thread.start()
+
+                    while True:
+                        progress_update = progress_queue.get()
+                        if progress_update is done_signal:
+                            break
+                        yield progress_update
+
+                    stage3_thread.join()
+
+                    if stage3_state['error']:
+                        yield json.dumps({'type': 'error', 'error': True, 'error_message': stage3_state['error']}) + '\n'
+                        return
+
+                    message = stage3_state['message']
 
                     if message == False:
                         yield json.dumps({'type': 'error', 'error': True, 'error_message': 'Failed to add documents to ChromaDB'}) + '\n'
