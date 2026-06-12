@@ -10,6 +10,8 @@ load_dotenv('../.env')
 
 start_time = time.time()
 
+BACKEND_API_URL = os.environ.get('BACKEND_API_URL', '').strip().strip('"').rstrip('/')
+
 # --- CONFIGURATION ---
 
 LIBRARY_NAME = 'Bioasq'
@@ -21,13 +23,13 @@ MODELS = [
 EMBED_SHORTHANDS = [EMBEDDING_MODEL]
 
 # --- API ENDPOINTS ---
-BASE_URL = 'http://localhost:8000' 
+BASE_URL = BACKEND_API_URL
 SAVE_ANSWER_API = f'{BASE_URL}/api/save_answer/'
 TOKEN_API = f'{BASE_URL}/token/'
 
 def get_jwt_token():
     # get jwt token
-    response = requests.post('http://localhost:8000/token/', json={
+    response = requests.post(TOKEN_API, json={
         'username': os.environ.get('API_USERNAME'),
         'password': os.environ.get('API_PASSWORD')
     })

@@ -4,8 +4,12 @@ import time
 import requests
 import pandas as pd
 import re
+from dotenv import load_dotenv
 
+load_dotenv('../../.env')
 start_time = time.time()
+
+OLLAMA_API_URL = os.environ.get('OLLAMA_API_URL', '').strip().strip('"').rstrip('/')
 
 #############
 # Variables #
@@ -20,7 +24,7 @@ MODELS = [
 ##############
 
 # Define API endpoints
-ANSWER_API = 'http://localhost:11434/api/generate/'
+ANSWER_API = f'{OLLAMA_API_URL}/api/generate/'
 
 # Load evaluation documents and questions
 EVAL_DOC = pd.read_csv('../inputs/text_queries_170.csv', encoding='ISO-8859-1').dropna()

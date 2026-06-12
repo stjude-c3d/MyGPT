@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 load_dotenv('../.env')
 start_time = time.time()
 
+BACKEND_API_URL = os.environ.get('BACKEND_API_URL', '').strip().strip('"').rstrip('/')
+
 #############
 # Variables #
 #############
@@ -21,8 +23,8 @@ model = 'gpt-oss:20b'
 # Define API endpoints
 # CONTEXT_API = 'https://svlpmygptbknd01.stjude.org/api/get_context/'
 # DATASET_API = 'https://svlpmygptbknd01.stjude.org/api/get_documents/'
-CONTEXT_API = 'http://localhost:8000/api/get_context/'
-DATASET_API = 'http://localhost:8000/api/get_documents/'
+CONTEXT_API = f'{BACKEND_API_URL}/api/get_context/'
+DATASET_API = f'{BACKEND_API_URL}/api/get_documents/'
 
 # Load evaluation documents and questions
 EVAL_DOC = pd.read_csv('../inputs/questions.csv', encoding='ISO-8859-1').dropna()
@@ -37,7 +39,7 @@ DATASETS = [LIBRARY_NAME]
 def get_token():
     """Fetch the bearer token for API calls."""
     # url = 'https://svlpmygptbknd01.stjude.org/token/'
-    url = 'http://localhost:8000/token/'
+    url = f'{BACKEND_API_URL}/token/'
     payload = {
         'username': os.environ.get('API_USERNAME'),
         'password': os.environ.get('API_PASSWORD')

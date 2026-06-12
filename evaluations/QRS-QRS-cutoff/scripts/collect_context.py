@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 load_dotenv('../.env')
 start_time = time.time()
 
+BACKEND_API_URL = os.environ.get('BACKEND_API_URL', '').strip().strip('"').rstrip('/')
+
 #############
 # Variables #
 #############
@@ -18,8 +20,8 @@ model =  'gpt-oss:20b' #'gpt-oss:20b'
 ##############
 
 # Define API endpoints
-CONTEXT_API = 'http://localhost:8000/api/get_context/'
-DATASET_API = 'http://localhost:8000/api/get_documents/'
+CONTEXT_API = f'{BACKEND_API_URL}/api/get_context/'
+DATASET_API = f'{BACKEND_API_URL}/api/get_documents/'
 
 # Load evaluation documents and questions
 EVAL_DOC = pd.read_csv('../inputs/QRS_ARS_cutoff_dataset.csv', encoding='ISO-8859-1').dropna()
@@ -28,7 +30,7 @@ QUESTION_LIST = EVAL_DOC['question'].tolist()
 # Get bearer token for backend API calls
 def get_token():
     """Fetch the bearer token for API calls."""
-    url = 'http://localhost:8000/token/'
+    url = f'{BACKEND_API_URL}/token/'
     payload = {
         'username': os.environ.get('API_USERNAME'),
         'password': os.environ.get('API_PASSWORD')

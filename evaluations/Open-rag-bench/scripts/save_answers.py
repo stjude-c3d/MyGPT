@@ -12,6 +12,8 @@ load_dotenv('../../.env')
 # Set start time for execution time measurement
 start_time = time.time()
 
+BACKEND_API_URL = os.environ.get('BACKEND_API_URL', '').strip().strip('"').rstrip('/')
+
 ### variables ###
 
 MODELS = [
@@ -29,8 +31,8 @@ COLLECTED = []
 # answer distance api
 # answer_api = 'http://10.48.179.211:8000/api/get_distance_between_answers/'
 # save_answer_api = 'http://10.48.179.211:8000/api/save_answer/'
-answer_api = 'http://localhost:8000/api/get_distance_between_answers/'
-save_answer_api = 'http://localhost:8000/api/save_answer/'
+answer_api = f'{BACKEND_API_URL}/api/get_distance_between_answers/'
+save_answer_api = f'{BACKEND_API_URL}/api/save_answer/'
  
 # Load evaluation documents and questions
 # EVAL_DOC = pd.read_csv('../inputs_topic_2/eval_dataset_pubp_q_0_3.csv', encoding='ISO-8859-1').dropna()
@@ -40,7 +42,7 @@ save_answer_api = 'http://localhost:8000/api/save_answer/'
 def get_jwt_token():
     # get jwt token
     # response = requests.post('http://10.48.179.211:8000/token/', json={
-    response = requests.post('http://localhost:8000/token/', json={
+    response = requests.post(f'{BACKEND_API_URL}/token/', json={
         'username': os.environ.get('API_USERNAME'),
         'password': os.environ.get('API_PASSWORD')
     })
@@ -58,8 +60,8 @@ print(token)
 #question_detail_api = 'https://svlpmygptbknd01.stjude.org/api/get_question_details/?question_id='
 # dataset_questions_api = 'http://10.48.179.211:8000/api/get_conversation_history/?dataset='
 # question_detail_api = 'http://10.48.179.211:8000/api/get_question_details/?question_id='
-dataset_questions_api = 'http://localhost:8000/api/get_conversation_history/?dataset='
-question_detail_api = 'http://localhost:8000/api/get_question_details/?question_id='
+dataset_questions_api = f'{BACKEND_API_URL}/api/get_conversation_history/?dataset='
+question_detail_api = f'{BACKEND_API_URL}/api/get_question_details/?question_id='
  
 def get_context_distances(input):
         with open(input, encoding='utf-8') as file:

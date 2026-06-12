@@ -1,0 +1,4 @@
+BACKEND_API_URL= "http://localhost:8000"
+OLLAMA_API_URL= "http://localhost:11434"
+API_USERNAME=admin
+API_PASSWORD=admin123
