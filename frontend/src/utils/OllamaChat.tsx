@@ -5,79 +5,7 @@ export const  OllamaDirectChatStream = async (body:any, setAnswer:any, setThough
 	const response = await fetch(`${process.env.REACT_APP_BACKEND_API}api/ollama_chat/`, {body, method: 'POST'})
 	const reader:any = response.body?.getReader()
 	const decoder = new TextDecoder()
-	let buffer = ''
-
-	const handleEvent = (json:any) => {
-		if (json.done === true) {
-			answerReceived = true
-			return
-		}
-
-		const chunk = json.content || ''
-		if (!chunk.length) {
-			return
-		}
-
-		if (json.type === 'thinking') {
-			if (setThought) {
-				thought += chunk
-				setThought(thought)
-			}
-		} else {
-			content += chunk
-		}
-	}
-
-	const processBuffer = () => {
-		let didProgress = true
-		while (didProgress) {
-			didProgress = false
-
-			if (buffer.includes('\n')) {
-				const parts = buffer.split('\n')
-				buffer = parts.pop() || ''
-
-				for (const line of parts) {
-					const trimmed = line.trim()
-					if (!trimmed) {
-						continue
-					}
-					try {
-						const json = JSON.parse(trimmed)
-						handleEvent(json)
-						didProgress = true
-					} catch {
-						buffer = trimmed + '\n' + buffer
-						break
-					}
-				}
-				continue
-			}
-
-			const trimmedBuffer = buffer.trim()
-			if (!trimmedBuffer) {
-				buffer = ''
-				break
-			}
-
-			if (trimmedBuffer.includes('}{')) {
-				buffer = trimmedBuffer.replace(/}\s*{/g, '}\n{')
-				didProgress = true
-				continue
-			}
-
-			if (trimmedBuffer.startsWith('{') && trimmedBuffer.endsWith('}')) {
-				try {
-					const json = JSON.parse(trimmedBuffer)
-					handleEvent(json)
-					buffer = ''
-					didProgress = true
-				} catch {
-					// Wait for additional bytes to complete JSON.
-				}
-			}
-		}
-	}
+	let leftover = ''
 
 	while (true) {
 		const { done, value } = await reader.read()
@@ -85,23 +13,63 @@ export const  OllamaDirectChatStream = async (body:any, setAnswer:any, setThough
 			break;
 		}
 
-		buffer += decoder.decode(value, { stream: true })
-		processBuffer()
+		const rawjson = leftover + decoder.decode(value, { stream: true })
+		const lines = rawjson.split('\n')
+		leftover = lines.pop() || ''
+
+		for (const j of lines) {
+			if (!j.trim()) {
+				continue
+			}
+
+			try {
+				const json = JSON.parse(j)
+				if (json.done === true) {
+					answerReceived = true
+					continue
+				}
+
+				const chunk = json.content || ''
+				if (!chunk.length) {
+					continue
+				}
+
+				if (json.type === 'thinking') {
+					if (setThought) {
+						thought += chunk
+						setThought(thought)
+					}
+				} else {
+					content += chunk
+				}
+			} catch {
+				// Skip lines that fail to parse
+				continue
+			}
+		}
 		setAnswer(content)
-		if (setThought && thought.length) setThought(thought)
 	}
 
-	buffer += decoder.decode()
-	processBuffer()
-	if (buffer.trim().length) {
+	if (leftover.trim().length) {
 		try {
-			const json = JSON.parse(buffer.trim())
-			handleEvent(json)
+			const lastJson = JSON.parse(leftover)
+			if (lastJson.done === true) {
+				answerReceived = true
+			} else {
+				const chunk = lastJson.content || ''
+				if (lastJson.type === 'thinking') {
+					if (setThought && chunk.length) {
+						thought += chunk
+						setThought(thought)
+					}
+				} else if (chunk.length) {
+					content += chunk
+					setAnswer(content)
+				}
+			}
 		} catch {
 			// Ignore trailing incomplete JSON if stream ended unexpectedly.
 		}
-		setAnswer(content)
-		if (setThought && thought.length) setThought(thought)
 	}
 
 	return {content, answerReceived, thought}

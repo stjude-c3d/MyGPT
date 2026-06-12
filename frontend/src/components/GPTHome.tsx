@@ -632,7 +632,8 @@ function GPTHome(props:{
 				'temperature': props.currentSettings.temperature,
 				'top_k': props.currentSettings.top_k,
 				'top_p': props.currentSettings.top_p,
-			}
+			},
+			'new_conversation': query.length === 1 ? true : false,
 		}
 
 		if (llmsWithToolSupport.includes(props.currentSettings.selectedLlm.split(':')[0]) && props.currentSettings.MCPTools && props.currentSettings.MCPTools.length){
@@ -641,8 +642,9 @@ function GPTHome(props:{
 		}
 
 		const body = JSON.stringify(body_)
+		console.log(props.currentSettings.MCPTools, mcpOllamaTools)
 		
-		if(messages.length > 0 && answer === '' && !answerReceived && !llmsWithToolSupport.includes(props.currentSettings.selectedLlm.split(':')[0])){
+		if(messages.length > 0 && answer === '' && !answerReceived && mcpOllamaTools.length === 0){
 			// fetch using async await
 			const postData = async () => {
 				const data = await OllamaDirectChatStream(body, setAnswer, isThinkStepSupported ? setThought : null)
@@ -652,7 +654,7 @@ function GPTHome(props:{
 			postData()
 		}
 
-		else if (messages.length > 0 && answer === '' && !answerReceived && llmsWithToolSupport.includes(props.currentSettings.selectedLlm.split(':')[0])){
+		else if (messages.length > 0 && answer === '' && !answerReceived && llmsWithToolSupport.includes(props.currentSettings.selectedLlm.split(':')[0]) && mcpOllamaTools.length){
 			
 			const postDataWithTools = async () => {
 				// fetch using async await
@@ -681,9 +683,9 @@ function GPTHome(props:{
 				answer_best_distance: props.currentSettings.relevance_score_cutoff.answer_best,
 				answer_worst_distance: props.currentSettings.relevance_score_cutoff.answer_worst,
 				use_default_hi: props.currentSettings.use_default_hi,
-				a_hi: props.currentSettings.relevance_score_cutoff.HIa,
-				b_hi: props.currentSettings.relevance_score_cutoff.HIb,
-				c_hi: props.currentSettings.relevance_score_cutoff.HIc,
+				QRS_p: props.currentSettings.relevance_score_cutoff.QRS_p,
+				ARS_q: props.currentSettings.relevance_score_cutoff.ARS_q,
+				HI_by_equation: props.currentSettings.relevance_score_cutoff.HI_by_equation,
 				temperature: props.currentSettings.temperature,
 				top_k: props.currentSettings.top_k,
 				top_p: props.currentSettings.top_p,

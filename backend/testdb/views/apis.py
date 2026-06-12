@@ -1580,6 +1580,7 @@ def ollama_chat(request):
     if request.method == 'POST':
         try:
             json_request = JSONParser().parse(request)
+            new_conversation = json_request['new_conversation']
             model = json_request['model']
             messages = json_request['messages']
             stream = json_request.get('stream', True)
@@ -1596,7 +1597,58 @@ def ollama_chat(request):
             client = OllamaClient(
                 host = os.environ.get('OLLAMA_SERVER')
             )
+
+            # save the question to the database with the model name and messages
+            dataset_name = model + '_direct_chat'
+            if not Dataset.objects.filter(dataset_name=dataset_name).exists():
+                Dataset.objects.create(
+                    dataset_name=dataset_name,
+                    dataset_size=0,
+                    user = '-',
+                    user_email = '-',
+                    user_group = '-',
+                    dataset_date_time=make_aware(datetime.datetime.now()),
+                    embedding_model = '',
+                )
+            dataset = Dataset.objects.get(dataset_name=dataset_name)
             
+            # Ensure model exists in database before creating questions
+            model_type, _ = Model.objects.get_or_create(model_name=model, defaults={'model_size': '0'})
+            
+            if new_conversation:
+                conversation = Conversation.objects.create(
+                    question_answer_count=1,
+                    conversation_dataset=Dataset.objects.get(dataset_name=dataset_name),
+                    start_date_time=make_aware(datetime.datetime.now())
+                )
+                Question.objects.create(
+                    question_text=messages[-1]['content'] if messages else '',
+                    conversation=conversation,
+                    question_dataset=dataset,
+                    model_type=model_type,
+                )
+            else:
+                conversation = Conversation.objects.filter(conversation_dataset=dataset).order_by('-start_date_time').first()
+                if conversation:
+                    Question.objects.create(
+                        question_text=messages[-1]['content'] if messages else '',
+                        conversation=conversation,
+                        question_dataset=dataset,
+                        model_type=model_type,
+                    )
+                else:
+                    conversation = Conversation.objects.create(
+                        question_answer_count=1,
+                        conversation_dataset=dataset,
+                        start_date_time=make_aware(datetime.datetime.now())
+                    )
+                    Question.objects.create(
+                        question_text=messages[-1]['content'] if messages else '',
+                        conversation=conversation,
+                        question_dataset=dataset,
+                        model_type=model_type,
+                    )
+
             # Non-streaming path: stream=False
             if not stream:
                 try:
