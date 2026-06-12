@@ -447,7 +447,10 @@ def get_context(request):
                 for f in files:
                     # check for the path traversal attack
                     if f.endswith('.pdf') and os.path.exists('data/pdfs/' + f):
-                        os.remove('data/pdfs/' + f)
+                        safe_filename = sanitize_filename(f)
+                        safe_path = os.path.join('data/pdfs', safe_filename)
+                        if os.path.exists(safe_path) and os.path.isfile(safe_path):
+                            os.remove(safe_path)
                 if original_pdf_path.endswith('.pdf'):
                     highlight_pdf(
                         original_pdf_path, 
@@ -865,6 +868,10 @@ def delete_dataset(request):
     if request.method == 'GET':
         dataset_name = request.GET.get('dataset')
         user_email = request.GET.get('user_email')
+        # Sanitize dataset_name early to prevent path traversal attacks
+        dataset_name = sanitize_filename(dataset_name)
+        if not dataset_name or len(dataset_name) == 0:
+            return Response({'error':True, 'error_message': 'Dataset name can\'t be empty'}, content_type="application/json")
         dataset = Dataset.objects.get(dataset_name=dataset_name, user_email=user_email)
         papers = Papers.objects.filter(paper_dataset=dataset)
         for paper in papers:
@@ -877,8 +884,6 @@ def delete_dataset(request):
 
         # delete the pdf folder
         pdf_folder = 'data/pdfs/' + dataset_name
-        if len(dataset_name) == 0:
-            return Response({'error':True, 'error_message': 'Dataset name can\'t be empty'}, content_type="application/json")
         #  delete /data/data_chunks/ + dataset_name + .txt
         data_chunks_file = 'data/data_chunks/' + dataset_name + '.txt'
         if os.path.exists(data_chunks_file):

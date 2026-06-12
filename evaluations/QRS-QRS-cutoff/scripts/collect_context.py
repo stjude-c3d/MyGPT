@@ -30,10 +30,8 @@ def get_token():
     """Fetch the bearer token for API calls."""
     url = 'http://localhost:8000/token/'
     payload = {
-        # 'username': os.environ.get('API_USERNAME'),
-        # 'password': os.environ.get('API_PASSWORD')
-        'username': 'admin',
-        'password': 'admin123'
+        'username': os.environ.get('API_USERNAME'),
+        'password': os.environ.get('API_PASSWORD')
     }
     #print("testing "*100)
     #print(payload)

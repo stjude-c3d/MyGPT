@@ -35,10 +35,8 @@ TOKEN_API = f'{BASE_URL}/token/'
 def get_jwt_token():
     # get jwt token
     response = requests.post('http://localhost:8000/token/', json={
-        # 'username': os.environ.get('API_USERNAME'),
-        # 'password': os.environ.get('API_PASSWORD')
-        'username': 'admin',
-        'password': 'admin123'
+        'username': os.environ.get('API_USERNAME'),
+        'password': os.environ.get('API_PASSWORD')
     })
     if response.status_code == 200:
         token = response.json().get('access')
