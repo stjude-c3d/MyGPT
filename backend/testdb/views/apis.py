@@ -1582,6 +1582,7 @@ def ollama_chat(request):
             temperature = json_request.get('options', {}).get('temperature', 0.7)
             top_k = json_request.get('options', {}).get('top_k', 50)
             top_p = json_request.get('options', {}).get('top_p', 0.9)
+            tools = json_request.get('tools', [])
 
             # Validate model_name input
             if not model or not re.match(r'^[a-zA-Z0-9_\-:.]+$', model):
@@ -1601,14 +1602,21 @@ def ollama_chat(request):
                         stream=False,
                         think=think,
                         options=options,
+                        tools=tools
                     )
+
+                    # Extract message content, thinking, and tool calls from the single object
+                    message = response.get('message', {}) if isinstance(response, dict) else getattr(response, 'message', {})
+                    response_content = message.get('content', '') if isinstance(message, dict) else getattr(message, 'content', '')
+                    response_thinking = message.get('thinking', '') if isinstance(message, dict) else getattr(message, 'thinking', '')
+                    tool_calls = message.get('tool_calls', []) if isinstance(message, dict) else getattr(message, 'tool_calls', [])
+                    return_response = {
+                        'content': response_content,
+                        'thinking': response_thinking,
+                        'tool_calls': tool_calls if tool_calls else [],
+                    }
                     
-                    # Extract message content and thinking from the single object
-                    message = response.get('message', {})
-                    return Response({
-                        'content': message.get('content', ''),
-                        'thinking': message.get('thinking', '')
-                    }, content_type="application/json")
+                    return Response(return_response, content_type="application/json")
                 except Exception as e:
                     return Response({'error': True, 'error_message': str(e)}, content_type="application/json")
             
@@ -1622,6 +1630,7 @@ def ollama_chat(request):
                         stream=stream,
                         think=think,
                         options=options,
+                        tools=tools
                     )
                     for part in response:
                         message = part.get('message', {})

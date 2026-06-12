@@ -9,12 +9,12 @@
 # RUN uv run mygpt_backend.py
 
 # Base Python image
-FROM python:3.15-rc-alpine3.22 AS base
-# Stage to copy the uv binary from the external image
-FROM ghcr.io/astral-sh/uv:0.7.21 AS uv-binary
+FROM python:3.12-slim AS base
+
 # Builder stage: setup environment and install dependencies using uv
 FROM base AS builder
-COPY --from=uv-binary /uv /bin/uv
+# Install uv package manager
+RUN pip install --no-cache-dir uv==0.7.21
 ENV UV_COMPILE_BYTECODE=1
 ENV UV_LINK_MODE=copy
 WORKDIR /app
@@ -22,10 +22,11 @@ COPY uv.lock pyproject.toml /app/
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev
 COPY . /app
+
 # Final runtime image
 FROM base
 COPY --from=builder /app /app
-COPY --from=builder /bin/uv /bin/uv
+RUN pip install --no-cache-dir uv==0.7.21
 ENV PATH="/app/.venv/bin:$PATH"
 WORKDIR /app
 CMD ["uv", "run", "mygpt_backend.py","--host", "0.0.0.0", "--port", "5001", "--log-level", "debug"]

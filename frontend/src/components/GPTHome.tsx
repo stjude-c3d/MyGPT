@@ -87,11 +87,11 @@ function GPTHome(props:{
 	// console.log(props.currentSettings.MCPTools, mcpOllamaTools)
 
 	const llmsWithToolSupport = [
-		'llama3.1', 'llama3.2', 'llama3.3' 
+		'llama3.1', 'llama3.2', 'llama3.3', 'gpt-oss', 'gemma4'
 	]
 
 	const llmswithThinkStepSupport = [
-		'gpt-oss', 'qwen3',
+		'gpt-oss', 'qwen3', 'gemma4'
 	]
 
 	const chatModeOptions = [
@@ -335,7 +335,7 @@ function GPTHome(props:{
 			let stream = false
 			let returnToolResponse = true
 			// fetch using async await and wait for the response and then call the getContext function
-			const ollamaData:any = await Promise.resolve(OllamaChatStreamWithToolSupport(body, ()=>{}, props.currentSettings.MCPTools, props.currentSettings.MCPClient, stream, returnToolResponse))
+			const ollamaData:any = await Promise.resolve(OllamaChatStreamWithToolSupport(body, ()=>{}, props.currentSettings.MCPTools, props.currentSettings.MCPClient, stream, returnToolResponse, isThinkStepSupported ? setThought : null))
 			if (ollamaData && ollamaData.answerReceived) {
 				setAnswerReceived(ollamaData.answerReceived)
 				let answer = ollamaData.content;
@@ -658,7 +658,7 @@ function GPTHome(props:{
 				// fetch using async await
 				let stream = true
 				let returnToolResponse = false
-				const data = await OllamaChatStreamWithToolSupport(body, setAnswer, props.currentSettings.MCPTools, props.currentSettings.MCPClient, stream, returnToolResponse)
+				const data = await OllamaChatStreamWithToolSupport(body, setAnswer, props.currentSettings.MCPTools, props.currentSettings.MCPClient, stream, returnToolResponse, isThinkStepSupported ? setThought : null)
 				setAnswerReceived(data.answerReceived)
 			}
 			postDataWithTools()

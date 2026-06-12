@@ -75,7 +75,6 @@ const MCPClient = (props:{
         const client = await ensureConnected()
         const toolsList:any = await client.listTools()
         if (isMounted) {
-          console.log('Fetched tools:', toolsList)
           setTools(toolsList['tools'] || [])
         }
       } catch (error) {
@@ -115,6 +114,7 @@ const MCPClient = (props:{
       props.settingsCallback({
         ...currentSettings,
         MCPTools: selectedTools,
+        MCPClient: client,
       })
       // Expose the client separately so consumers can call it directly.
       if (props.onMCPClientReady) {

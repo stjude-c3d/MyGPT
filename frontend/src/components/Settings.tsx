@@ -615,7 +615,6 @@ const Settings = (props: {
 								{props.defaultSettings.settingsPanels.map((panel: any, index: number) => {
 									const showMCPMenu = process.env.REACT_APP_MCP_SHOW_MCP_MENU === 'false' ? false :
 										process.env.REACT_APP_MCP_SHOW_MCP_MENU === 'true' ? true : false
-									console.log('showMCPMenu', showMCPMenu)
 									// if MCP menu is not shown, skip the mcp panel
 									if (!showMCPMenu && panel.key === 'mcp') return null
 									return (

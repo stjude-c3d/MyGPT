@@ -125,29 +125,60 @@ const OllamaDirectChatNoStream = async (body:any, setAnswer:any, setThought:any)
 	return {content, answerReceived, thought}
 }
 
-export const OllamaChatStreamWithToolSupport = async (body:any, setAnswer:any, MCPTools:any, MCPClient:any, stream:boolean, returnToolResponse:boolean) => {
+export const OllamaChatStreamWithToolSupport = async (body:any, setAnswer:any, MCPTools:any, MCPClient:any, stream:boolean, returnToolResponse:boolean, setThought:any) => {
 	let answerReceived
 	let content = ''
 	let toolResponse = ''
 	const response = await fetch(`${process.env.REACT_APP_BACKEND_API}api/ollama_chat/`, {body, method: 'POST'})
 	const data = await response.json()
-	if (data.tool_calls && data.tool_calls.length > 0){
+
+	const toolCalls = Array.isArray(data.tool_calls)
+		? data.tool_calls
+		: (data.tool_calls ? [data.tool_calls] : [])
+	if (toolCalls.length > 0){
 		let body_json = JSON.parse(body)
+		body_json.stream = false
 		let messages = body_json.messages || []
 		// handle tool calls here
-		await Promise.all(MCPTools.map(async (tool:any) => {
+		for (const call of toolCalls){
+			const callName = call?.function?.name || call?.name
+			const rawCallArgs = call?.function?.arguments || call?.arguments || {}
+			let callArgs = rawCallArgs
+			if (typeof rawCallArgs === 'string') {
+				try {
+					callArgs = JSON.parse(rawCallArgs)
+				} catch {
+					callArgs = {}
+				}
+			}
+			if (!callName){
+				continue
+			}
+
+			const toolExists = MCPTools?.some((tool:any) => tool?.name === callName)
+			if (!toolExists){
+				messages.push({
+					role: 'tool',
+					tool_name: callName,
+					content: JSON.stringify({ error: `Tool not found: ${callName}` })
+				})
+				toolResponse += JSON.stringify({ error: `Tool not found: ${callName}` })
+				continue
+			}
+
 			const result = await MCPClient.callTool({
-			name: tool['name'],
-			arguments: data.tool_calls[0].function.arguments,
+				name: callName,
+				arguments: callArgs,
 			})
 			if (result.content && result.content.length > 0){
 				messages.push({
 					role: 'tool',
+					tool_name: callName,
 					content: JSON.stringify(result.content)
 				})
 				toolResponse += JSON.stringify(result.content)
 			}
-		}))
+		}
 		const body_2 = {
 			model: body_json.model,
 			options: body_json.options,
@@ -159,12 +190,11 @@ export const OllamaChatStreamWithToolSupport = async (body:any, setAnswer:any, M
 			answerReceived = true
 		}
 		else if (!returnToolResponse && stream){
-			const data = await OllamaDirectChatStream(JSON.stringify(body_2), setAnswer, ()=>{})
+			const data = await OllamaDirectChatStream(JSON.stringify(body_2), setAnswer, setThought)
 			answerReceived = data.answerReceived
 			content = data.content
 		} else {
-			const data = await OllamaDirectChatNoStream(JSON.stringify(body_2), setAnswer, ()=>{})
-			console.log('data_2', data)
+			const data = await OllamaDirectChatNoStream(JSON.stringify(body_2), setAnswer, setThought)
 			answerReceived = data.answerReceived
 			content = data.content
 		}
