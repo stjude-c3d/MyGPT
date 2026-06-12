@@ -9,7 +9,7 @@
 # RUN uv run mygpt_backend.py
 
 # Base Python image
-FROM python:3.12-slim AS base
+FROM python:3.13.14-slim AS base
 
 # Builder stage: setup environment and install dependencies using uv
 FROM base AS builder
