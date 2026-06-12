@@ -8,7 +8,7 @@ from starlette.middleware.cors import CORSMiddleware
 import re
 
 # Initialize FastMCP server
-mcp = FastMCP("MyGPT-MCP", host="0.0.0.0", port=5001)
+mcp = FastMCP("MyGPT-MCP")
 
 # custom CORS middleware
 custom_middleware = [

@@ -1,32 +1,49 @@
-# FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
-# ADD . /app
-# WORKDIR /app
-# COPY * /app/
-# COPY requirements.txt /app/
-# RUN pip install -r requirements.txt
+# syntax=docker/dockerfile:1.7
 
-# RUN uv sync --locked
-# RUN uv run mygpt_backend.py
+FROM python:3.14.6-alpine3.23 AS base
 
-# Base Python image
-FROM python:3.13.14-slim AS base
-
-# Builder stage: setup environment and install dependencies using uv
+# Builder stage: install build toolchain for any packages that must compile from source.
 FROM base AS builder
-# Install uv package manager
+RUN apk add --no-cache --virtual .build-deps \
+    build-base \
+    linux-headers \
+    python3-dev \
+    libffi-dev \
+    openssl-dev \
+    cargo \
+    rust \
+    cmake \
+    git
+
 RUN pip install --no-cache-dir uv==0.7.21
+
 ENV UV_COMPILE_BYTECODE=1
 ENV UV_LINK_MODE=copy
 WORKDIR /app
+
+# Install locked third-party deps first for cache efficiency.
 COPY uv.lock pyproject.toml /app/
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev
-COPY . /app
+    uv sync --frozen --no-dev --no-install-project
 
-# Final runtime image
-FROM base
+# Copy project files, then install project into the venv.
+COPY . /app
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev
+
+# Runtime stage: keep only runtime libs, not the full compiler toolchain.
+FROM base AS runtime
+RUN apk add --no-cache \
+    libstdc++ \
+    libffi \
+    openssl \
+    ca-certificates
+
 COPY --from=builder /app /app
-RUN pip install --no-cache-dir uv==0.7.21
+COPY --from=builder /usr/local/bin/uv /usr/local/bin/uv
+
+ENV FASTMCP_HOST="0.0.0.0"
+ENV FASTMCP_PORT="5001"
 ENV PATH="/app/.venv/bin:$PATH"
 WORKDIR /app
-CMD ["uv", "run", "mygpt_backend.py","--host", "0.0.0.0", "--port", "5001", "--log-level", "debug"]
+CMD ["uv", "run", "mygpt_backend.py", "--host", "0.0.0.0", "--port", "5001", "--log-level", "debug"]
