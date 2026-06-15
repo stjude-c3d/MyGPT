@@ -1,4 +1,4 @@
-import { useState, useEffect, ReactElement} from 'react'
+import { useState, useEffect, useRef, ReactElement} from 'react'
 import { 
 	Viewer, Worker, SpecialZoomLevel, Icon
 } from '@react-pdf-viewer/core'
@@ -8,7 +8,7 @@ import '@react-pdf-viewer/bookmark/lib/styles/index.css';
 import type { RenderBookmarkItemProps } from '@react-pdf-viewer/bookmark'
 import { pageNavigationPlugin } from '@react-pdf-viewer/page-navigation'
 import '@react-pdf-viewer/default-layout/lib/styles/index.css'
-import { PaperAirplaneIcon, Cog6ToothIcon, PaperClipIcon, XMarkIcon, CheckIcon } from '@heroicons/react/24/outline'
+import { PaperAirplaneIcon, Cog6ToothIcon, PaperClipIcon, XMarkIcon, CheckIcon, ArrowsPointingInIcon, ArrowsPointingOutIcon } from '@heroicons/react/24/outline'
 import { scaleSequential, interpolateRdYlGn } from 'd3'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -901,10 +901,84 @@ function GPTHome(props:{
 		!props.frontendSettings.azure_login &&
 		props.currentSettings?.datasets?.length === 0
 
+	const [panelWidths, setPanelWidths] = useState({ left: 30, middle: 20, right: 50 })
+	const [panelCollapsed, setPanelCollapsed] = useState({ left: false, middle: false, right: false })
+	const savedExpandedWidthsRef = useRef({ left: 30, middle: 20, right: 50 })
+
+	const COLLAPSED_WIDTH = 4
+	const MIN_WIDTHS = { left: 30, middle: 20, right: 50 }
+
+	const distributeRemaining = (base: any, targetPanel: 'left' | 'middle' | 'right', delta: number) => {
+		if (delta <= 0) return base
+		const others = (['left', 'middle', 'right'] as const).filter((p) => p !== targetPanel)
+		const next = { ...base }
+		const openOthers = others.filter((p) => !panelCollapsed[p])
+		if (!openOthers.length) return next
+		const share = delta / openOthers.length
+		openOthers.forEach((p) => {
+			next[p] += share
+		})
+		return next
+	}
+
+	const collapsePanel = (panel: 'left' | 'middle' | 'right') => {
+		if (panelCollapsed[panel]) return
+		savedExpandedWidthsRef.current[panel] = panelWidths[panel]
+		const delta = Math.max(panelWidths[panel] - COLLAPSED_WIDTH, 0)
+		let next = { ...panelWidths, [panel]: COLLAPSED_WIDTH }
+		next = distributeRemaining(next, panel, delta)
+		setPanelWidths(next)
+		setPanelCollapsed((prev) => ({ ...prev, [panel]: true }))
+	}
+
+	const expandPanel = (panel: 'left' | 'middle' | 'right') => {
+		if (!panelCollapsed[panel]) return
+		const desired = Math.max(savedExpandedWidthsRef.current[panel], MIN_WIDTHS[panel])
+		let next = { ...panelWidths }
+		next[panel] = desired
+		let needed = desired - COLLAPSED_WIDTH
+		const donors = (['left', 'middle', 'right'] as const).filter((p) => p !== panel && !panelCollapsed[p])
+		for (const donor of donors) {
+			if (needed <= 0) break
+			const minDonor = MIN_WIDTHS[donor]
+			const available = Math.max(next[donor] - minDonor, 0)
+			const take = Math.min(available, needed)
+			next[donor] -= take
+			needed -= take
+		}
+		setPanelWidths(next)
+		setPanelCollapsed((prev) => ({ ...prev, [panel]: false }))
+	}
+
 	return (
-		<div className='grid grid-cols-10 p-4 bg-gray-200 dark:bg-neutral-800 max-w-[2000px] mx-auto h-[94vh]'>
-			<div className={'mt-24 p-6 bg-panel3 dark:bg-panel2-dark rounded-lg max-h-[92vh] overflow-y-auto duration-300 ease-in-out peer-checked:bg-panel1 after:w-4 after:h-4 after:bg-white after:rounded-full after:shadow-md after:duration-300' + 
-				(answerWithoutContext ? ' col-span-12 max-w-full' : ' col-span-3 max-w-4xl mr-6') }>
+		<div className='p-4 bg-gray-200 dark:bg-neutral-800 max-w-[2000px] mx-auto h-[94vh]'>
+			<div className='mt-24 h-[87vh] flex w-full items-stretch gap-2'>
+			{/* Panel for Chat */}
+			{!answerWithoutContext && panelCollapsed.left ? (
+				<div style={{ width: `${panelWidths.left}%` }} className='bg-panel3 dark:bg-panel2-dark rounded-lg h-full flex flex-col items-center justify-start relative pt-2'>
+					<button
+						title='Expand Chat panel'
+						className='absolute mx-auto top-2 p-2 rounded-md bg-white dark:bg-stjude dark:text-white text-nav'
+						onClick={() => expandPanel('left')}
+					>
+						<ArrowsPointingOutIcon className='w-4 h-4' />
+					</button>
+					<div className='text-xl mt-16 text-nav dark:text-white [writing-mode:vertical-rl] rotate-180'>Chat</div>
+				</div>
+			) : (
+			<div
+				style={{ width: answerWithoutContext ? '100%' : `${panelWidths.left}%` }}
+				className='p-6 bg-panel3 dark:bg-panel2-dark rounded-lg h-full overflow-y-auto duration-300 ease-in-out relative'
+			>
+				{!answerWithoutContext ? (
+					<button
+						title='Collapse Q&A panel'
+						className='absolute right-2 top-2 p-1 rounded-md bg-white dark:bg-stjude dark:text-white text-nav z-10'
+						onClick={() => collapsePanel('left')}
+					>
+						<ArrowsPointingInIcon className='w-4 h-4' />
+					</button>
+				) : null}
 				{/* Chat mode dropdown at the top */}
 				<div className="flex justify-center mb-8">
 					<select
@@ -1421,9 +1495,31 @@ function GPTHome(props:{
 						null
 				}
 			</div>
+			)}
+
 			{ !answerWithoutContext ? 
-			<>				
-			<div className='col-span-2 mt-24 max-w-5xl w-full bg-panel1 dark:bg-panel4-dark rounded-l-lg overflow-y-auto max-h-[92vh]'>
+			<>
+			{/* Panel for list of documents for the selected library */}				
+			{panelCollapsed.middle ? (
+				<div style={{ width: `${panelWidths.middle}%` }} className='bg-panel1 dark:bg-panel4-dark rounded-l-lg h-full flex flex-col items-center justify-start relative pt-2'>
+					<button
+						title='Expand library panel'
+						className='absolute mx-auto top-2 p-2 rounded-md bg-white dark:bg-stjude dark:text-white text-nav'
+						onClick={() => expandPanel('middle')}
+					>
+						<ArrowsPointingOutIcon className='w-4 h-4' />
+					</button>
+					<div className='text-xl mt-16 text-white [writing-mode:vertical-rl] rotate-180'>Library</div>
+				</div>
+			) : (
+			<div style={{ width: `${panelWidths.middle}%` }} className='bg-panel1 dark:bg-panel4-dark rounded-l-lg h-full overflow-y-auto duration-300 ease-in-out relative'>
+				<button
+					title='Collapse library panel'
+					className='absolute right-2 top-2 p-1 rounded-md bg-white dark:bg-stjude dark:text-white text-nav z-10'
+					onClick={() => collapsePanel('middle')}
+				>
+					<ArrowsPointingInIcon className='w-4 h-4' />
+				</button>
 				<div className=' p-6 text-2xl font-bold text-white'>{papers.length ? 'Your document library' : 'Your video library'}</div>
 				
 				<div className='p-2 text-sm border-slate-400 border-y'>
@@ -1538,7 +1634,29 @@ function GPTHome(props:{
 					}
 				</div>
 			</div>
-			<div className='col-span-5 mt-24 p-6 max-w-5xl w-full bg-panel2 dark:bg-panel3-dark rounded-r-lg overflow-y-auto max-h-[92vh]'>
+			)}
+			
+			{/* Panel for PDF viewer */}
+			{panelCollapsed.right ? (
+				<div style={{ width: `${panelWidths.right}%` }} className='bg-panel2 dark:bg-panel3-dark rounded-r-lg h-full flex flex-col items-center justify-start relative pt-2'>
+					<button
+						title='Expand viewer panel'
+						className='absolute mx-auto top-2 p-2 rounded-md bg-white dark:bg-stjude dark:text-white text-nav'
+						onClick={() => expandPanel('right')}
+					>
+						<ArrowsPointingOutIcon className='w-4 h-4' />
+					</button>
+					<div className='text-xl mt-16 text-nav dark:text-white [writing-mode:vertical-rl] rotate-180'>Document Viewer</div>
+				</div>
+			) : (
+			<div style={{ width: `${panelWidths.right}%` }} className='p-6 bg-panel2 dark:bg-panel3-dark rounded-r-lg h-full overflow-y-auto duration-300 ease-in-out relative'>
+				<button
+					title='Collapse viewer panel'
+					className='absolute right-2 top-2 p-1 rounded-md bg-white dark:bg-stjude dark:text-white text-nav z-10'
+					onClick={() => collapsePanel('right')}
+				>
+					<ArrowsPointingInIcon className='w-4 h-4' />
+				</button>
 					<div className='overflow-x-auto h-full w-full pt-4 '>
 						<Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
 						<div  className='h-[76vh]'>
@@ -1606,9 +1724,11 @@ function GPTHome(props:{
 					</Worker>
 				</div>
 			</div>
+			)}
 			</>	:
 			<></>
 			}
+			</div>
 		</div>
 	)
 }
