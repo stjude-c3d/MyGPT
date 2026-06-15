@@ -8,7 +8,7 @@ import '@react-pdf-viewer/bookmark/lib/styles/index.css';
 import type { RenderBookmarkItemProps } from '@react-pdf-viewer/bookmark'
 import { pageNavigationPlugin } from '@react-pdf-viewer/page-navigation'
 import '@react-pdf-viewer/default-layout/lib/styles/index.css'
-import { PaperAirplaneIcon, Cog6ToothIcon, PaperClipIcon, XMarkIcon, CheckIcon, ArrowsPointingInIcon, ArrowsPointingOutIcon } from '@heroicons/react/24/outline'
+import { PaperAirplaneIcon, Cog6ToothIcon, PaperClipIcon, XMarkIcon, CheckIcon, ArrowsPointingInIcon, ArrowsPointingOutIcon, ChatBubbleLeftRightIcon, DocumentChartBarIcon, BookmarkIcon as BookmarkIcon_, DocumentCheckIcon } from '@heroicons/react/24/outline'
 import { scaleSequential, interpolateRdYlGn } from 'd3'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -963,7 +963,8 @@ function GPTHome(props:{
 					>
 						<ArrowsPointingOutIcon className='w-4 h-4' />
 					</button>
-					<div className='text-xl mt-16 text-nav dark:text-white [writing-mode:vertical-rl] rotate-180'>Chat</div>
+					<ChatBubbleLeftRightIcon className=' w-6 h-6 mt-12 text-nav dark:text-white' />
+					<div className='text-xl mt-4 text-nav dark:text-white [writing-mode:vertical-rl] rotate-180'>Chat</div>
 				</div>
 			) : (
 			<div
@@ -1509,7 +1510,8 @@ function GPTHome(props:{
 					>
 						<ArrowsPointingOutIcon className='w-4 h-4' />
 					</button>
-					<div className='text-xl mt-16 text-white [writing-mode:vertical-rl] rotate-180'>Library</div>
+					<BookmarkIcon_ className='w-6 h-6 mt-12 text-white' />
+					<div className='text-xl mt-4 text-white [writing-mode:vertical-rl] rotate-180'>Library</div>
 				</div>
 			) : (
 			<div style={{ width: `${panelWidths.middle}%` }} className='bg-panel1 dark:bg-panel4-dark rounded-l-lg h-full overflow-y-auto duration-300 ease-in-out relative'>
@@ -1646,7 +1648,8 @@ function GPTHome(props:{
 					>
 						<ArrowsPointingOutIcon className='w-4 h-4' />
 					</button>
-					<div className='text-xl mt-16 text-nav dark:text-white [writing-mode:vertical-rl] rotate-180'>Document Viewer</div>
+					<DocumentCheckIcon className='w-6 h-6 mt-12 text-nav dark:text-white' />
+					<div className='text-xl mt-4 text-nav dark:text-white [writing-mode:vertical-rl] rotate-180'>Document Viewer</div>
 				</div>
 			) : (
 			<div style={{ width: `${panelWidths.right}%` }} className='p-6 bg-panel2 dark:bg-panel3-dark rounded-r-lg h-full overflow-y-auto duration-300 ease-in-out relative'>
