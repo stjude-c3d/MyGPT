@@ -2,6 +2,7 @@ import csv
 import json
 import sys
 import argparse
+import re
 
 csv.field_size_limit(sys.maxsize)
 
@@ -9,11 +10,17 @@ csv.field_size_limit(sys.maxsize)
 # Variables #
 #############
 
+def sanitize_name(value):
+    """Allow only safe filename characters for generated output names."""
+    sanitized = re.sub(r"[^A-Za-z0-9_-]", "_", str(value or "")).strip("_")
+    return sanitized or "default"
+
+
 def get_dataset_name():
     parser = argparse.ArgumentParser(description='Format answers to CSV')
     parser.add_argument('--dataset', default='QRS-ARS-cutoff-bge', help='Dataset name')
     args = parser.parse_args()
-    return args.dataset
+    return sanitize_name(args.dataset)
 
 MODELS = [
      'gpt-oss:20b'
@@ -49,7 +56,7 @@ def collect_answers(json_file_path, csv_file_path):
 
     # Write the answers to a CSV file
     with open(f'../outputs/answers/{csv_file_path}', 'w', newline='', encoding='utf-8') as csv_file:
-        writer = csv.writer(csv_file)
+        writer = csv.writer(csv_file, quoting=csv.QUOTE_ALL)
 
         # Write answers with sub-index and blank rows after every 34th question
         writer.writerow(['#', 'question_id',  'answer'])
@@ -73,7 +80,7 @@ def main():
     Main function to process answers for each model.
     """
     for model in MODELS:
-        model_name = model.removesuffix(":latest").replace(":", "-")
+        model_name = sanitize_name(model.removesuffix(":latest").replace(":", "-"))
         collect_answers(
             f'answers-{model_name}-{LIBRARY_NAME}.json',
             f'answers-{model_name}-{LIBRARY_NAME}.csv'
