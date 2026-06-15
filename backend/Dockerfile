@@ -1,4 +1,4 @@
-FROM ghcr.io/chroma-core/chroma:0.5.7
+FROM ghcr.io/chroma-core/chroma:1.5.9
 # please don't change the above line
 # FROM --platform=amd64 ghcr.io/chroma-core/chroma:latest
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -6,14 +6,11 @@ ENV PYTHONUNBUFFERED=1
 ENV CHROMA_SERVER_NOFILE=${CHROMA_SERVER_NOFILE}
 RUN mkdir /code
 WORKDIR /code
-RUN apt update
-RUN pip install --upgrade pip
-RUN pip install --upgrade setuptools wheel
-RUN apt install -y build-essential
-RUN apt install -y curl
-RUN apt install -y wkhtmltopdf
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends python3 python3-pip python3-venv build-essential curl
+RUN if apt-cache policy wkhtmltopdf | grep -q 'Candidate: (none)'; then echo "wkhtmltopdf not available for this Debian release; skipping install"; else apt-get install -y --no-install-recommends wkhtmltopdf; fi
 # RUN apt install -y libreoffice
 COPY requirements.txt /code/
-RUN pip install -r requirements.txt
+RUN python3 -m pip install --break-system-packages -r requirements.txt
 COPY . /code/
 COPY ./env_example /code/.env

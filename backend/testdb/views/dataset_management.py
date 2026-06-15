@@ -180,7 +180,7 @@ def add_dataset_from_upload(request, progress_callback=None):
             for i, row in df.iterrows():
                 doc_info = row.to_string(header=True)
                 doc_info = ','.join(doc_info.split('\n'))
-                doc_info = ': '.join(re.split('\s+', doc_info))
+                doc_info = ': '.join(re.split(r'\s+', doc_info))
                 doc_info = ', '.join(doc_info.split(','))
 
                 chunk = {'title': paper_titles[idx], 'page': i, 'content': doc_info, 'type': 'spreadsheet_chunk'}
