@@ -952,10 +952,10 @@ function GPTHome(props:{
 
 	return (
 		<div className='p-4 bg-gray-200 dark:bg-neutral-800 max-w-[2000px] mx-auto h-[94vh]'>
-			<div className='mt-24 h-[87vh] flex w-full items-stretch gap-2'>
+			<div className='mt-24 pb-24 h-full flex w-full items-stretch'>
 			{/* Panel for Chat */}
 			{!answerWithoutContext && panelCollapsed.left ? (
-				<div style={{ width: `${panelWidths.left}%` }} className='bg-panel3 dark:bg-panel2-dark rounded-lg h-full flex flex-col items-center justify-start relative pt-2'>
+				<div style={{ width: `${panelWidths.left}%` }} className='bg-panel3 mx-2 dark:bg-panel2-dark rounded-lg h-full flex flex-col items-center justify-start relative pt-2'>
 					<button
 						title='Expand Chat panel'
 						className='absolute mx-auto top-2 p-2 rounded-md bg-white dark:bg-stjude dark:text-white text-nav'
@@ -969,7 +969,7 @@ function GPTHome(props:{
 			) : (
 			<div
 				style={{ width: answerWithoutContext ? '100%' : `${panelWidths.left}%` }}
-				className='p-6 bg-panel3 dark:bg-panel2-dark rounded-lg h-full overflow-y-auto duration-300 ease-in-out relative'
+				className='p-6 mr-2 bg-panel3 dark:bg-panel2-dark rounded-lg h-full overflow-y-auto duration-300 ease-in-out relative'
 			>
 				{!answerWithoutContext ? (
 					<button
@@ -1662,7 +1662,7 @@ function GPTHome(props:{
 				</button>
 					<div className='overflow-x-auto h-full w-full pt-4 '>
 						<Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
-						<div  className='h-[76vh]'>
+						<div  className='h-[80vh]'>
 							{papers.length && viewerFileUrl ?
 								<Viewer
 								theme={props.currentSettings.darkMode ? 'dark' : 'light'}
