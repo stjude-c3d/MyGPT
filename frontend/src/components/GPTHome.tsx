@@ -8,7 +8,7 @@ import '@react-pdf-viewer/bookmark/lib/styles/index.css';
 import type { RenderBookmarkItemProps } from '@react-pdf-viewer/bookmark'
 import { pageNavigationPlugin } from '@react-pdf-viewer/page-navigation'
 import '@react-pdf-viewer/default-layout/lib/styles/index.css'
-import { PaperAirplaneIcon, Cog6ToothIcon, PaperClipIcon, XMarkIcon, CheckIcon, ArrowsPointingInIcon, ArrowsPointingOutIcon, ChatBubbleLeftRightIcon, DocumentChartBarIcon, BookmarkIcon as BookmarkIcon_, DocumentCheckIcon } from '@heroicons/react/24/outline'
+import { PaperAirplaneIcon, Cog6ToothIcon, PaperClipIcon, XMarkIcon, CheckIcon, ArrowsPointingInIcon, ArrowsPointingOutIcon, ChatBubbleLeftRightIcon, DocumentChartBarIcon, BookmarkIcon as BookmarkIcon_ } from '@heroicons/react/24/outline'
 import { scaleSequential, interpolateRdYlGn } from 'd3'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
