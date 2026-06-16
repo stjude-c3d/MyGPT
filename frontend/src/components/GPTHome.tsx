@@ -1648,7 +1648,7 @@ function GPTHome(props:{
 					>
 						<ArrowsPointingOutIcon className='w-4 h-4' />
 					</button>
-					<DocumentCheckIcon className='w-6 h-6 mt-12 text-nav dark:text-white' />
+					<DocumentChartBarIcon className='w-6 h-6 mt-12 text-nav dark:text-white' />
 					<div className='text-xl mt-4 text-nav dark:text-white [writing-mode:vertical-rl] rotate-180'>Document Viewer</div>
 				</div>
 			) : (
