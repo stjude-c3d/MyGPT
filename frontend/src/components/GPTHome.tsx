@@ -8,7 +8,7 @@ import '@react-pdf-viewer/bookmark/lib/styles/index.css';
 import type { RenderBookmarkItemProps } from '@react-pdf-viewer/bookmark'
 import { pageNavigationPlugin } from '@react-pdf-viewer/page-navigation'
 import '@react-pdf-viewer/default-layout/lib/styles/index.css'
-import { PaperAirplaneIcon, Cog6ToothIcon, PaperClipIcon, XMarkIcon, CheckIcon, ArrowsPointingInIcon, ArrowsPointingOutIcon, ChatBubbleLeftRightIcon, DocumentChartBarIcon, BookmarkIcon as BookmarkIcon_ } from '@heroicons/react/24/outline'
+import { PaperAirplaneIcon, Cog6ToothIcon, PaperClipIcon, XMarkIcon, CheckIcon, ArrowsPointingInIcon, ArrowsPointingOutIcon, ChatBubbleLeftRightIcon, DocumentChartBarIcon, BookmarkIcon as BookmarkIconMyGPT } from '@heroicons/react/24/outline'
 import { scaleSequential, interpolateRdYlGn } from 'd3'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -1510,7 +1510,7 @@ function GPTHome(props:{
 					>
 						<ArrowsPointingOutIcon className='w-4 h-4' />
 					</button>
-					<BookmarkIcon_ className='w-6 h-6 mt-12 text-white' />
+					<BookmarkIconMyGPT className='w-6 h-6 mt-12 text-white' />
 					<div className='text-xl mt-4 text-white [writing-mode:vertical-rl] rotate-180'>Library</div>
 				</div>
 			) : (
