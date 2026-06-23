@@ -18,65 +18,75 @@ export const fetchAndRegisterOllamaModels = async (
 	frontendSettings: any,
 	signal?: AbortSignal
 ): Promise<string[]> => {
-	const response = await fetch(`${process.env.REACT_APP_BACKEND_API}api/get_ollama_models/`, {
-		method: 'POST',
-		signal,
-	})
-	const data = await response.json()
-
-	const llms: string[] = data.models
-		.filter((model: any) => model.quantization_level !== 'F16')
-		.map((model: any) => model.name)
-
-	const llms_object = data.models.map((model: any) => ({
-		name: model.name,
-		size: (model.size * 1e-9).toFixed(2),
-	}))
-
-	const authHeader = getAuthHeader(frontendSettings)
-
-	if (frontendSettings && frontendSettings.django_login && localStorage.getItem('access')?.length) {
-		const registerOptions: RequestInit = {
+	try {
+		const response = await fetch(`${process.env.REACT_APP_BACKEND_API}api/get_ollama_models/`, {
 			method: 'POST',
-			headers: { 'Content-Type': 'application/json', 'Authorization': authHeader },
-			keepalive: true,
-			body: JSON.stringify({ llms: llms_object }),
 			signal,
+		})
+		if (!response.ok) {
+			return []
 		}
-		const response2 = await fetch(`${process.env.REACT_APP_BACKEND_API}api/add_ollama_models/`, registerOptions)
-		if (response2.ok) {
-			const data2 = await response2.json()
-			console.log(data2)
+		const data = await response.json()
+
+		const llms: string[] = data.models
+			.filter((model: any) => model.quantization_level !== 'F16')
+			.map((model: any) => model.name)
+
+		const llms_object = data.models.map((model: any) => ({
+			name: model.name,
+			size: (model.size * 1e-9).toFixed(2),
+		}))
+
+		const authHeader = getAuthHeader(frontendSettings)
+
+		if (frontendSettings && frontendSettings.django_login && localStorage.getItem('access')?.length) {
+			const registerOptions: RequestInit = {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json', 'Authorization': authHeader },
+				keepalive: true,
+				body: JSON.stringify({ llms: llms_object }),
+				signal,
+			}
+			const response2 = await fetch(`${process.env.REACT_APP_BACKEND_API}api/add_ollama_models/`, registerOptions)
+			if (response2.ok) {
+				const data2 = await response2.json()
+				console.log(data2)
+			}
 		}
+
+		const embeddingModels = data.models.filter(
+			(model: any) =>
+				(model.quantization_level === 'F16' && model.family.includes('bert')) ||
+				model.family.includes('nomic-bert')
+		)
+		const embedding_models_object = embeddingModels.map((model: any) => ({
+			name: model.name,
+			size: (model.size * 1e-9).toFixed(2),
+			source: 'ollama',
+		}))
+
+		if (frontendSettings) {
+			const embeddingOptions: RequestInit = {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json', 'Authorization': authHeader },
+				keepalive: true,
+				body: JSON.stringify({ embedding_models: embedding_models_object }),
+				signal,
+			}
+			const response3 = await fetch(`${process.env.REACT_APP_BACKEND_API}api/add_embedding_models/`, embeddingOptions)
+			if (response3.ok) {
+				const data3 = await response3.json()
+				console.log(data3)
+			}
+		}
+
+		return llms
+	} catch (err: any) {
+		if (err?.name !== 'AbortError') {
+			console.warn('fetchAndRegisterOllamaModels: backend unreachable', err)
+		}
+		return []
 	}
-
-	const embeddingModels = data.models.filter(
-		(model: any) =>
-			(model.quantization_level === 'F16' && model.family.includes('bert')) ||
-			model.family.includes('nomic-bert')
-	)
-	const embedding_models_object = embeddingModels.map((model: any) => ({
-		name: model.name,
-		size: (model.size * 1e-9).toFixed(2),
-		source: 'ollama',
-	}))
-
-	if (frontendSettings) {
-		const embeddingOptions: RequestInit = {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json', 'Authorization': authHeader },
-			keepalive: true,
-			body: JSON.stringify({ embedding_models: embedding_models_object }),
-			signal,
-		}
-		const response3 = await fetch(`${process.env.REACT_APP_BACKEND_API}api/add_embedding_models/`, embeddingOptions)
-		if (response3.ok) {
-			const data3 = await response3.json()
-			console.log(data3)
-		}
-	}
-
-	return llms
 }
 
 // POST api/get_dataset_details/

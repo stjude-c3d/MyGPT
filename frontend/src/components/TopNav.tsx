@@ -70,7 +70,7 @@ function TopNav(props:{
           'user': activeAccounts[0].name, 
           'user_email':  activeAccounts[0].username ,
           'isAdmin': isAdmin, 
-          'otherRoles': appRoles.filter((role:any) => role !== 'MyGPTAdmin') 
+          'otherRoles': appRoles?.filter((role:any) => role !== 'MyGPTAdmin') 
         }
         props.loginCallback(user)
       } else if (djangoAuthenticated && djangoUser.user) {

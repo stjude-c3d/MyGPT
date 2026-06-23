@@ -71,6 +71,9 @@ function App() {
         if (data.settings.django_login)
           setShowDisclaimer(true)
 			})
+			.catch(err => {
+				console.warn('frontend_settings: backend unreachable', err)
+			})
 	},[])
 
   //  set currentsettings login to true
@@ -105,6 +108,9 @@ function App() {
             currentSettings.datasets = currentSettings.datasets.filter((d:any)=>d !== 'None')
             setCurrentSettings({...currentSettings, datasets:data.map((d:any)=>d.dataset_name), selectedDataset:data[0].dataset_name, fetchDatasets:false})
           })
+          .catch(err => {
+            console.warn('get_datasets: backend unreachable', err)
+          })
         } 
         else if ((currentSettings.selectedDataset === 'None' || currentSettings.datasetsUpdated === true) && currentSettings.fetchDatasets === true) {
           const requestOptions = {
@@ -134,6 +140,9 @@ function App() {
                 currentSettings.datasets = currentSettings.datasets.filter((d:any)=>d !== 'None')
                 if(data && data.length > 0)
                   setCurrentSettings({...currentSettings, datasets:data.map((d:any)=>d.dataset_name), selectedDataset:data[0].dataset_name, fetchDatasets:false, datasetsUpdated:false})
+            })
+            .catch(err => {
+              console.warn('get_datasets: backend unreachable', err)
             })
           }
         }
