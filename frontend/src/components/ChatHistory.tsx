@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { scaleSequential, interpolateRdYlGn } from 'd3'
-import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
+import { ChevronDownIcon, ChevronUpIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
 import Markdown from 'react-markdown'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
@@ -25,18 +25,19 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 	const [questionDetails, setQuestionDetails]:[any,any] = useState({})
 	const [selectedSource, setSelectedSource] = useState(0)
 	const [showNullAnswer, setShowNullAnswer] = useState(false)
+	const [activeAnswer, setActiveAnswer] = useState(0)
 	const [selectedDataset, setSelectedDataset] = useState(props.dataset)
 	const [searchQuery, setSearchQuery] = useState('')
 	const [hallucionationIndex, setHallucionationIndex] = useState(0)
 
 	useEffect(() => {
-		if (questionDetails.answers && questionDetails.answers[0]) {
-			const hi = questionDetails.answers[0].hallucination_index_by_ml !== 0 ? questionDetails.answers[0].hallucination_index_by_ml : questionDetails.answers[0].hallucination_index_by_equation
+		if (questionDetails.answers && questionDetails.answers[activeAnswer]) {
+			const hi = questionDetails.answers[activeAnswer].hallucination_index_by_ml !== 0 ? questionDetails.answers[activeAnswer].hallucination_index_by_ml : questionDetails.answers[activeAnswer].hallucination_index_by_equation
 			setHallucionationIndex(hi)
 		} else {
 			setHallucionationIndex(0)
 		}
-	}, [questionDetails])
+	}, [questionDetails, activeAnswer])
 
 	useEffect(() => {
 		// fetch chat history from API
@@ -125,42 +126,66 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 				'Answer Relevance Score',
 				'Hallucination Index by equation',
 				'Hallucination Index by ML',
+				'Rating',
+				'Rating Comment',
 				'Dataset',
 				'Number of Sources',
 				'Timestamp'
 			]
 
-			// Create CSV rows
-			const csvData = questionDetails.map((item: any) => [
+		// Create CSV rows - one row per answer
+		const csvData = questionDetails.flatMap((item: any) => {
+			if (!item.details.answers || item.details.answers.length === 0) {
+				return [[
+					item.question_id,
+					`"${item.question.replace(/"/g, '""')}"`,
+					'N/A',
+					'N/A',
+					item.details.llm || 'N/A',
+					item.details.relevance_score || 'N/A',
+					'N/A',
+					'N/A',
+					'N/A',
+					'N/A',
+					'N/A',
+					selectedDataset,
+					item.details.sources ? item.details.sources.length : 0,
+					new Date(item.created_at || Date.now()).toLocaleString()
+				]]
+			}
+			return item.details.answers.map((answer: any) => [
 				item.question_id,
 				`"${item.question.replace(/"/g, '""')}"`,
-				`"${item.details.answers && item.details.answers[0] ? item.details.answers[0].answer.replace(/"/g, '""') : 'N/A'}"`,
-				`"${item.details.answers && item.details.answers[0] ? item.details.answers[0].answer_no_context.replace(/"/g, '""') : 'N/A'}"`,
+				`"${answer.answer.replace(/"/g, '""')}"`,
+				`"${answer.answer_no_context.replace(/"/g, '""')}"`,
 				item.details.llm || 'N/A',
 				item.details.relevance_score || 'N/A',
-				item.details.answers && item.details.answers[0] ? item.details.answers[0].relevance_score : 'N/A',
-				item.details.answers && item.details.answers[0] ? item.details.answers[0].hallucination_index_by_equation : 'N/A',
-				item.details.answers && item.details.answers[0] ? item.details.answers[0].hallucination_index_by_ml : 'N/A',
+				answer.relevance_score,
+				answer.hallucination_index_by_equation,
+				answer.hallucination_index_by_ml,
+				answer.rating === 1 ? 'Correct' : answer.rating === -1 ? 'Incorrect' : 'N/A',
+				`"${answer.user_comment ? answer.user_comment.replace(/"/g, '""') : ''}"`,
 				selectedDataset,
 				item.details.sources ? item.details.sources.length : 0,
 				new Date(item.created_at || Date.now()).toLocaleString()
 			])
+		})
 
-			// Combine headers and data
-			const csvContent = [headers, ...csvData]
-				.map(row => row.join(','))
-				.join('\n')
+		// Combine headers and data
+		const csvContent = [headers, ...csvData]
+			.map(row => row.join(','))
+			.join('\n')
 
-			// Create and download the CSV file
-			const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-			const link = document.createElement('a')
-			const url = URL.createObjectURL(blob)
-			link.setAttribute('href', url)
-			link.setAttribute('download', `chat-history-complete-${selectedDataset}-${new Date().toISOString().split('T')[0]}.csv`)
-			link.style.visibility = 'hidden'
-			document.body.appendChild(link)
-			link.click()
-			document.body.removeChild(link)
+		// Create and download the CSV file
+		const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+		const link = document.createElement('a')
+		const url = URL.createObjectURL(blob)
+		link.setAttribute('href', url)
+		link.setAttribute('download', `chat-history-complete-${selectedDataset}-${new Date().toISOString().split('T')[0]}.csv`)
+		link.style.visibility = 'hidden'
+		document.body.appendChild(link)
+		link.click()
+		document.body.removeChild(link)
 
 			// Reset button state
 			if (button) {
@@ -247,6 +272,7 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 											onClick={() => {
 												setActiveQuestion(originalIndex)
 												setActiveQuestionID(message.question_id)
+												setActiveAnswer(0)
 												setShowNullAnswer(false)
 											}}
 										>
@@ -291,7 +317,7 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 								<>
 									<div className='flex flex-row justify-between font-bold'>
 											{/* <div className='text-white text-sm py-2'>{questionDetails.llm}</div> */}
-										<div>
+										<div className='flex flex-col gap-1'>
 											<select
 												className='text-sm text-nav bg-panel3 dark:bg-panel2-dark dark:text-nav-dark p-1 rounded-md inline-block'
 												value={showNullAnswer ? 'without_context': 'with_context'}
@@ -306,13 +332,32 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 												<option value={'with_context'}>{questionDetails.llm + ' + MyGPT'}</option>
 												<option value={'without_context'}>{questionDetails.llm}</option>
 											</select>
+											{questionDetails.answers.length > 1 && (
+												<div className='flex items-center gap-1 text-white text-xs p-2'>
+													<button
+														onClick={() => setActiveAnswer(a => Math.max(0, a - 1))}
+														disabled={activeAnswer === 0}
+														className='disabled:opacity-30 hover:text-blue-100'
+													>
+														<ChevronLeftIcon className='w-4 h-4'/>
+													</button>
+													<span>Answer {activeAnswer + 1} / {questionDetails.answers.length}</span>
+													<button
+														onClick={() => setActiveAnswer(a => Math.min(questionDetails.answers.length - 1, a + 1))}
+														disabled={activeAnswer === questionDetails.answers.length - 1}
+														className='disabled:opacity-30 hover:text-blue-100'
+													>
+														<ChevronRightIcon className='w-4 h-4'/>
+													</button>
+												</div>
+											)}
 										</div>
 										<div className='text-white text-xs flex flex-col items-end py-2'>
 											<div className='text-white rounded-full text-xs py-1'>
 												Relevance 
-												<span style={{ backgroundColor: ConfidenceScoreColor(questionDetails.answers[0].relevance_score)}} 
-													className= {'py-1 px-2 m-1 rounded-full' + (questionDetails.answers[0].relevance_score > 80 || questionDetails.answers[0].relevance_score < 20 ? ' text-white' : ' text-nav')}>
-													{questionDetails.answers[0].relevance_score + '%'}
+										<span style={{ backgroundColor: ConfidenceScoreColor(questionDetails.answers[activeAnswer].relevance_score)}} 
+											className= {'py-1 px-2 m-1 rounded-full' + (questionDetails.answers[activeAnswer].relevance_score > 80 || questionDetails.answers[activeAnswer].relevance_score < 20 ? ' text-white' : ' text-nav')}>
+											{questionDetails.answers[activeAnswer].relevance_score + '%'}
 												</span>
 											</div>
 											<div className='text-white rounded-full text-xs py-1 mt-1'>
@@ -329,7 +374,7 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 											remarkPlugins={[remarkMath as any]}
 											rehypePlugins={[rehypeKatex as any]}
 										>
-											{showNullAnswer ? questionDetails.answers[0].answer_no_context : questionDetails.answers[0].answer}
+											{showNullAnswer ? questionDetails.answers[activeAnswer].answer_no_context : questionDetails.answers[activeAnswer].answer}
 										</Markdown>
 									</div>
 									<div className='text-white text-sm font-bold pt-4'>

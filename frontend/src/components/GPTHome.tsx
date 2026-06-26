@@ -18,6 +18,7 @@ import { OllamaDirectGenerateStream, OllamaDirectGenerateNoStream } from '../uti
 import { SJRayDirectGenerateStream } from '../utils/SJRayGenerate'
 import { fetchAndRegisterOllamaModels, fetchDatasetDetails, fetchDocuments, fetchSections, addDemoLibraryRequest, fetchContext, saveAnswer, fetchProtectedMediaBlobUrl } from '../utils/GPTHomeAPI'
 import FocusOnDocumentSelect from './DocumentFocusSelect'
+import Feedback from './Feedback'
 
 
 function GPTHome(props:{
@@ -1315,7 +1316,7 @@ function GPTHome(props:{
 										{showNullAnswerIndexes[query.length-i-1] === true? nullAnswers[query.length-i-1] : answers[query.length-i-1].response}
 									</Markdown>
 								</div>
-								{/* <Feedback
+								<Feedback
 									answer={JSON.parse(JSON.stringify(answers[query.length-i-1]))}
 									feedbackReceived={(answers[query.length-i-1].rating && answers[query.length-i-1].rating !== 0) ? true : false}
 									feedbackCallback={(feedback:any)=>{
@@ -1327,7 +1328,7 @@ function GPTHome(props:{
 											},
 											body: JSON.stringify({ 
 												answer_text: answers[query.length-i-1].response,
-												dataset: selectedDataset !== defaultDataset ? selectedDataset : defaultDataset, 
+												dataset: selectedDataset, 
 												rating: feedback.rating,
 												user_comment: feedback.user_comment,
 											})
@@ -1338,7 +1339,7 @@ function GPTHome(props:{
 												console.log(data)
 											})
 									}}
-								/> */}
+								/>
 								{
 								showNullAnswerIndexes[query.length - i - 1] === false && questionRelevancescore[query.length-1] > 0 && sourcePapers.length && sourcePages.length && sourcePapers[query.length-i-1] && sourcePages[query.length-i-1] ?
 									<>

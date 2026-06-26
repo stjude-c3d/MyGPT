@@ -570,7 +570,7 @@ def get_question_details(request):
                 'secondary_rank': source.secondary_rank,
             })
         # check if sources has rank, if yes, sort by rank or sort sources by vector_score and bm25_score
-        if (sources_json[0]['rank'] != 0):
+        if (len(sources_json) > 0 and sources_json[0]['rank'] != 0):
             sources_json = sorted(sources_json, key=lambda x: x['rank'])
         else:
             sources_json = sorted(sources_json, key=lambda x: (x['vector_score'] if 'vector_score' in x else 0) + (x['bm25_score'] if 'bm25_score' in x else 0), reverse=True)
@@ -582,6 +582,8 @@ def get_question_details(request):
                 'hallucination_index_by_equation': answer.hallucination_index_by_equation,
                 'hallucination_index_by_ml': answer.hallucination_index_by_ml,
                 'answer_no_context': answer.answer_no_context_text,
+                'rating': answer.rating,
+                'rating_comment': answer.user_comment,
             })
         # Determine the color code based on distance or score
         for source in sources_json: 
@@ -856,7 +858,7 @@ def feedback_for_answers(request):
         json_request = JSONParser().parse(request)
         answer_text = json_request['answer_text']
         rating = json_request['rating']
-        user_comment = json_request['user_comment']
+        user_comment = json_request['user_comment'] if 'user_comment' in json_request else ''
         answer = Answer.objects.get(answer_text=answer_text)
         answer.rating = rating
         answer.user_comment = user_comment

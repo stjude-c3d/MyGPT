@@ -15,9 +15,9 @@ model_types = (
 )
 
 rating_types = (
-	(1, 'positive'),
-	(0, 'neutral'),
-	(-1, 'negative'),
+	(1, 'correct'),
+	(0, 'n/a'),
+	(-1, 'incorrect'),
 )
 
 question_types = (
