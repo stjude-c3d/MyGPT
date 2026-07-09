@@ -2,6 +2,11 @@
 
 - [Asking questions](#asking-questions)
 - [MyGPT answers](#mygpt-answers)
+- [Confidence metrics](#confidence-metrics)
+- [Library Creation](#library-creation)
+- [Installation](#installation)
+- [Customization](#customization)
+- [General developers](#general-developers)
 
 ## Asking questions
 
@@ -62,3 +67,113 @@ No, MyGPT does not use any personal information. It uses login information for h
 
 ### 13.	Is there chat history available anywhere?
 Yes, MyGPT has a “History” menu to access chat history, which is available for any public library or your libraries after logging in.
+
+## Confidence metrics
+
+### 14.	What are confidence metrics?
+**Confidence metrics** are quantitative scores that MyGPT uses to gauge the trustworthiness of a generated answer.
+
+* **QRS (Question Relevance Score)** – measures how well the user’s question matches the content in the document library. A high QRS indicates the question is on‑topic and likely supported by retrieved text.
+
+* **ARS (Answer Relevance Score)** – evaluates how closely the answer aligns with the retrieved passages. A higher ARS indicates that the response is grounded in the source material.
+
+* **HI (Hallucination Index)** – identifies potential hallucinations. A high HI signals that the answer may be largely generated from the LLM’s internal knowledge rather than the library, especially when QRS and ARS are low.
+
+Together, these metrics help users determine whether an answer is supported by actual documents or might be a hallucinated response, enabling better verification and trust in the system.
+
+### 15.	How are question relevance scores (QRS) and answer relevance scores (ARS) calculated, and how to interpret them?
+**How QRS and ARS are computed**
+
+| Score | Formula |
+|-------|----------------------|
+| **Question relevance scores (QRS)** | $$QRS=\left(a\times\frac{\sum_{i=1}^{k}Q_{sem,i}}{k}\right)+\left(b\times\frac{\sum_{i=1}^{k}Q_{key,i}}{k}\right)+\left(c\times\frac{\sum_{i=1}^{k}Q_{rerank,i}}{k}\right)$$ |
+| **Answer relevance scores (ARS)** | $$ARS=\left(x\times\frac{\sum_{i=1}^{k}A_{sem,i}}{k}\right)+\left(y\times\frac{\sum_{i=1}^{k}A_{key,i}}{k}\right)+\left(z\times\frac{\sum_{i=1}^{k}A_{rerank,i}}{k}\right)$$ |
+
+- $Q_{\text{sem}}, A_{\text{sem}}$: semantic similarity scores (vector-search).
+- $Q_{\text{key}}, A_{\text{key}}$: keyword/BM25 scores.
+- $Q_{\text{rerank}}, A_{\text{rerank}}$: cross-encoder rerank scores (0-1).
+
+The sums are taken over the top‑k retrieved chunks that form the “golden context”.
+
+**Interpretation**
+
+| Score | Typical range | What it indicates |
+|-------|---------------|-------------------|
+| **High QRS** (close to 1) | Question is well‑matched to the library. | The library likely contains the needed information. |
+| **Low QRS** (< 0.3) | Question poorly matches the library. | Information may be missing or irrelevant. |
+| **High ARS** (close to 1) | Answer heavily relies on retrieved context. | Generated answer is grounded in the documents. |
+| **Low ARS** (< 0.3) | Answer uses little or no retrieved content. | Possible hallucination; verify against source. |
+
+The Hallucination Index (HI) combines QRS and ARS: low QRS/ARS → high HI, flagging potential hallucinations. Use these metrics to decide whether a generated answer should be trusted or cross‑checked with the documents.
+
+### 16.	How is the hallucination index (HI) calculated, and how to interpret it?
+Hallucination Index (HI) is a single‑score metric that blends the Question Relevance Score (QRS) and the Answer Relevance Score (ARS) to flag how much an LLM’s response may be “hallucinated” (i.e., not supported by the retrieved library).
+
+$$HI = 1 - \left(\frac{p \times QRS}{p + q}\right) - \left(\frac{q \times ARS}{p + q}\right)$$
+
+p and q are weighting factors that can be determined by global sensitivity analysis.
+
+- **HI ≈ 0** – high QRS and ARS → the answer is strongly grounded in the library; hallucination unlikely.
+- **HI close to 1** – low QRS or ARS → the answer likely relies on the LLM’s internal knowledge rather than the document set; higher risk of hallucination.
+
+Thus, a lower HI signals a trustworthy, evidence‑based reply, while a higher HI warns that the response may contain unsupported or fabricated content.
+
+### 17.	Can I change the calculations of QRS, ARS, and HI?
+
+Yes, the default formulas are provided in the paper and the software, but they are not hard‑coded as the only possible choice. The weights (a,b,c) to calculate QRS and (x,y,z) to calculate ARS were chosen by a global‑sensitivity analysis that maximized PR‑AUC. If you prefer different weighting, you can re‑run the same heat‑map optimization with your own dataset or simply plug in new values from the chat settings menu.
+
+<img src='./images/MyGPT_chat_setting.png' width='600px' style='vertical-align: top;' alt='MyGPT chat without documents'>
+
+### 18.	I am asking a question, and it’s about a topic in the library, but it gives me 0% relevance. Is it possible to relax the cutoff values for QRS?
+
+Yes—MyGPT allows you to lower the QRS threshold so that documents with weaker matches can be retrieved.
+
+Here’s how:
+1. **Re‑phrase the question**: A longer or more specific query often yields higher semantic scores.
+
+2. **Adjust the cutoff parameters**: In the MyGPT settings, you can change the weights (a, b, c). Setting c=0 removes reranking and provides all chunks from semantic and keyword searches. Or you can increase QCworst (the minimum cosine similarity allowed) and Aworst (the lowest keyword score accepted). Raising these values will relax the filter and bring more chunks into consideration.
+
+3. **Try a different embedding model**: Some models encode domain terms better; switching to an alternative can improve relevance scores for your topic.
+
+If, after these steps, the QRS remains 0 % and no relevant passages appear, it’s likely that the library simply does not contain the needed information. In that case, you may need to add additional documents or verify that the content is present in the existing files.
+
+
+### (Following will be updated soon)
+
+## Library creation
+
+### 19.	What are the options for creating a library?
+### 20.	What document types are supported by MyGPT?
+### 21.	What is the library size limit supported by MyGPT?
+### 22.	How much time it takes to upload a library? 
+### 23.	How should I format my document library?
+### 24.	Can MyGPT help me with library creation, management, or library expansion related to topics covered by the library?
+### 25.	If a library is shared with other users, can they see my chat history?
+### 26.	If I delete the library, will it delete chat history as well?
+
+## Installation
+
+### 27.	What are the options to install and use MyGPT?
+### 28.	What is the minimum requirement for installing MyGPT on a laptop?
+### 29.	How can I check if my computer/laptop is powerful enough to use MyGPT?
+### 30.	Is there any advantage to using MyGPT when installing it on my computer?
+### 31.	Is there any of using MyGPT by installing it on the server?
+### 32.	How much will be hosting MyGPT on the cloud with minimum requirements cost?
+### 33.	Is it possible to reduce hosting cost by sharing any infrastructure of MyGPT without compromising privacy?
+### 34.	Where are the PDFs I have uploaded are located?
+### 35.	Does MyGPT send any data to any external services or APIs?
+### 36.	Does MyGPT work offline?
+
+## Customization
+
+### 37.	Which LLMs I can use with MyGPT?
+### 38.	Can I use OpenAI or Gemini LLMs with MyGPT?
+### 39.	Which are the embedding models I can use with MyGPT?
+### 40.	What are the customizations offered by MyGPT?
+### 41.	Can you suggest any ideal customizations for MyGPT?
+
+## General developers
+
+### 42.	Is there documentation on APIs available from MyGPT?
+### 43.	How do I report a bug or feature for MyGPT?
+### 44.	How can I contribute to the development of MyGPT?
