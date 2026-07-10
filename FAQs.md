@@ -126,7 +126,7 @@ Yes, the default formulas are provided in the paper and the software, but they a
 
 ### 18.	I am asking a question, and it’s about a topic in the library, but it gives me 0% relevance. Is it possible to relax the cutoff values for QRS?
 
-Yes—MyGPT allows you to lower the QRS threshold so that documents with weaker matches can be retrieved.
+Yes, MyGPT allows you to lower the QRS threshold so that documents with weaker matches can be retrieved.
 
 Here’s how:
 1. **Re‑phrase the question**: A longer or more specific query often yields higher semantic scores.
@@ -137,19 +137,71 @@ Here’s how:
 
 If, after these steps, the QRS remains 0 % and no relevant passages appear, it’s likely that the library simply does not contain the needed information. In that case, you may need to add additional documents or verify that the content is present in the existing files.
 
-
-### (Following will be updated soon)
-
 ## Library creation
 
 ### 19.	What are the options for creating a library?
+
+**Options for creating a MyGPT library**
+
+1. **Direct upload through MyGPT**
+- *Simple upload*: Add PDFs, Word files, etc., with default preprocessing.
+- *Advanced settings*: Customize the chunk size/method, overlap, embedding model, distance function, BM25, reranker, and other retrieval parameters before building the library.
+
+2. **Import from a Zotero collection**
+- Create or use an existing private/shared Zotero library of publications.
+- Use MyGPT’s “Add Zotero collection” API to pull that collection into a new dataset/library within MyGPT.
+
+Both methods produce a pre‑processed, searchable library that can be accessed from the MyGPT home page and used for RAG queries.
+
 ### 20.	What document types are supported by MyGPT?
+
+MyGPT supports PDFs, DOC files ('.doc', '.docx'), and TEXT (.txt) files. 
+MyGPT can only extract text from the PDF and DOC files; it can't answer questions from images in the files.
+
 ### 21.	What is the library size limit supported by MyGPT?
-### 22.	How much time it takes to upload a library? 
+
+We have tested MyGPT on 800 PDFs totaling 10,000 pages. MyGPT has an upper limit of 10 GB for uploads and 10,000 files. The large library size will require more time for uploading, but the retrieval and answer-generation steps will be unaffected by library size.
+
+### 22.	How much time does it take to upload a library?
+
+The upload time varies with the number of pages in the library and the processing hardware.
+
+| Device | Pages | PDFs | Chunks | Upload | Retrieval (1st) | Retrieval (Avg) | Generation (1st) | Generation (Avg) | E2E (Avg) |
+|----------|------:|----------:|--------------------------------:|------------|---------------------:|---------------------:|----------------------:|----------------------:|----------------------:|
+| Mac Laptop (M1 chip) | 10 | 1 | 70 | 2m10s | 1.28s | 1.06s | 6.39s | 2.99s | 11s |
+| Mac Laptop (M1 chip) | 100 | 2 | 235 | 2m33s | 1.18s | 0.62s | 4.16s | 6.03s | 17s |
+| Mac Laptop (M1 chip) | 1000 | 4 | 3211 | 5m53s | 0.73s | 0.59s | 3.16s | 3.9s | 12s |
+| Mac Laptop (M1 chip) | 10000 | 791 | 58869 | 95m19s | 1.94s | 0.64s | 5.52s | 5.82s | 17s |
+| Mac Laptop (M4 chip) | 10 | 1 | 70 | 2.05s | 0.38s | 0.225s | 0.84s | 1.205s | 4.5s |
+| Mac Laptop (M4 chip) | 100 | 2 | 235 | 4.9s | 0.10s | 0.0775s | 2.04s | 2.295s | 4.5s |
+| Mac Laptop (M4 chip) | 1000 | 4 | 3211 | 1m18s | 0.14s | 0.11333s | 1.9s | 2.049s | 4.2s |
+| Mac Laptop (M4 chip) | 10000 | 791 | 58869 | 23m51s | 0.69s | 0.651s | 1.86s | 2.124s | 5.0s |
+| SJ VM | 10 | 1 | 70 | 11s | 5.63s | 0.80s | 11.22s | 0.51s | 11s |
+| SJ VM | 100 | 2 | 235 | 13s | 0.77s | 0.79s | 1.2s | 1.07s | 6.75s |
+| SJ VM | 1000 | 4 | 3211 | 2m12s | 0.68s | 0.73s | 1.16s | 1.49s | 12.6s |
+| SJ VM | 10000 | 791 | 58869 | 46m2s | 0.77s | 0.85s | 1.19s | 1.39s | 8s |
+
+Thus, a small library of about 10 pages can be uploaded in roughly two minutes on an M1 Mac, while a larger 1000‑page library may take over one and a half hours on the same machine. Upload times drop dramatically when using higher‑performance GPUs such as the M4 or A100. The exact duration depends on your hardware and library size.
+
 ### 23.	How should I format my document library?
+
+MyGPT accepts all kinds of documents, such as Biomedical literature, SOPs, or policies. We recommend not using scanned copies of documents, as MyGPT doesn't have OCR capability to extract text from photocopies.
+
 ### 24.	Can MyGPT help me with library creation, management, or library expansion related to topics covered by the library?
+
+No, MyGPT doesn't allow creation or expansion of a library. It's the user's responsibility to collect all the documents they want to upload to MyGPT. Users can use third-party tools such as Zotero or EndNote to collect documents and PDFs, then either use MyGPT's Zotero plugin to add a Zotero library or export an EndNote library and upload the documents to MyGPT.
+
 ### 25.	If a library is shared with other users, can they see my chat history?
+
+Yes, chat history is tied to the library, not to individual users.
+
+When a library is marked public (or “shared” with other users), anyone with access to that library who logs in to MyGPT can view its chat history through the History menu. If the library remains private to you, only your own account will see the history. In short: shared/public libraries expose their chat history to all users who have permission; private libraries keep it visible only to you.
+
 ### 26.	If I delete the library, will it delete chat history as well?
+
+Yes. When you delete a library, MyGPT removes all of its documents, vector embeddings, tokenizer, and associated chat history from the backend database.
+
+### (Following will be updated soon)
 
 ## Installation
 
@@ -175,5 +227,23 @@ If, after these steps, the QRS remains 0 % and no relevant passages appear, it
 ## General developers
 
 ### 42.	Is there documentation on APIs available from MyGPT?
+
+Yes. The documentation is embedded in the context you provided and lists several MyGPT REST‑API endpoints, along with their required parameters and expected responses.
+The documentation is available at https://github.com/stjude-c3d/MyGPT/blob/main/development.md
+
+Key APIs include:
+| Endpoint | Purpose | Required keys (request) |
+|----------|---------|------------------------|
+| /api/get_documents/ | Retrieve documents for a dataset | dataset, user_email, user_group |
+| /api/get_context/ | Get retrieval context (RAG) | text, model_type, dataset, new_conversation, previous_query, no_context, use_default_qrs, question_best_distance, question_worst_distance, maximum_chunks_count |
+| /api/save_answer/ | Persist an answer and its metrics | question_text, answer_text, answer_no_context_text, model_type, dataset, no_context, use_default_ars, answer_best_distance, answer_worst_distance, QRS_p, ARS_q, use_default_hi, temperature, top_k, top_p |
+
+Each request/response shape is shown, including fields like context, relevance_score, semantic_score, keyword_score, and sources. The documentation also describes optional parameters (e.g., focused_document_titles, translated_text) and notes on dataset types (papers or videos). This should give you a clear reference for using MyGPT’s APIs.
+
 ### 43.	How do I report a bug or feature for MyGPT?
+
+If you come across any bug or error, please report it in the [issues](https://github.com/mb-group/MyGPT_public/issues) section.
+
 ### 44.	How can I contribute to the development of MyGPT?
+
+If you need access to the MyGPT source code to help with the development process, please contact Jaimin Patel (Email: jaimin.patel@stjude.org) or the appropriate person at St. Jude Children's Research Hospital.
