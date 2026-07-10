@@ -122,7 +122,7 @@ Thus, a lower HI signals a trustworthy, evidence‑based reply, while a higher H
 
 Yes, the default formulas are provided in the paper and the software, but they are not hard‑coded as the only possible choice. The weights (a,b,c) to calculate QRS and (x,y,z) to calculate ARS were chosen by a global‑sensitivity analysis that maximized PR‑AUC. If you prefer different weighting, you can re‑run the same heat‑map optimization with your own dataset or simply plug in new values from the chat settings menu.
 
-<img src='./images/MyGPT_chat_setting.png' width='600px' style='vertical-align: top;' alt='MyGPT chat without documents'>
+<img src='./images/MyGPT_chat_setting.png' width='800px' style='vertical-align: top;' alt='MyGPT chat without documents'>
 
 ### 18.	I am asking a question, and it’s about a topic in the library, but it gives me 0% relevance. Is it possible to relax the cutoff values for QRS?
 
@@ -201,28 +201,202 @@ When a library is marked public (or “shared” with other users), anyone with 
 
 Yes. When you delete a library, MyGPT removes all of its documents, vector embeddings, tokenizer, and associated chat history from the backend database.
 
-### (Following will be updated soon)
 
 ## Installation
 
-### 27.	What are the options to install and use MyGPT?
+### 27.	What are the options for installing and using MyGPT?
+
+MyGPT can be installed in the following environments:
+
+- [Personal Computer](#personal-computer)
+- [Server/VM with GPU](#server-or-vm-with-gpu)
+- [Cloud services (Azure)](#cloud-services-azure)
+
+#### Personal Computer
+
+MyGPT uses Ollama as the LLM server and requires at least 8 GB RAM (16 GB recommended for better response time) and 10 GB of disk space.
+Ollama provides direct installation support for macOS and Linux. For Windows, use Docker to run Ollama.
+
+To run the pipeline on each platform, follow these instructions:
+
+- Mac
+  - [Basic Installation](./installation/macOS/README.md)
+
+- Linux
+  - [Basic Installation](./installation/linux/README.md)
+
+- Windows
+  - [Basic Installation](./installation/windows/README.md)
+
+These instructions are simple to follow, and you can modify the bash scripts as needed.
+
+#### Server or VM with GPU
+
+MyGPT can be hosted on a server or VM with a GPU. For this setup, we recommend hosting the User Interface (UI), Backend server, and Ollama (LLM server) on three separate VMs. The Ollama VM should have a GPU with CUDA installed.
+
+To run the pipeline on a VM/server, follow:
+
+- [Linux Server Installation](./installation/vm/README.md)
+
+#### Cloud services (Azure)
+
+MyGPT can be hosted on any cloud provider, and Azure is provided as an example deployment. For this setup, we recommend hosting the User Interface (UI), Backend server, and Ollama (LLM server) on three separate VMs. The Ollama VM should have a GPU with CUDA installed.
+
+To run the pipeline on Azure, follow:
+
+- [Azure Installation](./installation/azure/README.md)
+
 ### 28.	What is the minimum requirement for installing MyGPT on a laptop?
+
+The minimum specs for installing MyGPT on a laptop are:
+
+- **CPU:** ≥ 8 cores
+- **RAM:** ≥ 16 GB (the pipeline can run with 8 GB, but 16 GB is recommended for better response time)
+- **GPU:** Required (any GPU that supports the chosen LLM via Ollama)
+- **Storage:** ≈ 10 GB of free space
+
+These are the baseline requirements listed in the installation documentation.
+
 ### 29.	How can I check if my computer/laptop is powerful enough to use MyGPT?
+
+The limitation of running MyGPT on personal devices is the GPU and RAM.
+To check if your lapotp has enough resources to run Ollama, you can run following command:
+
+```
+curl -o /dev/null -s -w 'Total: %{time_total}s\n' http://localhost:11434/api/generate -d '{"model": "llama3", "stream": false, "prompt": "Despite the diversity among GPCRs, are there similarities in their activation pathways?", "system":"Use the following information to answer the question in less than 200 words, try not to use anything else: [tipsychotics). GPCR activation is facilitated by extracellular ligands, and leads to the recruitment of intracellular G proteins 3,6. Structural rearrangements of residue contacts in the transmembrane domain serve as ‘activation pathways’ that connect the ligand- binding pocket to the G protein-coupling region within the receptor. How similar are these activation pathways across different class A GPCRs? Here, we analysed 27 GPCRs from diverse subgroups for which structures of active and/or inactive states are available. We show that despite the diversity in activation pathways between receptors, the pathways converge near the G protein- coupling region. This convergence is mediated by a strikingly conserved structural rearrangement of, eptor activation are broadly similar (e.g. contraction of ligand binding site, opening of the cytosolic side due to relocation of TM6). However, receptor activation is mediated by diverse ligands and hence some aspects of ligand-induced GPCR activation must necessarily be receptor-specific. How similar are the activation pathways across different receptors? We carried out a comprehensive comparison of residue contacts of inactive and active state structures. Structural equivalence for residues across the different GPCRs was assigned using the GPCRdb numbering scheme 19 from GPCRdb 20 (www.gpcrdb.org ) (Methods). A contact between a pair of residues is defined to exist if the inter-atomic distance between any two atoms across the res, t reconsideration of the mechanisms involved in cellular signaling diversiﬁcation. Despite their large numbers, GPCRs can only signal through the same limited number of Gproteins that they can activate. Previous studies indicated that signaling diversity is in part dictated by a combination of G pro- teins activated by individual GPCRs ( Inoue et al., 2019 ;Masuho (C) G a-selectivity ﬁngerprints of RGS13 WT (left), RGS18 WT (right), and the chimera (center). (D) G a-selectivity bar codes of RGS8 WT, RGS14 WT, and the RGS8/14-F chimera. (E) Ga-selectivity ﬁngerprints of RGS8 WT (left), RGS14 WT (right), and the RGS8/14-F chimera. Plotted values are means ±SEMs of 3 independent experiments. The PDB accession number 1AGR is used in (B) and (D), Diverse activation pathways in class A GPCRs converge near the G protein-coupling region A. J. Venkatakrishnan1,6,*, Xavier Deupi2, Guillaume Lebon3, Franziska M. Heydenreich2,4, Tilman Flock1, Tamara Miljus2,4, Santhanam Balaji1, Michel Bouvier5, Dmitry B. Veprintsev2,4, Christopher G. Tate1, Gebhard F. X. Schertler2,4, and M. Madan Babu1,* 1MRC Laboratory of Molecular Biology, Francis Crick Avenue, Cambridge CB2 0QH, United Kingdom 2Paul Scherrer Institute, Villigen, Switzerland 3Institut de Génomique Fonctionnelle, CNRS UMR 5203, INSERM U1191, Université Montpellier, Montpellier, France 4Department of Biology, ETH Zurich, Wolfgang-Pauli-Str. 27, Zurich, Switzerland 5Institute for Research in Immunology and Cancer, University of Mo, uscarinic receptor (M2R) 11, nucleoside-activatable A 2A receptor (A 2AR)12, and peptide-activatable µ-opioid receptor (µOR) 10. The remaining structures have been determined only in either inactive or active states. The availability of structures of GPCRs from divergent subgroups (as low as ~20% sequence identity 18) that are bound to chemically diverse ligands and known to couple to different G proteins, allowed us to investigate activation pathways across class A GPCRs. Given that the GPCRs are structurally similar and activate a small set of G proteins, some structural aspects of receptor activation are broadly similar (e.g. contraction of ligand binding site, opening of the cytosolic side due to relocation of TM6). However, rece, ic residue contacts that mediate the convergence of activation pathways across class A GPCRs. Because the microenvironment (i.e. surrounding residues/second shell residues) in which such rearrangement takes place diverges between receptor families, the detailed mechanism by which this common step is facilitated by diverse ligands is likely to be distinct for different sets of GPCRs. Remarkably, despite such differences, we find that the activation pathways ultimately converge to a common and very specific set of contact rearrangements between topologically equivalent residues near the G protein-coupling region. Future studies aimed at investigating residues at and around these positions can help uncover the unique steps that lead to]"}'
+```
+
+This will print the total time it might take to run typical MyGPT queries. You can run the same command multiple times to get the average time. Ollama generally loads the model into memory, so the first query might take some time to run. But subsequent queries should be faster.
+
+The output should look like this:
+
+```
+Total: 9.975889s
+```
+
+If it's taking more than a minute to run, your laptop might not have enough resources to run Ollama.
+
+
 ### 30.	Is there any advantage to using MyGPT when installing it on my computer?
-### 31.	Is there any of using MyGPT by installing it on the server?
-### 32.	How much will be hosting MyGPT on the cloud with minimum requirements cost?
+
+Yes. Installing MyGPT locally gives several clear benefits:
+- **Data privacy & security**: All documents remain on your machine or internal network; no confidential information is sent to third‑party servers, reducing the risk of leakage and enabling deployment behind a firewall.
+- **Customizability**: You can choose the best‑performing LLMs, embedding models, distance functions, and fine‑tune thresholds (QRS/ARS) to match your specific library or domain needs.
+- **Ease of installation**: A single script orchestrates pre‑built Docker images, simplifying installation and maintenance; no complex debugging is required.
+- **Offline operation**: The entire RAG pipeline runs locally, so you can use it even without an internet connection.
+
+These advantages make local MyGPT a practical, secure, and cost‑effective choice for many users.
+
+### 31.	Is there any advantage of using MyGPT by installing it on the server?
+
+Yes. Installing MyGPT on a server gives several clear benefits that are highlighted in the documentation:
+1. **Centralized, secure deployment**: A server‑based installation can be kept behind a firewall, eliminating the need to send confidential documents to third‑party cloud services and reducing the risk of data leakage.
+2. **Scalability for many users**: For departments, institutions, or industry groups with dozens of users (e.g., 40 team members on an Nvidia DGX‑1), hosting MyGPT on a server allows all users to share the same GPU resources and LLM model, which is more efficient than each user running it locally.
+3. **Cost‑effectiveness**: The server can run small- or medium‑sized LLMs (e.g., Llama3, Gemma4) on commodity hardware or cloud VMs, often at lower cost than commercial cloud‑hosted LLM services.
+4. **Simplified maintenance**: MyGPT can be started using prebuilt Docker images; a single installation script handles environment setup, allowing system administrators to manage updates and backups centrally.
+5. **Performance gains**: A server with a GPU (e.g., RTX 4090 or A100) delivers faster inference than most personal laptops, improving response times for all users.
+
+In short, a server installation offers secure data handling, shared resources for many users, lower operating costs, easier maintenance, and better performance compared to running MyGPT on individual devices.
+
+### 32.	How much will it cost to host MyGPT on the cloud with minimum requirements cost?
+
+We have hosted a MyGPT instance on Azure, with an LLM server VM (NC8as T4 v3 - 8 vCPUs, 56 GB RAM) at $548.96/month and backend/frontend VM (E4ads v5 - 4 vCPUs, 32 GB RAM) at $325.58/month. This and similar estimates and configurations are in the following table.
+
+| Cloud Provider | Infrastructure | GPU | Avg. Cost per Month (USD) |
+|---------------|----------------|-----|--------------------------:|
+| Azure | 24 vCPUs, 220 GB RAM | 1 Nvidia A100 Tensor Core | $2,681.29 |
+| Azure | 8 vCPUs, 56 GB RAM | 1 Nvidia T4 Tensor Core | $548.96 |
+| Google | 12 vCPUs, 85 GB RAM | 1 Nvidia A100 Tensor Core | $2,682.57 |
+| Google | 8 vCPUs, 30 GB RAM | 1 Nvidia T4 Tensor Core | $374.03 |
+| Google | 4 vCPUs, 16 GB RAM | 1 Nvidia L4 Tensor Core | $516.99 |
+
 ### 33.	Is it possible to reduce hosting cost by sharing any infrastructure of MyGPT without compromising privacy?
-### 34.	Where are the PDFs I have uploaded are located?
+
+Yes, MyGPT uses third-party software- Ollama- as an LLM server to host and infer LLMs for the RAG pipeline. We don't store chats or PDFs to the LLM server. This component can be shared with several instances of MyGPT or other AI applications. Sharing this resource will not compromise data security or privacy.
+
+### 34.	Where are the PDFs I have uploaded located?
+
+The PDFs you upload to MyGPT are stored locally on the machine (or server) where MyGPT runs. When you add a document, MyGPT creates a private or shared “library” that stores the file in the backend and automatically splits it into chunks. Those chunks are then converted into vectors by the chosen embedding model (e.g., nomic‑embedding‑text or multi‑qa‑MiniLM‑L6‑cos‑v16) and stored in the Chroma vector database for fast retrieval.
+
 ### 35.	Does MyGPT send any data to any external services or APIs?
+
+No. MyGPT never sends your chat or document data to external services or APIs. All embeddings are generated locally, and the vector store is kept in a local Chroma database. MyGPT does not use the internet or any external API services to obtain information for answering questions, nor does it rely on LLM training data or personal user information as its knowledge base.
+
 ### 36.	Does MyGPT work offline?
+
+Yes, MyGPT is designed for offline use; it can be installed locally on a laptop, personal computer, or an Edge AI device such as the NVIDIA Jetson Orin Nano. The pipeline runs entirely with local LLMs (e.g., Llama 3.2 1b/3b, Gemma 2b) and does not rely on external APIs or internet access to retrieve information. MyGPT does not use the internet or any external API services, and it can handle documents offline, making it suitable for remote or air‑gapped environments.
 
 ## Customization
 
-### 37.	Which LLMs I can use with MyGPT?
-### 38.	Can I use OpenAI or Gemini LLMs with MyGPT?
+### 37.	Which LLMs can I use with MyGPT?
+
+MyGPT can run any open‑source LLM that is available through Ollama (or via the command‑line interface). The most commonly used models are listed below:
+
+- **Small, edge‑friendly**: ideal for Jetson Orin Nano or other low‑power devices *Llama3.2* 1 b / 3 b, *Gemma2* 2 b, *DeepSeek‑R1* 1.5 b
+
+- **Mid‑range**: good balance of speed and accuracy. *Gpt‑oss*:20 b (recommended for personal laptops), *Llama2*, *Gemma*, *Vicuna*, *Mistral*
+
+- **Large, high‑performance**: for servers or cloud deployments, *Gpt‑oss*:120 b, plus any of the 100+ LLMs available on Ollama’s public catalog
+
+MyGPT’s UI lists all installed models and lets you switch between them in the RAG pipeline or in “Direct chat with GPTs.” You can also add custom models via the GitHub repository instructions ([https://github.com/mb-group/MyGPT_public](https://github.com/mb-group/MyGPT_public)).
+
+### 38.	Can I use OpenAI, Claude, or Gemini LLMs with MyGPT?
+
+MyGPT is designed to run entirely locally and does not rely on any external API services. It uses pre‑built Docker images with open‑source LLMs that can be installed on a laptop, an edge device, an institutional server, or a cloud VM. So, MyGPT cannot directly call OpenAI, Claude, Gemini, or other commercial LLM APIs.
+
 ### 39.	Which are the embedding models I can use with MyGPT?
+
+MyGPT can use any open‑source embedding model that is available through Hugging Face or Ollama. 
+Here are some of the notable embedding models recommended by us:
+
+| Model | Source / Notes |
+|----------|---------|
+| **nomic‑embed‑text** (default) | Hosted via Ollama/Hugging Face; shown to perform best overall. |
+| **nomic‑embed‑text‑v2‑moe** | Multilingual variant, useful for non‑English documents.**bge‑m3**Multilingual embedding model from Hugging Face. |
+| **Paraphrase‑Multilingual** | Another multilingual option available on Hugging Face/Ollama. |
+| **multi‑qa‑MiniLM‑L6‑cos‑v1** |Default sentence‑transformer in the Chroma DB; can be chosen by the user.|
+| **MedCPT‑query‑encoder** | Domain‑specific biomedical model trained on PubMed query–article pairs. |
+
 ### 40.	What are the customizations offered by MyGPT?
+
+All of these components of MyGPT are modular; users can replace or tweak them through the MyGPT user interface at the pre‑processing, real‑time Q&A, and generation steps.
+
+- **Pre‑processing (chunking)**: 
+    - Fixed‑size chunking or document‑structure‑preserving recursive chunking. 
+    - Adjustable chunk overlap (number of characters shared between consecutive chunks)
+- **Embedding & retrieval**: 
+    - Choice of embedding model (e.g., from MTEB leaderboard)
+    - Selection of distance function for semantic search
+    - Vector database configuration and keyword‑search methods
+- **Reranking / relevance**:  
+    - Reranker models to refine retrieved passages
+    - Relevancy scoring mechanisms
+- **Generation**: 
+    - Choice of LLM (e.g., from Chatbot Arena leaderboard)
+    - Creativity parameters (temperature, top‑k/p)
+- **Context protocol**: 
+    - MCP (Model Context Protocol) settings for controlling context length and format
+- **Evaluation & transparency**: 
+    - Confidence metrics (QRS, ARS, HI scores) displayed with source citations
+    - Ability to swap any component via the UI
+
+<img src='./images/MyGPT_upload_menu.png' width='800px' style='vertical-align: top;' alt='MyGPT upload menu'></br>
+
+
+<img src='./images/MyGPT_chat_setting.png' width='800px' style='vertical-align: top;' alt='MyGPTchat setting'>
+
+
 ### 41.	Can you suggest any ideal customizations for MyGPT?
+
+The following settings strike a balance among performance, privacy, and resource usage while keeping MyGPT highly accurate across both public and private document libraries.
+
+1. **LLM selection**: Pick a top‑performing model from the Chatbot Arena leaderboard (e.g., GPT‑oss:20b or equivalent).
+2. **Embedding model**: Use a high‑ranking MTEB model such as *nomic‑embedding‑text* (hosted via Ollama) or *multi‑qa‑MiniLM‑L6‑cos‑v16* from the Chroma database. For multilingual use cases, use an appropriate embedding model, such as **nomic-text-v2-moe**.
+3. **BM25**: Use BM25 for better keyword search; it's not computationally expensive and is useful for data queries or keyword-search questions.
+4. **Chunking** – Standard chunking usually suffices; advanced semantic chunking is computationally heavy and offers little extra accuracy. We recommand 1000 characters length for fixed-size chunking and use overlap for better accuracy with retrieval.
+5. **Relevance tuning** – Adjust QRS/ARS cut‑off values and raise QCworst/Aworst thresholds to pull in more context when needed.
+6. **Reranking & scoring** – Enable the built‑in reranker (qnli-electra-base) or switch to a multilingual reranker (gte-multiligual-reranker).
+7. **Creativity settings** – Set creativity parameters according to your use case (low for factual queries, higher for brainstorming).
 
 ## General developers
 
