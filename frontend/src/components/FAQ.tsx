@@ -8,6 +8,7 @@ interface FAQProps {
 const FAQ = (props:FAQProps) =>{
 
 	const [activeCategory, setActiveCategory] = useState<string | null>('Asking Questions');
+	const [expandedImage, setExpandedImage] = useState<{ src: string; alt: string } | null>(null);
 	return (
 		// create floating panel with opque background
 		<div className='fixed inset-0 z-50 bg-black bg-opacity-70 flex items-center justify-center'>
@@ -41,14 +42,23 @@ const FAQ = (props:FAQProps) =>{
 					<div className='text-nav dark:text-nav-dark p-2 mt-2 flex justify-start text-lg font-semibold'>{item.question}  </div>
 					<div className='text-nav dark:text-nav-dark p-2'dangerouslySetInnerHTML={{ __html: item.answer }}></div>
 					{item.image && (
-						<div className='mt-4 flex flex-wrap items-start gap-4'>
+						<div className='mt-4 flex flex-wrap items-start gap-4 pt-4'>
 							{(Array.isArray(item.image) ? item.image : [item.image]).map((imgSrc, imgIndex) => (
-								<img
-									key={`${index}-${imgIndex}`}
-									src={imgSrc}
-									alt={`${item.question} ${imgIndex + 1}`}
-									className='w-full sm:w-[48%] h-auto object-contain self-start'
-								/>
+								<div key={`${index}-${imgIndex}`} className='relative w-full sm:w-[78%]'>
+									<img
+										src={imgSrc}
+										alt={`${item.question} ${imgIndex + 1}`}
+										className='w-full h-auto object-contain self-start border border-slate-400 rounded-lg'
+									/>
+									<button
+										type='button'
+										onClick={() => setExpandedImage({ src: imgSrc, alt: `${item.question} ${imgIndex + 1}` })}
+										className='absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded hover:bg-black/85'
+										aria-label={`Maximize image ${imgIndex + 1}`}
+									>
+										Maximize
+									</button>
+								</div>
 							))}
 						</div>
 					)}
@@ -58,6 +68,27 @@ const FAQ = (props:FAQProps) =>{
             )}
 					</div>
 				</div>
+				{expandedImage && (
+					<div
+						className='fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4'
+						onClick={() => setExpandedImage(null)}
+					>
+						<button
+							type='button'
+							onClick={() => setExpandedImage(null)}
+							className='absolute top-4 right-4 bg-white text-black px-3 py-1 rounded font-semibold'
+							aria-label='Close expanded image'
+						>
+							Close
+						</button>
+						<img
+							src={expandedImage.src}
+							alt={expandedImage.alt}
+							className='max-w-[95vw] max-h-[90vh] w-auto h-auto object-contain rounded-lg border border-slate-300'
+							onClick={(e) => e.stopPropagation()}
+						/>
+					</div>
+				)}
 			</div>
 		</div>
 	)

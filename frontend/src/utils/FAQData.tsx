@@ -60,10 +60,141 @@ interface FAQItem {
 			"answer": "Yes, MyGPT uses the facts present in your documents as the highest truth and will be able to  use them as context to answer your question. MyGPT does not rely on LLM training data and eliminates the need for periodic retraining of LLMs with new information"
 		},
 	],
-     'confidence Metrics': [],
-	 'Library Creation':[],
-	 'Installation' :[],
-	 'Customization':[],
-	 'General developers':[]
+	'Confidence Metrics': [
+		{
+			"question": "14. What are confidence metrics?",
+			"answer": "Confidence metrics are quantitative scores used by MyGPT to gauge answer trustworthiness.<br/><br/><b>QRS (Question Relevance Score)</b> measures how well a question matches the document library.<br/><b>ARS (Answer Relevance Score)</b> measures how well the answer is grounded in retrieved passages.<br/><b>HI (Hallucination Index)</b> indicates potential hallucination risk when QRS/ARS are low.<br/><br/>Together, these metrics help users verify whether an answer is document-supported or may need cross-checking."
+		},
+		{
+			"question": "15. How are question relevance scores (QRS) and answer relevance scores (ARS) calculated, and how to interpret them?",
+			"answer": "QRS and ARS are weighted combinations of semantic, keyword (BM25), and rerank components across top-k retrieved chunks.<br/><br/><b>QRS</b> = (a &times; (&Sigma;<sub>i=1</sub><sup>k</sup> Q<sub>sem,i</sub>/k)) + (b &times; (&Sigma;<sub>i=1</sub><sup>k</sup> Q<sub>key,i</sub>/k)) + (c &times; (&Sigma;<sub>i=1</sub><sup>k</sup> Q<sub>rerank,i</sub>/k))<br/><b>ARS</b> = (x &times; (&Sigma;<sub>i=1</sub><sup>k</sup> A<sub>sem,i</sub>/k)) + (y &times; (&Sigma;<sub>i=1</sub><sup>k</sup> A<sub>key,i</sub>/k)) + (z &times; (&Sigma;<sub>i=1</sub><sup>k</sup> A<sub>rerank,i</sub>/k))<br/><br/>Interpretation:<br/>- High QRS: question is likely well matched to the library.<br/>- Low QRS: information may be missing or weakly matched.<br/>- High ARS: answer is grounded in retrieved context.<br/>- Low ARS: answer may rely less on retrieved evidence."
+		},
+		{
+			"question": "16. How is the hallucination index (HI) calculated, and how to interpret it?",
+			"answer": "HI combines QRS and ARS into a single risk score:<br/><br/><b>HI</b> = 1 - ((p &times; QRS)/(p + q)) - ((q &times; ARS)/(p + q))<br/><br/>where p and q are weighting factors from sensitivity analysis.<br/><br/>- Low HI (near 0): answer is likely grounded in library evidence.<br/>- High HI (near 1): higher chance the answer depends on model priors rather than retrieved context."
+		},
+		{
+			"question": "17. Can I change the calculations of QRS, ARS, and HI?",
+			"answer": "Yes. The default formulas and weights are provided in the paper/software, but they are not the only option. You can tune the QRS weights (a,b,c), ARS weights (x,y,z), and related thresholds from chat settings, or re-run optimization on your own dataset.",
+			"image": "./MyGPT_chat_setting.png"
+		},
+		{
+			"question": "18. I am asking a question, and it is about a topic in the library, but it gives me 0% relevance. Is it possible to relax the cutoff values for QRS?",
+			"answer": "Yes. You can improve retrieval by:<br/><br/>1. Rephrasing the question with more specific context.<br/>2. Adjusting retrieval thresholds/weights (including QRS-related settings) from MyGPT settings.<br/>3. Trying a different embedding model that better captures your domain terminology.<br/><br/>If relevance still stays at 0% after these steps, the required information may not exist in the current library."
+		}
+	],
+	'Library Creation': [
+		{
+			"question": "19. What are the options for creating a library?",
+			"answer": "MyGPT supports two main approaches:<br/><br/><b>1) Direct upload through MyGPT</b><br/>- Simple upload with default preprocessing.<br/>- Advanced setup for chunking, overlap, embedding model, distance function, BM25, reranker, and retrieval parameters.<br/><br/><b>2) Import from a Zotero collection</b><br/>- Pull a private/shared Zotero collection into a MyGPT dataset using the Zotero integration/API.<br/><br/>Both options create a searchable library for RAG queries."
+		},
+		{
+			"question": "20. What document types are supported by MyGPT?",
+			"answer": "MyGPT supports PDF, DOC/DOCX, and TXT files. It extracts text from supported files but does not answer from image-only content in those files."
+		},
+		{
+			"question": "21. What is the library size limit supported by MyGPT?",
+			"answer": "Based on tested limits, MyGPT supports up to 10 GB total upload size and up to 10,000 files. Large libraries mainly impact upload/preprocessing time; retrieval and generation remain efficient after indexing."
+		},
+		{
+			"question": "22. How much time does it take to upload a library?",
+			"answer": "Upload time depends on hardware and document volume. Small libraries can upload in seconds to minutes, while large collections (for example, thousands of pages) can take much longer. Faster GPUs significantly reduce upload and processing time."
+		},
+		{
+			"question": "23. How should I format my document library?",
+			"answer": "Use clean, text-extractable documents. MyGPT works well with biomedical literature, SOPs, and policy documents. Avoid scanned photocopies because MyGPT does not include OCR for image-only scans."
+		},
+		{
+			"question": "24. Can MyGPT help me with library creation, management, or library expansion related to topics covered by the library?",
+			"answer": "MyGPT does not automatically build or expand libraries for you. Users collect and manage source documents externally (for example with Zotero or EndNote), then import/upload into MyGPT."
+		},
+		{
+			"question": "25. If a library is shared with other users, can they see my chat history?",
+			"answer": "Yes. Chat history is tied to the library. For shared/public libraries, users with access can view the history. For private libraries, only the owner/account with access can view it."
+		},
+		{
+			"question": "26. If I delete the library, will it delete chat history as well?",
+			"answer": "Yes. Deleting a library removes its uploaded documents, vectors/embeddings, tokenizer artifacts, and associated chat history from the backend database."
+		}
+	],
+	'Installation': [
+		{
+			"question": "27. What are the options for installing and using MyGPT?",
+			"answer": "MyGPT can be installed on:<br/>- Personal computer<br/>- Server/VM with GPU<br/>- Cloud services (Azure example)<br/><br/>Personal computer setup uses Ollama and needs at least 8 GB RAM (16 GB recommended) and about 10 GB disk space. Direct Ollama install is available on macOS/Linux; Windows can use Docker."
+		},
+		{
+			"question": "28. What is the minimum requirement for installing MyGPT on a laptop?",
+			"answer": "Baseline requirements:<br/>- CPU: 8 cores or more<br/>- RAM: 16 GB recommended (pipeline can run at 8 GB)<br/>- GPU: required for practical LLM inference via Ollama<br/>- Storage: around 10 GB free"
+		},
+		{
+			"question": "29. How can I check if my computer/laptop is powerful enough to use MyGPT?",
+			"answer": "Key bottlenecks are GPU and RAM. Run a representative Ollama generation request multiple times and compare latency (first run is usually slower due to model loading). If responses consistently take very long (for example, over a minute), local resources may be insufficient."
+		},
+		{
+			"question": "30. Is there any advantage to using MyGPT when installing it on my computer?",
+			"answer": "Yes. Local installation provides strong privacy, offline operation, simpler control over model/retrieval settings, and lower dependency on external services. It is practical for users who need secure, customizable RAG workflows."
+		},
+		{
+			"question": "31. Is there any advantage of using MyGPT by installing it on the server?",
+			"answer": "Yes. Server deployment supports centralized secure access, shared GPU resources for teams, easier maintenance/updates, and often better performance than individual laptops. It can also reduce overall cost in multi-user environments."
+		},
+		{
+			"question": "32. How much will it cost to host MyGPT on the cloud with minimum requirements cost?",
+			"answer": "Cloud cost depends on provider, VM type, and GPU class. Example estimates in the documentation range from a few hundred USD/month for T4/L4-class setups to around a few thousand USD/month for A100-class infrastructure."
+		},
+		{
+			"question": "33. Is it possible to reduce hosting cost by sharing any infrastructure of MyGPT without compromising privacy?",
+			"answer": "Yes. Ollama can be shared across multiple MyGPT instances/applications. Since chats/PDFs are not stored in the LLM server itself, sharing this layer can reduce cost without exposing document data."
+		},
+		{
+			"question": "34. Where are the PDFs I have uploaded located?",
+			"answer": "Uploaded PDFs are stored locally on the machine/server running MyGPT. Documents are split into chunks, embedded, and indexed in the local vector database for retrieval."
+		},
+		{
+			"question": "35. Does MyGPT send any data to any external services or APIs?",
+			"answer": "No. MyGPT is designed to run locally and does not send chat/document data to external API services. Embeddings and retrieval data are handled within local components."
+		},
+		{
+			"question": "36. Does MyGPT work offline?",
+			"answer": "Yes. MyGPT supports offline operation with local models and local retrieval infrastructure, making it suitable for private, restricted, or air-gapped environments."
+		}
+	],
+	'Customization': [
+		{
+			"question": "37. Which LLMs can I use with MyGPT?",
+			"answer": "MyGPT can run open-source LLMs available through Ollama/CLI. Typical options include smaller edge-friendly models, mid-range models, and large server/cloud models. You can switch models from the UI for RAG or direct chat workflows."
+		},
+		{
+			"question": "38. Can I use OpenAI, Claude, or Gemini LLMs with MyGPT?",
+			"answer": "MyGPT is built for fully local/offline execution and does not directly call external commercial LLM APIs such as OpenAI, Claude, or Gemini."
+		},
+		{
+			"question": "39. Which are the embedding models I can use with MyGPT?",
+			"answer": "MyGPT supports open-source embedding models from Hugging Face/Ollama. Common options include nomic-embed-text (default), nomic-embed-text-v2-moe, bge-m3, paraphrase-multilingual variants, multi-qa-MiniLM-L6-cos-v1, and MedCPT for biomedical contexts."
+		},
+		{
+			"question": "40. What are the customizations offered by MyGPT?",
+			"answer": "MyGPT is modular and configurable across the full pipeline:<br/>- Preprocessing/chunking strategy and overlap<br/>- Embedding model and retrieval distance function<br/>- Vector/keyword search settings<br/>- Reranker and relevance scoring options<br/>- LLM choice and creativity controls (temperature, top-k/p)<br/>- Context protocol and transparency settings (QRS/ARS/HI with citations)",
+			"image": ["./MyGPT_upload_menu.png", "./MyGPT_chat_setting.png"]
+		},
+		{
+			"question": "41. Can you suggest any ideal customizations for MyGPT?",
+			"answer": "Recommended baseline:<br/>1) Choose a strong LLM for your hardware tier.<br/>2) Use a high-performing embedding model (for example nomic-embedding-text).<br/>3) Keep BM25 enabled for keyword-heavy queries.<br/>4) Start with fixed-size chunking (~1000 chars) and overlap.<br/>5) Tune QRS/ARS thresholds for recall vs precision.<br/>6) Enable reranking (or multilingual reranker when needed).<br/>7) Set creativity low for factual QA and higher for brainstorming."
+		}
+	],
+	'General developers': [
+		{
+			"question": "42. Is there documentation on APIs available from MyGPT?",
+			"answer": "Yes. API documentation is available at https://github.com/stjude-c3d/MyGPT/blob/main/development.md and includes endpoint purposes, required request keys, and response fields for common operations such as document retrieval, RAG context retrieval, and answer persistence."
+		},
+		{
+			"question": "43. How do I report a bug or feature for MyGPT?",
+			"answer": "Please report bugs and feature requests in the project issues tracker: https://github.com/mb-group/MyGPT_public/issues"
+		},
+		{
+			"question": "44. How can I contribute to the development of MyGPT?",
+			"answer": "If you want to contribute or request source access for development collaboration, contact Jaimin Patel (jaimin.patel@stjude.org) or the appropriate representative at St. Jude Children's Research Hospital."
+		}
+	]
  
   }
