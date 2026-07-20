@@ -43,3 +43,4 @@ backend/data/reranker/*
 scripts/data/*
 frontend/.env.*
 MCP-server/mygpt_backend.egg-info/*
+backend/data/images/*
