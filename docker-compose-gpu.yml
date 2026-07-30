@@ -5,10 +5,8 @@ services:
       - ./data/db:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-    environment:
-      - POSTGRES_NAME=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+    env_file:
+      - ./.env_backend
   backend:
     build: ./backend
     command: >
@@ -21,16 +19,16 @@ services:
       - ./backend/static:/static
     ports:
       - "8000:8000"
-    environment:
-      - POSTGRES_NAME=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+    env_file:
+      - ./.env_backend
     depends_on:
       - db
     links:
       - db
   frontend:
     build: ./frontend
+    env_file:
+      - ./.env_frontend
     volumes:
       - .:/code
       - ./frontend/build:/build

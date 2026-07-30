@@ -5,12 +5,10 @@ services:
       - ./data/db:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-    environment:
-      - POSTGRES_NAME=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+    env_file:
+      - ../../../.env_backend
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_NAME"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -26,10 +24,8 @@ services:
       - ./libraries:/media
     ports:
       - "8000:8000"
-    environment:
-      - POSTGRES_NAME=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+    env_file:
+      - ../../../.env_backend
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000"]
       interval: 30s
@@ -43,6 +39,8 @@ services:
       - db
   frontend:
     image: ghcr.io/stjude-c3d/mygpt-frontend:latest
+    env_file:
+      - ../../../.env_frontend
     ports:
       - "3000:3000"
     depends_on:

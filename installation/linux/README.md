@@ -122,10 +122,13 @@ docker login ghcr.io
 
 3. **Run docker containers**
 
-	We will run following script to run docker containers:
+	Create and configure the ignored runtime files at the repository root, then run the containers:
 
 	```
-	cd MyGPT/installation/linux/prebuilt_images
+	cd MyGPT
+	cp .env_backend.example .env_backend
+	cp .env_frontend.example .env_frontend
+	cd installation/linux/prebuilt_images
 	bash run_docker.sh
 	```
 
@@ -164,6 +167,8 @@ docker login ghcr.io
 	cd MyGPT
 	bash installation/linux/build_images/build_docker.sh
 	```
+
+	Before starting containers, replace all placeholders in `.env_backend` and review the public settings in `.env_frontend`.
 
 4. **Run docker containers**
 
@@ -252,7 +257,7 @@ This will start the MCP server and you can access it at http://localhost:5001/ss
 
 ### Configure MCP Client in MyGPT
 
-To setup MCP client in MyGPT, you need to stop the frontend, and then update the environment variable in the `.env` file.
+To setup MCP client in MyGPT, stop the frontend, then update the public settings in `MyGPT/.env_frontend`.
 To stop the frontend, run following command if you are using pre-built docker images:
 
 ```cd MyGPT/installation/linux/prebuilt_images/
@@ -264,10 +269,10 @@ Or run following command if you are building docker images:
 bash MyGPT/installation/linux/build_images/stop_docker.sh
 ```
 
-Change following line in `.env` file:
+Set the following values in `.env_frontend`:
 
 ```
-REACT_APP_MCP_SERVER_URL = 'http://localhost:5001/sse'
+REACT_APP_MCP_SERVER_URL=http://localhost:5001/sse
 REACT_APP_MCP_SHOW_MCP_MENU=true
 ```
 

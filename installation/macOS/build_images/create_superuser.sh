@@ -14,4 +14,4 @@ read superuser_email
 # create super user
 echo "Creating superuser for backend app..."
 echo "enter password for superuser:"
-docker exec -it ${backend_container_id} python manage.py createsuperuser --username $superuser_name --email $superuser_email
+docker exec -it ${backend_container_id} python3 manage.py createsuperuser --username $superuser_name --email $superuser_email

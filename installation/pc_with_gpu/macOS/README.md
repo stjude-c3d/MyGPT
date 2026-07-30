@@ -151,7 +151,7 @@ We will install these two tools in the following steps:
 
 * To setup Zotero account, you need to create Zotero account and generate API key. You can generate an API key in your profile settings https://www.zotero.org/settings/keys
 
-* Once you genearte the key, add that key into `backend/env_example` for `ZOTERO_API_KEY` variable. 
+* Once you generate the key, add it to `MyGPT/.env_backend` as the `ZOTERO_API_KEY` value.
 
 * After that, if you are running MyGPT pipeline stop it with the script below:
 

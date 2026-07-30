@@ -13,4 +13,3 @@ RUN if apt-cache policy wkhtmltopdf | grep -q 'Candidate: (none)'; then echo "wk
 COPY requirements.txt /code/
 RUN python3 -m pip install --break-system-packages -r requirements.txt
 COPY . /code/
-COPY ./env_example /code/.env
