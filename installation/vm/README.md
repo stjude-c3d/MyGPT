@@ -60,23 +60,16 @@ The server/VM should have the following requirements:
 	git clone https://github.com/stjude-c3d/MyGPT.git
 	```
 
-3. Edit the `.env` file
-	Edit the `.env` file in the `backend` folder and set the following
+3. Create the backend runtime environment file
+	Create the ignored root file from its tracked template, then replace every placeholder with a secure value:
 	
 	```bash
-	cd MyGPT/backend
-	vi env_example
-	```
-	```
-	SECRET_KEY = 'add django key'
-	ZOTERO_API_KEY = 'Add zotero key here'
-	DJANGO_SUPERUSER_PASSWORD = 'add your django superuser password'
-	HUGGINGFACE_API_KEY = 'add your hugging face api key'
-	OLLAMA_SERVER = 'add your ollama server URL' 
+	cd MyGPT
+	cp .env_backend.example .env_backend
+	vi .env_backend
 	```
 
-	Add necessary keys values in the `env_example` file and save it.
-	The docker compose will copy and rename this file to `.env` file and save it in the backend folder.
+	Docker Compose injects these values when the containers start. The file is excluded from Git and Docker build contexts and is not copied into the image.
 
 4. Edit the `settings.py` file in Django app
 	Edit the `settings.py` file in the `backend` folder and change the following fields.

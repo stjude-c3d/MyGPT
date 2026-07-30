@@ -119,10 +119,18 @@ docker login ghcr.io
 
 3. **Run docker containers**
 
-	We will run following script to run docker containers:
+	Create the root runtime environment files and replace every backend placeholder with your own values:
 
 	```
-	cd MyGPT/installation/macOS/prebuilt_images
+	cd MyGPT
+	cp .env_backend.example .env_backend
+	cp .env_frontend.example .env_frontend
+	```
+
+	Then run the containers:
+
+	```
+	cd installation/macOS/prebuilt_images
 	bash run_docker.sh
 	```
 
@@ -160,6 +168,8 @@ docker login ghcr.io
 	cd MyGPT
 	bash installation/macOS/build_images/build_docker.sh
 	```
+
+	Before starting containers, replace all placeholders in `.env_backend` and review the public settings in `.env_frontend`.
 
 3. **Run docker containers**
 
@@ -230,7 +240,14 @@ Or run following command if you are building docker images:
 bash MyGPT/installation/macOS/build_images/create_superuser.sh
 ```
 
-You can check backend database at http://localhost:8000/admin/ with username and password you created in above step.
+Enroll the superuser in TOTP authentication before opening the administration site:
+
+```
+docker compose exec backend python3 manage.py migrate
+docker compose exec -it backend python3 manage.py setup_admin_otp <superuser-name>
+```
+
+Scan the terminal QR code with an authenticator app and enter its current six-digit code. You can then sign in at http://localhost:8000/admin/ with the username, password, and authenticator code.
 
 ### Run MCP server
 To run MCP server, run following command if you are using pre-built docker images:
@@ -248,7 +265,7 @@ This will start the MCP server and you can access it at http://localhost:5001/ss
 
 ### Configure MCP Client in MyGPT
 
-To setup MCP client in MyGPT, you need to stop the frontend, and then update the environment variable in the `.env` file.
+To setup MCP client in MyGPT, stop the frontend, then update the public settings in `MyGPT/.env_frontend`.
 To stop the frontend, run following command if you are using pre-built docker images:
 
 ```cd MyGPT/installation/macOS/prebuilt_images/
@@ -260,10 +277,10 @@ Or run following command if you are building docker images:
 bash MyGPT/installation/macOS/build_images/stop_docker.sh
 ```
 
-Change following line in `.env` file:
+Set the following values in `.env_frontend`:
 
 ```
-REACT_APP_MCP_SERVER_URL = 'http://localhost:5001/sse'
+REACT_APP_MCP_SERVER_URL=http://localhost:5001/sse
 REACT_APP_MCP_SHOW_MCP_MENU=true
 ```
 

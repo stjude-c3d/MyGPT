@@ -1,3 +1,7 @@
+.env
+.env.*
+.env_*
+
 static/*
 media/*
 chroma_storage/*

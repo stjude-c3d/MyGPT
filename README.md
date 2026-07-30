@@ -20,6 +20,15 @@ We have divided the MyGPT pipeline architecture into three sections:
 
 ## Installation
 
+Before running any Docker Compose workflow, create the ignored runtime environment files from the tracked templates at the repository root:
+
+```bash
+cp .env_backend.example .env_backend
+cp .env_frontend.example .env_frontend
+```
+
+Replace the placeholders in `.env_backend` with secure values and configure public browser settings in `.env_frontend`. These runtime files are injected by Docker Compose, are ignored by Git, and are excluded from Docker build contexts. Never put secrets in `.env_frontend`; variables prefixed with `REACT_APP_` are visible to browser users.
+
 MyGPT can be installed on following environments:
 
 - [Personal Computer](#personal-computer)

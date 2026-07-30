@@ -116,10 +116,13 @@ docker login ghcr.io
 
 3. **Run docker containers**
 
-	We will run following script to run docker containers:
+	Create and configure the ignored runtime files at the repository root, then run the containers:
 
 	```
-	cd MyGPT/installation/server_or_VM/prebuilt_images_docker
+	cd MyGPT
+	cp .env_backend.example .env_backend
+	cp .env_frontend.example .env_frontend
+	cd installation/server_or_VM/prebuilt_images_docker
 	bash run_docker.sh
 	```
 
@@ -158,6 +161,8 @@ docker login ghcr.io
 	cd MyGPT
 	bash installation/linux/build_images/build_docker.sh
 	```
+
+	Before starting containers, replace all placeholders in `.env_backend` and review the public settings in `.env_frontend`.
 
 4. **Run docker containers**
 

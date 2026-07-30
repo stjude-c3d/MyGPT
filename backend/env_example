@@ -1,7 +1,0 @@
-SECRET_KEY = '*(bq%bt*didjq*r5ft=pe=g1l0bxn3#luq5na(48-=-6*g^oi('
-DJANGO_SUPERUSER_PASSWORD = 'mygpt123'
-ZOTERO_API_KEY = 'Add zotero key here'
-SLACK_TOKEN = 'xoxb-6674838807-7236751984199-APiYouEra5hzEwXo4fDb7MrU'
-SLACK_MYGPT_CHANNEL_ID = 'C077J16U4PN'
-HUGGINGFACE_API_KEY = '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'
-OLLAMA_SERVER = 'http://host.docker.internal:11434'

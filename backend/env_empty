@@ -1,5 +1,0 @@
-SECRET_KEY = 'add django key'
-ZOTERO_API_KEY = 'Add zotero key here'
-DJANGO_SUPERUSER_PASSWORD = 'add your django superuser password'
-HUGGINGFACE_API_KEY = 'add your hugging face api key'
-OLLAMA_SERVER = 'add your ollama server URL' 

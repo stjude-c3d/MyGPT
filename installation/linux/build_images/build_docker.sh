@@ -1,6 +1,6 @@
-# replace the env_example with .env
-cp backend/env_example backend/.env
-cp frontend/env_example frontend/.env
+# Create root runtime environment files from the tracked templates.
+[ -f .env_backend ] || cp .env_backend.example .env_backend
+[ -f .env_frontend ] || cp .env_frontend.example .env_frontend
 
 ## build docker images
 docker compose build db

@@ -11,6 +11,8 @@ backend/data/pdfs/*
 !backend/data/pdfs/MyGPT
 backend/data/pdfs/MyGPT/*_highlighted.pdf
 backend/.env
+.env_backend
+.env_frontend
 google_colab_demo/static/*
 static/*
 data/*

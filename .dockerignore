@@ -1,3 +1,10 @@
+.env
+.env.*
+.env_backend
+.env_frontend
+__pycache__/
+*.pyc
+
 backend/media
 backend/chroma_storage
 backend/static/*
