@@ -216,14 +216,14 @@ const AddLibrarySettings = (props: {
 				'Authorization': `${
 				props.user && props.djangoLogin ?
 				'Bearer ' + localStorage.getItem('access') :
-					process.env.NODE_ENV === 'production' ? 
-					process.env.REACT_APP_AUTH_TOKEN_PROD 
-					: process.env.REACT_APP_AUTH_TOKEN_DEV}`
+					import.meta.env.MODE === 'production' ? 
+					import.meta.env.REACT_APP_AUTH_TOKEN_PROD 
+					: import.meta.env.REACT_APP_AUTH_TOKEN_DEV}`
 				},
 			body: formData
 		}
 
-		fetch(`${process.env.REACT_APP_BACKEND_API}api/add_zotero_collection/`, requestOptions)
+		fetch(`${import.meta.env.REACT_APP_BACKEND_API}api/add_zotero_collection/`, requestOptions)
 		.then(response => response.json())
 		.then(data => {
 			props.settingsCallback({...currentSettings, fetchDatasets: true, datasetsUpdated: true})
@@ -294,9 +294,9 @@ const AddLibrarySettings = (props: {
 					'Authorization': `${
 					props.user && props.djangoLogin ?
 					'Bearer ' + localStorage.getItem('access') :
-						process.env.NODE_ENV === 'production' ? 
-						process.env.REACT_APP_AUTH_TOKEN_PROD 
-						: process.env.REACT_APP_AUTH_TOKEN_DEV}`
+						import.meta.env.MODE === 'production' ? 
+						import.meta.env.REACT_APP_AUTH_TOKEN_PROD 
+						: import.meta.env.REACT_APP_AUTH_TOKEN_DEV}`
 					},
 				body: formData
 			}
@@ -306,7 +306,7 @@ const AddLibrarySettings = (props: {
 			setUploadStage('uploading')
 			setUploadProgressMessage('Starting upload...')
 
-			fetch(`${process.env.REACT_APP_BACKEND_API}api/upload_documents/`, requestOptions)
+			fetch(`${import.meta.env.REACT_APP_BACKEND_API}api/upload_documents/`, requestOptions)
 			.then(response => {
 				// Handle streaming response
 				if (!response.ok) {
@@ -397,13 +397,13 @@ const AddLibrarySettings = (props: {
 					'Authorization': `${
 					props.user && props.djangoLogin ?
 					'Bearer ' + localStorage.getItem('access') :
-						process.env.NODE_ENV === 'production' ? 
-						process.env.REACT_APP_AUTH_TOKEN_PROD 
-						: process.env.REACT_APP_AUTH_TOKEN_DEV}`
+						import.meta.env.MODE === 'production' ? 
+						import.meta.env.REACT_APP_AUTH_TOKEN_PROD 
+						: import.meta.env.REACT_APP_AUTH_TOKEN_DEV}`
 					},
 				body: formData
 			}
-			fetch(`${process.env.REACT_APP_BACKEND_API}api/add_video_library/`, requestOptions)
+			fetch(`${import.meta.env.REACT_APP_BACKEND_API}api/add_video_library/`, requestOptions)
 			.then(response => response.json())
 			.then(data => {
 				props.settingsCallback({...currentSettings, fetchDatasets: true, datasetsUpdated: true})

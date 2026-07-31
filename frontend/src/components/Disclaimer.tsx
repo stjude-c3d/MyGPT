@@ -22,7 +22,7 @@ const Disclaimer = (props: DisclaimerProps) =>{
 			method: 'POST',
 			headers: {
 			'Content-Type': 'application/json',
-			'Authorization': `${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_AUTH_TOKEN_PROD : process.env.REACT_APP_AUTH_TOKEN_DEV}`
+			'Authorization': `${import.meta.env.MODE === 'production' ? import.meta.env.REACT_APP_AUTH_TOKEN_PROD : import.meta.env.REACT_APP_AUTH_TOKEN_DEV}`
 			},
 			body: JSON.stringify({
 			'access_token': localStorage.getItem('access')
@@ -30,7 +30,7 @@ const Disclaimer = (props: DisclaimerProps) =>{
 		}
 
 
-		fetch(`${process.env.REACT_APP_BACKEND_API}api/get_username/?format=json`, requestOptions)
+		fetch(`${import.meta.env.REACT_APP_BACKEND_API}api/get_username/?format=json`, requestOptions)
 			.then(response => {
 			if (response.status === 401) {
 				localStorage.removeItem('access')
@@ -52,7 +52,7 @@ const Disclaimer = (props: DisclaimerProps) =>{
 
 	useEffect(()=>{
 		if (djangoAuthenticated && djangoUser && djangoUser.user && djangoUser.user.length > 0) {
-			fetch(`${process.env.REACT_APP_BACKEND_API}api/disclaimer_agreements/?format=json`, {
+			fetch(`${import.meta.env.REACT_APP_BACKEND_API}api/disclaimer_agreements/?format=json`, {
 				method: 'GET',
 				headers: {
 					'Content-Type': 'application/json',
@@ -71,14 +71,14 @@ const Disclaimer = (props: DisclaimerProps) =>{
 			method: 'POST',
 			headers: { 
 				'Content-Type': 'application/json',
-				'Authorization': `${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_AUTH_TOKEN_PROD : process.env.REACT_APP_AUTH_TOKEN_DEV}`
+				'Authorization': `${import.meta.env.MODE === 'production' ? import.meta.env.REACT_APP_AUTH_TOKEN_PROD : import.meta.env.REACT_APP_AUTH_TOKEN_DEV}`
 			},
 			body: JSON.stringify({
 				'username': djangoUser.user
 			})
 		}
 
-		fetch(`${process.env.REACT_APP_BACKEND_API}api/submit_disclaimer_agreement/?format=json`, requestOptions)
+		fetch(`${import.meta.env.REACT_APP_BACKEND_API}api/submit_disclaimer_agreement/?format=json`, requestOptions)
 			.then(response => response.json())
 			.then(data => {
 				console.log('Success:', data)

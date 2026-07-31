@@ -1,41 +1,27 @@
+import { vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import GPTHome from '../components/GPTHome'
 import defaultSettings from '../utils/DefaultState'
 import * as GPTHomeAPI from '../utils/GPTHomeAPI'
 import '../__mocks__/intersectObserverMock'
 
-jest.mock('../utils/GPTHomeAPI', () => ({
-  fetchAndRegisterOllamaModels: jest.fn().mockResolvedValue(['llama3:latest']),
-  fetchDatasetDetails: jest.fn().mockResolvedValue({ documents_language: 'english' }),
-  fetchDocuments: jest.fn().mockResolvedValue({ dataset_type: 'papers', documents: [] }),
-  fetchSections: jest.fn().mockResolvedValue({ sections: [] }),
-  addDemoLibraryRequest: jest.fn().mockResolvedValue({}),
-  fetchContext: jest.fn().mockResolvedValue({ relevance_score: 0, context: '', sources: [] }),
-  saveAnswer: jest.fn().mockResolvedValue({ relevance_score: 0, hallucination_index_by_ml: 0 }),
+vi.mock('../utils/GPTHomeAPI', () => ({
+  fetchAndRegisterOllamaModels: vi.fn().mockResolvedValue(['llama3:latest']),
+  fetchDatasetDetails: vi.fn().mockResolvedValue({ documents_language: 'english' }),
+  fetchDocuments: vi.fn().mockResolvedValue({ dataset_type: 'papers', documents: [] }),
+  fetchSections: vi.fn().mockResolvedValue({ sections: [] }),
+  addDemoLibraryRequest: vi.fn().mockResolvedValue({}),
+  fetchContext: vi.fn().mockResolvedValue({ relevance_score: 0, context: '', sources: [] }),
+  saveAnswer: vi.fn().mockResolvedValue({ relevance_score: 0, hallucination_index_by_ml: 0 }),
 }))
 
-jest.mock('@react-pdf-viewer/core', () => ({
-  Viewer: ({ fileUrl }) => <div data-testid="pdf-viewer">{fileUrl ? `viewer:${fileUrl}` : 'viewer'}</div>,
-  Worker: ({ children }) => <div data-testid="pdf-worker">{children}</div>,
-  SpecialZoomLevel: { ActualSize: 'ActualSize' },
-  Icon: ({ children }) => <span>{children}</span>,
-}))
-
-jest.mock('@react-pdf-viewer/default-layout', () => ({
-  defaultLayoutPlugin: () => ({}),
-  BookmarkIcon: () => <span data-testid="bookmark-icon" />,
-}))
-
-jest.mock('@react-pdf-viewer/bookmark', () => ({
-  bookmarkPlugin: () => ({
-    Bookmarks: () => <div data-testid="bookmarks" />,
-  }),
-}))
-
-jest.mock('@react-pdf-viewer/page-navigation', () => ({
-  pageNavigationPlugin: () => ({
-    jumpToPage: jest.fn(),
-  }),
+vi.mock('react-pdf', () => ({
+  Document: ({ children, onLoadSuccess }) => {
+    onLoadSuccess?.({ numPages: 3 })
+    return <div data-testid="pdf-document">{children}</div>
+  },
+  Page: ({ pageNumber }) => <div data-testid="pdf-page">{pageNumber}</div>,
+  pdfjs: { GlobalWorkerOptions: {} },
 }))
 
 const default_frontend_settings = {
@@ -48,7 +34,7 @@ const default_frontend_settings = {
 
 describe('GPTHome', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     GPTHomeAPI.fetchAndRegisterOllamaModels.mockResolvedValue(['llama3:latest'])
     GPTHomeAPI.fetchDatasetDetails.mockResolvedValue({ documents_language: 'english' })
     GPTHomeAPI.fetchDocuments.mockResolvedValue({ dataset_type: 'papers', documents: [] })
@@ -72,7 +58,7 @@ describe('GPTHome', () => {
     return render(
       <GPTHome
         currentSettings={currentSettings}
-        settingsCallback={jest.fn()}
+        settingsCallback={vi.fn()}
         frontendSettings={frontendSettings}
         user={{ user_email: '', otherRoles: [] }}
       />

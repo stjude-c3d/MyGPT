@@ -1,27 +1,36 @@
+import { vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import Settings from '../components/Settings'
 import defaultSettings from '../utils/DefaultState'
 
-jest.mock('../components/LLMSettings', () => () => <div data-testid='llm-settings'>LLM Settings</div>)
-jest.mock('../components/EmbeddingSettings', () => () => <div data-testid='embedding-settings'>Embedding Settings</div>)
-jest.mock('../components/RelevanceScoresSettings', () => () => <div data-testid='relevance-settings'>Relevance Settings</div>)
-jest.mock('../components/MCPClient', () => () => <div data-testid='mcp-client'>MCP Client</div>)
+vi.mock('../components/LLMSettings', () => ({
+  default: () => <div data-testid='llm-settings'>LLM Settings</div>
+}))
+vi.mock('../components/EmbeddingSettings', () => ({
+  default: () => <div data-testid='embedding-settings'>Embedding Settings</div>
+}))
+vi.mock('../components/RelevanceScoresSettings', () => ({
+  default: () => <div data-testid='relevance-settings'>Relevance Settings</div>
+}))
+vi.mock('../components/MCPClient', () => ({
+  default: () => <div data-testid='mcp-client'>MCP Client</div>
+}))
 
 describe('Settings', () => {
   const baseProps = {
-    closeSettings: jest.fn(),
+    closeSettings: vi.fn(),
     defaultSettings,
     currentSettings: defaultSettings,
-    settingsCallback: jest.fn(),
+    settingsCallback: vi.fn(),
     djangoLogin: false,
     user: { user_email: 'abc@xyz.com', otherRoles: [] }
   }
 
   beforeEach(() => {
-    jest.clearAllMocks()
-    jest.spyOn(console, 'log').mockImplementation(() => {})
+    vi.clearAllMocks()
+    vi.spyOn(console, 'log').mockImplementation(() => {})
 
-    global.fetch = jest.fn((url) => {
+    global.fetch = vi.fn((url) => {
       const urlStr = typeof url === 'string' ? url : (url && url.url ? url.url : String(url))
 
       if (urlStr.includes('get_datasets')) {
@@ -47,7 +56,7 @@ describe('Settings', () => {
   })
 
   afterEach(() => {
-    jest.restoreAllMocks()
+    vi.restoreAllMocks()
   })
 
   it('renders Settings header', () => {
@@ -71,13 +80,13 @@ describe('Settings', () => {
   })
 
   it('shows Add New Library button when openUpload is provided', () => {
-    render(<Settings {...baseProps} openUpload={jest.fn()} />)
+    render(<Settings {...baseProps} openUpload={vi.fn()} />)
     expect(screen.getAllByRole('button', { name: /Add New Library/i }).length).toBeGreaterThan(0)
   })
 
   it('triggers close and upload open on Add New Library click', () => {
-    const closeSettings = jest.fn()
-    const openUpload = jest.fn()
+    const closeSettings = vi.fn()
+    const openUpload = vi.fn()
 
     render(
       <Settings

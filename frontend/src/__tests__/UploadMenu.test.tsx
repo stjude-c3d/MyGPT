@@ -1,26 +1,27 @@
+import { vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import UploadMenu from '../components/UploadMenu'
 
-jest.mock('../components/AddLibrarySettings', () => {
-	return function MockAddLibrarySettings() {
+vi.mock('../components/AddLibrarySettings', () => ({
+	default: function MockAddLibrarySettings() {
 		return <div data-testid='add-library-settings'>AddLibrarySettings</div>
 	}
-})
+}))
 
-jest.mock('../components/FlowUpload', () => {
-	return function MockFlowUpload() {
+vi.mock('../components/FlowUpload', () => ({
+	default: function MockFlowUpload() {
 		return <div data-testid='flow-upload'>FlowUpload</div>
 	}
-})
+}))
 
 describe('UploadMenu', () => {
-	const renderUploadMenu = (closeUpload = jest.fn(), openSettings = jest.fn()) => {
+	const renderUploadMenu = (closeUpload = vi.fn(), openSettings = vi.fn()) => {
 		render(
 			<UploadMenu
 				closeUpload={closeUpload}
 				openSettings={openSettings}
 				currentSettings={{}}
-				settingsCallback={jest.fn()}
+				settingsCallback={vi.fn()}
 			/>
 		)
 		return { closeUpload, openSettings }
@@ -36,14 +37,14 @@ describe('UploadMenu', () => {
 	})
 
 	it('closes menu when close icon is clicked', () => {
-		const { closeUpload } = renderUploadMenu(jest.fn(), jest.fn())
+		const { closeUpload } = renderUploadMenu(vi.fn(), vi.fn())
 
 		screen.getByText('x').click()
 		expect(closeUpload).toHaveBeenCalledTimes(1)
 	})
 
 	it('switches to advanced tab and renders FlowUpload', () => {
-		renderUploadMenu(jest.fn(), jest.fn())
+		renderUploadMenu(vi.fn(), vi.fn())
 
 		fireEvent.click(screen.getByText('Advanced'))
 		expect(screen.getByTestId('flow-upload')).toBeInTheDocument()

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BrowserRouter } from 'react-router-dom'
+import { BrowserRouter } from 'react-router'
 import { NavBar } from './NavBar'
 import useAuthenticateUser from '../hooks/useAuthenticateUser'
 
@@ -29,7 +29,7 @@ function TopNav(props:{
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_AUTH_TOKEN_PROD : process.env.REACT_APP_AUTH_TOKEN_DEV}`
+          'Authorization': `${import.meta.env.MODE === 'production' ? import.meta.env.REACT_APP_AUTH_TOKEN_PROD : import.meta.env.REACT_APP_AUTH_TOKEN_DEV}`
         },
         body: JSON.stringify({
           'access_token': localStorage.getItem('access')
@@ -37,7 +37,7 @@ function TopNav(props:{
       }
 
 
-      fetch(`${process.env.REACT_APP_BACKEND_API}api/get_username/?format=json`, requestOptions)
+      fetch(`${import.meta.env.REACT_APP_BACKEND_API}api/get_username/?format=json`, requestOptions)
         .then(response => {
           if (response.status === 401) {
             localStorage.removeItem('access')

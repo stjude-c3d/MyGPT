@@ -4,56 +4,45 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@azure/msal-react": "^2.2.0",
+    "@azure/msal-react": "^5.0.0",
     "@heroicons/react": "^2.2.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "@react-pdf-viewer/bookmark": "3.12.0",
-    "@react-pdf-viewer/core": "^3.12.0",
-    "@react-pdf-viewer/default-layout": "^3.12.0",
-    "@react-pdf-viewer/highlight": "3.12.0",
-    "@react-pdf-viewer/page-navigation": "3.12.0",
+    "react-pdf": "^9.0.0",
     "@react-three/drei": "^9.122.0",
     "@react-three/fiber": "^8.18.0",
-    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
     "@types/d3": "^7.1.0",
-    "@types/node": "^16.18.126",
+    "@types/node": "^20.19.9",
     "@types/three": "^0.184.0",
     "@xyflow/react": "^12.10.2",
     "better-react-mathjax": "^2.3.0",
     "d3": "7.9.0",
-    "env-cmd": "^10.1.0",
     "http-proxy-middleware": "^3.0.5",
     "node-forge": "^1.4.0",
     "nth-check": "2.1.1",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "react-markdown": "^8.0.7",
-    "react-router-dom": "^6.30.3",
-    "react-scripts": "5.0.1",
-    "remark-gfm": "^3.0.1",
+    "react-router": "^8.3.0",
     "rehype-katex": "^7.0.1",
+    "remark-gfm": "^3.0.1",
     "remark-math": "^6.0.0",
     "three": "^0.184.0",
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "build:prod": "env-cmd -f .env.production react-scripts build",
-    "build:azure": "env-cmd -f .env.azure react-scripts build",
-    "test": "react-scripts test",
-    "test:watch": "react-scripts test --env=jsdom --watchAll",
-    "test:ci": "react-scripts test --env=jsdom --watchAll=false",
-    "eject": "react-scripts eject"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
+    "start": "vite",
+    "dev": "vite",
+    "build": "vite build",
+    "build:prod": "vite build --mode production",
+    "build:azure": "vite build --mode azure",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ci": "vitest run"
   },
   "browserslist": {
     "production": [
@@ -68,29 +57,26 @@
     ]
   },
   "devDependencies": {
-    "@types/jest": "^29.5.12",
-    "@types/react": "^18.3.1",
-    "@types/react-dom": "^18.3.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^5.2.0",
     "autoprefixer": "^10.4.4",
-    "jest": "^29.7.0",
+    "jsdom": "^24.1.3",
     "postcss": "^8.4.31",
-    "react-test-renderer": "^18.3.1",
+    "react-test-renderer": "^19.2.7",
     "tailwindcss": "^3.0.23",
-    "ts-jest": "^29.1.2"
-  },
-  "jest": {
-    "transformIgnorePatterns": [
-      "!node_modules/(?!@src/*.)"
-    ],
-    "moduleNameMapper": {
-      "@modelcontextprotocol/sdk/client/index": "<rootDir>/node_modules/@modelcontextprotocol/sdk/dist/esm/client/index",
-      "@modelcontextprotocol/sdk/client/sse": "<rootDir>/node_modules/@modelcontextprotocol/sdk/dist/esm/server/sse"
-    }
+    "vite": "^8.2.0",
+    "vitest": "^4.1.10"
   },
   "overrides": {
     "nth-check": "2.1.1",
     "hono": "4.12.27",
-    "fast-uri": "4.1.1"
+    "fast-uri": "4.1.1",
+    "brace-expansion": "^5.0.8",
+    "pdfjs-dist": "^4.4.0",
+    "tar": "^7.5.21",
+    "react": "$react",
+    "react-dom": "$react-dom"
   },
   "resolutions": {
     "node-forge": "^1.3.2"

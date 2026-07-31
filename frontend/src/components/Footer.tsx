@@ -5,7 +5,7 @@ const Footer = (props: {
 	onDisclaimerClick: () => void,
 	onFAQClick: () => void,
 }) => {
-	const version = process.env.REACT_APP_MYGPT_VERSION
+	const version = import.meta.env.REACT_APP_MYGPT_VERSION
 	const year = new Date().getFullYear()
 
 	const [backendUp, setBackendUp] = useState<boolean | null>(null)
@@ -15,13 +15,13 @@ const Footer = (props: {
 		let isMounted = true
 		const check = async () => {
 			try {
-				const r = await fetch(`${process.env.REACT_APP_BACKEND_API}api/frontend_settings/?format=json`, { method: 'GET' })
+				const r = await fetch(`${import.meta.env.REACT_APP_BACKEND_API}api/frontend_settings/?format=json`, { method: 'GET' })
 				if (isMounted) setBackendUp(r.ok)
 			} catch {
 				if (isMounted) setBackendUp(false)
 			}
 			try {
-				const r = await fetch(`${process.env.REACT_APP_BACKEND_API}api/get_ollama_models/`, { method: 'POST' })
+				const r = await fetch(`${import.meta.env.REACT_APP_BACKEND_API}api/get_ollama_models/`, { method: 'POST' })
 				const data = await r.json()
 				const hasModelList = Array.isArray(data?.models)
 				if (isMounted) setOllamaUp(r.ok && hasModelList)
@@ -48,7 +48,7 @@ const Footer = (props: {
 		<div className='flex justify-between text-nav bg-[#2A4759] my-auto py-4 h-[6vh]'>
 			<div className='text-sm text-white mx-8 my-auto flex flex-row items-center gap-3'>
 				{/* <p className='inline-block mx-2'>Designed by </p> */}
-				<img src={process.env.PUBLIC_URL + '/stjude-logo-child.png'} alt='St. Jude logo' className='h-[3vh] inline-block'/>
+				<img src='/stjude-logo-child.png' alt='St. Jude logo' className='h-[3vh] inline-block'/>
 				<p className='inline-block'>St. Jude Children's Research Hospital</p>
 				<p className='inline-block opacity-60'>© {year}</p>
 			</div>
