@@ -1,12 +1,12 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import pdfjsWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import { Document, Page, pdfjs } from 'react-pdf'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
 import { PaperAirplaneIcon, Cog6ToothIcon, PaperClipIcon, XMarkIcon, CheckIcon, ArrowsPointingInIcon, ArrowsPointingOutIcon, ChatBubbleLeftRightIcon, DocumentChartBarIcon, BookmarkIcon as BookmarkIconMyGPT, MagnifyingGlassIcon, ChevronUpIcon, ChevronDownIcon, ArrowDownTrayIcon, Squares2X2Icon, Bars3Icon } from '@heroicons/react/24/outline'
 import { scaleSequential, interpolateRdYlGn } from 'd3'
-import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import MathMarkdown from './MathMarkdown'
 // import Feedback from './Feedback'
 import { OllamaDirectChatStream, OllamaChatStreamWithToolSupport } from '../utils/OllamaChat'
 import { OllamaDirectGenerateStream, OllamaDirectGenerateNoStream } from '../utils/OllamaGenerate'
@@ -90,14 +90,19 @@ function GPTHome(props:{
 
 	// Per-page stable renderer functions; recreated only when highlights or page count change.
 	const textRenderers = useMemo(() => {
-		const renderers: Record<number, (item: { str: string }) => string> = {}
+		const renderers: Record<number, (item: { str: string }) => React.ReactNode> = {}
 		for (let p = 1; p <= numPages; p++) {
 			const contexts = highlightsByPage[p]
 			renderers[p] = ({ str }: { str: string }) => {
 				if (!contexts || !str?.trim()) return str
 				for (const ctx of contexts) {
 					if (ctx.includes(str.trim())) {
-						return `<span style="position:relative;display:inline">${str}<span aria-hidden="true" style="position:absolute;inset:-1px 0;background:rgba(255,220,0,0.45);border-radius:2px;pointer-events:none;z-index:0"></span></span>`
+						return (
+							<span style={{ position: 'relative', display: 'inline' }}>
+								{str}
+								<span aria-hidden="true" style={{ position: 'absolute', top: '-1px', right: 0, bottom: 0, left: 0, background: 'rgba(255,220,0,0.45)', borderRadius: '2px', pointerEvents: 'none', zIndex: 0 }} />
+							</span>
+						)
 					}
 				}
 				return str
@@ -1305,16 +1310,16 @@ function GPTHome(props:{
 												style={{ height: minimizedThinking ? 0 : 'auto', overflow: minimizedThinking ? 'hidden' : 'visible' }}
 											>
 												<div className='text-gray-300 text-sm whitespace-pre-wrap overflow-y-auto max-h-48'>
-													<Markdown remarkPlugins={[remarkGfm]}>
-														{showNullAnswerIndexes[query.length-i-1] === true? nullThoughts[query.length-i-1] : thoughts[query.length-i-1]}
-													</Markdown>
+													<MathMarkdown>
+														{showNullAnswerIndexes[query.length-i-1] === true? nullThoughts[query.length-i-1] ?? '' : thoughts[query.length-i-1] ?? ''}
+													</MathMarkdown>
 												</div>
 											</div>
 										</div>
 									)}
-									<Markdown remarkPlugins={[remarkGfm]}>
-										{showNullAnswerIndexes[query.length-i-1] === true? nullAnswers[query.length-i-1] : answers[query.length-i-1].response}
-									</Markdown>
+									<MathMarkdown>
+										{showNullAnswerIndexes[query.length-i-1] === true? nullAnswers[query.length-i-1] ?? '' : answers[query.length-i-1].response ?? ''}
+									</MathMarkdown>
 								</div>
 								<Feedback
 									answer={JSON.parse(JSON.stringify(answers[query.length-i-1]))}
@@ -1422,16 +1427,16 @@ function GPTHome(props:{
 										<div className='mb-4 p-4 bg-slate-700 dark:bg-slate-800 rounded-lg border-l-4 border-blue-500'>
 											<div className='text-blue-300 text-sm font-semibold mb-2'>💭 Thinking...</div>
 											<div className='text-gray-300 text-sm whitespace-pre-wrap'>
-												<Markdown remarkPlugins={[remarkGfm]}>
+												<MathMarkdown>
 													{thought}
-												</Markdown>
+												</MathMarkdown>
 											</div>
 										</div>
 									)}
 									<div className='text-white whitespace-pre-wrap answer-div'>
-										<Markdown remarkPlugins={[remarkGfm]}>
+										<MathMarkdown>
 											{answer.length ? answer: 'Generating answer...'}
-										</Markdown>
+										</MathMarkdown>
 									</div>
 									{
 									questionRelevancescore[query.length-1] > 0 && sourcePapers.length && sourcePages.length && sourcePages[query.length-1] && sourcePapers[query.length-1] ?
@@ -1726,7 +1731,7 @@ function GPTHome(props:{
 										<Document key={viewerFileUrl} file={viewerFileUrl} onLoadSuccess={({ numPages }: { numPages: number }) => setNumPages(numPages)} onLoadError={() => setNumPages(0)}>
 											{numPages > 0 && Array.from({ length: numPages }, (_, i) => (
 												<div key={i + 1} id={`pdf-page-${i + 1}`} className='shadow-lg border border-gray-300 dark:border-gray-600'>
-													<Page pageNumber={i + 1} scale={pdfScale} customTextRenderer={textRenderers[i + 1]} />
+													<Page pageNumber={i + 1} scale={pdfScale} customTextRenderer={textRenderers[i + 1] as any} />
 												</div>
 											))}
 										</Document>

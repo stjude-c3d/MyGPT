@@ -2,9 +2,8 @@ import { useState, useEffect } from 'react'
 import { scaleSequential, interpolateRdYlGn } from 'd3'
 import { ChevronDownIcon, ChevronUpIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
 import Markdown from 'react-markdown'
-import remarkMath from 'remark-math'
-import rehypeKatex from 'rehype-katex'
-import 'katex/dist/katex.min.css'
+import remarkGfm from 'remark-gfm'
+import MathMarkdown from './MathMarkdown'
 
 interface ChatHistoryProps {
 	dataset: string,
@@ -276,12 +275,9 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 												setShowNullAnswer(false)
 											}}
 										>
-											<Markdown
-												remarkPlugins={[remarkMath as any]}
-												rehypePlugins={[rehypeKatex as any]}
-											>
+											<MathMarkdown>
 												{message.question}
-											</Markdown>
+											</MathMarkdown>
 										</div>
 									)
 								})
@@ -304,12 +300,9 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 									</div>
 								</div>
 								<div className='text-nav dark:text-nav-dark'>
-										<Markdown
-											remarkPlugins={[remarkMath as any]}
-											rehypePlugins={[rehypeKatex as any]}
-										>
-											{questionDetails.question}
-										</Markdown>
+									<MathMarkdown>
+										{questionDetails.question}
+										</MathMarkdown>
 									</div>
 							</div>
 							<div className={'py-4 px-6 m-4 bg-panel1 dark:bg-panel4-dark rounded-lg shadow-md box2' + (props.darkMode ? ' llm-chat-dark' : ' llm-chat')}>
@@ -370,12 +363,9 @@ const ChatHistory = (props: ChatHistoryProps) =>{
 										</div>
 									</div>
 									<div className='text-white whitespace-pre-wrap answer-div'>
-										<Markdown
-											remarkPlugins={[remarkMath as any]}
-											rehypePlugins={[rehypeKatex as any]}
-										>
-											{showNullAnswer ? questionDetails.answers[activeAnswer].answer_no_context : questionDetails.answers[activeAnswer].answer}
-										</Markdown>
+									<MathMarkdown>
+										{showNullAnswer ? questionDetails.answers[activeAnswer].answer_no_context : questionDetails.answers[activeAnswer].answer}
+										</MathMarkdown>
 									</div>
 									<div className='text-white text-sm font-bold pt-4'>
 									{questionDetails.sources.length > 1 ? 'Sources' : questionDetails.sources.length === 1 ? 'Source': ''}
