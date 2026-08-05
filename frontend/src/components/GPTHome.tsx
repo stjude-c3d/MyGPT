@@ -1675,22 +1675,22 @@ function GPTHome(props:{
 					{/* Thumbnail panel */}
 					{showThumbnails && numPages > 0 && (
 						<div style={{ width: thumbnailWidth }} className='overflow-y-auto bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shrink-0 select-none'>
-							{Array.from({ length: numPages }, (_, i) => (
-								<div
-									key={i + 1}
-									onClick={() => jumpToPage(i + 1)}
-									className='group flex justify-center py-2 px-1.5 cursor-pointer'
-								>
-									<div className='shrink-0 flex flex-col items-center'>
-										<div className={`shadow-md ${viewerPage === i + 1 ? 'ring-[3px] ring-gray-500 dark:ring-gray-300' : 'ring-1 ring-transparent group-hover:ring-[3px] group-hover:ring-gray-400 dark:group-hover:ring-gray-400'}`}>
-											<Document file={viewerFileUrl}>
+							<Document file={viewerFileUrl}>
+								{Array.from({ length: numPages }, (_, i) => (
+									<div
+										key={i + 1}
+										onClick={() => jumpToPage(i + 1)}
+										className='group flex justify-center py-2 px-1.5 cursor-pointer'
+									>
+										<div className='shrink-0 flex flex-col items-center'>
+											<div className={`shadow-md ${viewerPage === i + 1 ? 'ring-[3px] ring-gray-500 dark:ring-gray-300' : 'ring-1 ring-transparent group-hover:ring-[3px] group-hover:ring-gray-400 dark:group-hover:ring-gray-400'}`}>
 												<Page pageNumber={i + 1} scale={0.18} renderTextLayer={false} renderAnnotationLayer={false} />
-											</Document>
+											</div>
+											<p className='text-xs mt-1.5 text-gray-500 dark:text-gray-400'>{i + 1}</p>
 										</div>
-										<p className='text-xs mt-1.5 text-gray-500 dark:text-gray-400'>{i + 1}</p>
 									</div>
-								</div>
-							))}
+								))}
+							</Document>
 						</div>
 					)}
 					{/* Drag handle — only shown when thumbnail panel is open */}
