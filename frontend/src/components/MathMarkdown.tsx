@@ -66,7 +66,8 @@ export default function MathMarkdown({ children, className }: MathMarkdownProps)
 						return <code key={i}>{part.content}</code>
 					}
 				}
-				if (!part.content.trim()) return null
+				if (!part.content) return null
+				if (!part.content.trim()) return <span key={i}>{part.content}</span>
 				return (
 					<Markdown key={i} remarkPlugins={[remarkGfm]} className={className}>
 						{part.content}
