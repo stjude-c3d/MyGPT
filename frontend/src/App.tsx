@@ -89,7 +89,7 @@ function App() {
         const requestOptions = {
           method: 'POST',
           headers: { 
-            'Content-Type': 'application',
+            'Content-Type': 'application/json',
             'Authorization': `${
               frontendSettings.django_login ?
               'Bearer ' + localStorage.getItem('access') :
