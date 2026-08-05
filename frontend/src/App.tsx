@@ -64,7 +64,7 @@ function App() {
 				'Content-Type': 'application/json'
 			}
 		}
-		fetch(`${process.env.REACT_APP_BACKEND_API}api/frontend_settings/?format=json`, requestOptions)
+		fetch(`${import.meta.env.REACT_APP_BACKEND_API}api/frontend_settings/?format=json`, requestOptions)
 			.then(response => response.json())
 			.then(data => {
 				setFrontendSettings(data.settings)
@@ -89,20 +89,20 @@ function App() {
         const requestOptions = {
           method: 'POST',
           headers: { 
-            'Content-Type': 'application',
+            'Content-Type': 'application/json',
             'Authorization': `${
               frontendSettings.django_login ?
               'Bearer ' + localStorage.getItem('access') :
-              process.env.NODE_ENV === 'production' ? 
-              process.env.REACT_APP_AUTH_TOKEN_PROD 
-              : process.env.REACT_APP_AUTH_TOKEN_DEV}`
+              import.meta.env.PROD ? 
+              import.meta.env.REACT_APP_AUTH_TOKEN_PROD 
+              : import.meta.env.REACT_APP_AUTH_TOKEN_DEV}`
           },
           body: JSON.stringify({
             'user_email': user.user_email,
             'user_group': user.otherRoles?.length ? user.otherRoles[0] : ''
           })
         }
-        fetch(`${process.env.REACT_APP_BACKEND_API}api/get_datasets/?format=json`, requestOptions)
+        fetch(`${import.meta.env.REACT_APP_BACKEND_API}api/get_datasets/?format=json`, requestOptions)
           .then(response => response.json())
           .then(data => {
             currentSettings.datasets = currentSettings.datasets.filter((d:any)=>d !== 'None')
@@ -120,9 +120,9 @@ function App() {
               'Authorization': `${
                 frontendSettings.django_login ?
                 'Bearer ' + localStorage.getItem('access') :
-                process.env.NODE_ENV === 'production' ? 
-                process.env.REACT_APP_AUTH_TOKEN_PROD 
-                : process.env.REACT_APP_AUTH_TOKEN_DEV}`
+                import.meta.env.PROD ?
+                import.meta.env.REACT_APP_AUTH_TOKEN_PROD 
+                : import.meta.env.REACT_APP_AUTH_TOKEN_DEV}`
             },
             body: JSON.stringify({
               'user_email': '',
@@ -130,7 +130,7 @@ function App() {
             })
           }
           if ((frontendSettings.django_login && localStorage.getItem('access')?.length) || !frontendSettings.django_login) {
-            fetch(`${process.env.REACT_APP_BACKEND_API}api/get_datasets/?format=json`, requestOptions)
+            fetch(`${import.meta.env.REACT_APP_BACKEND_API}api/get_datasets/?format=json`, requestOptions)
             .then(response => {
               if(response.ok){
                 return response.json()

@@ -1,17 +1,11 @@
-import { useState, useEffect, useRef, ReactElement} from 'react'
-import { 
-	Viewer, Worker, SpecialZoomLevel, Icon
-} from '@react-pdf-viewer/core'
-import { defaultLayoutPlugin, ToolbarProps, ToolbarSlot, BookmarkIcon } from '@react-pdf-viewer/default-layout'
-import { bookmarkPlugin } from '@react-pdf-viewer/bookmark';
-import '@react-pdf-viewer/bookmark/lib/styles/index.css';
-import type { RenderBookmarkItemProps } from '@react-pdf-viewer/bookmark'
-import { pageNavigationPlugin } from '@react-pdf-viewer/page-navigation'
-import '@react-pdf-viewer/default-layout/lib/styles/index.css'
-import { PaperAirplaneIcon, Cog6ToothIcon, PaperClipIcon, XMarkIcon, CheckIcon, ArrowsPointingInIcon, ArrowsPointingOutIcon, ChatBubbleLeftRightIcon, DocumentChartBarIcon, BookmarkIcon as BookmarkIconMyGPT } from '@heroicons/react/24/outline'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
+import pdfjsWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
+import { Document, Page, pdfjs } from 'react-pdf'
+import 'react-pdf/dist/Page/AnnotationLayer.css'
+import 'react-pdf/dist/Page/TextLayer.css'
+import { PaperAirplaneIcon, Cog6ToothIcon, PaperClipIcon, XMarkIcon, CheckIcon, ArrowsPointingInIcon, ArrowsPointingOutIcon, ChatBubbleLeftRightIcon, DocumentChartBarIcon, BookmarkIcon as BookmarkIconMyGPT, MagnifyingGlassIcon, ChevronUpIcon, ChevronDownIcon, ArrowDownTrayIcon, Squares2X2Icon, Bars3Icon } from '@heroicons/react/24/outline'
 import { scaleSequential, interpolateRdYlGn } from 'd3'
-import Markdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
+import MathMarkdown from './MathMarkdown'
 // import Feedback from './Feedback'
 import { OllamaDirectChatStream, OllamaChatStreamWithToolSupport } from '../utils/OllamaChat'
 import { OllamaDirectGenerateStream, OllamaDirectGenerateNoStream } from '../utils/OllamaGenerate'
@@ -20,6 +14,7 @@ import { fetchAndRegisterOllamaModels, fetchDatasetDetails, fetchDocuments, fetc
 import FocusOnDocumentSelect from './DocumentFocusSelect'
 import Feedback from './Feedback'
 
+pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorkerUrl
 
 function GPTHome(props:{
 	currentSettings:any,
@@ -71,7 +66,49 @@ function GPTHome(props:{
 	const [selectedStop, setSelectedStop] = useState(0)
 	const [fileAttachmentType, setFileAttachmentType] = useState('paper_attachment')
 	const [viewerFileUrl, setViewerFileUrl] = useState('')
+	const [numPages, setNumPages] = useState(0)
+	const [viewerPage, setViewerPage] = useState(1)
+	const [pdfScale, setPdfScale] = useState(1.0)
+	const [showThumbnails, setShowThumbnails] = useState(false)
+	const [thumbnailWidth, setThumbnailWidth] = useState(170)
+	const isDraggingThumb = useRef(false)
 	const [mediaLoading, setMediaLoading] = useState(false)
+
+	// Map page number → context strings for the most recent query, used by customTextRenderer.
+	const highlightsByPage = useMemo(() => {
+		const map: Record<number, string[]> = {}
+		if (!sourcePages.length || !sourceContexts.length) return map
+		const latestPages: any[] = sourcePages[sourcePages.length - 1] || []
+		const latestContexts: any[] = sourceContexts[sourceContexts.length - 1] || []
+		latestPages.forEach((page: any, idx: number) => {
+			const ctx: string = latestContexts[idx]
+			if (page && ctx) map[page] = [...(map[page] || []), ctx]
+		})
+		return map
+	}, [sourcePages, sourceContexts])
+
+	// Per-page stable renderer functions; recreated only when highlights or page count change.
+	const textRenderers = useMemo(() => {
+		const renderers: Record<number, (item: { str: string }) => React.ReactNode> = {}
+		for (let p = 1; p <= numPages; p++) {
+			const contexts = highlightsByPage[p]
+			renderers[p] = ({ str }: { str: string }) => {
+				if (!contexts || !str?.trim()) return str
+				for (const ctx of contexts) {
+					if (ctx.includes(str.trim())) {
+						return (
+							<span style={{ position: 'relative', display: 'inline' }}>
+								{str}
+								<span aria-hidden="true" style={{ position: 'absolute', top: '-1px', right: 0, bottom: 0, left: 0, background: 'rgba(255,220,0,0.45)', borderRadius: '2px', pointerEvents: 'none', zIndex: 0 }} />
+							</span>
+						)
+					}
+				}
+				return str
+			}
+		}
+		return renderers
+	}, [highlightsByPage, numPages])
 	const [mediaLoadError, setMediaLoadError] = useState('')
 	const ConfidenceScoreColor = scaleSequential()
 		.domain([0, 100])
@@ -239,6 +276,7 @@ function GPTHome(props:{
 		return () => {
 			controller.abort()
 			if (objectUrl) URL.revokeObjectURL(objectUrl)
+			setNumPages(0)
 		}
 	}, [papers, selectedPaperIdx, fileAttachmentType, props.frontendSettings, props.currentSettings.loggedin])
 
@@ -277,7 +315,7 @@ function GPTHome(props:{
 			addDemoLibraryRequest(props.currentSettings.selectedEmbeddingModel, props.frontendSettings, controller.signal)
 				.then(data => {
 					if (!isMounted) return
-					console.log(data)
+					// console.log(data)
 					setAddDemoLibrary(false)
 					props.settingsCallback({...props.currentSettings, selectedDataset: 'MyGPT', showSettings: false, fetchPapers: true})
 				})
@@ -589,7 +627,7 @@ function GPTHome(props:{
 			}
 			saveAnswer(body, props.frontendSettings)
 				.then(data => {
-					console.log(data)
+					// console.log(data)
 					setAnswerRelevancescore((prevAnswerRelevancescore:any)=>[...prevAnswerRelevancescore, data.relevance_score])
 					setHallucinationIndex((prevHallucinationIndex:any)=>[...prevHallucinationIndex, data.hallucination_index_by_ml])
 					setContext('')
@@ -693,7 +731,7 @@ function GPTHome(props:{
 			}
 			saveAnswer(body, props.frontendSettings)
 				.then(data => {
-					console.log(data)
+					// console.log(data)
 					setAnswerRelevancescore((prevAnswerRelevancescore:any)=>[...prevAnswerRelevancescore, data.relevance_score])
 					setHallucinationIndex((prevHallucinationIndex:any)=>[...prevHallucinationIndex, data.hallucination_index_by_ml])
 					setAnswer('')
@@ -704,18 +742,77 @@ function GPTHome(props:{
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	},[answers, query, answerWithoutContext, answerReceived, answer])
 
-	const PageNavigationPluginInstance = pageNavigationPlugin()
+	useEffect(() => {
+		if (selectedPage > 0) jumpToPage(selectedPage)
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [selectedPage])
 
-	useEffect(()=>{
-		// settime for the page to load
-		setTimeout(()=>{
-			PageNavigationPluginInstance.jumpToPage(selectedPage-1)
-		}, 1000)
-		// PageNavigationPluginInstance.jumpToPage(selectedPage-1)
-	},[selectedPage, PageNavigationPluginInstance])
+	// After the PDF finishes loading, re-attempt the scroll; then refine to the highlighted mark element.
+	useEffect(() => {
+		if (numPages > 0 && selectedPage > 0) {
+			requestAnimationFrame(() => {
+				jumpToPage(selectedPage)
+				// Second RAF: after the page scroll, nudge to the first highlighted mark on that page.
+				requestAnimationFrame(() => {
+					const pageEl = document.getElementById(`pdf-page-${selectedPage}`)
+					const markEl = pageEl?.querySelector('span[aria-hidden="true"]') as HTMLElement | null
+					const container = scrollAreaRef.current
+					if (markEl && container) {
+						const markTop = markEl.getBoundingClientRect().top
+						const containerTop = container.getBoundingClientRect().top
+						container.scrollTop += (markTop - containerTop) - 40
+					}
+				})
+			})
+		}
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [numPages])
 
-	const bookmarkPluginInstance = bookmarkPlugin()
-	const { Bookmarks } = bookmarkPluginInstance
+	const scrollAreaRef = useRef<HTMLDivElement>(null)
+
+	const jumpToPage = (page: number) => {
+		setViewerPage(page)
+		const container = scrollAreaRef.current
+		const el = document.getElementById(`pdf-page-${page}`)
+		if (el && container) container.scrollTop = el.offsetTop - container.offsetTop
+	}
+
+	// Update viewerPage indicator as user scrolls
+	useEffect(() => {
+		const container = scrollAreaRef.current
+		if (!container || !numPages) return
+		const handleScroll = () => {
+			const containerTop = container.getBoundingClientRect().top
+			for (let i = numPages; i >= 1; i--) {
+				const el = document.getElementById(`pdf-page-${i}`)
+				if (el && el.getBoundingClientRect().top <= containerTop + 80) {
+					setViewerPage(i)
+					break
+				}
+			}
+		}
+		container.addEventListener('scroll', handleScroll)
+		return () => container.removeEventListener('scroll', handleScroll)
+	}, [numPages])
+
+	// Thumbnail panel drag-to-resize
+	useEffect(() => {
+		const handleMouseMove = (e: MouseEvent) => {
+			if (!isDraggingThumb.current) return
+			const row = document.querySelector('.pdf-viewer-row') as HTMLElement
+			if (!row) return
+			const sidebarWidth = 32
+			const newWidth = Math.max(80, Math.min(300, e.clientX - row.getBoundingClientRect().left - sidebarWidth))
+			setThumbnailWidth(newWidth)
+		}
+		const handleMouseUp = () => { isDraggingThumb.current = false }
+		document.addEventListener('mousemove', handleMouseMove)
+		document.addEventListener('mouseup', handleMouseUp)
+		return () => {
+			document.removeEventListener('mousemove', handleMouseMove)
+			document.removeEventListener('mouseup', handleMouseUp)
+		}
+	}, [])
 
 	useEffect(()=>{
 		if (props.currentSettings.MCPTools && props.currentSettings.MCPTools.length){
@@ -751,100 +848,7 @@ function GPTHome(props:{
 		}
 	}, [answers]);
 
-	const renderToolbar = (Toolbar: (props: ToolbarProps) => ReactElement) => (
-		<Toolbar>
-			{(slots: ToolbarSlot) => {
-				const {
-					CurrentPageInput,
-					Download,
-					EnterFullScreen,
-					GoToNextPage,
-					GoToPreviousPage,
-					NumberOfPages,
-					ShowSearchPopover,
-					Zoom,
-					ZoomIn,
-					ZoomOut,
-				} = slots;
-				return (
-					<div
-						style={{
-							alignItems: 'center',
-							display: 'flex',
-							width: '100%',
-						}}
-					>
-						<div style={{ padding: '0px 2px' }}>
-							<ShowSearchPopover />
-						</div>
-						<div style={{ padding: '0px 2px' }}>
-							<ZoomOut />
-						</div>
-						<div style={{ padding: '0px 2px' }}>
-							<Zoom />
-						</div>
-						<div style={{ padding: '0px 2px' }}>
-							<ZoomIn />
-						</div>
-						<div style={{ padding: '0px 2px', marginLeft: 'auto' }}>
-							<GoToPreviousPage />
-						</div>
-						<div className='flex flex-row text-sm my-auto align-middle'>
-							<CurrentPageInput />
-						</div>
-						<div className='flex flex-row text-sm my-auto align-middle'>
-							of <NumberOfPages />
-						</div>
-						<div style={{ padding: '0px 2px' }}>
-							<GoToNextPage />
-						</div>
-						<div style={{ padding: '0px 2px', marginLeft: 'auto' }}>
-							<EnterFullScreen />
-						</div>
-						<div style={{ padding: '0px 2px' }}>
-							<Download />
-						</div>
-					</div>
-				);
-			}}
-		</Toolbar>
-	)
 
-	const ExpandIcon = () => (
-    <Icon size={16}>
-        <path d="M.541,5.627,11.666,18.2a.5.5,0,0,0,.749,0L23.541,5.627" />
-    </Icon>
-);
-
-	const CollapseIcon = () => (
-		<Icon size={16}>
-			<path d="M5.651,23.5,18.227,12.374a.5.5,0,0,0,0-.748L5.651.5" />
-		</Icon>
-	);
-
-
-	const renderBookmarkItem = (renderProps: RenderBookmarkItemProps) =>
-        renderProps.defaultRenderItem(
-            renderProps.onClickItem,
-            <>
-                {renderProps.defaultRenderToggle(<ExpandIcon />, <CollapseIcon />)}
-                {renderProps.defaultRenderTitle(() => {
-                    renderProps.onClickTitle();
-                })}
-            </>
-        );
-	
-	const DefaultLayoutPluginInstance = defaultLayoutPlugin({
-		sidebarTabs: (defaultTabs:any) => [
-			defaultTabs[0],
-            {
-                content: <Bookmarks renderBookmarkItem={renderBookmarkItem} />,
-                icon: <BookmarkIcon />,
-                title: 'Bookmark',
-            },
-		],
-		renderToolbar,
-	})
 
 	const resetStates = () => {
 		setQuery([])
@@ -1305,16 +1309,16 @@ function GPTHome(props:{
 												style={{ height: minimizedThinking ? 0 : 'auto', overflow: minimizedThinking ? 'hidden' : 'visible' }}
 											>
 												<div className='text-gray-300 text-sm whitespace-pre-wrap overflow-y-auto max-h-48'>
-													<Markdown remarkPlugins={[remarkGfm]}>
-														{showNullAnswerIndexes[query.length-i-1] === true? nullThoughts[query.length-i-1] : thoughts[query.length-i-1]}
-													</Markdown>
+													<MathMarkdown>
+														{showNullAnswerIndexes[query.length-i-1] === true? nullThoughts[query.length-i-1] ?? '' : thoughts[query.length-i-1] ?? ''}
+													</MathMarkdown>
 												</div>
 											</div>
 										</div>
 									)}
-									<Markdown remarkPlugins={[remarkGfm]}>
-										{showNullAnswerIndexes[query.length-i-1] === true? nullAnswers[query.length-i-1] : answers[query.length-i-1].response}
-									</Markdown>
+									<MathMarkdown>
+										{showNullAnswerIndexes[query.length-i-1] === true? nullAnswers[query.length-i-1] ?? '' : answers[query.length-i-1].response ?? ''}
+									</MathMarkdown>
 								</div>
 								<Feedback
 									answer={JSON.parse(JSON.stringify(answers[query.length-i-1]))}
@@ -1324,7 +1328,7 @@ function GPTHome(props:{
 											method: 'POST',
 											headers: { 
 												'Content-Type': 'application/json',
-												'Authorization': `${process.env.NODE_ENV === 'production' ? process.env.REACT_APP_AUTH_TOKEN_PROD : process.env.REACT_APP_AUTH_TOKEN_DEV}`
+										'Authorization': `${import.meta.env.PROD ? import.meta.env.REACT_APP_AUTH_TOKEN_PROD : import.meta.env.REACT_APP_AUTH_TOKEN_DEV}`
 											},
 											body: JSON.stringify({ 
 												answer_text: answers[query.length-i-1].response,
@@ -1333,7 +1337,7 @@ function GPTHome(props:{
 												user_comment: feedback.user_comment,
 											})
 										}
-										fetch(`${process.env.REACT_APP_BACKEND_API}api/feedback/?format=json`, requestOptions)
+										fetch(`${import.meta.env.REACT_APP_BACKEND_API}api/feedback/?format=json`, requestOptions)
 											.then(response => response.json())
 											.then(data => {
 												console.log(data)
@@ -1422,16 +1426,16 @@ function GPTHome(props:{
 										<div className='mb-4 p-4 bg-slate-700 dark:bg-slate-800 rounded-lg border-l-4 border-blue-500'>
 											<div className='text-blue-300 text-sm font-semibold mb-2'>💭 Thinking...</div>
 											<div className='text-gray-300 text-sm whitespace-pre-wrap'>
-												<Markdown remarkPlugins={[remarkGfm]}>
+												<MathMarkdown>
 													{thought}
-												</Markdown>
+												</MathMarkdown>
 											</div>
 										</div>
 									)}
 									<div className='text-white whitespace-pre-wrap answer-div'>
-										<Markdown remarkPlugins={[remarkGfm]}>
+										<MathMarkdown>
 											{answer.length ? answer: 'Generating answer...'}
-										</Markdown>
+										</MathMarkdown>
 									</div>
 									{
 									questionRelevancescore[query.length-1] > 0 && sourcePapers.length && sourcePages.length && sourcePages[query.length-1] && sourcePapers[query.length-1] ?
@@ -1653,29 +1657,86 @@ function GPTHome(props:{
 					<div className='text-xl mt-4 text-nav dark:text-white [writing-mode:vertical-rl] rotate-180'>Document Viewer</div>
 				</div>
 			) : (
-			<div style={{ width: `${panelWidths.right}%` }} className='p-6 bg-panel2 dark:bg-panel3-dark rounded-r-lg h-full overflow-y-auto duration-300 ease-in-out relative'>
-				<button
-					title='Collapse viewer panel'
-					className='absolute right-2 top-2 p-1 rounded-md bg-white dark:bg-stjude dark:text-white text-nav z-10'
-					onClick={() => collapsePanel('right')}
-				>
-					<ArrowsPointingInIcon className='w-4 h-4' />
-				</button>
-					<div className='overflow-x-auto h-full w-full pt-4 '>
-						<Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
-						<div  className='h-[80vh]'>
-							{papers.length && viewerFileUrl ?
-								<Viewer
-								theme={props.currentSettings.darkMode ? 'dark' : 'light'}
-								fileUrl={viewerFileUrl}
-								defaultScale={SpecialZoomLevel.ActualSize}
-								initialPage={selectedPage-1}
-								plugins={[
-									DefaultLayoutPluginInstance, 
-									PageNavigationPluginInstance,
-									bookmarkPluginInstance,
-								]}
-								/> : papers.length ?
+			<div style={{ width: `${panelWidths.right}%` }} className='bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-r-lg h-full overflow-hidden duration-300 ease-in-out relative flex flex-col shadow-sm'>
+				<div className='flex-1 overflow-hidden flex flex-row w-full pdf-viewer-row bg-gray-100 dark:bg-gray-900'>
+					{/* Left icon sidebar */}
+					<div className='flex flex-col items-center gap-1 py-2 px-0.5 bg-gray-100 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shrink-0'>
+						<button
+							title='Page thumbnails'
+							onClick={() => setShowThumbnails(v => !v)}
+							className={`p-1.5 rounded ${showThumbnails ? 'bg-gray-200 dark:bg-gray-600' : 'hover:bg-gray-200 dark:hover:bg-gray-700'} text-gray-600 dark:text-gray-300`}
+						>
+							<Squares2X2Icon className='w-5 h-5' />
+						</button>
+						<button title='Outline' className='p-1.5 rounded opacity-30 cursor-not-allowed text-gray-600 dark:text-gray-300'>
+							<Bars3Icon className='w-5 h-5' />
+						</button>
+					</div>
+					{/* Thumbnail panel */}
+					{showThumbnails && numPages > 0 && (
+						<div style={{ width: thumbnailWidth }} className='overflow-y-auto bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shrink-0 select-none'>
+							<Document file={viewerFileUrl}>
+								{Array.from({ length: numPages }, (_, i) => (
+									<div
+										key={i + 1}
+										onClick={() => jumpToPage(i + 1)}
+										className='group flex justify-center py-2 px-1.5 cursor-pointer'
+									>
+										<div className='shrink-0 flex flex-col items-center'>
+											<div className={`shadow-md ${viewerPage === i + 1 ? 'ring-[3px] ring-gray-500 dark:ring-gray-300' : 'ring-1 ring-transparent group-hover:ring-[3px] group-hover:ring-gray-400 dark:group-hover:ring-gray-400'}`}>
+												<Page pageNumber={i + 1} scale={0.18} renderTextLayer={false} renderAnnotationLayer={false} />
+											</div>
+											<p className='text-xs mt-1.5 text-gray-500 dark:text-gray-400'>{i + 1}</p>
+										</div>
+									</div>
+								))}
+							</Document>
+						</div>
+					)}
+					{/* Drag handle — only shown when thumbnail panel is open */}
+					{showThumbnails && numPages > 0 && (
+						<div
+							className='w-1 cursor-col-resize shrink-0 bg-gray-200 dark:bg-gray-700 hover:bg-blue-400 dark:hover:bg-blue-500 transition-colors'
+							onMouseDown={e => { isDraggingThumb.current = true; e.preventDefault() }}
+						/>
+					)}
+					{/* Main content: toolbar + document */}
+					<div className='flex flex-col flex-1 overflow-hidden'>
+						{papers.length && viewerFileUrl ?
+							<>
+								{/* Toolbar matching original layout: search | zoom | page nav | fullscreen | download */}
+								<div className='flex items-center gap-0.5 px-2 py-1 bg-gray-100 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-xs shrink-0'>
+									<button className='p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700' title='Search'><MagnifyingGlassIcon className='w-4 h-4' /></button>
+									<span className='mx-1 w-px h-4 bg-gray-300 dark:bg-gray-600 shrink-0' />
+									<button className='p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700' title='Zoom out' onClick={() => setPdfScale(s => Math.max(0.25, +(s - 0.25).toFixed(2)))}><span className='text-sm font-bold'>−</span></button>
+									<select value={pdfScale} onChange={e => setPdfScale(Number(e.target.value))} className='mx-0.5 px-1 py-0.5 border border-gray-300 dark:border-gray-500 rounded bg-white dark:bg-gray-700 text-xs cursor-pointer'>
+										{[0.25,0.5,0.75,1,1.25,1.5,2,3].map(v => <option key={v} value={v}>{Math.round(v*100)}%</option>)}
+									</select>
+									<button className='p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700' title='Zoom in' onClick={() => setPdfScale(s => Math.min(3, +(s + 0.25).toFixed(2)))}><span className='text-sm font-bold'>+</span></button>
+									<div className='ml-auto flex items-center gap-0.5'>
+										<button className='p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-40' title='Previous page' onClick={() => jumpToPage(Math.max(1, viewerPage - 1))} disabled={viewerPage <= 1}><ChevronUpIcon className='w-4 h-4' /></button>
+										<input type='number' min={1} max={numPages || 1} value={viewerPage} onChange={e => jumpToPage(Math.min(numPages, Math.max(1, Number(e.target.value))))} className='w-8 text-center border border-gray-300 dark:border-gray-500 rounded px-0.5 bg-white dark:bg-gray-700' />
+										<span className='whitespace-nowrap'>of {numPages || '—'}</span>
+										<button className='p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-40' title='Next page' onClick={() => jumpToPage(Math.min(numPages, viewerPage + 1))} disabled={viewerPage >= numPages}><ChevronDownIcon className='w-4 h-4' /></button>
+										<span className='mx-1 w-px h-4 bg-gray-300 dark:bg-gray-600 shrink-0' />
+										<button className='p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700' title='Fullscreen' onClick={() => (document.querySelector('.pdf-scroll-area') as HTMLElement)?.requestFullscreen?.()}><ArrowsPointingOutIcon className='w-4 h-4' /></button>
+										<a href={viewerFileUrl} download className='p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer' title='Download'><ArrowDownTrayIcon className='w-4 h-4' /></a>
+										<span className='mx-1 w-px h-4 bg-gray-300 dark:bg-gray-600 shrink-0' />
+										<button className='p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700' title='Collapse viewer panel' onClick={() => collapsePanel('right')}><ArrowsPointingInIcon className='w-4 h-4' /></button>
+									</div>
+								</div>
+								<div ref={scrollAreaRef} className='overflow-auto flex-1 pdf-scroll-area bg-[#bfbcba] dark:bg-[#033f52]'>
+									<div className='flex flex-col items-center py-4 gap-3'>
+										<Document key={viewerFileUrl} file={viewerFileUrl} onLoadSuccess={({ numPages }: { numPages: number }) => setNumPages(numPages)} onLoadError={() => setNumPages(0)}>
+											{numPages > 0 && Array.from({ length: numPages }, (_, i) => (
+												<div key={i + 1} id={`pdf-page-${i + 1}`} className='shadow-lg border border-gray-300 dark:border-gray-600'>
+													<Page pageNumber={i + 1} scale={pdfScale} customTextRenderer={textRenderers[i + 1] as any} />
+												</div>
+											))}
+										</Document>
+									</div>
+								</div>
+							</>							: papers.length ?
 								<div className='text-center text-nav'>
 									{mediaLoading ? 'Loading document...' : mediaLoadError || 'Preparing document...'}
 								</div>
@@ -1723,9 +1784,8 @@ function GPTHome(props:{
 										Or you can add your own library from Upload menu.
 									</div>
 								</div>
-							}
-						</div>
-					</Worker>
+						}
+					</div>
 				</div>
 			</div>
 			)}

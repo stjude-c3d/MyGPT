@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Client } from '@modelcontextprotocol/sdk/client/index'
-import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse'
+import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp'
 
 const MCPClient = (props:{
   currentSettings:any,
@@ -26,8 +26,8 @@ const MCPClient = (props:{
   const currentSettings = props.currentSettings
   const getClient = () => {
     if (!transportRef.current) {
-      transportRef.current = new SSEClientTransport(
-        new URL(process.env.REACT_APP_MCP_SERVER_URL || 'http://localhost:5001/sse')
+      transportRef.current = new StreamableHTTPClientTransport(
+        new URL(import.meta.env.REACT_APP_MCP_SERVER_URL || 'http://localhost:5001/mcp')
       )
     }
     if (!clientRef.current) {
@@ -182,7 +182,7 @@ const MCPClient = (props:{
           <label className='text-nav dark:text-nav-dark mb-2 text-lg mx-auto'>MCP Server</label>
           {/* add example url */}
           <p className='text-xs text-gray-500 dark:text-gray-400 mb-2 mx-auto'>
-            <span className='text-nav dark:text-nav-dark'>URL: {process.env.REACT_APP_MCP_SERVER_URL}</span><br/>
+            <span className='text-nav dark:text-nav-dark'>URL: {import.meta.env.REACT_APP_MCP_SERVER_URL}</span><br/>
             <span className='text-nav dark:text-nav-dark'>Server Name: {serverName} </span>
           </p>
           {/* add connect button */}

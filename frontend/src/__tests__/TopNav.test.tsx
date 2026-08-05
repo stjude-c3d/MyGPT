@@ -1,27 +1,28 @@
+import { vi, type Mock } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import TopNav from '../components/TopNav'
 import useAuthenticateUser from '../hooks/useAuthenticateUser'
 
-jest.mock('../hooks/useAuthenticateUser')
+vi.mock('../hooks/useAuthenticateUser')
 
-const mockedUseAuthenticateUser = useAuthenticateUser as jest.Mock
+const mockedUseAuthenticateUser = useAuthenticateUser as Mock
 
 const baseProps = {
-	setShowUpload: jest.fn(),
-	setShowSettings: jest.fn(),
-	setShowChatHistory: jest.fn(),
-	setPlotButton: jest.fn(),
-	loginCallback: jest.fn(),
+	setShowUpload: vi.fn(),
+	setShowSettings: vi.fn(),
+	setShowChatHistory: vi.fn(),
+	setPlotButton: vi.fn(),
+	loginCallback: vi.fn(),
 }
 
 describe('TopNav', () => {
 	beforeEach(() => {
-		jest.clearAllMocks()
+		vi.clearAllMocks()
 		localStorage.clear()
 		mockedUseAuthenticateUser.mockReturnValue({
 			activeAccounts: [],
 			appRoles: [],
-			instance: { loginRedirect: jest.fn(), logoutRedirect: jest.fn() },
+			instance: { loginRedirect: vi.fn(), logoutRedirect: vi.fn() },
 		})
 	})
 
@@ -65,7 +66,7 @@ describe('TopNav', () => {
 	})
 
 	it('opens settings when the settings button is clicked', () => {
-		const setShowSettings = jest.fn()
+		const setShowSettings = vi.fn()
 		renderTopNav({ setShowSettings })
 
 		const settingsButton = screen.getByRole('button', { name: /settings/i })
@@ -83,11 +84,11 @@ describe('TopNav', () => {
 	})
 
 	it('calls loginCallback with authenticated user details from MSAL account', async () => {
-		const loginCallback = jest.fn()
+		const loginCallback = vi.fn()
 		mockedUseAuthenticateUser.mockReturnValue({
 			activeAccounts: [{ name: 'Jane Doe', username: 'jane@org.org' }],
 			appRoles: ['MyGPTAdmin', 'Reader'],
-			instance: { loginRedirect: jest.fn(), logoutRedirect: jest.fn() },
+			instance: { loginRedirect: vi.fn(), logoutRedirect: vi.fn() },
 		})
 
 		renderTopNav({ loginCallback })

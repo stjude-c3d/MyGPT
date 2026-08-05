@@ -584,14 +584,14 @@ const FlowUpload = (props: {
             headers: {
                 'Authorization': `${props.user && props.djangoLogin ?
                     'Bearer ' + localStorage.getItem('access') :
-                    process.env.NODE_ENV === 'production' ?
-                        process.env.REACT_APP_AUTH_TOKEN_PROD
-                        : process.env.REACT_APP_AUTH_TOKEN_DEV}`
+                    import.meta.env.PROD ?
+                        import.meta.env.REACT_APP_AUTH_TOKEN_PROD
+                        : import.meta.env.REACT_APP_AUTH_TOKEN_DEV}`
             },
             body: formData
         }
         
-        fetch(`${process.env.REACT_APP_BACKEND_API}api/upload_documents/`, requestOptions)
+        fetch(`${import.meta.env.REACT_APP_BACKEND_API}api/upload_documents/`, requestOptions)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Upload failed')
