@@ -4,7 +4,7 @@ export const getAuthHeader = (frontendSettings: any): string => {
 	if (jwtAccessToken?.length) {
 		return 'Bearer ' + jwtAccessToken
 	}
-	const staticToken = import.meta.env.MODE === 'production'
+	const staticToken = import.meta.env.PROD
 		? import.meta.env.REACT_APP_AUTH_TOKEN_PROD ?? ''
 		: import.meta.env.REACT_APP_AUTH_TOKEN_DEV ?? ''
 
