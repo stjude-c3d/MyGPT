@@ -1,9 +1,11 @@
 import json
+import re
 import requests
 import time
 import pandas as pd
 import os
 import argparse
+from pathlib import Path
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -15,13 +17,28 @@ BACKEND_API_URL = os.environ.get('BACKEND_API_URL', '').strip().strip('"').rstri
 
 # --- CONFIGURATION ---
 
+SCRIPTS_DIR = Path(__file__).resolve().parent
+OUTPUTS_DIR = (SCRIPTS_DIR / '../outputs').resolve()
+
+
+def safe_path(base_dir: Path, *parts: str) -> Path:
+    """Resolve a path and ensure it stays within base_dir."""
+    resolved = (base_dir / Path(*parts)).resolve()
+    if not str(resolved).startswith(str(base_dir) + os.sep):
+        raise ValueError(f"Path traversal detected: {resolved}")
+    return resolved
+
+
 def get_dataset_name():
     parser = argparse.ArgumentParser(description='Save answers to database')
     parser.add_argument('--dataset', default='QRS-ARS-cutoff-bge', help='Dataset name')
     args = parser.parse_args()
-    return args.dataset
+    dataset = args.dataset
+    if not re.match(r'^[a-zA-Z0-9_\-]+$', dataset):
+        raise ValueError(f"Invalid dataset name: {dataset!r}. Only alphanumeric characters, hyphens, and underscores are allowed.")
+    return dataset
 
-LIBRARY_NAME = get_dataset_name()
+LIBRARY_NAME = os.path.basename(get_dataset_name())
 EMBEDDING_MODEL = 'bge'
 MODELS = [
     'gpt-oss:20b'
@@ -57,20 +74,20 @@ def process_evaluation():
         sanitized_model = model.replace(':', '-')
         
         # Define File Paths
-        input_json_path = f'../outputs/answers/answers-{sanitized_model}-{LIBRARY_NAME}.json'
-        output_csv_path = f'../outputs/answers/answers-scores-{sanitized_model}-{LIBRARY_NAME}.csv'
+        input_json_path = safe_path(OUTPUTS_DIR, 'answers', f'answers-{sanitized_model}-{LIBRARY_NAME}.json')
+        output_csv_path = safe_path(OUTPUTS_DIR, 'answers', f'answers-scores-{sanitized_model}-{LIBRARY_NAME}.csv')
         
         print(f"\nProcessing Model: {model}")
         print(f"Reading Input: {input_json_path}")
         print(f"Writing Output: {output_csv_path}")
 
         # Check if input file exists
-        if not os.path.exists(input_json_path):
+        if not input_json_path.exists():
             print(f"❌ Error: Input file not found: {input_json_path}")
             continue
 
         # Load Data
-        with open(input_json_path, encoding='utf-8') as file:
+        with open(os.path.realpath(input_json_path), encoding='utf-8') as file:
             raw_data = json.load(file)
             json_data = pd.DataFrame(raw_data)
             
@@ -101,7 +118,7 @@ def process_evaluation():
                 id_list = [i + 1 for i in range(len(question_list))]
 
         # Open CSV for writing
-        with open(output_csv_path, 'w', buffering=1) as f:
+        with open(os.path.realpath(output_csv_path), 'w', buffering=1) as f:
             # --- MODIFIED HEADER: Added question_id ---
             f.write('question_id,mean_distance_a,relevance_score_a,hallucination_index_by_ml,hallucination_index_by_equation,vector_distances_a,vector_scores_a,bm25_scores_a,rerank_sentiments_a\n')
             

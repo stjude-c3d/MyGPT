@@ -1,13 +1,30 @@
 import pandas as pd
 import json
-
+import re
+import os
 import argparse
+from pathlib import Path
+
+SCRIPTS_DIR = Path(__file__).resolve().parent
+OUTPUTS_DIR = (SCRIPTS_DIR / '../outputs').resolve()
+
+
+def safe_path(base_dir: Path, *parts: str) -> Path:
+    """Resolve a path and ensure it stays within base_dir."""
+    resolved = (base_dir / Path(*parts)).resolve()
+    if not str(resolved).startswith(str(base_dir) + os.sep):
+        raise ValueError(f"Path traversal detected: {resolved}")
+    return resolved
+
 
 def get_dataset_name():
     parser = argparse.ArgumentParser(description='Combine answers with context')
     parser.add_argument('--dataset', default='QRS-ARS-cutoff-bge', help='Dataset name')
     args = parser.parse_args()
-    return args.dataset
+    dataset = args.dataset
+    if not re.match(r'^[a-zA-Z0-9_\-]+$', dataset):
+        raise ValueError(f"Invalid dataset name: {dataset!r}. Only alphanumeric characters, hyphens, and underscores are allowed.")
+    return os.path.basename(dataset)
 
 def combine_context_with_answers(
 	answers_csv,
@@ -28,7 +45,7 @@ def combine_context_with_answers(
 		combined.rename(columns={'relevance_score': 'ARS'}, inplace=True)
 
 	# Load contexts JSON
-	with open(contexts_json, 'r', encoding='utf-8') as f:
+	with open(os.path.realpath(contexts_json), 'r', encoding='utf-8') as f:
 		data = json.load(f)
 	extracted_data = []
 	for item in data:
@@ -71,16 +88,16 @@ def combine_context_with_answers(
 		)
 		final_combined = final_combined[~mask]
 
-	final_combined.to_csv(output_csv, index=False)
+	final_combined.to_csv(os.path.realpath(output_csv), index=False)
 	print(f"Saved combined CSV to: {output_csv}")
 
 if __name__ == "__main__":
 	library_name = get_dataset_name()
-	answers_csv = f"../outputs/answers/answers-gpt-oss-20b-{library_name}.csv"
-	scores_csv = f"../outputs/answers/answers-scores-gpt-oss-20b-{library_name}.csv"
-	contexts_json = f'../outputs/contexts/context_{library_name}.json'
-	label_studio_json = f'../outputs/answers/label_studio_data_{library_name}.json'
-	output_csv = f"../outputs/answers/answers-gpt-oss-20b-{library_name}-full.csv"
+	answers_csv = safe_path(OUTPUTS_DIR, 'answers', f'answers-gpt-oss-20b-{library_name}.csv')
+	scores_csv = safe_path(OUTPUTS_DIR, 'answers', f'answers-scores-gpt-oss-20b-{library_name}.csv')
+	contexts_json = safe_path(OUTPUTS_DIR, 'contexts', f'context_{library_name}.json')
+	label_studio_json = safe_path(OUTPUTS_DIR, 'answers', f'label_studio_data_{library_name}.json')
+	output_csv = safe_path(OUTPUTS_DIR, 'answers', f'answers-gpt-oss-20b-{library_name}-full.csv')
 
 	combine_context_with_answers(
 		answers_csv,

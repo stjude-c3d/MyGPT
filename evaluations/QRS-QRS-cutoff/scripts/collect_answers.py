@@ -5,6 +5,7 @@ import requests
 import pandas as pd
 import re
 import argparse
+from pathlib import Path
 from dotenv import load_dotenv
 
 load_dotenv('../.env')
@@ -16,13 +17,29 @@ OLLAMA_API_URL = os.environ.get('OLLAMA_API_URL', '').strip().strip('"').rstrip(
 # Variables #
 #############
 
+SCRIPTS_DIR = Path(__file__).resolve().parent
+OUTPUTS_DIR = (SCRIPTS_DIR / '../outputs').resolve()
+INPUTS_DIR = (SCRIPTS_DIR / '../inputs').resolve()
+
+
+def safe_path(base_dir: Path, *parts: str) -> Path:
+    """Resolve a path and ensure it stays within base_dir."""
+    resolved = (base_dir / Path(*parts)).resolve()
+    if not str(resolved).startswith(str(base_dir) + os.sep):
+        raise ValueError(f"Path traversal detected: {resolved}")
+    return resolved
+
+
 def get_dataset_name():
     parser = argparse.ArgumentParser(description='Collect answers from API')
     parser.add_argument('--dataset', default='QRS-ARS-cutoff-bge', help='Dataset name')
     args = parser.parse_args()
-    return args.dataset
+    dataset = args.dataset
+    if not re.match(r'^[a-zA-Z0-9_\-]+$', dataset):
+        raise ValueError(f"Invalid dataset name: {dataset!r}. Only alphanumeric characters, hyphens, and underscores are allowed.")
+    return dataset
 
-LIBRARY_NAME = get_dataset_name()
+LIBRARY_NAME = os.path.basename(get_dataset_name())
 EMBEDDING_MODEL = 'bge'
 MODELS = [
     'gpt-oss:20b'
@@ -34,7 +51,7 @@ MODELS = [
 ANSWER_API = f'{OLLAMA_API_URL}/api/generate/'
 
 # Load evaluation documents and questions
-EVAL_DOC = pd.read_csv('../inputs/QRS_ARS_cutoff_dataset.csv', encoding='ISO-8859-1').dropna()
+EVAL_DOC = pd.read_csv(INPUTS_DIR / 'QRS_ARS_cutoff_dataset.csv', encoding='ISO-8859-1').dropna()
 QUESTION_LIST = EVAL_DOC['question'].tolist()
 
 # List of models and embeddings to evaluate
@@ -60,7 +77,7 @@ def collect_answers():
     # Load existing answers to check which questions have been answered
     model = MODELS[0]  # Just to get the sanitized model name
     sanitized_model = model.replace(':', '-')
-    answers_file_path = f'../outputs/answers/answers-{sanitized_model}-{LIBRARY_NAME}.json'
+    answers_file_path = safe_path(OUTPUTS_DIR, 'answers', f'answers-{sanitized_model}-{LIBRARY_NAME}.json')
     try:
         with open(answers_file_path, 'r', encoding='utf-8') as f:
             existing_answers = json.load(f)
@@ -69,7 +86,7 @@ def collect_answers():
         answered_questions = set()
     
     for shorthand in EMBED_SHORTHANDS:
-        with open('../outputs/contexts/context_' + LIBRARY_NAME + '.json', encoding='utf-8') as file:
+        with open(safe_path(OUTPUTS_DIR, 'contexts', f'context_{LIBRARY_NAME}.json'), encoding='utf-8') as file:
             context_lists = pd.DataFrame.from_dict(json.load(file))['contexts'].tolist()
         for model in MODELS:
             if (model, shorthand) in COLLECTED:
@@ -82,7 +99,6 @@ def collect_answers():
                 else:
                     print(f'Processing Question {i + 1}...')
                 
-                question_idx = i + 1
                 contexts_full = context_lists[i]
                 # contexts_full = context_lists[(i * 3) + question_idx]
                 contexts = []
@@ -122,17 +138,17 @@ def collect_answers():
                     }
                     print(f'Finished processing question {i+1}')
                     model_name = model.removesuffix(":latest").replace(":", "-")
-                    result_file_path = f'../outputs/answers/answers-{model_name}-{LIBRARY_NAME}.json'
-                    os.makedirs(os.path.dirname(result_file_path), exist_ok=True)
+                    result_file_path = safe_path(OUTPUTS_DIR, 'answers', f'answers-{model_name}-{LIBRARY_NAME}.json')
+                    result_file_path.parent.mkdir(parents=True, exist_ok=True)
 
-                    if os.path.exists(result_file_path):
+                    if result_file_path.exists():
                         with open(result_file_path, 'r+', encoding='utf-8') as result_file:
                             result_data = json.load(result_file)
                             result_data.append(qa_result)
                             result_file.seek(0)
                             json.dump(result_data, result_file, indent=4)
                     else:
-                        with open(result_file_path, 'w', encoding='utf-8') as result_file:
+                        with open(result_file_path, 'w', encoding='utf-8') as result_file:  # noqa: WPS515
                             json.dump([qa_result], result_file, indent=4)
 
 collect_answers()

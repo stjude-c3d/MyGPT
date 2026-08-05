@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import csv
+import os
 import shutil
 from pathlib import Path
 from typing import List, Set
@@ -46,7 +47,7 @@ def copy_matching_files(document_ids: List[str], source_dir: Path, destination_d
             missing_ids.append(document_id)
             continue
 
-        shutil.copy2(source_file, destination_file)
+        shutil.copy2(os.path.realpath(source_file), os.path.realpath(destination_file))
 
     return missing_ids
 
