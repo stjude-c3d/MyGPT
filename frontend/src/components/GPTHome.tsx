@@ -1743,15 +1743,36 @@ function GPTHome(props:{
 								: videos.length && videos[selectedPaperIdx] && videos[selectedPaperIdx]['video_link'] ?
 								// show embedded youtube videos
 									<div className='p-2'>
-										<iframe 
-											className='w-full h-[40vh]' 
-											src={videos[selectedPaperIdx]['video_link'].replace('watch?v=', 'embed/') + '?start=' + selectedStart + '&end=' + selectedStop + (selectedStart !== 0 ? '&autoplay=1&cc_load_policy=1': '')}
-											title={videos[selectedPaperIdx]['video_title']}
+										{(() => {
+											const baseUrl = videos[selectedPaperIdx]['video_link'].replace('watch?v=', 'embed/');
+											// Validate it's a YouTube URL
+											if (!baseUrl.includes('youtube.com') && !baseUrl.includes('youtu.be')) {
+												return <div className='text-center text-red-500'>Invalid video source</div>;
+											}
+											const params = new URLSearchParams();
+											const start = Math.max(0, parseInt(String(selectedStart)) || 0);
+											const end = Math.max(0, parseInt(String(selectedStop)) || 0);
+											if (start > 0) {
+												params.set('start', String(start));
+												params.set('autoplay', '1');
+												params.set('cc_load_policy', '1');
+											}
+											if (end > 0) {
+												params.set('end', String(end));
+											}
+											const videoUrl = `${baseUrl}?${params.toString()}`;
+											return (
+												<iframe 
+													className='w-full h-[40vh]' 
+													src={videoUrl}
+													title={videos[selectedPaperIdx]['video_title']}
 											allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
 											allowFullScreen
 											referrerPolicy='no-referrer'
 										>
 										</iframe>
+											);
+										})()}
 										</div>
 								:
 								!props.currentSettings.loggedin && !canLoadDemoLibraryWithoutLogin ?
