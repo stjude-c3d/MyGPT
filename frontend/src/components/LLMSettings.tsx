@@ -162,7 +162,7 @@ const LLMSettings = (props: {
 					method: 'POST',
 					headers: { 
 						'Content-Type': 'application/json',
-						'Authorization': `${import.meta.env.MODE === 'production' ? import.meta.env.REACT_APP_AUTH_TOKEN_PROD : import.meta.env.REACT_APP_AUTH_TOKEN_DEV}`
+						'Authorization': `${import.meta.env.PROD ? import.meta.env.REACT_APP_AUTH_TOKEN_PROD : import.meta.env.REACT_APP_AUTH_TOKEN_DEV}`
 					},
 					setConnection: 'keep-alive',
 					keepalive: true,
