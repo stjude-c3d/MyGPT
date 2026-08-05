@@ -26,11 +26,10 @@ langchain_community
 langchain==1.0.0a1
 huggingface-hub>=0.36.0
 pycryptodome==3.19.1
-sqlparse>=0.5.0 # not directly required, pinned by Snyk to avoid a vulnerability
-urllib3>=2.5.0 # not directly required, pinned by Snyk to avoid a vulnerability
-zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
 bm25s
 pystemmer
-zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
 ollama>=0.6.1
 Django>=5.1.15
+sqlparse>=0.5.0 # not directly required, pinned by Snyk to avoid a vulnerability
+zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
+urllib3>=2.7.0 # not directly required, pinned by Snyk to avoid a vulnerability
