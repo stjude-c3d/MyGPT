@@ -216,7 +216,7 @@ const AddLibrarySettings = (props: {
 				'Authorization': `${
 				props.user && props.djangoLogin ?
 				'Bearer ' + localStorage.getItem('access') :
-					import.meta.env.MODE === 'production' ? 
+					import.meta.env.PROD ? 
 					import.meta.env.REACT_APP_AUTH_TOKEN_PROD 
 					: import.meta.env.REACT_APP_AUTH_TOKEN_DEV}`
 				},
@@ -294,7 +294,7 @@ const AddLibrarySettings = (props: {
 					'Authorization': `${
 					props.user && props.djangoLogin ?
 					'Bearer ' + localStorage.getItem('access') :
-						import.meta.env.MODE === 'production' ? 
+						import.meta.env.PROD ? 
 						import.meta.env.REACT_APP_AUTH_TOKEN_PROD 
 						: import.meta.env.REACT_APP_AUTH_TOKEN_DEV}`
 					},
@@ -397,7 +397,7 @@ const AddLibrarySettings = (props: {
 					'Authorization': `${
 					props.user && props.djangoLogin ?
 					'Bearer ' + localStorage.getItem('access') :
-						import.meta.env.MODE === 'production' ? 
+						import.meta.env.PROD ? 
 						import.meta.env.REACT_APP_AUTH_TOKEN_PROD 
 						: import.meta.env.REACT_APP_AUTH_TOKEN_DEV}`
 					},

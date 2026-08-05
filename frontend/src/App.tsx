@@ -120,7 +120,7 @@ function App() {
               'Authorization': `${
                 frontendSettings.django_login ?
                 'Bearer ' + localStorage.getItem('access') :
-                import.meta.env.MODE === 'production' ? 
+                import.meta.env.PROD ?
                 import.meta.env.REACT_APP_AUTH_TOKEN_PROD 
                 : import.meta.env.REACT_APP_AUTH_TOKEN_DEV}`
             },
