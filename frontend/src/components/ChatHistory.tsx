@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react'
 import { scaleSequential, interpolateRdYlGn } from 'd3'
 import { ChevronDownIcon, ChevronUpIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
-import Markdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
 import MathMarkdown from './MathMarkdown'
 
 interface ChatHistoryProps {
