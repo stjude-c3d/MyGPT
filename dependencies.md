@@ -16,6 +16,7 @@ Source: `backend/requirements.txt`
 - chromadb==1.5.9
 - Django>=5.1.15
 - django-cors-headers
+- django-otp>=1.7.0
 - djangorestframework>=3.15.2
 - djangorestframework-simplejwt>=5.3.1
 - duckdb
@@ -26,7 +27,6 @@ Source: `backend/requirements.txt`
 - ollama>=0.6.1
 - openpyxl
 - pandas
-- pdfkit
 - psycopg2-binary>=2.9.9
 - pycryptodome==3.19.1
 - pymupdf==1.24.14
@@ -36,13 +36,14 @@ Source: `backend/requirements.txt`
 - python-dotenv>=1.2.2
 - pytube
 - pyzotero
-- requests>=2.32.5
+- qrcode>=8.0
+- requests>=2.33.0
 - sacremoses
 - sentence_transformers>=5.1.2
 - sqlparse>=0.5.0 # not directly required, pinned by Snyk to avoid a vulnerability
 - tqdm
 - transformers>=4.57.2
-- urllib3>=2.5.0 # not directly required, pinned by Snyk to avoid a vulnerability
+- urllib3>=2.7.0 # not directly required, pinned by Snyk to avoid a vulnerability
 - youtube_transcript_api>=0.6.3
 - zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
 
@@ -66,52 +67,47 @@ Source: `frontend/package.json`
 
 ### Runtime Dependencies (`dependencies`)
 
-- @azure/msal-react@^2.2.0
+- @azure/msal-react@^5.0.0
 - @heroicons/react@^2.2.0
-- @modelcontextprotocol/sdk@^1.26.0
-- @react-pdf-viewer/bookmark@3.12.0
-- @react-pdf-viewer/core@^3.12.0
-- @react-pdf-viewer/default-layout@^3.12.0
-- @react-pdf-viewer/highlight@3.12.0
-- @react-pdf-viewer/page-navigation@3.12.0
+- @modelcontextprotocol/sdk@^1.29.0
 - @react-three/drei@^9.122.0
 - @react-three/fiber@^8.18.0
-- @testing-library/jest-dom@^5.17.0
+- @testing-library/jest-dom@^6.6.3
 - @testing-library/react@^16.3.2
 - @testing-library/user-event@^14.6.1
 - @types/d3@^7.1.0
-- @types/node@^16.18.126
+- @types/node@^20.19.9
 - @types/three@^0.184.0
 - @xyflow/react@^12.10.2
 - better-react-mathjax@^2.3.0
 - d3@7.9.0
-- env-cmd@^10.1.0
 - http-proxy-middleware@^3.0.5
 - node-forge@^1.4.0
 - nth-check@2.1.1
-- react@^18.3.1
-- react-dom@^18.3.0
+- react@^19.2.7
+- react-dom@^19.2.7
 - react-markdown@^8.0.7
-- react-router-dom@^6.30.3
-- react-scripts@5.0.1
-- rehype-katex@^7.0.1
+- react-pdf@^9.0.0
+- react-router@^8.3.0
+- rehype-katex@^6.0.3
 - remark-gfm@^3.0.1
-- remark-math@^6.0.0
+- remark-math@^5.1.1
 - three@^0.184.0
 - typescript@^4.9.5
 - web-vitals@^2.1.4
 
 ### Development Dependencies (`devDependencies`)
 
-- @types/jest@^29.5.12
-- @types/react-dom@^18.3.0
-- @types/react@^18.3.1
+- @types/react-dom@^19.0.0
+- @types/react@^19.0.0
+- @vitejs/plugin-react@^5.2.0
 - autoprefixer@^10.4.4
-- jest@^29.7.0
+- jsdom@^24.1.3
 - postcss@^8.4.31
-- react-test-renderer@^18.3.1
+- react-test-renderer@^19.2.7
 - tailwindcss@^3.0.23
-- ts-jest@^29.1.2
+- vite@^7.3.6
+- vitest@^4.1.10
 
 ## Environment-Specific Dependencies and Setup
 

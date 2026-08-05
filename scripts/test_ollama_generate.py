@@ -13,7 +13,18 @@ import requests
 import json
 import argparse
 import sys
+from urllib.parse import urlparse
 from typing import Dict, Any
+
+
+def validate_url(url: str) -> str:
+    """Validate URL to prevent SSRF attacks."""
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        raise ValueError(f"Invalid URL scheme '{parsed.scheme}'. Only http and https are allowed.")
+    if not parsed.netloc:
+        raise ValueError("URL must include a valid host.")
+    return url
 
 
 def test_ollama_generate(
@@ -38,6 +49,12 @@ def test_ollama_generate(
         "model": model_name,
         "prompt": question
     }
+
+    try:
+        url = validate_url(url)
+    except ValueError as e:
+        print(f"\n✗ ERROR: {e}")
+        return {"status": "error", "error": str(e)}
 
     print(f"\n{'='*70}")
     print(f"Testing Backend Ollama Generate Endpoint (Streaming)")
@@ -203,6 +220,12 @@ def test_get_ollama_models(
     Returns:
         Dictionary with status, response data, and any errors
     """
+    try:
+        url = validate_url(url)
+    except ValueError as e:
+        print(f"\n✗ ERROR: {e}")
+        return {"status": "error", "error": str(e)}
+
     print(f"\n{'='*70}")
     print("Testing Backend get_ollama_models Endpoint")
     print(f"{'='*70}")
