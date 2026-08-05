@@ -3,7 +3,7 @@ export const getAuthHeader = (user: any, djangoLogin: any): string => {
 	if (user && djangoLogin) {
 		return 'Bearer ' + localStorage.getItem('access')
 	}
-	return import.meta.env.MODE === 'production'
+	return import.meta.env.PROD
 		? import.meta.env.REACT_APP_AUTH_TOKEN_PROD ?? ''
 		: import.meta.env.REACT_APP_AUTH_TOKEN_DEV ?? ''
 }
