@@ -1,12 +1,14 @@
 import fs from 'fs'
 import path from 'path'
+import { fileURLToPath } from 'url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 // Load root-level .env_frontend (not Vite's default .env naming) for local `vite`/`vite build`
 // runs outside Docker Compose. Vars already in process.env (e.g. injected via Compose's
 // env_file:) take precedence and are never overwritten.
-const rootEnvPath = path.resolve(__dirname, '../.env_frontend')
+const configDir = path.dirname(fileURLToPath(import.meta.url))
+const rootEnvPath = path.resolve(configDir, '../.env_frontend')
 if (fs.existsSync(rootEnvPath)) {
 	for (const line of fs.readFileSync(rootEnvPath, 'utf-8').split('\n')) {
 		const trimmed = line.trim()
