@@ -6,7 +6,6 @@ import re
 import datetime
 import pymupdf
 import pandas as pd
-import pdfkit
 from django.core.files.base import File
 from django.utils.timezone import make_aware
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -160,15 +159,30 @@ def add_dataset_from_upload(request, progress_callback=None):
                 df = pd.read_csv(base_name + doctype)
             df.dropna(axis = 0, how = 'all', inplace = True)
 
-            df.to_html(base_name + '.html')
-            options = {
-                'page-size': 'A0',
-                'margin-top': '0.75in',
-                'margin-right': '0.75in',
-                'margin-bottom': '0.75in',
-                'margin-left': '0.75in'
-            }
-            pdfkit.from_file(base_name + '.html', base_name + '.pdf', options = options)
+            # Build fixed-width text lines for the table
+            col_widths = [
+                min(max(len(str(col)), int(df[col].astype(str).str.len().max())), 40)
+                for col in df.columns
+            ]
+            rows = [df.columns.tolist()] + df.astype(str).values.tolist()
+            text_lines = []
+            for row in rows:
+                line = '  '.join(str(cell)[:w].ljust(w) for cell, w in zip(row, col_widths))
+                text_lines.append(line)
+
+            # Write paginated PDF using pymupdf (A4 landscape)
+            doc = pymupdf.open()
+            lines_per_page = 75
+            for page_start in range(0, len(text_lines), lines_per_page):
+                page = doc.new_page(width=842, height=595)
+                page.insert_text(
+                    (20, 20),
+                    '\n'.join(text_lines[page_start:page_start + lines_per_page]),
+                    fontsize=7,
+                    fontname='courier',
+                )
+            doc.save(base_name + '.pdf')
+            doc.close()
 
             with open(base_name + '.pdf', 'rb') as f:
                 paper.paper_attachment.save(dataset_name + '/paper' + str(idx+1) + '.pdf', File(f), save=True)
