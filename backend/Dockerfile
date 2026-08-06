@@ -8,7 +8,6 @@ RUN mkdir /code
 WORKDIR /code
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends python3 python3-pip python3-venv build-essential curl
-RUN if apt-cache policy wkhtmltopdf | grep -q 'Candidate: (none)'; then echo "wkhtmltopdf not available for this Debian release; skipping install"; else apt-get install -y --no-install-recommends wkhtmltopdf; fi
 # RUN apt install -y libreoffice
 COPY requirements.txt /code/
 RUN python3 -m pip install --break-system-packages -r requirements.txt
