@@ -1328,7 +1328,7 @@ function GPTHome(props:{
 											method: 'POST',
 											headers: { 
 												'Content-Type': 'application/json',
-										'Authorization': `${import.meta.env.PROD ? import.meta.env.REACT_APP_AUTH_TOKEN_PROD : import.meta.env.REACT_APP_AUTH_TOKEN_DEV}`
+										'Authorization': `${import.meta.env.PROD ? import.meta.env.VITE_AUTH_TOKEN_PROD : import.meta.env.VITE_AUTH_TOKEN_DEV}`
 											},
 											body: JSON.stringify({ 
 												answer_text: answers[query.length-i-1].response,
@@ -1337,7 +1337,7 @@ function GPTHome(props:{
 												user_comment: feedback.user_comment,
 											})
 										}
-										fetch(`${import.meta.env.REACT_APP_BACKEND_API}api/feedback/?format=json`, requestOptions)
+										fetch(`${import.meta.env.VITE_BACKEND_API}api/feedback/?format=json`, requestOptions)
 											.then(response => response.json())
 											.then(data => {
 												console.log(data)

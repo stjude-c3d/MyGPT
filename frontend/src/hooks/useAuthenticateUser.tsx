@@ -82,7 +82,7 @@ const useAuthenticateUser = () => {
 	return { activeAccounts, appRoles, instance }
 };
 
-const allowedDomains = [import.meta.env.REACT_APP_REDIRECT_URI];
+const allowedDomains = [import.meta.env.VITE_REDIRECT_URI];
 
 function isValidRedirectUrl(url:string) {
     try {

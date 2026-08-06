@@ -27,7 +27,7 @@ cp .env_backend.example .env_backend
 cp .env_frontend.example .env_frontend
 ```
 
-Replace the placeholders in `.env_backend` with secure values and configure public browser settings in `.env_frontend`. These runtime files are injected by Docker Compose, are ignored by Git, and are excluded from Docker build contexts. Never put secrets in `.env_frontend`; variables prefixed with `REACT_APP_` are visible to browser users.
+Replace the placeholders in `.env_backend` with secure values and configure public browser settings in `.env_frontend`. These runtime files are injected by Docker Compose, are ignored by Git, and are excluded from Docker build contexts. Never put secrets in `.env_frontend`; variables prefixed with `VITE_` are visible to browser users.
 
 MyGPT can be installed on following environments:
 

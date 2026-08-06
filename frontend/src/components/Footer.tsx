@@ -5,7 +5,7 @@ const Footer = (props: {
 	onDisclaimerClick: () => void,
 	onFAQClick: () => void,
 }) => {
-	const version = import.meta.env.REACT_APP_MYGPT_VERSION
+	const version = import.meta.env.VITE_MYGPT_VERSION
 	const year = new Date().getFullYear()
 
 	const [backendUp, setBackendUp] = useState<boolean | null>(null)
@@ -15,13 +15,13 @@ const Footer = (props: {
 		let isMounted = true
 		const check = async () => {
 			try {
-				const r = await fetch(`${import.meta.env.REACT_APP_BACKEND_API}api/frontend_settings/?format=json`, { method: 'GET' })
+				const r = await fetch(`${import.meta.env.VITE_BACKEND_API}api/frontend_settings/?format=json`, { method: 'GET' })
 				if (isMounted) setBackendUp(r.ok)
 			} catch {
 				if (isMounted) setBackendUp(false)
 			}
 			try {
-				const r = await fetch(`${import.meta.env.REACT_APP_BACKEND_API}api/get_ollama_models/`, { method: 'POST' })
+				const r = await fetch(`${import.meta.env.VITE_BACKEND_API}api/get_ollama_models/`, { method: 'POST' })
 				const data = await r.json()
 				const hasModelList = Array.isArray(data?.models)
 				if (isMounted) setOllamaUp(r.ok && hasModelList)

@@ -5,11 +5,11 @@
 
 import { LogLevel } from '@azure/msal-browser'
 
-const clientId:any = import.meta.env.REACT_APP_CLIENT_ID
-const authority:any = import.meta.env.REACT_APP_AUTHORITY
-const redirectUri:any = import.meta.env.REACT_APP_REDIRECT_URI
-// const scopes:any = import.meta.env.REACT_APP_SCOPES
-const graphMeEndpoint:any = import.meta.env.REACT_APP_GRAPH_ME_ENDPOINT
+const clientId:any = import.meta.env.VITE_CLIENT_ID
+const authority:any = import.meta.env.VITE_AUTHORITY
+const redirectUri:any = import.meta.env.VITE_REDIRECT_URI
+// const scopes:any = import.meta.env.VITE_SCOPES
+const graphMeEndpoint:any = import.meta.env.VITE_GRAPH_ME_ENDPOINT
 
 /**
  * Configuration object to be passed to MSAL instance on creation. 
@@ -61,7 +61,7 @@ export const msalConfig = {
  */
 export const protectedResources = {
     apiPubParser: {
-        scopes: ['api://'+ import.meta.env.REACT_APP_CLIENT_ID +'/access_via_approle_assignments'],
+        scopes: ['api://'+ import.meta.env.VITE_CLIENT_ID +'/access_via_approle_assignments'],
     },
 };
 

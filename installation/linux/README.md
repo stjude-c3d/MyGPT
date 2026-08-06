@@ -272,8 +272,8 @@ bash MyGPT/installation/linux/build_images/stop_docker.sh
 Set the following values in `.env_frontend`:
 
 ```
-REACT_APP_MCP_SERVER_URL=http://localhost:5001/sse
-REACT_APP_MCP_SHOW_MCP_MENU=true
+VITE_MCP_SERVER_URL=http://localhost:5001/sse
+VITE_MCP_SHOW_MCP_MENU=true
 ```
 
 You can change MCP server URL to your custom MCP server URL if you are using a different server.

@@ -25,7 +25,6 @@ chroma/chroma_storage/*
 *.pyc
 .DS_Store
 frontend/.env
-frontend/.env.development
 frontend/.env.production
 mydatabase
 ollama/models/blobs/*
@@ -44,5 +43,6 @@ label_studio/data/*
 backend/data/reranker/*
 scripts/data/*
 frontend/.env.*
+frontend/.env.development
 MCP-server/mygpt_backend.egg-info/*
 backend/data/images/*

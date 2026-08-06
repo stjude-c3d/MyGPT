@@ -1439,8 +1439,8 @@ def secure_media(request, file_path):
     static_tokens = [
         os.environ.get('AUTH_TOKEN_PROD'),
         os.environ.get('AUTH_TOKEN_DEV'),
-        os.environ.get('REACT_APP_AUTH_TOKEN_PROD'),
-        os.environ.get('REACT_APP_AUTH_TOKEN_DEV'),
+        os.environ.get('VITE_AUTH_TOKEN_PROD'),
+        os.environ.get('VITE_AUTH_TOKEN_DEV'),
     ]
     valid_static_tokens = [token for token in static_tokens if token]
     has_valid_static_token = (

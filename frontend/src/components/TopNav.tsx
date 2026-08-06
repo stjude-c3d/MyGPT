@@ -29,7 +29,7 @@ function TopNav(props:{
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `${import.meta.env.PROD ? import.meta.env.REACT_APP_AUTH_TOKEN_PROD : import.meta.env.REACT_APP_AUTH_TOKEN_DEV}`
+          'Authorization': `${import.meta.env.PROD ? import.meta.env.VITE_AUTH_TOKEN_PROD : import.meta.env.VITE_AUTH_TOKEN_DEV}`
         },
         body: JSON.stringify({
           'access_token': localStorage.getItem('access')
@@ -37,7 +37,7 @@ function TopNav(props:{
       }
 
 
-      fetch(`${import.meta.env.REACT_APP_BACKEND_API}api/get_username/?format=json`, requestOptions)
+      fetch(`${import.meta.env.VITE_BACKEND_API}api/get_username/?format=json`, requestOptions)
         .then(response => {
           if (response.status === 401) {
             localStorage.removeItem('access')

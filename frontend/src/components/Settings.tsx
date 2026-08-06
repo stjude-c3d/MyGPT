@@ -64,8 +64,8 @@ const Settings = (props: {
 				'Authorization': `${props.user && props.djangoLogin ?
 					'Bearer ' + localStorage.getItem('access') :
 					import.meta.env.PROD ?
-						import.meta.env.REACT_APP_AUTH_TOKEN_PROD
-						: import.meta.env.REACT_APP_AUTH_TOKEN_DEV}`
+						import.meta.env.VITE_AUTH_TOKEN_PROD
+						: import.meta.env.VITE_AUTH_TOKEN_DEV}`
 			},
 			body: JSON.stringify(props.djangoLogin ? props.user : props.user ? {
 				'user_email': props.user.user_email,
@@ -76,7 +76,7 @@ const Settings = (props: {
 			})
 		}
 		if (!datasets.length || props.currentSettings.fetchDatasets)
-			fetch(`${import.meta.env.REACT_APP_BACKEND_API}api/get_datasets/`, requestOptions)
+			fetch(`${import.meta.env.VITE_BACKEND_API}api/get_datasets/`, requestOptions)
 				.then(response => response.json())
 				.then(data => {
 					const dataset_names = data.map((d: any) => d.dataset_name)
@@ -122,11 +122,11 @@ const Settings = (props: {
 					'Authorization': `${props.user && props.djangoLogin ?
 						'Bearer ' + localStorage.getItem('access') :
 						import.meta.env.PROD ?
-							import.meta.env.REACT_APP_AUTH_TOKEN_PROD
-							: import.meta.env.REACT_APP_AUTH_TOKEN_DEV}`
+							import.meta.env.VITE_AUTH_TOKEN_PROD
+							: import.meta.env.VITE_AUTH_TOKEN_DEV}`
 				}
 			}
-			fetch(`${import.meta.env.REACT_APP_BACKEND_API}api/delete_dataset/?dataset=${deleteDataset}&user_email=${email}`, requestOptions)
+			fetch(`${import.meta.env.VITE_BACKEND_API}api/delete_dataset/?dataset=${deleteDataset}&user_email=${email}`, requestOptions)
 				.then(response => response.json())
 				.then(data => {
 					setDeleteDataset('')
@@ -146,7 +146,7 @@ const Settings = (props: {
 					'Content-Type': 'application/json'
 				}
 			}
-			fetch(`${import.meta.env.REACT_APP_BACKEND_API}api/add_dataset_embeddings/?dataset=${addEmbeddingForDataset}`, requestOptions)
+			fetch(`${import.meta.env.VITE_BACKEND_API}api/add_dataset_embeddings/?dataset=${addEmbeddingForDataset}`, requestOptions)
 				.then(response => response.json())
 				.then(() => {
 					setAddEmbeddingForDataset('')
@@ -164,7 +164,7 @@ const Settings = (props: {
 	useEffect(() => {
 
 		const postData = async () => {
-			const response = await fetch(`${import.meta.env.REACT_APP_OLLAMA_API}api/tags`, { method: 'GET' })
+			const response = await fetch(`${import.meta.env.VITE_OLLAMA_API}api/tags`, { method: 'GET' })
 			const data = await response.json()
 
 			// set models
@@ -192,15 +192,15 @@ const Settings = (props: {
 			// 		'Authorization': `${props.user && props.djangoLogin ?
 			// 			'Bearer ' + localStorage.getItem('access') :
 			// 			import.meta.env.PROD ?
-			// 				import.meta.env.REACT_APP_AUTH_TOKEN_PROD
-			// 				: import.meta.env.REACT_APP_AUTH_TOKEN_DEV}`
+			// 				import.meta.env.VITE_AUTH_TOKEN_PROD
+			// 				: import.meta.env.VITE_AUTH_TOKEN_DEV}`
 			// 	},
 			// 	setConnection: 'keep-alive',
 			// 	keepalive: true,
 			// 	setTimeout: 10000,
 			// 	body: JSON.stringify({ 'llms': llms_object })
 			// }
-			// const response2 = await fetch(`${import.meta.env.REACT_APP_BACKEND_API}api/add_ollama_models/`, requestOptions)
+			// const response2 = await fetch(`${import.meta.env.VITE_BACKEND_API}api/add_ollama_models/`, requestOptions)
 			// const data2 = await response2.json()
 
 		}
@@ -250,8 +250,8 @@ const Settings = (props: {
 						<div className={'w-1/4 border-slate-400 border-y-2 ' + (window.screen.availHeight < 1000 ? 'h-[80vh]' : 'h-[55vh]')}>
 							<div className='grid grid-cols-1 divide-y'>
 								{props.defaultSettings.settingsPanels.map((panel: any, index: number) => {
-									const showMCPMenu = import.meta.env.REACT_APP_MCP_SHOW_MCP_MENU === 'false' ? false :
-										import.meta.env.REACT_APP_MCP_SHOW_MCP_MENU === 'true' ? true : false
+									const showMCPMenu = import.meta.env.VITE_MCP_SHOW_MCP_MENU === 'false' ? false :
+										import.meta.env.VITE_MCP_SHOW_MCP_MENU === 'true' ? true : false
 									// console.log('showMCPMenu', showMCPMenu)
 									// if MCP menu is not shown, skip the mcp panel
 									if (!showMCPMenu && panel.key === 'mcp') return null
@@ -613,8 +613,8 @@ const Settings = (props: {
 						<div className={'w-1/4 border-slate-400 border-y-2 ' + (window.screen.availHeight < 1000 ? 'h-[80vh]' : 'h-[55vh]')}>
 							<div className='grid grid-cols-1 divide-y'>
 								{props.defaultSettings.settingsPanels.map((panel: any, index: number) => {
-									const showMCPMenu = import.meta.env.REACT_APP_MCP_SHOW_MCP_MENU === 'false' ? false :
-										import.meta.env.REACT_APP_MCP_SHOW_MCP_MENU === 'true' ? true : false
+									const showMCPMenu = import.meta.env.VITE_MCP_SHOW_MCP_MENU === 'false' ? false :
+										import.meta.env.VITE_MCP_SHOW_MCP_MENU === 'true' ? true : false
 									// if MCP menu is not shown, skip the mcp panel
 									if (!showMCPMenu && panel.key === 'mcp') return null
 									return (

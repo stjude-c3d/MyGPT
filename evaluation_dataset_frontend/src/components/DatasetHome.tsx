@@ -63,10 +63,10 @@ function DatasetHome(){
 			method: 'GET',
 			headers: { 
 				'Content-Type': 'application/json',
-				'Authorization': 'Basic ' + base64.encode(`${process.env.REACT_APP_DJANGO_USER}:${process.env.REACT_APP_DJANGO_PASSWORD}`)
+				'Authorization': 'Basic ' + base64.encode(`${process.env.VITE_DJANGO_USER}:${process.env.VITE_DJANGO_PASSWORD}`)
 			},
 		}
-		fetch(`${process.env.REACT_APP_BACKEND_API}evaluation_dataset/libraries/?format=json`, requestOptions)
+		fetch(`${process.env.VITE_BACKEND_API}evaluation_dataset/libraries/?format=json`, requestOptions)
 			.then(response => response.json())
 			.then(data => {setDatasets(data.results)})
 	},[])
@@ -76,11 +76,11 @@ function DatasetHome(){
 			method: 'GET',
 			headers: { 
 				'Content-Type': 'application/json',
-				'Authorization': 'Basic ' + base64.encode(`${process.env.REACT_APP_DJANGO_USER}:${process.env.REACT_APP_DJANGO_PASSWORD}`)	
+				'Authorization': 'Basic ' + base64.encode(`${process.env.VITE_DJANGO_USER}:${process.env.VITE_DJANGO_PASSWORD}`)	
 			},
 		}
 		if(datasets.length > 0) {
-			fetch(`${process.env.REACT_APP_BACKEND_API}evaluation_dataset/questions/?format=json`, requestOptions)
+			fetch(`${process.env.VITE_BACKEND_API}evaluation_dataset/questions/?format=json`, requestOptions)
 				.then(response => response.json())
 				.then(data => {
 					const quesiton_data = data.results.map((d:any)=>{
@@ -142,11 +142,11 @@ function DatasetHome(){
 			method: 'GET',
 			headers: { 
 				'Content-Type': 'application/json',
-				'Authorization': 'Basic ' + base64.encode(`${process.env.REACT_APP_DJANGO_USER}:${process.env.REACT_APP_DJANGO_PASSWORD}`)
+				'Authorization': 'Basic ' + base64.encode(`${process.env.VITE_DJANGO_USER}:${process.env.VITE_DJANGO_PASSWORD}`)
 			},
 		}
 		if(selectedQuestion !== null){
-			fetch(`${process.env.REACT_APP_BACKEND_API}evaluation_dataset/get_question_by_id/?question_id=${selectedQuestion}&format=json`, requestOptions)
+			fetch(`${process.env.VITE_BACKEND_API}evaluation_dataset/get_question_by_id/?question_id=${selectedQuestion}&format=json`, requestOptions)
 				.then(response => response.json())
 				.then(data => {
 					const answer_order = ['mygpt_beta','best_1','best_2']
@@ -305,7 +305,7 @@ function DatasetHome(){
 																				method: 'PUT',
 																				headers: { 
 																					'Content-Type': 'application/json',
-																					'Authorization': 'Basic ' + base64.encode(`${process.env.REACT_APP_DJANGO_USER}:${process.env.REACT_APP_DJANGO_PASSWORD}`)
+																					'Authorization': 'Basic ' + base64.encode(`${process.env.VITE_DJANGO_USER}:${process.env.VITE_DJANGO_PASSWORD}`)
 																				},
 																				body: JSON.stringify({
 																					'answer_text': a.answer_text,
@@ -318,7 +318,7 @@ function DatasetHome(){
 																					'submission_date_time': new Date().toISOString()
 																				})
 																			}
-																			fetch(`${process.env.REACT_APP_BACKEND_API}evaluation_dataset/answers/${a.id}/`, requestOptions)
+																			fetch(`${process.env.VITE_BACKEND_API}evaluation_dataset/answers/${a.id}/`, requestOptions)
 																				.then(response => response.json())
 																				.then(data => {
 																					answers.forEach((ans:any, i:number)=>{

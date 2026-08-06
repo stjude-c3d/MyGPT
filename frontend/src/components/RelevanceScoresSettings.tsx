@@ -28,11 +28,11 @@ export const RelevanceScoreSettings = (props: any) => {
 						props.user && props.djangoLogin ?
 						'Bearer ' + localStorage.getItem('access') :
 						import.meta.env.PROD ? 
-						import.meta.env.REACT_APP_AUTH_TOKEN_PROD 
-						: import.meta.env.REACT_APP_AUTH_TOKEN_DEV}`
+						import.meta.env.VITE_AUTH_TOKEN_PROD 
+						: import.meta.env.VITE_AUTH_TOKEN_DEV}`
 			}
 		}
-		fetch(`${import.meta.env.REACT_APP_BACKEND_API}api/get_embedding_model_details/?dataset=${props.selectedDataset}&format=json`, requestOptions)
+		fetch(`${import.meta.env.VITE_BACKEND_API}api/get_embedding_model_details/?dataset=${props.selectedDataset}&format=json`, requestOptions)
 			.then(response => response.json())
 			.then(data => {
 				if (data) {

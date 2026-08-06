@@ -79,7 +79,7 @@ export const NavBar = (props = defaultNavProps) => {
 				 },
 				body: JSON.stringify({ 'refresh_token': localStorage.getItem('refresh') })
 			}
-			fetch(`${import.meta.env.REACT_APP_BACKEND_API}logout/`, requestOptions)
+			fetch(`${import.meta.env.VITE_BACKEND_API}logout/`, requestOptions)
 			.then(response => {
 				if (response.status === 204) {
 					console.log('Logged out successfully')
@@ -124,7 +124,7 @@ export const NavBar = (props = defaultNavProps) => {
 			'password': password
 		}
 
-		fetch(`${import.meta.env.REACT_APP_BACKEND_API}token/`, {
+		fetch(`${import.meta.env.VITE_BACKEND_API}token/`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',

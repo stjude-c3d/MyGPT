@@ -9,7 +9,10 @@ import react from '@vitejs/plugin-react'
 // env_file:) take precedence and are never overwritten.
 const configDir = path.dirname(fileURLToPath(import.meta.url))
 const rootEnvPath = path.resolve(configDir, '../.env_frontend')
-if (fs.existsSync(rootEnvPath)) {
+const buildMode = process.env.NODE_ENV || process.argv[process.argv.indexOf('--mode') + 1] || 'development'
+// Only load .env_frontend for local development — mode-specific .env files
+// (e.g. .env.production, .env.azure) take full precedence during production builds.
+if (fs.existsSync(rootEnvPath) && buildMode === 'development') {
 	for (const line of fs.readFileSync(rootEnvPath, 'utf-8').split('\n')) {
 		const trimmed = line.trim()
 		if (!trimmed || trimmed.startsWith('#')) continue
@@ -24,12 +27,12 @@ if (fs.existsSync(rootEnvPath)) {
 }
 
 // Proxies /sjray the same way CRA's src/setupProxy.js used to.
-const sjRayTarget = process.env.REACT_APP_SJ_RAY_API || 'https://svltgpt01a.stjude.org/'
+const sjRayTarget = process.env.VITE_SJ_RAY_API || 'https://svltgpt01a.stjude.org/'
 
 export default defineConfig({
 	plugins: [react()],
-	// Keep the REACT_APP_ prefix so existing .env_frontend files and docs don't need renaming.
-	envPrefix: ['VITE_', 'REACT_APP_'],
+	// Keep the VITE_ prefix so existing .env_frontend files and docs don't need renaming.
+	envPrefix: ['VITE_', 'VITE_'],
 	// Matches CRA's output dir so existing docker-compose bind mounts keep working.
 	build: {
 		outDir: 'build',
