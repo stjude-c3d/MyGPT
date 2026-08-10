@@ -51,6 +51,7 @@ def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key,
     else:
         dataset = Dataset.objects.create(
             dataset_name=dataset_name,
+            library_type='papers',
             dataset_size=0,
             zotero_id=collection_id,
             user = user if len(user) else '-',

@@ -255,6 +255,7 @@ def get_context(request):
         if not dataset_exist:
             Dataset.objects.create(
                 dataset_name=dataset_name,
+                library_type='papers',
                 dataset_size=0,
                 dataset_date_time=make_aware(datetime.datetime.now()),
                 user_email='-',
@@ -329,6 +330,7 @@ def get_context(request):
             if not dataset_exist:
                 dataset = Dataset.objects.create(
                     dataset_name=dataset_name,
+                    library_type='papers',
                     dataset_size=0,
                     dataset_date_time=make_aware(datetime.datetime.now()),
                     direct_chat_without_docs = True,
@@ -1237,6 +1239,7 @@ def add_video_library(request):
         else:
             dataset = Dataset.objects.create(
                 dataset_name=dataset_name,
+                library_type='videos',
                 dataset_size=0,
                 user = user if len(user) else '-',
                 user_email = user_email if len(user_email) else '-',
@@ -1605,6 +1608,7 @@ def ollama_chat(request):
             if not Dataset.objects.filter(dataset_name=dataset_name).exists():
                 Dataset.objects.create(
                     dataset_name=dataset_name,
+                    library_type='papers',
                     dataset_size=0,
                     user = '-',
                     user_email = '-',

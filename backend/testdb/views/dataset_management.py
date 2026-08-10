@@ -91,6 +91,7 @@ def add_dataset_from_upload(request, progress_callback=None):
     else:
         dataset = Dataset.objects.create(
             dataset_name=dataset_name,
+            library_type='papers',
             dataset_size=0,
             chunksize=chunk_size,
             chunking_method=chunking_method,
@@ -104,7 +105,8 @@ def add_dataset_from_upload(request, progress_callback=None):
             dataset_prompt = default_prompt,
             user_email = user_email if len(user_email) else '-',
             user_group = user_group if len(user_group) else '-',
-            dataset_date_time=make_aware(datetime.datetime.now())
+            dataset_date_time=make_aware(datetime.datetime.now()),
+            direct_chat_without_docs = False
         )
 
     # make directory for pdfs
@@ -396,6 +398,7 @@ def add_demo_dataset(embedding_model_request='multi-qa-MiniLM-L6-cos-v1'):
         print(f'new_count: {new_count}')
         dataset = Dataset.objects.create(
             dataset_name=dataset_name,
+            library_type='papers',
             dataset_size=new_count,
             embedding_model=embedding_model_request,
             chunksize=1000,
