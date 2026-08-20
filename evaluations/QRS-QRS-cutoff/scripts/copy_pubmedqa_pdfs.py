@@ -37,29 +37,31 @@ def copy_matching_files(document_ids: List[str], source_dir: Path, destination_d
     destination_dir.mkdir(parents=True, exist_ok=True)
     resolved_source = source_dir.resolve()
     resolved_dest = destination_dir.resolve()
-    missing_ids: List[str] = []
+    requested_ids = {_validate_document_id(document_id) for document_id in document_ids}
+    copied_ids: Set[str] = set()
 
-    for document_id in document_ids:
-        document_id = _validate_document_id(document_id)
-        source_file = (resolved_source / f"{document_id}.pdf").resolve()
-        destination_file = (destination_dir / source_file.name).resolve()
+    # Discover files from the trusted source directory; IDs only select exact matches.
+    for source_entry in resolved_source.iterdir():
+        if not source_entry.is_file() or source_entry.suffix.lower() != ".pdf":
+            continue
+        document_id = source_entry.stem
+        if document_id not in requested_ids:
+            continue
 
-        # Guard against path traversal: ensure both paths stay within their directories
+        source_file = source_entry.resolve()
+        destination_file = (resolved_dest / source_entry.name).resolve()
         try:
             source_file.relative_to(resolved_source)
             destination_file.relative_to(resolved_dest)
         except ValueError as error:
             raise ValueError(
-                f"Path traversal detected in document ID: {document_id!r}"
+                f"Path traversal detected for source file: {source_entry.name!r}"
             ) from error
 
-        if not source_file.exists():
-            missing_ids.append(document_id)
-            continue
-
         shutil.copy2(source_file, destination_file)
+        copied_ids.add(document_id)
 
-    return missing_ids
+    return [document_id for document_id in document_ids if document_id not in copied_ids]
 
 
 def main() -> None:
