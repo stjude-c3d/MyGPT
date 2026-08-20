@@ -11,7 +11,7 @@ pypdf>=6.0.0
 pandas
 pyzotero
 pymupdf==1.24.14
-numpy>=2.5.1
+numpy>=2.2.1
 chromadb==1.5.9
 python-dotenv>=1.2.2
 pytube
