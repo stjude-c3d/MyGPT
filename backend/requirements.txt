@@ -11,7 +11,7 @@ pypdf>=6.0.0
 pandas
 pyzotero
 pymupdf==1.24.14
-numpy
+numpy>=2.5.1
 chromadb==1.5.9
 tqdm
 python-dotenv>=1.2.2
