@@ -1,9 +1,16 @@
 #!/usr/bin/env python3
 import argparse
 import csv
+import re
 import shutil
 from pathlib import Path
 from typing import List, Set
+
+
+def _validate_document_id(document_id: str) -> str:
+    if re.fullmatch(r"[0-9]+", document_id) is None:
+        raise ValueError(f"Invalid PubMed document ID: {document_id!r}")
+    return document_id
 
 
 def read_document_ids(csv_path: Path, column_name: str) -> List[str]:
@@ -33,6 +40,7 @@ def copy_matching_files(document_ids: List[str], source_dir: Path, destination_d
     missing_ids: List[str] = []
 
     for document_id in document_ids:
+        document_id = _validate_document_id(document_id)
         source_file = (resolved_source / f"{document_id}.pdf").resolve()
         destination_file = (destination_dir / source_file.name).resolve()
 
