@@ -13,9 +13,7 @@ pyzotero
 pymupdf==1.24.14
 numpy>=2.5.1
 chromadb==1.5.9
-tqdm
 python-dotenv>=1.2.2
-pytest-django
 pytube
 youtube_transcript_api>=0.6.3
 duckdb
@@ -23,6 +21,8 @@ openpyxl
 urllib3>=2.7.0 # not directly required, pinned by Snyk to avoid a vulnerability
 sqlparse>=0.5.0 # not directly required, pinned by Snyk to avoid a vulnerability
 zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
+tqdm
+pytest-django
 langchain_community
 langchain==1.0.0a1
 huggingface-hub>=0.36.0
