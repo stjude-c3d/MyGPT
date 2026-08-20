@@ -6,7 +6,7 @@ import base64
 import subprocess
 import requests
 import re
-import xml.etree.ElementTree as ET
+from defusedxml import ElementTree as ET
 from pypdf import PdfReader
 from langchain_community.llms import Ollama
 

@@ -65,7 +65,9 @@ cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink
 dataclasses-json==0.6.7
     # via langchain-community
 defusedxml==0.7.1
-    # via youtube-transcript-api
+    # via
+    #   -r requirements.txt
+    #   youtube-transcript-api
 distro==1.9.0
     # via langsmith
 django==6.0.8
