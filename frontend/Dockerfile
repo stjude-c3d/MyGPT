@@ -1,4 +1,4 @@
-FROM node:20.20.2-bookworm-slim
+FROM node:20.20.2-alpine3.22
 WORKDIR /app
 ENV PATH /app/node_modules/.bin:$PATH
 COPY package.json /app/package.json
