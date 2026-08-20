@@ -58,7 +58,8 @@ def copy_matching_files(document_ids: List[str], source_dir: Path, destination_d
                 f"Path traversal detected for source file: {source_entry.name!r}"
             ) from error
 
-        shutil.copy2(source_file, destination_file)
+        with source_file.open("rb") as source_handle, destination_file.open("wb") as destination_handle:
+            shutil.copyfileobj(source_handle, destination_handle)
         copied_ids.add(document_id)
 
     return [document_id for document_id in document_ids if document_id not in copied_ids]
