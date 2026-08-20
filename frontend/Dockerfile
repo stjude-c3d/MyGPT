@@ -1,8 +1,4 @@
-FROM node:20.20.2-alpine3.22
-RUN apk add --no-cache \
-	openssl=3.5.7-r0 \
-	libssl3=3.5.7-r0 \
-	libcrypto3=3.5.7-r0
+FROM node:20.20.2-bookworm-slim
 WORKDIR /app
 ENV PATH /app/node_modules/.bin:$PATH
 COPY package.json /app/package.json
