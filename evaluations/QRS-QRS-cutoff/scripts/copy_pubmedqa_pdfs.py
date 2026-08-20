@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
 import argparse
 import csv
-import os
+import re
 import shutil
 from pathlib import Path
 from typing import List, Set
+
+
+def _validate_document_id(document_id: str) -> str:
+    if re.fullmatch(r"[0-9]+", document_id) is None:
+        raise ValueError(f"Invalid PubMed document ID: {document_id!r}")
+    return document_id
 
 
 def read_document_ids(csv_path: Path, column_name: str) -> List[str]:
@@ -31,25 +37,32 @@ def copy_matching_files(document_ids: List[str], source_dir: Path, destination_d
     destination_dir.mkdir(parents=True, exist_ok=True)
     resolved_source = source_dir.resolve()
     resolved_dest = destination_dir.resolve()
-    missing_ids: List[str] = []
+    requested_ids = {_validate_document_id(document_id) for document_id in document_ids}
+    copied_ids: Set[str] = set()
 
-    for document_id in document_ids:
-        source_file = (source_dir / f"{document_id}.pdf").resolve()
-        destination_file = (destination_dir / source_file.name).resolve()
-
-        # Guard against path traversal: ensure both paths stay within their directories
-        if not str(source_file).startswith(str(resolved_source) + "/"):
-            raise ValueError(f"Path traversal detected in document ID: {document_id!r}")
-        if not str(destination_file).startswith(str(resolved_dest) + "/"):
-            raise ValueError(f"Path traversal detected in destination for ID: {document_id!r}")
-
-        if not source_file.exists():
-            missing_ids.append(document_id)
+    # Discover files from the trusted source directory; IDs only select exact matches.
+    for source_entry in resolved_source.iterdir():
+        if not source_entry.is_file() or source_entry.suffix.lower() != ".pdf":
+            continue
+        document_id = source_entry.stem
+        if document_id not in requested_ids:
             continue
 
-        shutil.copy2(os.path.realpath(source_file), os.path.realpath(destination_file))
+        source_file = source_entry.resolve()
+        destination_file = (resolved_dest / source_entry.name).resolve()
+        try:
+            source_file.relative_to(resolved_source)
+            destination_file.relative_to(resolved_dest)
+        except ValueError as error:
+            raise ValueError(
+                f"Path traversal detected for source file: {source_entry.name!r}"
+            ) from error
 
-    return missing_ids
+        with source_file.open("rb") as source_handle, destination_file.open("wb") as destination_handle:
+            shutil.copyfileobj(source_handle, destination_handle)
+        copied_ids.add(document_id)
+
+    return [document_id for document_id in document_ids if document_id not in copied_ids]
 
 
 def main() -> None:

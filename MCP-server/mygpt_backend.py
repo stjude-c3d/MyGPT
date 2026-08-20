@@ -1,4 +1,34 @@
 from typing import Any
+import typing as _typing
+import functools as _functools
+
+# Python 3.15 removed the deprecated `typing.no_type_check_decorator`, but
+# `beartype` (via fastmcp's key-value dependency) still imports it unconditionally.
+if not hasattr(_typing, "no_type_check_decorator"):
+    def _no_type_check_decorator(decorator):
+        @_functools.wraps(decorator)
+        def wrapped_decorator(*args, **kwds):
+            func = decorator(*args, **kwds)
+            return _typing.no_type_check(func)
+        return wrapped_decorator
+
+    _typing.no_type_check_decorator = _no_type_check_decorator
+
+# Python 3.15's importlib now passes an extra `fullname` arg to `source_to_code`,
+# which beartype's claw import-hook loader (used by fastmcp's key-value dep)
+# doesn't accept yet. Wrap it so the extra arg is dropped instead of raising.
+try:
+    from beartype.claw._importlib import _clawimpload as _beartype_clawimpload
+
+    _orig_source_to_code = _beartype_clawimpload.BeartypeSourceFileLoader.source_to_code
+
+    def _patched_source_to_code(self, data, path, fullname=None, *, _optimize=-1):
+        return _orig_source_to_code(self, data, path, _optimize=_optimize)
+
+    _beartype_clawimpload.BeartypeSourceFileLoader.source_to_code = _patched_source_to_code
+except ImportError:
+    pass
+
 import httpx
 import asyncio
 # from mcp.server.fastmcp import FastMCP

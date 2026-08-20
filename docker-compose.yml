@@ -90,6 +90,8 @@ services:
     # image: ghcr.io/stjude-c3d/mygpt-mcp-server:latest
     volumes:
       - ./MCP-server:/app
+      # Keep the image's built venv; don't let the bind mount above shadow it.
+      - /app/.venv
     ports:
       - "5001:5001"
     depends_on:
