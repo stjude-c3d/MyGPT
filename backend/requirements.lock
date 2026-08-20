@@ -553,7 +553,7 @@ yarl==1.24.5
     # via aiohttp
 youtube-transcript-api==1.2.4
     # via -r requirements.txt
-zipp==4.1.0
+zipp==3.19.1
     # via -r requirements.txt
 zstandard==0.25.0
     # via langsmith
