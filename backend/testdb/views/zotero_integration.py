@@ -93,7 +93,7 @@ def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key,
     # Loop through PDF attachments, extract content, and store it in 'data' list
     for idx, title, attachment in zip(range(1, len(titles)+1), titles, pdf_attachments):
         pdf_path = _safe_path(BASE_DATA_DIR, 'pdfs', dataset_name, f'paper{idx}.pdf')
-        with open(os.path.realpath(pdf_path), 'wb') as f:
+        with open(pdf_path, 'wb') as f:
             write_success = False
             try:
                 f.write(zot.file(attachment['data']['key']))
@@ -101,7 +101,7 @@ def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key,
             except:
                 print('error writing pdf')
             if write_success:
-                pages = getPDFContent(os.path.realpath(pdf_path))
+                pages = getPDFContent(pdf_path)
                 papers = Papers.objects.filter(paper_title=title, paper_dataset=dataset)
                 if papers.count() > 0:
                     paper = papers[0]
@@ -113,7 +113,7 @@ def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key,
                         paper_dataset=dataset,
                         paper_date_time=make_aware(datetime.datetime.now())
                     )
-                with open(os.path.realpath(pdf_path), 'rb') as f:
+                with open(pdf_path, 'rb') as f:
                     paper.paper_attachment.save(dataset_name + '/paper' + str(idx) + '.pdf', File(f), save=True)
 
                 for page_num, page in enumerate(pages):
@@ -143,7 +143,7 @@ def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key,
     print('zotero chunks loaded')        
 
     chunks_path = _safe_path(BASE_DATA_DIR, 'data_chunks', f'{dataset_name}.txt')
-    with open(os.path.realpath(chunks_path), 'w') as f:
+    with open(chunks_path, 'w') as f:
         for chunk in data:
             # convert chunk to string and write to file
             f.write(str(chunk) + '\n')

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import argparse
 import csv
-import os
 import shutil
 from pathlib import Path
 from typing import List, Set
@@ -34,20 +33,23 @@ def copy_matching_files(document_ids: List[str], source_dir: Path, destination_d
     missing_ids: List[str] = []
 
     for document_id in document_ids:
-        source_file = (source_dir / f"{document_id}.pdf").resolve()
+        source_file = (resolved_source / f"{document_id}.pdf").resolve()
         destination_file = (destination_dir / source_file.name).resolve()
 
         # Guard against path traversal: ensure both paths stay within their directories
-        if not str(source_file).startswith(str(resolved_source) + "/"):
-            raise ValueError(f"Path traversal detected in document ID: {document_id!r}")
-        if not str(destination_file).startswith(str(resolved_dest) + "/"):
-            raise ValueError(f"Path traversal detected in destination for ID: {document_id!r}")
+        try:
+            source_file.relative_to(resolved_source)
+            destination_file.relative_to(resolved_dest)
+        except ValueError as error:
+            raise ValueError(
+                f"Path traversal detected in document ID: {document_id!r}"
+            ) from error
 
         if not source_file.exists():
             missing_ids.append(document_id)
             continue
 
-        shutil.copy2(os.path.realpath(source_file), os.path.realpath(destination_file))
+        shutil.copy2(source_file, destination_file)
 
     return missing_ids
 
