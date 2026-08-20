@@ -27,9 +27,12 @@ def _safe_dataset_name(name: str) -> str:
 
 def _safe_path(base_dir: Path, *parts: str) -> Path:
     """Resolve path and ensure it stays within base_dir."""
-    resolved = (base_dir / Path(*parts)).resolve()
-    if not str(resolved).startswith(str(base_dir) + os.sep):
-        raise ValueError(f"Path traversal detected: {resolved}")
+    resolved_base = base_dir.resolve()
+    resolved = (resolved_base / Path(*parts)).resolve()
+    try:
+        resolved.relative_to(resolved_base)
+    except ValueError as error:
+        raise ValueError(f"Path traversal detected: {resolved}") from error
     return resolved
 
 
@@ -93,7 +96,7 @@ def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key,
     # Loop through PDF attachments, extract content, and store it in 'data' list
     for idx, title, attachment in zip(range(1, len(titles)+1), titles, pdf_attachments):
         pdf_path = _safe_path(BASE_DATA_DIR, 'pdfs', dataset_name, f'paper{idx}.pdf')
-        with open(pdf_path, 'wb') as f:
+        with pdf_path.open('wb') as f:
             write_success = False
             try:
                 f.write(zot.file(attachment['data']['key']))
@@ -113,7 +116,7 @@ def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key,
                         paper_dataset=dataset,
                         paper_date_time=make_aware(datetime.datetime.now())
                     )
-                with open(pdf_path, 'rb') as f:
+                with pdf_path.open('rb') as f:
                     paper.paper_attachment.save(dataset_name + '/paper' + str(idx) + '.pdf', File(f), save=True)
 
                 for page_num, page in enumerate(pages):
@@ -143,7 +146,7 @@ def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key,
     print('zotero chunks loaded')        
 
     chunks_path = _safe_path(BASE_DATA_DIR, 'data_chunks', f'{dataset_name}.txt')
-    with open(chunks_path, 'w') as f:
+    with chunks_path.open('w') as f:
         for chunk in data:
             # convert chunk to string and write to file
             f.write(str(chunk) + '\n')
