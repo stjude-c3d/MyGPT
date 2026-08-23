@@ -36,7 +36,7 @@ def _safe_path(base_dir: Path, *parts: str) -> Path:
     return resolved
 
 
-def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key, user='', user_email='', user_group='', use_bm25='Yes', chunking_method='fixed_chunk_size'):
+def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key, user='', user_email='', user_group='', use_bm25='Yes', chunking_method='fixed_chunk_size', documents_language='-', reranker='-'):
     """Collects chunks of text from PDFs stored in a Zotero collection."""
     types = ['journalArticle', 'preprint', 'blogPost', 'webpage']
     api_key = users_api_key
@@ -62,6 +62,9 @@ def get_zotero_chunks(library_id, library_id_type, collection_id, users_api_key,
             user_group = user_group if len(user_group) else '-',
             chunking_method=chunking_method,
             use_bm25= True if use_bm25 == 'Yes' else False,
+            use_reranker= False if reranker == 'None' else True,
+            reranker=reranker,
+            documents_language=documents_language,
             dataset_date_time=make_aware(datetime.datetime.now())
         )
 

@@ -16,7 +16,7 @@ const AddLibrarySettings = (props: {
 			           return {
                 libraryName: safeCurrentSettings.libraryName || '',
                 docs: safeCurrentSettings.docs || emptyUploadDocs,
-                languageOfDocs: safeCurrentSettings.languageOfDocs || 'English',
+                languageOfDocs: safeCurrentSettings.DatasetLanguage || 'English',
             }
 		}
 
@@ -203,7 +203,7 @@ const AddLibrarySettings = (props: {
 		formData.append('chunking_method', chunkingMethod)
 		formData.append('chunk_size', chunkSize)
 		formData.append('use_bm25', useBM25)
-		formData.append('use_reranker', Reranker)
+		formData.append('reranker', Reranker)
 		formData.append('distance_function', distanceFn)
 		formData.append('user', props.user ? props.user.user.replace(', ','_'): '-')
 		formData.append('user_email', props.user ? props.user.user_email : '-')

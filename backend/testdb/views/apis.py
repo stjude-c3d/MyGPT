@@ -772,7 +772,10 @@ def save_answer(request):
             hallucination_index_by_equation_raw = 1
             hallucination_index_by_equation = round((hallucination_index_by_equation_raw - minHI)/(maxHI - minHI) * 100, 0)
         else:
-            hallucination_index_by_equation_raw = 1 - ((QRS_p * question_relevance_score)/ (QRS_p + ARS_q)) - ((ARS_q * relevance_score)/ (QRS_p + ARS_q))
+            # relevance scores are on a 0-100 scale; the equation expects 0-1 fractions
+            question_relevance_fraction = question_relevance_score / 100
+            answer_relevance_fraction = relevance_score / 100
+            hallucination_index_by_equation_raw = 1 - ((QRS_p * question_relevance_fraction)/ (QRS_p + ARS_q)) - ((ARS_q * answer_relevance_fraction)/ (QRS_p + ARS_q))
             hallucination_index_by_equation = round((hallucination_index_by_equation_raw - minHI)/(maxHI - minHI) * 100, 0)
 
         # create new sources array with vector_distances and vector_scores
@@ -934,6 +937,8 @@ def add_zotero_dataset(request):
         user_email_r = request.POST.get('user_email')
         user_group_r = request.POST.get('user_group')
         distance_function = request.POST.get('distance_function')
+        reranker_r = request.POST.get('reranker')
+        language_of_docs_r = request.POST.get('documents_language')
 
         # Validate all inputs for code injection
         if not api_key_r or not re.match(r'^[a-zA-Z0-9]+$', api_key_r):
@@ -979,18 +984,26 @@ def add_zotero_dataset(request):
         else:
             user_group = user_group_r
 
-        dataset_name = get_zotero_chunks(library_id, library_id_type, collection_id, api_key, user, user_email, user_group, use_bm25, chunking_method)
+        # Validate language_of_docs input, defaulting to english when not provided
+        if not language_of_docs_r or not re.match(r'^[a-zA-Z]+$', language_of_docs_r):
+            language_of_docs = 'english'
+        else:
+            language_of_docs = language_of_docs_r.lower()
+
+        reranker = reranker_r if reranker_r else 'None'
+
+        dataset_name = get_zotero_chunks(library_id, library_id_type, collection_id, api_key, user, user_email, user_group, use_bm25, chunking_method, language_of_docs, reranker)
         if dataset_name == False:
             return Response({'error':True}, content_type="application/json")
         else:
             dataset_name = sanitize_filename(dataset_name)
 
         if use_bm25 == 'Yes':
-            index_document_by_bm25(dataset_name, language_of_docs='english')
+            index_document_by_bm25(dataset_name, language_of_docs=language_of_docs)
 
         # if dataset_name.error:
         #     return Response({'error':True, 'error_message': dataset_name.error}, content_type="application/json")
-        message = add_to_chroma(dataset_name, embedding_model, distance_function, chunking_method)
+        message = add_to_chroma(dataset_name, embedding_model, distance_function, chunking_method, reranker)
 
         if message == False:
             return Response({'error':True}, content_type="application/json")
