@@ -5,8 +5,8 @@ sleep 10
 
 # create backend folder with demo publiction library
 mkdir backend/data/pdfs/MyGPT
-cp -r backend/sample_dataset/pdfs/* backend/data/pdfs/MyGPT/.
-cp backend/sample_dataset/data_chunks/MyGPT.txt backend/data/data_chunks/.
+cp -r backend/data/pdfs/* backend/data/pdfs/.
+cp backend/data/data_chunks/MyGPT.txt backend/data/data_chunks/.
 docker compose up -d backend
 sleep 60
 open http://localhost:8000
