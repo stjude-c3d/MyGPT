@@ -12,7 +12,8 @@ read superuser_name
 echo "Enter superuser email for backend app:"
 read superuser_email
 
-# create super user
+# create super user and enroll it in TOTP authentication
+# you will be prompted for a password, then a QR code will be shown to scan
+# with an authenticator app before entering its current six-digit code
 echo "Creating superuser for backend app..."
-echo "enter password for superuser:"
-docker exec -it ${backend_container_id} python backend/manage.py createsuperuser --username $superuser_name --email $superuser_email
+docker exec -it ${backend_container_id} python backend/manage.py create_superuser_with_otp --username $superuser_name --email $superuser_email

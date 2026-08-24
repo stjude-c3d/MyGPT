@@ -39,6 +39,7 @@ CSRF_TRUSTED_ORIGINS=['http://localhost']
 INSTALLED_APPS = [
     'testdb',
     'evaluation_dataset',
+    'authentication',
     'rest_framework',
     'corsheaders',
     'django_app.admin.OTPAdminConfig',

@@ -239,6 +239,10 @@ Or run following command if you are building docker images:
 bash MyGPT/installation/linux/build_images/create_superuser.sh
 ```
 
+Scan the terminal QR code with an authenticator app and enter its current six-digit code. You can then sign in at http://localhost:8000/admin/ with the username, password, and authenticator code.
+
+Note: `create_superuser.sh` now runs `create_superuser_with_otp`, which creates the superuser and walks through this TOTP enrollment in one step.
+
 You can check backend database at http://localhost:8000/admin/ with username and password you created in above step.
 
 ### Run MCP server

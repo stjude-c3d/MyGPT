@@ -1,7 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 from django_otp.plugins.otp_totp.models import TOTPDevice
-import qrcode
+
+from ...otp_utils import render_terminal_qr
 
 
 class Command(BaseCommand):
@@ -32,7 +33,7 @@ class Command(BaseCommand):
             return
 
         self.stdout.write('Scan this QR code with an authenticator app:')
-        self.stdout.write(self._terminal_qr(device.config_url))
+        self.stdout.write(render_terminal_qr(device.config_url))
         token = input('Enter the current six-digit code to confirm enrollment: ').strip()
 
         if not device.verify_token(token):
@@ -41,13 +42,3 @@ class Command(BaseCommand):
         device.confirmed = True
         device.save(update_fields=['confirmed'])
         self.stdout.write(self.style.SUCCESS('TOTP authentication is enabled for this administrator.'))
-
-    @staticmethod
-    def _terminal_qr(value):
-        qr = qrcode.QRCode(border=2)
-        qr.add_data(value)
-        qr.make(fit=True)
-        return '\n'.join(
-            ''.join('██' if cell else '  ' for cell in row)
-            for row in qr.get_matrix()
-        )

@@ -240,14 +240,9 @@ Or run following command if you are building docker images:
 bash MyGPT/installation/macOS/build_images/create_superuser.sh
 ```
 
-Enroll the superuser in TOTP authentication before opening the administration site:
-
-```
-docker compose exec backend python3 manage.py migrate
-docker compose exec -it backend python3 manage.py setup_admin_otp <superuser-name>
-```
-
 Scan the terminal QR code with an authenticator app and enter its current six-digit code. You can then sign in at http://localhost:8000/admin/ with the username, password, and authenticator code.
+
+Note: `create_superuser.sh` now runs `create_superuser_with_otp`, which creates the superuser and walks through this TOTP enrollment in one step.
 
 ### Run MCP server
 To run MCP server, run following command if you are using pre-built docker images:
