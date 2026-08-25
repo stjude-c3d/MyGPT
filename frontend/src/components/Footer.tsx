@@ -5,7 +5,7 @@ const Footer = (props: {
 	onDisclaimerClick: () => void,
 	onFAQClick: () => void,
 }) => {
-	const version = import.meta.env.VITE_MYGPT_VERSION || '1.0.0'
+	const version = import.meta.env.VITE_MYGPT_VERSION || '1.0.1'
 	const year = new Date().getFullYear()
 
 	const [backendUp, setBackendUp] = useState<boolean | null>(null)
