@@ -87,8 +87,28 @@ def getPDFContent(path):
 
 def convert_to_pdf(input_file, output_dir):
     """Convert files to PDF using LibreOffice"""
-    input_path = Path(input_file).resolve()
-    output_path = Path(output_dir).resolve()
+    # Validate and normalize input path within safe directory
+    safe_input_root = os.path.realpath('data/pdfs')
+    if not safe_input_root.endswith(os.sep):
+        safe_input_root += os.sep
+
+    normalized_input = os.path.realpath(input_file)
+    if not normalized_input.startswith(safe_input_root):
+        raise ValueError("Input file is outside the safe directory")
+
+    input_path = Path(normalized_input)
+
+    # Validate and normalize output path within safe directory
+    safe_output_root = os.path.realpath('data/pdfs')
+    if not safe_output_root.endswith(os.sep):
+        safe_output_root += os.sep
+
+    normalized_output = os.path.realpath(output_dir)
+    if not normalized_output.startswith(safe_output_root):
+        raise ValueError("Output directory is outside the safe directory")
+
+    output_path = Path(normalized_output)
+
     allowed_extensions = {'.doc', '.docx', '.txt'}
 
     if input_path.suffix.lower() not in allowed_extensions:
@@ -115,7 +135,7 @@ def convert_to_pdf(input_file, output_dir):
     output_name = f'{output_stem}.pdf'
 
     # Normalize and validate the destination path stays within the output directory
-    output_root = os.path.realpath(os.fspath(output_path))
+    output_root = os.fspath(output_path)
     if not output_root.endswith(os.sep):
         output_root += os.sep
 
