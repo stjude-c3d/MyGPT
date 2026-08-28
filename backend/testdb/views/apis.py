@@ -879,8 +879,8 @@ def delete_dataset(request):
         user_email = request.GET.get('user_email')
         try:
             dataset_name = validate_dataset_name(dataset_name)
-        except ValueError as error:
-            return Response({'error':True, 'error_message': str(error)}, status=400, content_type="application/json")
+        except ValueError:
+            return Response({'error':True, 'error_message': 'Invalid dataset name'}, status=400, content_type="application/json")
         dataset = Dataset.objects.get(dataset_name=dataset_name, user_email=user_email)
         papers = Papers.objects.filter(paper_dataset=dataset)
         for paper in papers:
