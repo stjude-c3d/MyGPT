@@ -1744,11 +1744,41 @@ function GPTHome(props:{
 								// show embedded youtube videos
 									<div className='p-2'>
 										{(() => {
-											const baseUrl = videos[selectedPaperIdx]['video_link'].replace('watch?v=', 'embed/');
-											// Validate it's a YouTube URL
-											if (!baseUrl.includes('youtube.com') && !baseUrl.includes('youtu.be')) {
+											let baseUrl = '';
+											try {
+												const rawVideoLink = String(videos[selectedPaperIdx]['video_link'] || '');
+												const parsed = new URL(rawVideoLink);
+												const hostname = parsed.hostname.toLowerCase();
+												const allowedHosts = new Set([
+													'youtube.com',
+													'www.youtube.com',
+													'm.youtube.com',
+													'youtu.be',
+													'www.youtu.be'
+												]);
+
+												if (!allowedHosts.has(hostname)) {
+													return <div className='text-center text-red-500'>Invalid video source</div>;
+												}
+
+												let videoId = '';
+												if (hostname === 'youtu.be' || hostname === 'www.youtu.be') {
+													videoId = parsed.pathname.replace(/^\/+/, '').split('/')[0];
+												} else if (parsed.pathname.startsWith('/embed/')) {
+													videoId = parsed.pathname.replace(/^\/embed\/+/, '').split('/')[0];
+												} else {
+													videoId = parsed.searchParams.get('v') || '';
+												}
+
+												if (!videoId) {
+													return <div className='text-center text-red-500'>Invalid video source</div>;
+												}
+
+												baseUrl = `https://www.youtube.com/embed/${encodeURIComponent(videoId)}`;
+											} catch (e) {
 												return <div className='text-center text-red-500'>Invalid video source</div>;
 											}
+
 											const params = new URLSearchParams();
 											const start = Math.max(0, parseInt(String(selectedStart)) || 0);
 											const end = Math.max(0, parseInt(String(selectedStop)) || 0);
