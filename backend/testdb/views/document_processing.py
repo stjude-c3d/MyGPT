@@ -114,12 +114,18 @@ def convert_to_pdf(input_file, output_dir):
         raise ValueError("Invalid output filename")
     output_name = f'{output_stem}.pdf'
 
+    # Normalize and validate the destination path stays within the output directory
     output_root = os.path.realpath(os.fspath(output_path))
+    if not output_root.endswith(os.sep):
+        output_root += os.sep
+
     normalized_destination = os.path.realpath(
         os.path.join(output_root, output_name)
     )
-    if os.path.commonpath([output_root, normalized_destination]) != output_root:
+
+    if not normalized_destination.startswith(output_root):
         raise ValueError("Output path is outside the output directory")
+
     destination = Path(normalized_destination)
 
     # Use only fixed command arguments; user-controlled paths stay outside the subprocess.
