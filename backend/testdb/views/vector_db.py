@@ -61,13 +61,31 @@ def add_to_chroma(dataset_name, embedding_model_request='all-MiniLM-L6-v2', dist
         # First pass: count total lines for progress
         total_lines = 0
         for filename in files:
-            with open(f'{documents_directory}/{filename}', 'r') as file:
+            # Validate file path within safe directory
+            safe_data_root = os.path.realpath(documents_directory)
+            if not safe_data_root.endswith(os.sep):
+                safe_data_root += os.sep
+
+            normalized_file_path = os.path.realpath(f'{documents_directory}/{filename}')
+            if not normalized_file_path.startswith(safe_data_root):
+                raise ValueError(f"File path is outside the safe directory: {filename}")
+
+            with open(normalized_file_path, 'r') as file:
                 total_lines += sum(1 for _ in file)
 
         emit_progress(55, f'Reading {total_lines} documents...')
 
         for filename in files:
-            with open(f'{documents_directory}/{filename}', 'r') as file:
+            # Validate file path within safe directory
+            safe_data_root = os.path.realpath(documents_directory)
+            if not safe_data_root.endswith(os.sep):
+                safe_data_root += os.sep
+
+            normalized_file_path = os.path.realpath(f'{documents_directory}/{filename}')
+            if not normalized_file_path.startswith(safe_data_root):
+                raise ValueError(f"File path is outside the safe directory: {filename}")
+
+            with open(normalized_file_path, 'r') as file:
                 for line_number, line in enumerate(
                     tqdm((file.readlines()), desc=f'Reading {filename}'), 1
                 ):
