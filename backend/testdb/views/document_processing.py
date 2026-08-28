@@ -4,9 +4,11 @@ Document processing functions for PDFs and other file formats
 import fitz
 import base64
 import os
+import shutil
 import subprocess
 import requests
 import re
+import tempfile
 from pathlib import Path
 from defusedxml import ElementTree as ET
 from pypdf import PdfReader
@@ -96,22 +98,20 @@ def convert_to_pdf(input_file, output_dir):
     if not output_path.is_dir():
         raise ValueError("Output directory does not exist")
 
-    input_name = input_path.name
-    if input_name.startswith("-"):
-        raise ValueError("Invalid input filename")
-    if not re.match(r"^[A-Za-z0-9][A-Za-z0-9_.\-\s]*$", input_name):
-        raise ValueError("Invalid input filename")
+    staged_name = {
+        '.doc': 'input.doc',
+        '.docx': 'input.docx',
+        '.txt': 'input.txt',
+    }[input_path.suffix.lower()]
+    destination = output_path / f'{input_path.stem}.pdf'
 
-    # Pass only a validated basename while using the validated directory as cwd.
-    command = [
-        "soffice",
-        "--headless",
-        "--convert-to", "pdf",
-        "--outdir", os.fspath(output_path),
-        input_name,
-    ]
-
-    subprocess.run(command, check=True, shell=False, cwd=os.fspath(input_path.parent))
+    # Use only fixed command arguments; user-controlled paths stay outside the subprocess.
+    with tempfile.TemporaryDirectory() as temporary_directory:
+        temporary_path = Path(temporary_directory)
+        shutil.copyfile(input_path, temporary_path / staged_name)
+        command = ["soffice", "--headless", "--convert-to", "pdf", staged_name]
+        subprocess.run(command, check=True, shell=False, cwd=temporary_directory)
+        shutil.move(temporary_path / 'input.pdf', destination)
 
 
 def extractPDFImages(path, title, data_list):
