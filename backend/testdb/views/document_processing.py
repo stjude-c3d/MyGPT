@@ -103,16 +103,22 @@ def convert_to_pdf(input_file, output_dir):
         '.docx': 'input.docx',
         '.txt': 'input.txt',
     }[input_path.suffix.lower()]
-    output_name = f'{input_path.stem}.pdf'
-    if not re.fullmatch(r'[A-Za-z0-9_-]+\.pdf', output_name):
-        raise ValueError("Invalid output filename")
-
-    normalized_destination = os.path.normpath(
-        os.path.join(os.fspath(output_path), output_name)
+    output_stem = input_path.stem
+    valid_stem = (
+        output_stem
+        and len(output_stem) <= 255
+        and output_stem.isascii()
+        and all(character.isalnum() or character in '_-' for character in output_stem)
     )
-    if os.path.commonpath(
-        [os.fspath(output_path), normalized_destination]
-    ) != os.fspath(output_path):
+    if not valid_stem:
+        raise ValueError("Invalid output filename")
+    output_name = f'{output_stem}.pdf'
+
+    output_root = os.path.realpath(os.fspath(output_path))
+    normalized_destination = os.path.realpath(
+        os.path.join(output_root, output_name)
+    )
+    if os.path.commonpath([output_root, normalized_destination]) != output_root:
         raise ValueError("Output path is outside the output directory")
     destination = Path(normalized_destination)
 
