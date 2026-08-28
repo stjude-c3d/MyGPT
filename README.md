@@ -1,4 +1,4 @@
-[![backend CI](https://github.com/stjude-c3d/MyGPT/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/stjude-c3d/MyGPT/actions/workflows/backend-ci.yml) [![frontend CI](https://github.com/stjude-c3d/MyGPT/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/stjude-c3d/MyGPT/actions/workflows/frontend-ci.yml) [![Build Backend Docker Image](https://github.com/stjude-c3d/MyGPT/actions/workflows/backend-docker-image.yml/badge.svg)](https://github.com/stjude-c3d/MyGPT/actions/workflows/backend-docker-image.yml) [![Frontend Docker Image](https://github.com/stjude-c3d/MyGPT/actions/workflows/frontend-docker-image.yml/badge.svg)](https://github.com/stjude-c3d/MyGPT/actions/workflows/frontend-docker-image.yml)
+[![backend CI](https://github.com/stjude/MyGPT/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/stjude/MyGPT/actions/workflows/backend-ci.yml) [![frontend CI](https://github.com/stjude/MyGPT/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/stjude/MyGPT/actions/workflows/frontend-ci.yml) [![Build Backend Docker Image](https://github.com/stjude/MyGPT/actions/workflows/backend-docker-image.yml/badge.svg)](https://github.com/stjude/MyGPT/actions/workflows/backend-docker-image.yml) [![Frontend Docker Image](https://github.com/stjude/MyGPT/actions/workflows/frontend-docker-image.yml/badge.svg)](https://github.com/stjude/MyGPT/actions/workflows/frontend-docker-image.yml)
 
 <!-- make div and show logo in middle -->
 <div align="center" style='padding:20px;'>
@@ -92,10 +92,31 @@ Here is an example of the user interface with question, answer, and source citin
 
 Check out the [FAQs](./FAQs.md) for common questions and answers.
 
+## Citation
+
+The research paper describing MyGPT is currently **in press**. Please use the following citation until the final publication details are available:
+
+> Patel J, Downing J, Ferguson H, You T, Malinverni D, Mathew D A S, Chen I, Sluter M, Moorefield B, Parej K, Ragavan M, Morris C, Keerthi D, Becerra Armada D, Meszaros B, Trivedi V, Alam S, Woodard A, Alford D, Pathak S, Li C, Umeton R, Rodriguez-Galindo C, Lam CG, Gottschalk S, Kalodimos CG, Babu MM. Democratizing reliable knowledge-seeking with MyGPT: A Privacy-First, Open-Source Retrieval-Augmented Generation Platform. In press.
+
+In text, cite the paper as **Patel et al. (in press)** or **(Patel et al., in press)**. The journal, volume, page numbers, publication year, and DOI will be added here once the paper is published.
+
+BibTeX:
+
+```bibtex
+@article{patel2026mygpt,
+	author  = {Patel, Jaimin and Downing, Jude and Ferguson, Hugh and You, Thika and Malinverni, Duccio and Mathew D. A., Steve and Chen, Ines and Sluter, Madison and Moorefield, Beth and Parej, Katalin and Ragavan, Mukundan and Morris, Cindy and Keerthi, Dinesh and Becerra Armada, Desiree and Meszaros, Balint and Trivedi, Vikas and Alam, Shahinur and Woodard, Anthony and Alford, Dan and Pathak, Sagar and Li, Cai and Umeton, Renato and Rodriguez-Galindo, Carlos and Lam, Catherine G. and Gottschalk, Stephen and Kalodimos, Charalampos G. and Babu, M. Madan},
+	title   = {Democratizing reliable knowledge-seeking with MyGPT: A Privacy-First, Open-Source Retrieval-Augmented Generation Platform},
+	note    = {In press},
+}
+```
+
+## Evaluation datasets and Benchmarks
+For all datasets presented in the paper, the scripts used to reproduce the results are available in the GitHub repository at: [MyGPT-evaluations](https://github.com/stjude/MyGPT-evaluations). The BioASQ evaluation corpus used in this study was curated as a collection of PDF documents and has been deposited in GitHub at https://github.com/stjude/MyGPT-evaluations/tree/main/BioASQ/inputs/pdfs. The PubMedQA and Open RAG Benchmark datasets, as well as the kinase literature use case dataset, are based on published articles obtained through institutional subscriptions and licensing agreements. Although the corresponding PDF files cannot be redistributed, the PubMed IDs (PMIDs) and Digital Object Identifiers (DOIs) required to retrieve the source publications are provided in the GitHub repository referenced above. The BMTCT Standard Operating Procedure (SOP) documents are not publicly available as they contain confidential institutional information that is subject to institutional legal and administrative requirements. The authors do not have permission to redistribute these materials. PDF health policy documents analyzed in the multilingual study are publicly available and have been deposited in GitHub at: https://github.com/stjude/MyGPT-evaluations/tree/main/health_policies/inputs.  Reviewer-validated assessments of generated multilingual policy analyses are not publicly available but may be obtained from the corresponding author for academic research purposes, subject to any applicable data-sharing restrictions. Evaluation results for all other experiments presented in the manuscript are provided in  *Supplementary Data 1* in the paper. 
+
 ## Developer's Guide
 
 Developers who are interested in using MyGPT API can check the [developer's guide](./development.md).
 
 ## Issues
 
-If you come across any bug or error, please report it in the [issues](https://github.com/stjude-c3d/MyGPT/issues) section.
+If you come across any bug or error, please report it in the [issues](https://github.com/stjude/MyGPT/issues) section.
