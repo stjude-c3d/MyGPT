@@ -110,7 +110,10 @@ def convert_to_pdf(input_file, output_dir):
         '.docx': 'input.docx',
         '.txt': 'input.txt',
     }[input_path.suffix.lower()]
-    destination = (output_path / f'{input_path.stem}.pdf').resolve()
+    safe_stem = re.sub(r'[^A-Za-z0-9_.-]', '_', input_path.stem).strip('._-')
+    if not safe_stem:
+        safe_stem = 'converted'
+    destination = (output_path / f'{safe_stem}.pdf').resolve()
 
     try:
         destination.relative_to(safe_root)
