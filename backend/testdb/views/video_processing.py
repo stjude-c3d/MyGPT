@@ -1,11 +1,10 @@
 """
 YouTube video processing functions
 """
+import os
 import chromadb
 from tqdm import tqdm
 from youtube_transcript_api import YouTubeTranscriptApi
-from django.utils.timezone import make_aware
-import datetime
 
 from ..models import Dataset, EmbeddingModel
 from .embedding_utils import get_embedding_model_ef
@@ -38,8 +37,15 @@ def get_youtube_transcript(dataset_name, video_ids, video_titles):
             transcipt_json_10.append({"title": video_title, "content": text, "start": start, "end": end, "type": "video_chunk"})
     
     #  save transcript to csv file
-    transcript_path = safe_path('data/data_chunks', dataset_name + '.txt')
-    with transcript_path.open('w', newline='') as file:
+    safe_data_root = os.path.realpath('data/data_chunks')
+    if not safe_data_root.endswith(os.sep):
+        safe_data_root += os.sep
+
+    normalized_output_path = os.path.realpath(f'data/data_chunks/{dataset_name}.txt')
+    if not normalized_output_path.startswith(safe_data_root):
+        raise ValueError(f"Output path is outside the safe directory: {dataset_name}")
+
+    with open(normalized_output_path, 'w', newline='') as file:
         for chunk in transcipt_json_10:
             # convert chunk to string and write to file
             file.write(str(chunk) + '\n')
@@ -72,17 +78,26 @@ def add_video_to_chroma(dataset_name, embedding_model_request='multi-qa-MiniLM-L
 
     # Load the documents in batches of 100
     if count == 0:
-        filename = document_path.name
-        with document_path.open('r') as file:
-            for line_number, line in enumerate(
-                tqdm((file.readlines()), desc=f'Reading {filename}'), 1
-            ):
-                # Strip whitespace and append the line to the documents list
-                line = line.strip()
-                #convert line to json
-                line_json = eval(line)
-                documents.append(line_json['content'])
-                metadatas.append({'filename': line_json['title'], 'start': line_json['start'], 'end' : line_json['end'], 'type' : line_json['type']})
+        for filename in files:
+            # Validate file path within safe directory
+            safe_data_root = os.path.realpath(documents_directory)
+            if not safe_data_root.endswith(os.sep):
+                safe_data_root += os.sep
+
+            normalized_file_path = os.path.realpath(f'{documents_directory}/{filename}')
+            if not normalized_file_path.startswith(safe_data_root):
+                raise ValueError(f"File path is outside the safe directory: {filename}")
+
+            with open(normalized_file_path, 'r') as file:
+                for line_number, line in enumerate(
+                    tqdm((file.readlines()), desc=f'Reading {filename}'), 1
+                ):
+                    # Strip whitespace and append the line to the documents list
+                    line = line.strip()
+                    #convert line to json
+                    line_json = eval(line)
+                    documents.append(line_json['content'])
+                    metadatas.append({'filename': line_json['title'], 'start': line_json['start'], 'end' : line_json['end'], 'type' : line_json['type']})
         ids = [str(i) for i in range(count, count + len(documents))]
         
         # add to vector database

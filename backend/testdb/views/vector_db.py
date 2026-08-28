@@ -60,32 +60,51 @@ def add_to_chroma(dataset_name, embedding_model_request='all-MiniLM-L6-v2', dist
     if count == 0:
         # First pass: count total lines for progress
         total_lines = 0
-        with document_path.open('r') as file:
-            total_lines = sum(1 for _ in file)
+        for filename in files:
+            # Validate file path within safe directory
+            safe_data_root = os.path.realpath(documents_directory)
+            if not safe_data_root.endswith(os.sep):
+                safe_data_root += os.sep
+
+            normalized_file_path = os.path.realpath(f'{documents_directory}/{filename}')
+            if not normalized_file_path.startswith(safe_data_root):
+                raise ValueError(f"File path is outside the safe directory: {filename}")
+
+            with open(normalized_file_path, 'r') as file:
+                total_lines += sum(1 for _ in file)
 
         emit_progress(55, f'Reading {total_lines} documents...')
 
-        filename = document_path.name
-        with document_path.open('r') as file:
-            for line_number, line in enumerate(
-                tqdm((file.readlines()), desc=f'Reading {filename}'), 1
-            ):
-                # Strip whitespace and append the line to the documents list
-                line = line.strip()
-                #convert line to json
-                line_json = eval(line)
-                # remove new lines and extra spaces
-                line_json['content'] = re.sub(r'\s+', ' ', line_json['content']).strip()
-                documents.append(line_json['content'])
-                if chunking_method == 'structure_preserving':
-                    metadatas.append({'filename': line_json['title'], 'page': line_json['page'], 'section': line_json['section'], 'type': line_json['type']})
-                else:
-                    metadatas.append({'filename': line_json['title'], 'page': line_json['page'], 'type': line_json['type']})
+        for filename in files:
+            # Validate file path within safe directory
+            safe_data_root = os.path.realpath(documents_directory)
+            if not safe_data_root.endswith(os.sep):
+                safe_data_root += os.sep
 
-                # Report progress
-                if total_lines > 0:
-                    progress = 55 + int((line_number / total_lines) * 15)
-                    emit_progress(min(progress, 70), f'Read {line_number}/{total_lines}')
+            normalized_file_path = os.path.realpath(f'{documents_directory}/{filename}')
+            if not normalized_file_path.startswith(safe_data_root):
+                raise ValueError(f"File path is outside the safe directory: {filename}")
+
+            with open(normalized_file_path, 'r') as file:
+                for line_number, line in enumerate(
+                    tqdm((file.readlines()), desc=f'Reading {filename}'), 1
+                ):
+                    # Strip whitespace and append the line to the documents list
+                    line = line.strip()
+                    #convert line to json
+                    line_json = eval(line)
+                    # remove new lines and extra spaces
+                    line_json['content'] = re.sub(r'\s+', ' ', line_json['content']).strip()
+                    documents.append(line_json['content'])
+                    if chunking_method == 'structure_preserving':
+                        metadatas.append({'filename': line_json['title'], 'page': line_json['page'], 'section': line_json['section'], 'type': line_json['type']})
+                    else:
+                        metadatas.append({'filename': line_json['title'], 'page': line_json['page'], 'type': line_json['type']})
+                    
+                    # Report progress
+                    if total_lines > 0:
+                        progress = 55 + int((line_number / total_lines) * 15)
+                        emit_progress(min(progress, 70), f'Read {line_number}/{total_lines}')
 
         ids = [str(i) for i in range(count, count + len(documents))]
         
