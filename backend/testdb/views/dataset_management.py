@@ -14,7 +14,7 @@ import chromadb
 
 from ..models import Papers, Dataset, Question, Answer, Conversation, PaperSections
 from .document_processing import getPDFContent, convert_to_pdf, get_toc_from_grobid
-from .helpers import sanitize_filename
+from .helpers import safe_path, sanitize_filename, validate_dataset_name
 from .embedding_utils import get_embedding_model_ef
 from .analytics import add_pca_to_chunks
 
@@ -37,11 +37,10 @@ def add_dataset_from_upload(request, progress_callback=None):
     use_reranker = False if reranker_r == 'None' else True
     default_prompt = '###INSTUCTIONS#### \nUse following information to answer the question in less than 200 words, try not to use any other information other than provided context. if the information is not in the context, then tell user that information is not found in the documents.\n ### CONTEXT ####'
 
-    # Validate all inputs for code injection
-    if not dataset_name_r or not re.match(r'^[a-zA-Z0-9_\-\s\w]+$', dataset_name_r):
+    try:
+        dataset_name = validate_dataset_name(dataset_name_r)
+    except ValueError:
         return False
-    else:
-        dataset_name = dataset_name_r
 
     paper_titles = paper_titles_r
 
@@ -110,8 +109,8 @@ def add_dataset_from_upload(request, progress_callback=None):
         )
 
     # make directory for pdfs
-    if not os.path.exists('data/pdfs/'+ dataset_name):
-        os.makedirs('data/pdfs/'+ dataset_name)
+    dataset_directory = safe_path('data/pdfs', dataset_name)
+    dataset_directory.mkdir(parents=True, exist_ok=True)
     
     # save pdfs
     data = []
@@ -137,10 +136,10 @@ def add_dataset_from_upload(request, progress_callback=None):
         if '/' in attachment.name:
             return False
 
-        if not os.path.exists('data/pdfs/'+ dataset_name):
+        if not dataset_directory.exists():
             return False
         doctype = '.' + attachment.name.split('.')[-1]
-        base_name = 'data/pdfs/'+ dataset_name + '/paper' + str(idx+1)
+        base_name = os.fspath(safe_path(dataset_directory, 'paper' + str(idx+1)))
 
         # Ensure the file extension is valid
         allowed_extensions = ['.pdf', '.doc', '.docx', '.txt', '.xlsx', '.xls', '.csv']
@@ -332,7 +331,8 @@ def add_dataset_from_upload(request, progress_callback=None):
                             section_dataset=dataset
                         )                         
 
-    with open('data/data_chunks/'+ dataset_name +'.txt', 'w') as f:
+    chunks_path = safe_path('data/data_chunks', dataset_name + '.txt')
+    with chunks_path.open('w') as f:
         for chunk in data:
             f.write(str(chunk) + '\n')
 

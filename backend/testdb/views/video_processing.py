@@ -9,10 +9,12 @@ import datetime
 
 from ..models import Dataset, EmbeddingModel
 from .embedding_utils import get_embedding_model_ef
+from .helpers import safe_path, validate_dataset_name
 
 
 def get_youtube_transcript(dataset_name, video_ids, video_titles):
     """Extract and save YouTube video transcripts"""
+    dataset_name = validate_dataset_name(dataset_name)
     transcipt_json_10 = []
     for i in range(len(video_ids)):
         video_id = video_ids[i]
@@ -36,7 +38,8 @@ def get_youtube_transcript(dataset_name, video_ids, video_titles):
             transcipt_json_10.append({"title": video_title, "content": text, "start": start, "end": end, "type": "video_chunk"})
     
     #  save transcript to csv file
-    with open('data/data_chunks/'+ dataset_name +'.txt', 'w', newline='') as file:
+    transcript_path = safe_path('data/data_chunks', dataset_name + '.txt')
+    with transcript_path.open('w', newline='') as file:
         for chunk in transcipt_json_10:
             # convert chunk to string and write to file
             file.write(str(chunk) + '\n')
@@ -47,10 +50,10 @@ def get_youtube_transcript(dataset_name, video_ids, video_titles):
 
 def add_video_to_chroma(dataset_name, embedding_model_request='multi-qa-MiniLM-L6-cos-v1'):
     """Add video transcripts to ChromaDB"""
-    documents_directory = '/code/data/data_chunks'
+    dataset_name = validate_dataset_name(dataset_name)
     documents = []
     metadatas = []
-    files = [dataset_name + '.txt']
+    document_path = safe_path('/code/data/data_chunks', dataset_name + '.txt')
 
     # Instantiate a persistent chroma client in the persist_directory.
     client = chromadb.PersistentClient(path='/code/chroma_storage/.')
@@ -69,17 +72,17 @@ def add_video_to_chroma(dataset_name, embedding_model_request='multi-qa-MiniLM-L
 
     # Load the documents in batches of 100
     if count == 0:
-        for filename in files:
-            with open(f'{documents_directory}/{filename}', 'r') as file:
-                for line_number, line in enumerate(
-                    tqdm((file.readlines()), desc=f'Reading {filename}'), 1
-                ):
-                    # Strip whitespace and append the line to the documents list
-                    line = line.strip()
-                    #convert line to json
-                    line_json = eval(line)
-                    documents.append(line_json['content'])
-                    metadatas.append({'filename': line_json['title'], 'start': line_json['start'], 'end' : line_json['end'], 'type' : line_json['type']})
+        filename = document_path.name
+        with document_path.open('r') as file:
+            for line_number, line in enumerate(
+                tqdm((file.readlines()), desc=f'Reading {filename}'), 1
+            ):
+                # Strip whitespace and append the line to the documents list
+                line = line.strip()
+                #convert line to json
+                line_json = eval(line)
+                documents.append(line_json['content'])
+                metadatas.append({'filename': line_json['title'], 'start': line_json['start'], 'end' : line_json['end'], 'type' : line_json['type']})
         ids = [str(i) for i in range(count, count + len(documents))]
         
         # add to vector database

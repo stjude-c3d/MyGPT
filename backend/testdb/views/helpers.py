@@ -2,6 +2,28 @@
 General utility helper functions
 """
 import re
+from pathlib import Path
+
+
+DATASET_NAME_PATTERN = re.compile(r'^[a-zA-Z0-9_-]+$')
+
+
+def validate_dataset_name(dataset_name):
+    """Return a dataset identifier that is safe to use as one path component."""
+    if not isinstance(dataset_name, str) or not DATASET_NAME_PATTERN.fullmatch(dataset_name):
+        raise ValueError("Dataset name may contain only ASCII letters, numbers, underscores, and hyphens.")
+    return dataset_name
+
+
+def safe_path(base_dir, *parts):
+    """Resolve a path and require it to remain beneath base_dir."""
+    resolved_base = Path(base_dir).resolve()
+    resolved_path = resolved_base.joinpath(*parts).resolve()
+    try:
+        resolved_path.relative_to(resolved_base)
+    except ValueError as error:
+        raise ValueError("Path escapes its allowed directory.") from error
+    return resolved_path
 
 
 def sanitize_filename(filename):

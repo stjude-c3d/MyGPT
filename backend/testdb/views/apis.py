@@ -33,9 +33,11 @@ from .bm25_utils import (
 
 # Import from specialized modules
 from .helpers import (
+    safe_path,
     sanitize_filename,
     seconds_to_hhmmss,
     min_max_normalization,
+    validate_dataset_name,
     # find_cutoff_distance
 )
 
@@ -875,10 +877,10 @@ def delete_dataset(request):
     if request.method == 'GET':
         dataset_name = request.GET.get('dataset')
         user_email = request.GET.get('user_email')
-        # Sanitize dataset_name early to prevent path traversal attacks
-        dataset_name = sanitize_filename(dataset_name)
-        if not dataset_name or len(dataset_name) == 0:
-            return Response({'error':True, 'error_message': 'Dataset name can\'t be empty'}, content_type="application/json")
+        try:
+            dataset_name = validate_dataset_name(dataset_name)
+        except ValueError as error:
+            return Response({'error':True, 'error_message': str(error)}, status=400, content_type="application/json")
         dataset = Dataset.objects.get(dataset_name=dataset_name, user_email=user_email)
         papers = Papers.objects.filter(paper_dataset=dataset)
         for paper in papers:
@@ -890,9 +892,9 @@ def delete_dataset(request):
         client.delete_collection(name=dataset_name)
 
         # delete the pdf folder
-        pdf_folder = 'data/pdfs/' + dataset_name
+        pdf_folder = safe_path('data/pdfs', dataset_name)
         #  delete /data/data_chunks/ + dataset_name + .txt
-        data_chunks_file = 'data/data_chunks/' + dataset_name + '.txt'
+        data_chunks_file = safe_path('data/data_chunks', dataset_name + '.txt')
         if os.path.exists(data_chunks_file):
             try:
                 os.remove(data_chunks_file)
@@ -900,15 +902,16 @@ def delete_dataset(request):
                 return Response({'error':True, 'error_message': 'Could not delete data chunks file'}, content_type="application/json")
             
         # delete files from media folder
-        media_folder = 'media/papers/' + dataset_name
+        media_folder = safe_path('media/papers', dataset_name)
         if os.path.exists(media_folder):
             # remove all files with output_file name in thier name
             files = [f for f in os.listdir(media_folder) if dataset_name in f]
             # remove all files with output_file name in thier name
             for f in files:
-                if f.endswith('.pdf') and os.path.exists(os.path.join(media_folder, f)):
+                media_file = safe_path(media_folder, f)
+                if f.endswith('.pdf') and os.path.exists(media_file):
                     try:
-                        os.remove(os.path.join(media_folder, f))
+                        os.remove(media_file)
                     except:
                         return Response({'error':True, 'error_message': 'Could not delete media folder'}, content_type="application/json")
 
@@ -916,7 +919,6 @@ def delete_dataset(request):
             # remove all files with output_file name in thier name
             # files = [f for f in os.listdir(pdf_folder) if dataset_name in f]
             # remove all files with output_file name in thier name
-            pdf_folder = sanitize_filename(pdf_folder)
             try:
                 shutil.rmtree(pdf_folder)
             except:

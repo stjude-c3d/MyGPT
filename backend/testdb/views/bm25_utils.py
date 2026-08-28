@@ -9,22 +9,24 @@ import shutil
 from .rerank_utils import (
     rerank_sources
 )
+from .helpers import safe_path, validate_dataset_name
 
 #this method should be called as part of the upload document process just after adding chunks into the chromadb
 def index_document_by_bm25(dataset_name, language_of_docs='english', progress_callback=None):
-    documents_directory = '/code/data/data_chunks' # some other directory can be initalized for storing indices for each document
+    dataset_name = validate_dataset_name(dataset_name)
     # tokenizer_directory = '/code/data/bm25_tokenizer/' + dataset_name
-    tokenizer_directory = Path('/code/data/bm25_tokenizer') / dataset_name
+    tokenizer_directory = safe_path('/code/data/bm25_tokenizer', dataset_name)
     tokenizer_directory.mkdir(parents=True, exist_ok=True)
+    documents_file = safe_path('/code/data/data_chunks', dataset_name + '.txt')
 
     documents = []
 
     # First, count total lines for progress tracking
     total_lines = 0
-    with open(f'{documents_directory}/{dataset_name}.txt', 'r') as file:
+    with documents_file.open('r') as file:
         total_lines = sum(1 for _ in file)
 
-    with open(f'{documents_directory}/{dataset_name}.txt', 'r') as file:
+    with documents_file.open('r') as file:
         for line_number, line in enumerate(
                 tqdm((file.readlines()), desc=f'Reading {dataset_name}'), 100
         ):
@@ -61,6 +63,9 @@ def index_document_by_bm25(dataset_name, language_of_docs='english', progress_ca
     tokenizer.save_stopwords(tokenizer_directory)
 
 def retrieve_chunks_by_bm25(queryText, dataset_name, focused_document_titles=[], chunk_count=10, reranker='None', language_of_docs='english'):
+    dataset_name = validate_dataset_name(dataset_name)
+    chunk_file = safe_path('/code/data/data_chunks', dataset_name + '.txt')
+    tokenizer_directory = safe_path('/code/data/bm25_tokenizer', dataset_name)
 
     stemmer = Stemmer.Stemmer(language_of_docs.lower())
     # french_stemmer = SnowballStemmer("french")
@@ -73,18 +78,17 @@ def retrieve_chunks_by_bm25(queryText, dataset_name, focused_document_titles=[],
     scores = []
     # if focused_document_titles is not empty, get the chunk file and create weight mask for the documents
     if focused_document_titles != []:
-        chunk_file = f'/code/data/data_chunks/{dataset_name}.txt'
-        with open(chunk_file, 'r') as file:
+        with chunk_file.open('r') as file:
             chunk_lines = file.readlines()
         for document_title in focused_document_titles:
             weight_mask = np.array([1 if "'title': '" + str(document_title) + "'" in line else 0 for line in chunk_lines])
 
-            retriever_loaded = bm25s.BM25.load(f"/code/data/bm25_tokenizer/{dataset_name}", mmap=True, load_corpus=True)
+            retriever_loaded = bm25s.BM25.load(tokenizer_directory, mmap=True, load_corpus=True)
             results_temp, scores_temp = retriever_loaded.retrieve(queriesTokenized, k=chunk_count, return_as="tuple", weight_mask=weight_mask if document_title != '' else None)
             results.extend(results_temp)
             scores.extend(scores_temp)
     else:
-        retriever_loaded = bm25s.BM25.load(f"/code/data/bm25_tokenizer/{dataset_name}", mmap=True, load_corpus=True)
+        retriever_loaded = bm25s.BM25.load(tokenizer_directory, mmap=True, load_corpus=True)
         results, scores = retriever_loaded.retrieve(queriesTokenized, k=chunk_count, return_as="tuple")
 
     if reranker != 'None':
