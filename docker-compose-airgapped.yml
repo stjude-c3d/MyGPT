@@ -101,7 +101,7 @@ services:
 
   mcp_server:
     build: ./MCP-server
-    # image: ghcr.io/stjude-c3d/mygpt-mcp-server:latest
+    # image: ghcr.io/stjude/mygpt-mcp-server:latest
     volumes:
       - ./MCP-server:/app
     expose:

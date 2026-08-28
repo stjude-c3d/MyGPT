@@ -185,7 +185,7 @@ interface FAQItem {
 	'General developers': [
 		{
 			"question": "42. Is there documentation on APIs available from MyGPT?",
-			"answer": "Yes. API documentation is available at https://github.com/stjude-c3d/MyGPT/blob/main/development.md and includes endpoint purposes, required request keys, and response fields for common operations such as document retrieval, RAG context retrieval, and answer persistence."
+			"answer": "Yes. API documentation is available at https://github.com/stjude/MyGPT/blob/main/development.md and includes endpoint purposes, required request keys, and response fields for common operations such as document retrieval, RAG context retrieval, and answer persistence."
 		},
 		{
 			"question": "43. How do I report a bug or feature for MyGPT?",
