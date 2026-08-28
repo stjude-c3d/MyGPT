@@ -3,9 +3,11 @@ Document processing functions for PDFs and other file formats
 """
 import fitz
 import base64
+import os
 import subprocess
 import requests
 import re
+from pathlib import Path
 from defusedxml import ElementTree as ET
 from pypdf import PdfReader
 from langchain_community.llms import Ollama
@@ -83,17 +85,27 @@ def getPDFContent(path):
 
 def convert_to_pdf(input_file, output_dir):
     """Convert files to PDF using LibreOffice"""
-    # Construct the command to convert PPTX to PDF
+    input_path = Path(input_file).resolve()
+    output_path = Path(output_dir).resolve()
+    allowed_extensions = {'.doc', '.docx', '.txt'}
+
+    if input_path.suffix.lower() not in allowed_extensions:
+        raise ValueError("Unsupported file type for PDF conversion")
+    if not input_path.is_file():
+        raise ValueError("Input file does not exist")
+    if not output_path.is_dir():
+        raise ValueError("Output directory does not exist")
+
+    # Pass only a validated basename while using the validated directory as cwd.
     command = [
         "soffice",
         "--headless",
         "--convert-to", "pdf",
-        "--outdir", output_dir,
-        input_file
+        "--outdir", os.fspath(output_path),
+        input_path.name,
     ]
-    
-    # Run the command
-    subprocess.run(command, check=True)
+
+    subprocess.run(command, check=True, shell=False, cwd=os.fspath(input_path.parent))
 
 
 def extractPDFImages(path, title, data_list):
