@@ -7,6 +7,8 @@ import os
 import subprocess
 import requests
 import re
+import tempfile
+import shutil
 from pathlib import Path
 from defusedxml import ElementTree as ET
 from pypdf import PdfReader
@@ -96,22 +98,20 @@ def convert_to_pdf(input_file, output_dir):
     if not output_path.is_dir():
         raise ValueError("Output directory does not exist")
 
-    input_name = input_path.name
-    if input_name.startswith("-"):
-        raise ValueError("Invalid input filename")
-    if not re.match(r"^[A-Za-z0-9][A-Za-z0-9_.\-\s]*$", input_name):
-        raise ValueError("Invalid input filename")
+    with tempfile.TemporaryDirectory(dir=os.fspath(output_path)) as temp_dir:
+        temp_input_name = f"input{input_path.suffix.lower()}"
+        temp_input_path = Path(temp_dir) / temp_input_name
+        shutil.copy2(os.fspath(input_path), os.fspath(temp_input_path))
 
-    # Pass only a validated basename while using the validated directory as cwd.
-    command = [
-        "soffice",
-        "--headless",
-        "--convert-to", "pdf",
-        "--outdir", os.fspath(output_path),
-        input_name,
-    ]
+        command = [
+            "soffice",
+            "--headless",
+            "--convert-to", "pdf",
+            "--outdir", os.fspath(output_path),
+            temp_input_name,
+        ]
 
-    subprocess.run(command, check=True, shell=False, cwd=os.fspath(input_path.parent))
+        subprocess.run(command, check=True, shell=False, cwd=temp_dir)
 
 
 def extractPDFImages(path, title, data_list):
