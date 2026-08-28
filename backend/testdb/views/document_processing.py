@@ -96,13 +96,19 @@ def convert_to_pdf(input_file, output_dir):
     if not output_path.is_dir():
         raise ValueError("Output directory does not exist")
 
+    input_name = input_path.name
+    if input_name.startswith("-"):
+        raise ValueError("Invalid input filename")
+    if not re.match(r"^[A-Za-z0-9][A-Za-z0-9_.\-\s]*$", input_name):
+        raise ValueError("Invalid input filename")
+
     # Pass only a validated basename while using the validated directory as cwd.
     command = [
         "soffice",
         "--headless",
         "--convert-to", "pdf",
         "--outdir", os.fspath(output_path),
-        input_path.name,
+        input_name,
     ]
 
     subprocess.run(command, check=True, shell=False, cwd=os.fspath(input_path.parent))
