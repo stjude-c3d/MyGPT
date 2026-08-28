@@ -15,6 +15,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 from pytube import YouTube, Playlist
 import datetime
+import logging
 import os
 import shutil
 import json
@@ -23,6 +24,9 @@ import queue
 import threading
 from ollama import Client as OllamaClient, ListResponse
 from django.contrib.auth.models import User
+
+
+logger = logging.getLogger(__name__)
 
 from .bm25_utils import (
     index_document_by_bm25, 
@@ -1089,8 +1093,9 @@ def upload_documents(request):
                                 reranker,
                                 stage3_progress_callback,
                             )
-                        except Exception as exc:
-                            stage3_state['error'] = str(exc)
+                        except Exception:
+                            logger.exception("ChromaDB indexing failed during dataset upload")
+                            stage3_state['error'] = 'Failed to index the uploaded dataset'
                         finally:
                             progress_queue.put(done_signal)
 
@@ -1118,8 +1123,9 @@ def upload_documents(request):
                     yield on_progress('chroma_indexing', 100, 'Upload completed successfully')
                     yield json.dumps({'type': 'done', 'uploaded': True}) + '\n'
                     
-                except Exception as e:
-                    yield json.dumps({'type': 'error', 'error': True, 'error_message': str(e)}) + '\n'
+                except Exception:
+                    logger.exception("Streaming dataset upload failed")
+                    yield json.dumps({'type': 'error', 'error': True, 'error_message': 'Dataset upload failed'}) + '\n'
             
             if stream_progress:
                 return StreamingHttpResponse(
@@ -1150,8 +1156,9 @@ def upload_documents(request):
                 if message == False:
                     return Response({'error': True}, content_type="application/json")
                 return Response({'uploaded': True}, content_type="application/json")
-        except Exception as e:
-            return Response({'error': True, 'error_message': str(e)}, content_type="application/json")
+        except Exception:
+            logger.exception("Dataset upload failed")
+            return Response({'error': True, 'error_message': 'Dataset upload failed'}, status=500, content_type="application/json")
 
 @api_view(['POST'])
 def add_ollama_models(request):
@@ -1545,8 +1552,9 @@ def ollama_generate(request):
                         'response': response.get('response', ''),
                         'thinking': response.get('thinking', '')
                     }, content_type="application/json")
-                except Exception as e:
-                    return Response({'error': True, 'error_message': str(e)}, content_type="application/json")
+                except Exception:
+                    logger.exception("Ollama generate request failed")
+                    return Response({'error': True, 'error_message': 'Model generation failed'}, status=500, content_type="application/json")
             
             # Streaming path: stream=True
             def stream_response():
@@ -1585,15 +1593,17 @@ def ollama_generate(request):
                     
                     # Signal completion
                     yield json.dumps({'type': 'done', 'content': '', 'done': True}) + '\n'
-                except Exception as e:
-                    yield json.dumps({'error': True, 'error_message': str(e), 'done': True}) + '\n'
+                except Exception:
+                    logger.exception("Streaming Ollama generate request failed")
+                    yield json.dumps({'error': True, 'error_message': 'Model generation failed', 'done': True}) + '\n'
             
             return StreamingHttpResponse(
                 stream_response(),
                 content_type='application/x-ndjson'
             )
-        except Exception as e:
-            return Response({'error': True, 'error_message': str(e)}, content_type="application/json")
+        except Exception:
+            logger.exception("Invalid Ollama generate request")
+            return Response({'error': True, 'error_message': 'Unable to process generation request'}, status=500, content_type="application/json")
         
 @api_view(['POST'])
 def ollama_chat(request):
@@ -1695,8 +1705,9 @@ def ollama_chat(request):
                     }
                     
                     return Response(return_response, content_type="application/json")
-                except Exception as e:
-                    return Response({'error': True, 'error_message': str(e)}, content_type="application/json")
+                except Exception:
+                    logger.exception("Ollama chat request failed")
+                    return Response({'error': True, 'error_message': 'Model chat failed'}, status=500, content_type="application/json")
             
             # Streaming path: stream=True
             def stream_response():
@@ -1724,15 +1735,17 @@ def ollama_chat(request):
                     
                     # Signal completion
                     yield json.dumps({'type': 'done', 'content': '', 'done': True}) + '\n'
-                except Exception as e:
-                    yield json.dumps({'error': True, 'error_message': str(e), 'done': True}) + '\n'
+                except Exception:
+                    logger.exception("Streaming Ollama chat request failed")
+                    yield json.dumps({'error': True, 'error_message': 'Model chat failed', 'done': True}) + '\n'
             
             return StreamingHttpResponse(
                 stream_response(),
                 content_type='application/x-ndjson'
             )
-        except Exception as e:
-            return Response({'error': True, 'error_message': str(e)}, content_type="application/json")
+        except Exception:
+            logger.exception("Invalid Ollama chat request")
+            return Response({'error': True, 'error_message': 'Unable to process chat request'}, status=500, content_type="application/json")
         
 @api_view(['POST'])
 def get_ollama_models(request):
@@ -1760,8 +1773,9 @@ def get_ollama_models(request):
                             'quantization_level': quantization_level,
                         })
             return Response({'added':True, 'models': models}, content_type="application/json")
-        except Exception as e:
-            return Response({'error': True, 'error_message': str(e)}, content_type="application/json")
+        except Exception:
+            logger.exception("Unable to list Ollama models")
+            return Response({'error': True, 'error_message': 'Unable to list models'}, status=500, content_type="application/json")
         
 @api_view(['POST'])
 def ollama_pull_model(request):
@@ -1839,12 +1853,14 @@ def ollama_pull_model(request):
                     
                     # Signal completion
                     yield json.dumps({'status': 'completed', 'progress': 100, 'done': True}) + '\n'
-                except Exception as e:
-                    yield json.dumps({'error': True, 'error_message': str(e), 'done': True}) + '\n'
+                except Exception:
+                    logger.exception("Streaming Ollama model pull failed")
+                    yield json.dumps({'error': True, 'error_message': 'Model download failed', 'done': True}) + '\n'
             
             return StreamingHttpResponse(
                 stream_response(),
                 content_type='application/x-ndjson'
             )
-        except Exception as e:
-            return Response({'error': True, 'error_message': str(e)}, content_type="application/json")
+        except Exception:
+            logger.exception("Unable to start Ollama model pull")
+            return Response({'error': True, 'error_message': 'Unable to start model download'}, status=500, content_type="application/json")
