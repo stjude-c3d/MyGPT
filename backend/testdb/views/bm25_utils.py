@@ -1,4 +1,5 @@
 #libraries to import for keyword search
+import os
 import bm25s
 import Stemmer
 from pathlib import Path
@@ -21,12 +22,21 @@ def index_document_by_bm25(dataset_name, language_of_docs='english', progress_ca
 
     documents = []
 
+    # Validate file path within safe directory
+    safe_data_root = os.path.realpath(documents_directory)
+    if not safe_data_root.endswith(os.sep):
+        safe_data_root += os.sep
+
+    normalized_file_path = os.path.realpath(f'{documents_directory}/{dataset_name}.txt')
+    if not normalized_file_path.startswith(safe_data_root):
+        raise ValueError(f"File path is outside the safe directory: {dataset_name}")
+
     # First, count total lines for progress tracking
     total_lines = 0
-    with documents_file.open('r') as file:
+    with open(normalized_file_path, 'r') as file:
         total_lines = sum(1 for _ in file)
 
-    with documents_file.open('r') as file:
+    with open(normalized_file_path, 'r') as file:
         for line_number, line in enumerate(
                 tqdm((file.readlines()), desc=f'Reading {dataset_name}'), 100
         ):
