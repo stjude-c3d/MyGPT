@@ -103,7 +103,18 @@ def convert_to_pdf(input_file, output_dir):
         '.docx': 'input.docx',
         '.txt': 'input.txt',
     }[input_path.suffix.lower()]
-    destination = output_path / f'{input_path.stem}.pdf'
+    output_name = f'{input_path.stem}.pdf'
+    if not re.fullmatch(r'[A-Za-z0-9_-]+\.pdf', output_name):
+        raise ValueError("Invalid output filename")
+
+    normalized_destination = os.path.normpath(
+        os.path.join(os.fspath(output_path), output_name)
+    )
+    if os.path.commonpath(
+        [os.fspath(output_path), normalized_destination]
+    ) != os.fspath(output_path):
+        raise ValueError("Output path is outside the output directory")
+    destination = Path(normalized_destination)
 
     # Use only fixed command arguments; user-controlled paths stay outside the subprocess.
     with tempfile.TemporaryDirectory() as temporary_directory:
