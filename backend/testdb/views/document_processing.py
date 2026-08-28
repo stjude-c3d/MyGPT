@@ -90,6 +90,7 @@ def convert_to_pdf(input_file, output_dir):
     input_path = Path(input_file).resolve()
     output_path = Path(output_dir).resolve()
     allowed_extensions = {'.doc', '.docx', '.txt'}
+    safe_root = Path("data/pdfs").resolve()
 
     if input_path.suffix.lower() not in allowed_extensions:
         raise ValueError("Unsupported file type for PDF conversion")
@@ -98,12 +99,23 @@ def convert_to_pdf(input_file, output_dir):
     if not output_path.is_dir():
         raise ValueError("Output directory does not exist")
 
+    try:
+        input_path.relative_to(safe_root)
+        output_path.relative_to(safe_root)
+    except ValueError:
+        raise ValueError("Input/output path outside allowed directory")
+
     staged_name = {
         '.doc': 'input.doc',
         '.docx': 'input.docx',
         '.txt': 'input.txt',
     }[input_path.suffix.lower()]
-    destination = output_path / f'{input_path.stem}.pdf'
+    destination = (output_path / f'{input_path.stem}.pdf').resolve()
+
+    try:
+        destination.relative_to(safe_root)
+    except ValueError:
+        raise ValueError("Destination path outside allowed directory")
 
     # Use only fixed command arguments; user-controlled paths stay outside the subprocess.
     with tempfile.TemporaryDirectory() as temporary_directory:
