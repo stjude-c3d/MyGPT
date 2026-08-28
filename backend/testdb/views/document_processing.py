@@ -267,9 +267,18 @@ def get_toc_from_grobid(pdf_path):
     Extract the table of contents from a PDF file using GROBID.
     Grobid is available at http://localhost:8070 by default.
     """
+    # Validate and normalize PDF path within safe directory
+    safe_pdf_root = os.path.realpath('data/pdfs')
+    if not safe_pdf_root.endswith(os.sep):
+        safe_pdf_root += os.sep
+
+    normalized_pdf_path = os.path.realpath(pdf_path)
+    if not normalized_pdf_path.startswith(safe_pdf_root):
+        raise ValueError("PDF path is outside the safe directory")
+
     # Use GROBID to extract the table of contents
     url = 'http://host.docker.internal:8070/api/processFulltextDocument'
-    files = {'input': open(pdf_path, 'rb')}
+    files = {'input': open(normalized_pdf_path, 'rb')}
     data = {'consolidateHeader': '1', 'teiCoordinates': 'head'}
     response = requests.post(url, files=files, data=data)
     
