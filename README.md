@@ -31,9 +31,17 @@ Replace the placeholders in `.env_backend` with secure values and configure publ
 
 MyGPT can be installed on following environments:
 
+- [Desktop Application (macOS / Windows / Linux)](#desktop-application)
 - [Personal Computer](#personal-computer)
 - [Server/VM with GPU](#server-or-vm-with-gpu)
 - [Cloud services (Azure)](#cloud-services-azure)
+
+### Desktop Application
+
+MyGPT provides a native desktop application with modern window management, local Docker orchestration, and in-app developer settings:
+
+* **macOS:** Download the `.dmg` from releases. See [macOS Installation & Setup Guide](./electron/MACOS_INSTALL_GUIDE.md) for quick setup, Ollama models, and Gatekeeper instructions.
+* **Packaging & Development:** See [electron/README.md](./electron/README.md) for build, test, and packaging scripts.
 
 ### Personal Computer
 

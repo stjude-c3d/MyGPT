@@ -11,6 +11,7 @@ import {
 } from '@heroicons/react/24/outline'
 import MCPClient from './MCPClient'
 import FlowSettings from './FlowSettings'
+import DeveloperAPISettings from './DeveloperAPISettings'
 
 const Settings = (props: {
 	closeSettings: any,
@@ -590,6 +591,15 @@ const Settings = (props: {
 										settingsCallback={props.settingsCallback}
 									/> : <></>
 							}
+							{
+								activeTab === 'developer_api' ?
+									<DeveloperAPISettings
+										currentSettings={currentSettings}
+										settingsCallback={props.settingsCallback}
+										djangoLogin={props.djangoLogin}
+										user={props.user}
+									/> : <></>
+							}
 						</div>
 					</div>
 
@@ -899,6 +909,15 @@ const Settings = (props: {
 									<MCPClient
 										currentSettings={currentSettings}
 										settingsCallback={props.settingsCallback}
+									/> : <></>
+							}
+							{
+								activeTab === 'developer_api' ?
+									<DeveloperAPISettings
+										currentSettings={currentSettings}
+										settingsCallback={props.settingsCallback}
+										djangoLogin={props.djangoLogin}
+										user={props.user}
 									/> : <></>
 							}
 						</div>

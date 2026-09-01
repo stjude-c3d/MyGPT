@@ -149,10 +149,10 @@ function App() {
     }, [user, currentSettings, frontendSettings.django_login])
 
   return (
-    <div className={darkMode ? 'dark': ''}>
+    <div className={`h-screen max-h-screen w-full overflow-hidden flex flex-col justify-between bg-gray-200 dark:bg-neutral-900 ${darkMode ? 'dark': ''}`}>
     { frontendSettings.azure_login ?
       <MsalProvider instance={msalInstance}>
-        <div className='bg-gray-200 dark:bg-zinc-800'>
+        <div className='flex-1 flex flex-col min-h-0 overflow-hidden bg-gray-200 dark:bg-neutral-800'>
         <TopNav
           setShowUpload={setShowUpload}
           setShowSettings={setShowSettings} 
@@ -218,7 +218,7 @@ function App() {
       </MsalProvider>
     : 
     frontendSettings.django_login ?
-    <div className='bg-gray-200'>
+    <div className='flex-1 flex flex-col min-h-0 overflow-hidden bg-gray-200 dark:bg-neutral-800'>
       <TopNav 
         setShowUpload={()=>{
           setShowUpload(true)
@@ -301,7 +301,7 @@ function App() {
       }
     </div>
     :
-    <div className='bg-gray-200'>
+    <div className='flex-1 flex flex-col min-h-0 overflow-hidden bg-gray-200 dark:bg-neutral-800'>
       <TopNav 
         setShowUpload={setShowUpload}
         setShowSettings={setShowSettings} 
