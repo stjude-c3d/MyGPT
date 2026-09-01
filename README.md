@@ -1,4 +1,19 @@
-[![backend CI](https://github.com/stjude/MyGPT/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/stjude/MyGPT/actions/workflows/backend-ci.yml) [![frontend CI](https://github.com/stjude/MyGPT/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/stjude/MyGPT/actions/workflows/frontend-ci.yml) [![Build Backend Docker Image](https://github.com/stjude/MyGPT/actions/workflows/backend-docker-image.yml/badge.svg)](https://github.com/stjude/MyGPT/actions/workflows/backend-docker-image.yml) [![Frontend Docker Image](https://github.com/stjude/MyGPT/actions/workflows/frontend-docker-image.yml/badge.svg)](https://github.com/stjude/MyGPT/actions/workflows/frontend-docker-image.yml) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22165249.svg)](https://doi.org/10.5281/zenodo.22165249)
+<div align="center">
+	<p>
+		<a href="https://github.com/stjude/MyGPT/actions/workflows/backend-ci.yml"><img src="https://github.com/stjude/MyGPT/actions/workflows/backend-ci.yml/badge.svg" alt="Backend CI"></a>
+		<a href="https://github.com/stjude/MyGPT/actions/workflows/frontend-ci.yml"><img src="https://github.com/stjude/MyGPT/actions/workflows/frontend-ci.yml/badge.svg" alt="Frontend CI"></a>
+		<a href="https://github.com/stjude/MyGPT/actions/workflows/backend-docker-image.yml"><img src="https://github.com/stjude/MyGPT/actions/workflows/backend-docker-image.yml/badge.svg" alt="Build Backend Docker Image"></a>
+		<a href="https://github.com/stjude/MyGPT/actions/workflows/frontend-docker-image.yml"><img src="https://github.com/stjude/MyGPT/actions/workflows/frontend-docker-image.yml/badge.svg" alt="Build Frontend Docker Image"></a>
+	</p>
+	<p>
+		<a href="https://github.com/stjude/MyGPT/actions/workflows/github-code-scanning/codeql"><img src="https://github.com/stjude/MyGPT/actions/workflows/github-code-scanning/codeql/badge.svg" alt="CodeQL"></a>
+		<a href="https://github.com/stjude/MyGPT/actions/workflows/agents/copilot-pull-request-reviewer"><img src="https://github.com/stjude/MyGPT/actions/workflows/agents/copilot-pull-request-reviewer/badge.svg" alt="Copilot"></a>
+		<a href="https://github.com/stjude/MyGPT/actions/workflows/dependabot/update-graph"><img src="https://github.com/stjude/MyGPT/actions/workflows/dependabot/update-graph/badge.svg" alt="Dependency Graph"></a>
+	</p>
+	<p>
+		<a href="https://doi.org/10.5281/zenodo.22165249"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.22165249.svg" alt="DOI"></a>
+	</p>
+</div>
 
 <!-- make div and show logo in middle -->
 <div align="center" style='padding:20px;'>
