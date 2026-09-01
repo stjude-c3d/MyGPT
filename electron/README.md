@@ -67,8 +67,9 @@ The output installers will be placed in `electron/release/`:
 * `MyGPT-1.0.2-arm64.dmg` (for Apple Silicon M1/M2/M3/M4)
 * `MyGPT-1.0.2-x64.dmg` (for Intel Macs)
 
-### 📖 End-User Distribution Guides:
-* **macOS Setup & Installation Guide:** [MACOS_INSTALL_GUIDE.md](./MACOS_INSTALL_GUIDE.md) — share this guide with Mac users for first-time installation, Ollama/Docker setup, and bypassing the macOS Gatekeeper prompt.
+### 📖 Distribution & User Guides:
+* **macOS Local User Guide:** [MACOS_INSTALL_GUIDE.md](./MACOS_INSTALL_GUIDE.md) — share this guide with Mac users for local installation, Ollama/Docker setup, and bypassing the macOS Gatekeeper prompt.
+* **Remote VM & Cloud Desktop Guide:** [REMOTE_CLOUD_DESKTOP_GUIDE.md](./REMOTE_CLOUD_DESKTOP_GUIDE.md) — instructions for building and distributing desktop apps that connect to a remote VM, GPU server, or Cloud instance (Azure/AWS/GCP) with SSL and enterprise SSO.
 
 ---
 

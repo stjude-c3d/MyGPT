@@ -40,7 +40,8 @@ MyGPT can be installed on following environments:
 
 MyGPT provides a native desktop application with modern window management, local Docker orchestration, and in-app developer settings:
 
-* **macOS:** Download the `.dmg` from releases. See [macOS Installation & Setup Guide](./electron/MACOS_INSTALL_GUIDE.md) for quick setup, Ollama models, and Gatekeeper instructions.
+* **macOS Local Install:** Download the `.dmg` from releases. See [macOS Installation & Setup Guide](./electron/MACOS_INSTALL_GUIDE.md) for quick setup, Ollama models, and Gatekeeper instructions.
+* **Remote VM & Cloud Connected Desktop Apps:** See [Remote VM & Cloud Desktop Guide](./electron/REMOTE_CLOUD_DESKTOP_GUIDE.md) to build and distribute lightweight desktop apps connected to remote GPU servers or Azure/AWS/GCP deployments.
 * **Packaging & Development:** See [electron/README.md](./electron/README.md) for build, test, and packaging scripts.
 
 ### Personal Computer
