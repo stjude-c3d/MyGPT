@@ -4,15 +4,11 @@ import { fileURLToPath } from 'url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// Load root-level .env_frontend (not Vite's default .env naming) for local `vite`/`vite build`
-// runs outside Docker Compose. Vars already in process.env (e.g. injected via Compose's
-// env_file:) take precedence and are never overwritten.
 const configDir = path.dirname(fileURLToPath(import.meta.url))
 const rootEnvPath = path.resolve(configDir, '../.env_frontend')
-const buildMode = process.env.NODE_ENV || process.argv[process.argv.indexOf('--mode') + 1] || 'development'
-// Only load .env_frontend for local development — mode-specific .env files
-// (e.g. .env.production, .env.azure) take full precedence during production builds.
-if (fs.existsSync(rootEnvPath) && buildMode === 'development') {
+
+// Load root-level .env_frontend for local `vite` and `vite build`
+if (fs.existsSync(rootEnvPath)) {
 	for (const line of fs.readFileSync(rootEnvPath, 'utf-8').split('\n')) {
 		const trimmed = line.trim()
 		if (!trimmed || trimmed.startsWith('#')) continue
@@ -26,11 +22,16 @@ if (fs.existsSync(rootEnvPath) && buildMode === 'development') {
 	}
 }
 
+if (!process.env.VITE_BACKEND_API) {
+	process.env.VITE_BACKEND_API = 'http://localhost:8000/'
+}
+
 // Proxies /sjray the same way CRA's src/setupProxy.js used to.
 const sjRayTarget = process.env.VITE_SJ_RAY_API || 'https://svltgpt01a.stjude.org/'
 
 export default defineConfig({
 	plugins: [react()],
+	base: './',
 	// Keep the VITE_ prefix so existing .env_frontend files and docs don't need renaming.
 	envPrefix: ['VITE_', 'VITE_'],
 	// Matches CRA's output dir so existing docker-compose bind mounts keep working.

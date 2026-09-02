@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { BrowserRouter } from 'react-router'
 import { NavBar } from './NavBar'
 import useAuthenticateUser from '../hooks/useAuthenticateUser'
+import defaultLogo from '../assets/mygpt_logo_color_dark.png'
 
 function TopNav(props:{
   setShowUpload:any,
@@ -86,7 +87,7 @@ function TopNav(props:{
             appName={'MyGPT'}
             appNameLink = {'/'}
             showAppLogo = {true}
-            appLogoPath = {'./mygpt_logo_color_dark.png'}
+            appLogoPath = {defaultLogo}
             // appLogoLink = {'/'}
             showPlotButton = {false}
             plotButtonCallback = {() => {props.setPlotButton(true)}}

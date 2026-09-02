@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router'
 import { 
 	ArrowUpTrayIcon,
@@ -6,6 +6,7 @@ import {
 	ClockIcon,
 	SunIcon, MoonIcon,
 	ChartBarSquareIcon } from '@heroicons/react/24/outline'
+import defaultLogo from '../assets/mygpt_logo_color_dark.png'
 
 // -----------------------------//
 // Top Navigation with app name //
@@ -151,14 +152,13 @@ export const NavBar = (props = defaultNavProps) => {
 				backgroundColor: props.backgroundColor ? props.backgroundColor : ''
 			}}
 			className={'fixed w-full h-24 flex flex-wrap items-center justify-between py-3 shadow-lg navbar navbar-expand-lg navbar-light z-20' + (props.backgroundColor ? '' : ' bg-bsk_opp')} >
-			<base href='/'></base>
 			<div className='flex-grow items-center flex justify-between'>
 				<div className='flex flex-row mx-8'>
 					<div>
 					{
 						props.showAppLogo ?
 						(<Link to='/'>
-							<img src={props.appLogoPath} alt='mygpt_logo' loading='lazy' className='object-cover h-16 w-22 inline-block justify-start'/>
+							<img src={props.appLogoPath || defaultLogo} alt='mygpt_logo' loading='lazy' className='object-cover h-16 w-22 inline-block justify-start'/>
 						</Link>) :
 						(<div></div>)
 					}
