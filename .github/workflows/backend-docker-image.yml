@@ -14,7 +14,7 @@ on:
 
 jobs:
  build:
-  runs-on: linux_large
+  runs-on: mygpt_builder
   permissions:
    contents: read
    packages: write
@@ -42,5 +42,5 @@ jobs:
       # platforms: linux/amd64,linux/arm64
       push: true
       tags: |
-       ghcr.io/stjude-c3d/mygpt-backend:latest
-       ghcr.io/stjude-c3d/mygpt-backend:latest-amd64
+       ghcr.io/stjude/mygpt-backend:latest
+       ghcr.io/stjude/mygpt-backend:latest-amd64

@@ -1,10 +1,10 @@
 ## create super user for backend app
 
 # find backend container id by image name
-backend_container_id=$(docker ps -aqf "ancestor=ghcr.io/stjude-c3d/mygpt-backend:latest")
+backend_container_id=$(docker ps -aqf "ancestor=ghcr.io/stjude/mygpt-backend:latest")
 
 if [ -z "$backend_container_id" ]; then
-	backend_container_id=$(docker ps -aqf "ancestor=ghcr.io/stjude-c3d/mygpt-backend:arm64")
+	backend_container_id=$(docker ps -aqf "ancestor=ghcr.io/stjude/mygpt-backend:arm64")
 	if [ -z "$backend_container_id" ]; then
 		echo "Backend container not found. Please ensure the backend is running."
 		exit 1

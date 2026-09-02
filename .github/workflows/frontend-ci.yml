@@ -10,6 +10,9 @@ on:
       - "frontend/**"
     branches: [ "main" ]
 
+permissions:
+  contents: read
+  packages: read
 jobs:
   build:
     runs-on: ubuntu-latest

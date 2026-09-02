@@ -17,7 +17,7 @@ jobs:
         uses: int128/docker-manifest-create-action@v2
         with:
           tags: |
-            ghcr.io/stjude-c3d/mygpt-mcp-server:latest
+            ghcr.io/stjude/mygpt-mcp-server:latest
           sources: |
-            ghcr.io/stjude-c3d/mygpt-mcp-server:latest-amd64
-            ghcr.io/stjude-c3d/mygpt-mcp-server:arm64
+            ghcr.io/stjude/mygpt-mcp-server:latest-amd64
+            ghcr.io/stjude/mygpt-mcp-server:arm64

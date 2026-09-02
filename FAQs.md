@@ -403,7 +403,7 @@ The following settings strike a balance among performance, privacy, and resource
 ### 42.	Is there documentation on APIs available from MyGPT?
 
 Yes. The documentation is embedded in the context you provided and lists several MyGPT REST‑API endpoints, along with their required parameters and expected responses.
-The documentation is available at https://github.com/stjude-c3d/MyGPT/blob/main/development.md
+The documentation is available at https://github.com/stjude/MyGPT/blob/main/development.md
 
 Key APIs include:
 | Endpoint | Purpose | Required keys (request) |

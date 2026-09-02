@@ -23,7 +23,7 @@ The server/VM should have the following requirements:
 
 2. Build the frontend on your local machine
 	```bash
-	git clone https://github.com/stjude-c3d/MyGPT.git
+	git clone https://github.com/stjude/MyGPT.git
 	cd MyGPT/frontend
 	npm install
 	npm run build
@@ -57,7 +57,7 @@ The server/VM should have the following requirements:
 	Or you can get installation instructions by running following command from Terminal. It will create `MyGPT` folder on your Desktop or desired folder. To get this from GitHub, we will need `GitHub username` and `GitHub access token` as the GitHub repo is private. When you run the following command, it will ask for this credentials.
 
 	```bash
-	git clone https://github.com/stjude-c3d/MyGPT.git
+	git clone https://github.com/stjude/MyGPT.git
 	```
 
 3. Create the backend runtime environment file

@@ -3,9 +3,13 @@ Document processing functions for PDFs and other file formats
 """
 import fitz
 import base64
+import os
+import shutil
 import subprocess
 import requests
 import re
+import tempfile
+from pathlib import Path
 from defusedxml import ElementTree as ET
 from pypdf import PdfReader
 from langchain_community.llms import Ollama
@@ -83,17 +87,74 @@ def getPDFContent(path):
 
 def convert_to_pdf(input_file, output_dir):
     """Convert files to PDF using LibreOffice"""
-    # Construct the command to convert PPTX to PDF
-    command = [
-        "soffice",
-        "--headless",
-        "--convert-to", "pdf",
-        "--outdir", output_dir,
-        input_file
-    ]
-    
-    # Run the command
-    subprocess.run(command, check=True)
+    # Validate and normalize input path within safe directory
+    safe_input_root = os.path.realpath('data/pdfs')
+    if not safe_input_root.endswith(os.sep):
+        safe_input_root += os.sep
+
+    normalized_input = os.path.realpath(input_file)
+    if not normalized_input.startswith(safe_input_root):
+        raise ValueError("Input file is outside the safe directory")
+
+    input_path = Path(normalized_input)
+
+    # Validate and normalize output path within safe directory
+    safe_output_root = os.path.realpath('data/pdfs')
+    if not safe_output_root.endswith(os.sep):
+        safe_output_root += os.sep
+
+    normalized_output = os.path.realpath(output_dir)
+    if not normalized_output.startswith(safe_output_root):
+        raise ValueError("Output directory is outside the safe directory")
+
+    output_path = Path(normalized_output)
+
+    allowed_extensions = {'.doc', '.docx', '.txt'}
+
+    if input_path.suffix.lower() not in allowed_extensions:
+        raise ValueError("Unsupported file type for PDF conversion")
+    if not input_path.is_file():
+        raise ValueError("Input file does not exist")
+    if not output_path.is_dir():
+        raise ValueError("Output directory does not exist")
+
+    staged_name = {
+        '.doc': 'input.doc',
+        '.docx': 'input.docx',
+        '.txt': 'input.txt',
+    }[input_path.suffix.lower()]
+    output_stem = input_path.stem
+    valid_stem = (
+        output_stem
+        and len(output_stem) <= 255
+        and output_stem.isascii()
+        and all(character.isalnum() or character in '_-' for character in output_stem)
+    )
+    if not valid_stem:
+        raise ValueError("Invalid output filename")
+    output_name = f'{output_stem}.pdf'
+
+    # Normalize and validate the destination path stays within the output directory
+    output_root = os.fspath(output_path)
+    if not output_root.endswith(os.sep):
+        output_root += os.sep
+
+    normalized_destination = os.path.realpath(
+        os.path.join(output_root, output_name)
+    )
+
+    if not normalized_destination.startswith(output_root):
+        raise ValueError("Output path is outside the output directory")
+
+    destination = Path(normalized_destination)
+
+    # Use only fixed command arguments; user-controlled paths stay outside the subprocess.
+    with tempfile.TemporaryDirectory() as temporary_directory:
+        temporary_path = Path(temporary_directory)
+        shutil.copyfile(input_path, temporary_path / staged_name)
+        command = ["soffice", "--headless", "--convert-to", "pdf", staged_name]
+        subprocess.run(command, check=True, shell=False, cwd=temporary_directory)
+        shutil.move(temporary_path / 'input.pdf', destination)
 
 
 def extractPDFImages(path, title, data_list):
@@ -206,9 +267,18 @@ def get_toc_from_grobid(pdf_path):
     Extract the table of contents from a PDF file using GROBID.
     Grobid is available at http://localhost:8070 by default.
     """
+    # Validate and normalize PDF path within safe directory
+    safe_pdf_root = os.path.realpath('data/pdfs')
+    if not safe_pdf_root.endswith(os.sep):
+        safe_pdf_root += os.sep
+
+    normalized_pdf_path = os.path.realpath(pdf_path)
+    if not normalized_pdf_path.startswith(safe_pdf_root):
+        raise ValueError("PDF path is outside the safe directory")
+
     # Use GROBID to extract the table of contents
     url = 'http://host.docker.internal:8070/api/processFulltextDocument'
-    files = {'input': open(pdf_path, 'rb')}
+    files = {'input': open(normalized_pdf_path, 'rb')}
     data = {'consolidateHeader': '1', 'teiCoordinates': 'head'}
     response = requests.post(url, files=files, data=data)
     

@@ -2,7 +2,7 @@
 docker compose down
 
 # remove docker images
-imageNames=("ghcr.io/stjude-c3d/mygpt-frontend:latest" "ghcr.io/stjude-c3d/mygpt-backend:latest")
+imageNames=("ghcr.io/stjude/mygpt-frontend:latest" "ghcr.io/stjude/mygpt-backend:latest")
 for imageName in "${imageNames[@]}"
 do
 	containerIds=$(docker ps -aq --filter "ancestor=$imageName")

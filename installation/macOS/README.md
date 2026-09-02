@@ -94,7 +94,7 @@ You have 2 options to install MyGPT pipeline:
 	Or you can get installation instructions by running following command from Terminal. It will create `MyGPT` folder on your Desktop or desired folder. To get this from GitHub, we will need `GitHub username` and `GitHub access token` as the GitHub repo is private. When you run the following command, it will ask for this credentials.
 
 	```
-	git clone https://github.com/stjude-c3d/MyGPT.git
+	git clone https://github.com/stjude/MyGPT.git
 	```
 
 > [!NOTE] 
@@ -155,7 +155,7 @@ docker login ghcr.io
 	If you want to get source code from GitHub we will first get MyGPT source code by running following command. It will create `MyGPT` folder on your Desktop. To get the source code from GitHub, we will need `GitHub username` and `GitHub access token` as the GitHub repo is private. When you run the following command, it will ask for this credentials.
 
 	```
-	git clone https://github.com/stjude-c3d/MyGPT.git
+	git clone https://github.com/stjude/MyGPT.git
 	```
 
 	<ins>Note:</ins> If you don't have GitHub access token, you can genearte classic token using this guideline: https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic
